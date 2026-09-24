@@ -17,7 +17,7 @@ public class OpenApiConfig {
     @Bean
     OpenAPI giaPhaOpenApi() {
         return new OpenAPI()
-                .info(new Info().title("Gia Phả API").version("v1"))
+                .info(new Info().title("Tộc Phả API").version("v1"))
                 .components(new Components().addSecuritySchemes(BEARER,
                         new SecurityScheme().type(SecurityScheme.Type.HTTP).scheme("bearer").bearerFormat("JWT")))
                 .addSecurityItem(new SecurityRequirement().addList(BEARER));

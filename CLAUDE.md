@@ -1,4 +1,4 @@
-# CLAUDE.md — Gia Phả (Family Management)
+# CLAUDE.md — Tộc Phả (Family Management)
 
 > **Đầu mỗi phiên đọc CLAUDE.md và ROADMAP.md** (`roadmap/ROADMAP.md`). Chỉ làm đúng đợt được giao, xong thì tick ✅ và DỪNG.
 

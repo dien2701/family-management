@@ -11,7 +11,20 @@ public record AppProperties(
         @DefaultValue Jwt jwt,
         @DefaultValue Auth auth,
         @DefaultValue Google google,
-        @DefaultValue Mail mail) {
+        @DefaultValue Mail mail,
+        @DefaultValue Policy policy,
+        @DefaultValue Family family) {
+
+    /** Phiên bản chính sách bảo mật; đổi khi nội dung chính sách đổi để biết ai đã đồng ý bản nào. */
+    public record Policy(@DefaultValue("1.0") String version) {
+    }
+
+    public record Family(
+            @DefaultValue("7d") Duration inviteTtl,
+            // Gốc URL frontend để dựng link mời dạng {baseUrl}/moi/{code}
+            @DefaultValue("http://localhost:5173") String frontendBaseUrl,
+            @DefaultValue("10") int joinPerMinutePerUser) {
+    }
 
     public record Jwt(String secret, @DefaultValue("15m") Duration accessTtl) {
     }

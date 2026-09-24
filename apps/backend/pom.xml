@@ -14,7 +14,7 @@
     <artifactId>giapha-backend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>giapha-backend</name>
-    <description>Gia Phả - backend</description>
+    <description>Tộc Phả - backend</description>
 
     <properties>
         <java.version>21</java.version>

@@ -12,7 +12,7 @@ export function Sidebar() {
           <TreeDeciduous className="size-6" aria-hidden="true" />
         </span>
         <span className="hidden text-lg leading-tight font-bold text-primary lg:inline">
-          Gia Phả
+          Tộc Phả
         </span>
       </div>
 

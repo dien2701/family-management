@@ -2,11 +2,31 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { describe, expect, it } from 'vitest'
+import { AuthContext, type AuthContextValue } from '@/context/authContext'
 import { routes } from '@/pages/routes'
+
+// Người dùng đã đăng nhập và thuộc một dòng họ, để route guard cho vào khung chính
+const auth: AuthContextValue = {
+  status: 'authenticated',
+  user: {
+    id: 1,
+    fullName: 'Đặng Văn An',
+    email: 'an@example.com',
+    systemRole: 'USER',
+    familyId: 1,
+  },
+  setSession: () => {},
+  refresh: async () => true,
+  logout: async () => {},
+}
 
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] })
-  render(<RouterProvider router={router} />)
+  render(
+    <AuthContext value={auth}>
+      <RouterProvider router={router} />
+    </AuthContext>,
+  )
   return router
 }
 
@@ -36,7 +56,7 @@ describe('BottomNav', () => {
     await userEvent.click(within(nav).getByRole('link', { name: 'Lịch' }))
     expect(router.state.location.pathname).toBe('/lich')
     expect(screen.getByRole('heading', { level: 1, name: 'Lịch' })).toBeInTheDocument()
-    expect(document.title).toBe('Lịch · Gia Phả')
+    expect(document.title).toBe('Lịch · Tộc Phả')
   })
 })
 

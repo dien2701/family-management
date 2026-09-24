@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
 ---
 
-Bạn viết test cho dự án Gia Phả. Chỉ thêm hoặc sửa file test; không sửa mã production (nếu thấy bug thì báo lại).
+Bạn viết test cho dự án Tộc Phả. Chỉ thêm hoặc sửa file test; không sửa mã production (nếu thấy bug thì báo lại).
 
 ## Backend (`apps/backend/src/test/java/vn/giapha/<module>/`)
 - JUnit 5 + Testcontainers MySQL 8.4 qua `@IntegrationTest` (trong `support/`). Không dùng H2.

@@ -1,5 +1,8 @@
 // Wrapper của fetch: base `/api`, gửi/nhận JSON, đổi ProblemDetail của backend thành ApiError.
-// Bearer + tự refresh khi 401 thêm ở Đợt 3 (AuthProvider).
+// Access token chỉ nằm trong biến của module này (bộ nhớ), không ghi vào localStorage/sessionStorage.
+// Gặp 401 thì refresh một lần (dùng chung một request cho mọi lời gọi song song) rồi thử lại.
+
+import type { AuthResponse } from '@/types/api'
 
 const BASE_URL = '/api'
 
@@ -37,6 +40,65 @@ type RequestOptions = {
   signal?: AbortSignal
 }
 
+// ---------- Phiên đăng nhập (chỉ trong bộ nhớ) ----------
+
+type SessionHooks = {
+  /** Refresh thành công: claim trong token có thể đã đổi (family, vai trò). */
+  onRefreshed: (session: AuthResponse) => void
+  /** Refresh bị từ chối: phiên đã hết hạn hoặc bị thu hồi. */
+  onExpired: () => void
+}
+
+let accessToken: string | null = null
+let sessionHooks: SessionHooks | null = null
+let refreshInFlight: Promise<AuthResponse | null> | null = null
+
+export function setAccessToken(token: string | null) {
+  accessToken = token
+}
+
+export function getAccessToken(): string | null {
+  return accessToken
+}
+
+export function configureSession(hooks: SessionHooks | null) {
+  sessionHooks = hooks
+}
+
+function expireSession() {
+  accessToken = null
+  sessionHooks?.onExpired()
+}
+
+/**
+ * Đổi refresh cookie lấy access token mới. Trả `null` khi không còn phiên (401/403),
+ * ném lỗi khi gặp sự cố khác (mất mạng, 5xx) để không đăng xuất oan.
+ * Refresh token xoay vòng nên các lời gọi đồng thời phải dùng chung một request.
+ */
+export function refreshSession(): Promise<AuthResponse | null> {
+  refreshInFlight ??= doRefresh().finally(() => {
+    refreshInFlight = null
+  })
+  return refreshInFlight
+}
+
+async function doRefresh(): Promise<AuthResponse | null> {
+  try {
+    const session = await request<AuthResponse>('POST', '/auth/refresh', { retryOn401: false })
+    accessToken = session.accessToken ?? null
+    sessionHooks?.onRefreshed(session)
+    return session
+  } catch (error) {
+    if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+      accessToken = null
+      return null
+    }
+    throw error
+  }
+}
+
+// ---------- Request ----------
+
 function buildUrl(path: string, query?: RequestOptions['query']): string {
   const params = new URLSearchParams()
   for (const [key, value] of Object.entries(query ?? {})) {
@@ -57,7 +119,17 @@ async function parseProblem(response: Response): Promise<ProblemDetail> {
   }
 }
 
-async function request<T>(method: string, path: string, options: RequestOptions = {}): Promise<T> {
+type InternalOptions = RequestOptions & { retryOn401?: boolean }
+
+async function request<T>(
+  method: string,
+  path: string,
+  { retryOn401 = true, ...options }: InternalOptions = {},
+): Promise<T> {
+  // `/auth/*` trả 401 khi sai mật khẩu hoặc hết phiên: đó là kết quả, không phải token hết hạn
+  const canRetry = retryOn401 && !path.startsWith('/auth/')
+  const sentToken = accessToken
+
   let response: Response
   try {
     response = await fetch(buildUrl(path, options.query), {
@@ -65,6 +137,7 @@ async function request<T>(method: string, path: string, options: RequestOptions 
       headers: {
         Accept: 'application/json',
         ...(options.body !== undefined && { 'Content-Type': 'application/json' }),
+        ...(sentToken && { Authorization: `Bearer ${sentToken}` }),
       },
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
       credentials: 'same-origin',
@@ -73,6 +146,22 @@ async function request<T>(method: string, path: string, options: RequestOptions 
   } catch (cause) {
     if (cause instanceof DOMException && cause.name === 'AbortError') throw cause
     throw new ApiError(0, { title: 'Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.' })
+  }
+
+  if (response.status === 401 && canRetry) {
+    // Token đã được đổi bởi lời gọi khác trong lúc chờ thì thử lại luôn, khỏi refresh thêm lần nữa
+    const refreshed =
+      accessToken !== sentToken && accessToken !== null ? true : (await refreshSession()) !== null
+    if (refreshed) {
+      try {
+        return await request<T>(method, path, { ...options, retryOn401: false })
+      } catch (error) {
+        // Vừa refresh xong mà vẫn 401: token không dùng được nữa nên coi như hết phiên
+        if (error instanceof ApiError && error.status === 401) expireSession()
+        throw error
+      }
+    }
+    expireSession()
   }
 
   if (!response.ok) throw new ApiError(response.status, await parseProblem(response))

@@ -96,8 +96,8 @@ public class OtpService {
                 now.plus(props.auth().otpTtl()), now));
         long minutes = props.auth().otpTtl().toMinutes();
         String subject = purpose == OtpPurpose.REGISTER
-                ? "Mã xác thực đăng ký Gia Phả"
-                : "Mã đặt lại mật khẩu Gia Phả";
+                ? "Mã xác thực đăng ký Tộc Phả"
+                : "Mã đặt lại mật khẩu Tộc Phả";
         mailSender.send(email, subject, "Mã xác thực của bạn là: " + code + "\n\n"
                 + "Mã có hiệu lực trong " + minutes + " phút. Không chia sẻ mã này với bất kỳ ai.\n"
                 + "Nếu bạn không yêu cầu, hãy bỏ qua email này.");

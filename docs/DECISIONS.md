@@ -18,7 +18,7 @@
    → **Chốt:** monorepo `apps/backend` + `apps/frontend`, không dùng công cụ quản lý workspace.
 6. **Tên package gốc và tên app**, ⏳ **Chưa chốt**. Tạm dùng:
    - package `vn.giapha`, groupId `vn.giapha`, artifactId `giapha-backend`;
-   - tên hiển thị **"Gia Phả"** (lấy từ tên miền ví dụ `giapha.duckdns.org`).
+   - tên hiển thị **"Tộc Phả"** (lấy từ tên miền ví dụ `giapha.duckdns.org`).
 
 ## B. Kiến trúc backend
 

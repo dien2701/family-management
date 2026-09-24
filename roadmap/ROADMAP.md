@@ -1,4 +1,4 @@
-# ROADMAP — Gia Phả
+# ROADMAP — Tộc Phả
 
 > Đầu mỗi phiên đọc `CLAUDE.md` và file này. Mỗi phiên **chỉ làm một đợt**, xong thì DỪNG.
 > Đặc tả nằm ở `roadmap/IDEA.md`, quyết định kỹ thuật ở `docs/DECISIONS.md` (thắng IDEA khi có mâu thuẫn), giao diện ở `docs/DESIGN.md`.
@@ -45,9 +45,9 @@
 | 0 | Nền tảng Backend | setup | Sonnet · high | ✅ 2026-09-25 |
 | 1 | Nền tảng Frontend | setup | Sonnet · high | ✅ 2026-09-25 |
 | 2 | Auth BE | auth | Sonnet · high | ✅ 2026-09-25 |
-| 3 | Auth FE | auth | Sonnet · high | ⬜ |
-| 4 | Dòng họ BE | family | Sonnet · medium | ⬜ |
-| 5 | Dòng họ FE | family | Sonnet · medium | ⬜ |
+| 3 | Auth FE | auth | Sonnet · high | ✅ 2026-09-25 |
+| 4 | Dòng họ BE | family | Sonnet · medium | ✅ 2026-09-25 |
+| 5 | Dòng họ FE | family | Sonnet · medium | ✅ 2026-09-25 |
 | 6 | Lịch âm BE | calendar | **Opus · high** | ⬜ |
 | 7 | Lịch âm FE | calendar | Sonnet · high | ⬜ |
 | 8 | Thành viên BE: cốt lõi | member | Sonnet · high | ⬜ |
@@ -87,8 +87,8 @@
 | 40 | Import Excel BE | report | Sonnet · high | ⬜ |
 | 41 | Import Excel FE | report | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 3 — Auth FE
-Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`, `security-review`, `code-review`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 2 (bên dưới).
+## ▶️ Đợt đang chờ: Đợt 6 — Lịch âm BE
+Model **Opus** · Effort **high** · Skill: `code-review`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 5 (bên dưới).
 
 ---
 
@@ -208,19 +208,23 @@ BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, security
 
 ---
 
-### Đợt 3 — Auth FE ⬜
+### Đợt 3 — Auth FE ✅ 2026-09-25
 IDEA §6.1 · DECISIONS #15–17
-- [ ] Các trang: Đăng nhập, Đăng ký (có tick đồng ý điều khoản), Nhập OTP (đếm ngược 60 giây mới gửi lại được), Quên mật khẩu, rồi OTP, rồi Mật khẩu mới.
-- [ ] Nút "Đăng nhập với Google" dùng Google Identity Services, gọi `/api/auth/google`.
-- [ ] `AuthProvider`: access token chỉ giữ trong bộ nhớ. Khi tải trang thì gọi `/auth/refresh`. `client.ts` gắn Bearer, gặp 401 thì refresh một lần rồi thử lại. Có đăng xuất.
-- [ ] Route guard và điều hướng sau đăng nhập: chưa có family vào `/bat-dau` (trang tạm), có family vào `/`, Admin vào `/quan-tri` (trang tạm).
-- [ ] Lỗi trong `ProblemDetail.errors` hiện đúng dưới từng trường (RHF + Zod).
-- [ ] Test Vitest cho schema Zod của form đăng ký.
+- [x] Các trang: Đăng nhập, Đăng ký (có tick đồng ý điều khoản), Nhập OTP (đếm ngược 60 giây mới gửi lại được), Quên mật khẩu, rồi OTP, rồi Mật khẩu mới. ✅ 2026-09-25
+- [x] Nút "Đăng nhập với Google" dùng Google Identity Services, gọi `/api/auth/google`. ✅ 2026-09-25
+- [x] `AuthProvider`: access token chỉ giữ trong bộ nhớ. Khi tải trang thì gọi `/auth/refresh`. `client.ts` gắn Bearer, gặp 401 thì refresh một lần rồi thử lại. Có đăng xuất. ✅ 2026-09-25
+- [x] Route guard và điều hướng sau đăng nhập: chưa có family vào `/bat-dau` (trang tạm), có family vào `/`, Admin vào `/quan-tri` (trang tạm). ✅ 2026-09-25
+- [x] Lỗi trong `ProblemDetail.errors` hiện đúng dưới từng trường (RHF + Zod). ✅ 2026-09-25
+- [x] Test Vitest cho schema Zod của form đăng ký. ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** 2026-09-25. Dựng module `features/auth` ở frontend: trang Đăng nhập, Đăng ký (có tick điều khoản), Xác thực OTP (đếm ngược 60 giây, mốc gửi lại giữ được khi F5) và Quên mật khẩu (email → OTP → mật khẩu mới, một route `/quen-mat-khau`), nút Google Identity Services. `AuthProvider` giữ access token chỉ trong bộ nhớ (biến của `services/client.ts`), tải trang thì gọi `/auth/refresh`; `client.ts` gắn Bearer, gặp 401 thì refresh một lần (gộp các lời gọi song song vào một request, vì refresh token xoay vòng) rồi thử lại. Route guard chia ba khu: family (`/`), chưa có family (`/bat-dau`), Admin (`/quan-tri`); trang `/bat-dau` và `/quan-tri` là trang tạm. Lỗi `ProblemDetail.errors` hiện dưới từng trường (RHF + Zod). Header hiện chữ cái đầu của người dùng, trang Thêm có thẻ tài khoản + Đăng xuất. `npm run lint`, `npm run build` pass; `npm test` pass 40 test (schema đăng ký 8, guards 8, routing 3, client phiên 7...). Đã chạy thật với backend dev trên MySQL cài sẵn (chủ yếu ở 375px, giao diện đăng ký và `/bat-dau` xem thêm ở 1280px; nút Google đã hiện nhưng **chưa bấm thử đăng nhập Google thật** vì cần tài khoản Google; thay đổi `logout()` sau code-review chỉ có test tự động, chưa chạy lại trên trình duyệt): đăng ký, OTP sai (báo "Còn 4 lần thử") rồi OTP đúng vào `/bat-dau`, F5 vẫn còn phiên, Local/Session Storage rỗng, đăng xuất, đăng nhập sai chỉ báo lỗi chung, quên mật khẩu trọn luồng rồi đăng nhập bằng mật khẩu mới. `security-review` không thấy lỗ hổng độ tin cậy cao; `code-review` ra 8 phát hiện, đã sửa 6.
+- File chính: `apps/frontend/src/{services/client.ts,context/{authContext.ts,AuthProvider.tsx},hooks/{useAuth,useCountdown}.ts,features/auth/**,components/{ui/{input,checkbox}.tsx,shared/{FormField,PasswordInput,OtpInput,Alert,FullPageSpinner}.tsx},layout/PlainLayout.tsx,pages/{routes,OnboardingPage,AdminHomePage,MorePage}.tsx,utils/{formErrors,time}.ts,types/{api,google.d}.ts}`, `apps/frontend/.env.example`.
+- Khác dự kiến: (1) Quên mật khẩu là một route với 3 bước trong bộ nhớ, không phải 3 URL riêng, để OTP không nằm trên URL hay trong history state (F5 thì làm lại từ đầu); (2) email của luồng OTP đăng ký đi theo `history.state`, không đưa lên URL; (3) checkbox đồng ý điều khoản chưa có link tới trang Chính sách bảo mật vì trang đó làm ở Đợt 5 (cần thêm link khi làm Đợt 5); (4) nút Google là nút do chính Google vẽ (cao 40px, theo quy định của GIS), chỉ hiện khi có `VITE_GOOGLE_CLIENT_ID`; (5) sau khi đăng xuất chủ động thì không nhớ trang để quay lại, còn hết phiên hoặc mở link sâu thì có (`state.from`, chỉ nhận đường dẫn nội bộ); (6) `logout()` ném lỗi nếu server không nhận được lời gọi (giữ nguyên phiên và báo người dùng) để cookie refresh không còn hiệu lực ngầm; (7) `refresh()` trong context trả `boolean`, dùng cho Đợt 5; (8) chữ hint dưới trường và chữ "hoặc" cỡ 14px theo DESIGN §2 (chú thích), còn lại ≥ 16px.
+- Việc nên làm thêm (chưa làm, ngoài phạm vi): chưa có test riêng cho `AuthProvider`, `OtpForm`, `applyApiError`; chưa kiểm được trực quan khung chính (`AppShell`, thẻ tài khoản trong trang Thêm, avatar chữ cái) với người dùng có family vì chưa có endpoint tạo family (Đợt 4), hiện chỉ có test tự động; sau Đợt 5 nên kiểm lại ở 375px và 1280px; `client.ts` loại trừ refresh theo tiền tố `/auth/` (có test) — nếu sau này có endpoint công khai ngoài `/auth/` thì đổi sang tùy chọn tường minh; nhiều tab mở cùng lúc khi tải trang có thể refresh song song và một tab bị đăng xuất (hiếm); tài khoản thử `thu.dot3a@example.com` (mật khẩu `matkhaumoi123`) còn trong DB dev, có thể xóa.
 
 **🔧 Setup thủ công cần làm:**
-- Tạo `apps/frontend/.env.local` với `VITE_GOOGLE_CLIENT_ID=<cùng client id ở Đợt 2>`.
+- Tạo `apps/frontend/.env.local` với `VITE_GOOGLE_CLIENT_ID=<cùng client id ở Đợt 2>` (mẫu ở `apps/frontend/.env.example`; để trống thì nút Google bị ẩn). Trong Google Cloud Console phải có origin `http://localhost:5173` (đã nêu ở Đợt 2). Vite phải khởi động lại nếu thêm biến sau khi đã chạy.
+- Chạy backend (profile dev) song song với `npm run dev`; vì cookie refresh có `Path=/api/auth` nên frontend phải gọi qua proxy `/api` cùng origin (đã cấu hình sẵn).
 
 **🧪 Test thủ công (từng bước):**
 1. Mở `/dang-ky` ở khổ 375px, bỏ trống mọi trường rồi bấm Đăng ký: lỗi phải hiện dưới từng trường.
@@ -238,19 +242,23 @@ BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào khô
 
 ---
 
-### Đợt 4 — Dòng họ BE ⬜
+### Đợt 4 — Dòng họ BE ✅ 2026-09-25
 IDEA §3, §6.2 · DECISIONS #22–24
-- [ ] `V3__family.sql`: `family`, `family_invitation` (thêm `revoked_at`), `user_consent`. Phiên bản chính sách lấy từ cấu hình `app.policy.version`.
-- [ ] Tạo family (chỉ cho user chưa có family), người tạo thành Manager, lưu consent.
-- [ ] Mã mời: tạo (chuỗi ngẫu nhiên 8 ký tự + link), xem danh sách, thu hồi. Tham gia bằng mã (lưu consent) thì vào thẳng family. Báo lỗi riêng khi mã hết hạn hoặc đã bị thu hồi.
-- [ ] Rời family (User), loại thành viên (Manager), chuyển quyền Manager. Manager chỉ rời được sau khi đã chuyển quyền. Mỗi thay đổi đều thu hồi refresh token của người bị ảnh hưởng.
-- [ ] `GET /api/family`: thông tin family và danh sách tài khoản. Email chỉ hiện cho Manager và chính chủ.
-- [ ] Facade `FamilyFacade`, để module khác đọc `familyId` và vai trò.
-- [ ] Test: mã hết hạn hoặc bị thu hồi, user đã có family không tham gia được family khác, chuyển quyền, truy cập chéo family trả 404.
+- [x] `V3__family.sql`: `family`, `family_invitation` (thêm `revoked_at`), `user_consent`. Phiên bản chính sách lấy từ cấu hình `app.policy.version`. ✅ 2026-09-25
+- [x] Tạo family (chỉ cho user chưa có family), người tạo thành Manager, lưu consent. ✅ 2026-09-25
+- [x] Mã mời: tạo (chuỗi ngẫu nhiên 8 ký tự + link), xem danh sách, thu hồi. Tham gia bằng mã (lưu consent) thì vào thẳng family. Báo lỗi riêng khi mã hết hạn hoặc đã bị thu hồi. ✅ 2026-09-25
+- [x] Rời family (User), loại thành viên (Manager), chuyển quyền Manager. Manager chỉ rời được sau khi đã chuyển quyền. Mỗi thay đổi đều thu hồi refresh token của người bị ảnh hưởng. ✅ 2026-09-25
+- [x] `GET /api/family`: thông tin family và danh sách tài khoản. Email chỉ hiện cho Manager và chính chủ. ✅ 2026-09-25
+- [x] Facade `FamilyFacade`, để module khác đọc `familyId` và vai trò. ✅ 2026-09-25
+- [x] Test: mã hết hạn hoặc bị thu hồi, user đã có family không tham gia được family khác, chuyển quyền, truy cập chéo family trả 404. ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** 2026-09-25. Module `family` BE: tạo family (người tạo thành Manager, lưu `user_consent` kèm `app.policy.version` và IP), mã mời 8 ký tự (bỏ ký tự dễ nhầm, dùng nhiều lần, hết hạn 7 ngày, thu hồi được, lỗi riêng `INVITE_NOT_FOUND` 404 / `INVITE_REVOKED` 410 / `INVITE_EXPIRED` 410), tham gia bằng mã (vào thẳng family, lưu consent), rời, loại tài khoản, chuyển quyền Manager, `GET /api/family` và `GET /api/family/{id}` (email chỉ hiện cho Manager và chính chủ), `FamilyFacade`. `.\mvnw.cmd verify` pass: 82 test (thêm `FamilyApiTest` 20 test: mã hết hạn/thu hồi, đã có family không tham gia được, chuyển quyền, Manager không rời được, Admin bị chặn, tài khoản khóa, truy cập chéo family trả 404, audit log, facade). `code-review` ra 2 phát hiện, đã sửa cả hai.
+- Endpoint: `POST /api/family`, `POST /api/family/join`, `GET /api/family[/{id}]`, `POST|GET /api/family/invitations`, `DELETE /api/family/invitations/{id}`, `POST /api/family/leave`, `DELETE /api/family/accounts/{userId}`, `POST /api/family/transfer-manager`.
+- File chính: `db/migration/V3__family.sql`, `family/**` (entity, repository, service, dto, mapper, controller, `FamilyFacade`), `auth/AuthFacade.java`, `common/consent/*`, `config/AppProperties.java` (`app.policy.version`, `app.family.*`), `FamilyApiTest`.
+- Khác dự kiến: (1) family không phụ thuộc entity của auth: gọi qua `AuthFacade` mới ở gốc module auth (vai trò trao đổi dạng chuỗi); (2) vai trò và family của người gọi **đọc từ DB, không tin claim** (claim có thể cũ 15 phút), thao tác đổi thành viên khóa dòng `family` (`PESSIMISTIC_WRITE`) trước rồi kiểm quyền; (3) gán family bằng UPDATE có điều kiện `family_id IS NULL` nên hai request song song chỉ một cái thắng; (4) Admin bị chặn tạo/tham gia family (403 `ADMIN_CANNOT_HAVE_FAMILY`) theo DECISIONS #22 dù IDEA §3 ghi Admin được tạo; (5) rời, loại và chuyển quyền thu hồi refresh token của người bị ảnh hưởng, gồm **cả Manager cũ và người nhận khi chuyển quyền** (theo security.md), còn tạo/tham gia thì không thu hồi để FE refresh lấy claim mới; (6) V3 thêm FK `user_account.family_id -> family(id)`, nên `AuthApiTest` phải tạo dòng family thật; `created_by` không có FK; (7) request tạo family chưa có `coverUrl` (làm cùng module file, Đợt 10); (8) `.env.example` có gợi ý `FRONTEND_BASE_URL` để dựng link mời `/moi/{code}`.
+- Việc nên làm thêm (chưa làm, ngoài phạm vi): **Đợt 5 FE**: sau khi rời, bị loại hoặc chuyển quyền thì refresh sẽ trả 401 nên FE phải đưa người dùng về đăng nhập, không gọi refresh như ghi trong checklist Đợt 5; Manager là thành viên duy nhất thì không có cách rời hay giải tán family (chờ Đợt 32 quản trị); `http.getRemoteAddr()` (dùng cho consent và rate limit) sẽ là IP của nginx khi deploy, cần cấu hình `forward-headers-strategy` ở Đợt 23; các module sau vẫn dùng claim token nên khi cần quyền chính xác hãy hỏi `FamilyFacade`.
 
-**🔧 Setup thủ công cần làm:** Không có.
+**🔧 Setup thủ công cần làm:** Không có (tuỳ chọn: đặt `FRONTEND_BASE_URL` khi deploy để link mời trỏ đúng tên miền).
 
 **🧪 Test thủ công (từng bước):**
 1. User A tạo family qua Swagger, gọi `/api/me` thì phải thấy `familyRole=MANAGER`.
@@ -258,6 +266,7 @@ IDEA §3, §6.2 · DECISIONS #22–24
 3. A thu hồi mã. User C dùng lại mã đó phải bị báo lỗi.
 4. A thử rời family: bị chặn. A chuyển quyền cho B rồi rời: thành công.
 5. Dùng token của family khác gọi `/api/family/{id}`: nhận 404.
+6. Sau bước 4 (chuyển quyền, rời), refresh của A và B bị từ chối (401): phải đăng nhập lại để có claim mới.
 
 **➡️ Đợt tiếp:** Đợt 5 — Dòng họ FE · Model **Sonnet** · Effort **medium** · Skill: `ui-ux-pro-max`, `run`
 ```text
@@ -267,24 +276,28 @@ BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill n�
 
 ---
 
-### Đợt 5 — Dòng họ FE ⬜
+### Đợt 5 — Dòng họ FE ✅ 2026-09-25
 IDEA §6.2 · DECISIONS #22–24
-- [ ] `/bat-dau`: hai lựa chọn "Tạo dòng họ" (tên, quê quán, mô tả) và "Nhập mã mời". Cả hai đều bắt tick đồng ý, có link tới trang chính sách.
-- [ ] `/chinh-sach-bao-mat`: trang tĩnh ghi đủ 5 ý ở IDEA §6.2, có hiện phiên bản chính sách.
-- [ ] `/moi/:code`: nếu chưa đăng nhập thì chuyển qua đăng nhập/đăng ký rồi quay lại để tham gia.
-- [ ] Trang "Dòng họ" (trong menu Thêm): thông tin, danh sách tài khoản. Manager có thêm: tạo mã, "Chia sẻ" (Web Share API, không hỗ trợ thì sao chép link), thu hồi, chuyển quyền, loại thành viên. Mọi người đều có nút "Rời dòng họ".
-- [ ] Sau khi tham gia, rời, hoặc chuyển quyền thì gọi refresh để cập nhật claim trong token.
+- [x] `/bat-dau`: hai lựa chọn "Tạo dòng họ" (tên, quê quán, mô tả) và "Nhập mã mời". Cả hai đều bắt tick đồng ý, có link tới trang chính sách. ✅ 2026-09-25
+- [x] `/chinh-sach-bao-mat`: trang tĩnh ghi đủ 5 ý ở IDEA §6.2, có hiện phiên bản chính sách. ✅ 2026-09-25
+- [x] `/moi/:code`: nếu chưa đăng nhập thì chuyển qua đăng nhập/đăng ký rồi quay lại để tham gia. ✅ 2026-09-25
+- [x] Trang "Dòng họ" (trong menu Thêm): thông tin, danh sách tài khoản. Manager có thêm: tạo mã, "Chia sẻ" (Web Share API, không hỗ trợ thì sao chép link), thu hồi, chuyển quyền, loại thành viên. Mọi người đều có nút "Rời dòng họ". ✅ 2026-09-25
+- [x] Sau khi tham gia hoặc tạo family thì gọi refresh để cập nhật claim. Rời, chuyển quyền: backend thu hồi refresh token nên refresh trả 401, phiên kết thúc và người dùng về trang đăng nhập (theo ghi chú Đợt 4). ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** 2026-09-25. Module `features/family` ở frontend: màn hình `/bat-dau` có hai tab "Nhập mã mời" và "Tạo dòng họ" (tên, quê quán, mô tả), cả hai bắt tick đồng ý kèm link mở tab mới tới trang Chính sách bảo mật; trang `/chinh-sach-bao-mat` công khai (5 ý theo IDEA §6.2, hiện phiên bản chính sách); `/moi/:code` (chưa đăng nhập thì sang đăng nhập/đăng ký rồi quay lại, mã điền sẵn); trang Dòng họ ở `/them/dong-ho` (menu Thêm): thông tin, danh sách tài khoản, Manager có tạo mã, Chia sẻ (Web Share, không có thì sao chép link), thu hồi, chuyển quyền, loại; mọi người có "Rời dòng họ" (Manager bị chặn kèm giải thích). Xác nhận thao tác bằng hộp thoại `<dialog>` gốc (bottom sheet ở điện thoại, modal ≥768px). `npm run lint`, `npm run build` pass; `npm test` pass 48 test (thêm schema tạo/tham gia family và `carryFrom`). Đã chạy thật với backend dev (MySQL 3306) ở 375px và 1280px: đăng ký user mới vào `/bat-dau`, tạo mà chưa tick bị chặn, tick rồi tạo vào Dashboard; tạo mã, Chia sẻ; mở link mời khi chưa đăng nhập, đăng ký user C rồi OTP thì tự vào family; C rời thì về đăng nhập; A chuyển quyền cho B thì cả hai phải đăng nhập lại, đăng nhập lại A thấy A là thành viên (mất mục mã mời), B là Quản lý; thu hồi mã; không cuộn ngang ở cả hai khổ. Chưa chạy `code-review` (không nằm trong yêu cầu đợt).
+- File chính: `apps/frontend/src/features/family/{api,hooks,schemas,strings,policyContent}.ts`, `features/family/{components,pages}/**`, `components/shared/ConfirmDialog.tsx`, `components/ui/textarea.tsx`, `utils/date.ts`, `pages/{routes,MorePage}.tsx`, `features/auth/{routing.ts,pages/{Login,Register,VerifyOtp}Page.tsx}`, `services/schema.d.ts` (sinh lại bằng `npm run gen:api`).
+- Khác dự kiến: (1) **phiên bản chính sách** đang là hằng `POLICY_VERSION = '1.0'` trong `features/family/strings.ts` vì backend chưa có API trả `app.policy.version`; đổi bên backend thì phải đổi cả ở đây (hoặc thêm endpoint ở một đợt BE); (2) sau khi rời, chuyển quyền thì người thực hiện bị đưa về đăng nhập (không gọi refresh để giữ phiên, vì backend thu hồi token), người nhận quyền cũng bị đăng xuất và thấy vai trò mới sau khi đăng nhập lại; (3) `from` (trang định vào) được mang theo qua Đăng nhập, Đăng ký, OTP để link mời không bị mất, nhờ `carryFrom` ở `features/auth/routing.ts`; (4) `/moi/:code` nằm sau `RequireAuth` nhưng ngoài `AreaGuard` vì user đã có family/Admin cũng mở được link và được báo lý do; (5) trang Dòng họ đặt ở `/them/dong-ho` để mục "Thêm" vẫn sáng; vai trò Manager lấy từ danh sách tài khoản của `GET /api/family` chứ không từ claim; (6) thêm link chính sách vào checkbox của trang Đăng ký (còn nợ từ Đợt 3); (7) trang Thêm thêm mục "Chính sách bảo mật"; (8) nội dung Chính sách bảo mật do tôi soạn theo 5 ý của IDEA §6.2 và là **bản nháp cần người có trách nhiệm pháp lý duyệt** trước khi dùng thật (đặc biệt phần thời hạn xử lý yêu cầu xóa dữ liệu và thông tin liên hệ).
+- Việc nên làm thêm (chưa làm, ngoài phạm vi): thông báo "Bạn đã rời dòng họ / quyền đã chuyển, hãy đăng nhập lại" trên trang đăng nhập (hiện chỉ bị chuyển ngầm); Manager là thành viên duy nhất không có cách giải tán family (chờ Đợt 32); test Vitest cho `ConfirmDialog`, `InvitationsSection` và luồng `/moi/:code` (jsdom chưa hỗ trợ `<dialog>.showModal`, cần mock); hai tài khoản thử `dot5.a@example.com`, `dot5.b@example.com` (mật khẩu `matkhau12345`) và family "Dong ho Nguyen" còn trong DB dev, có thể xóa; chunk JS chính đã hơn 500 kB, nên tách route (lazy) khi thêm các trang lớn (cây, lịch).
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
 1. Đăng ký user mới: phải vào `/bat-dau`. Tạo dòng họ mà không tick đồng ý: bị chặn. Tick rồi tạo: vào Dashboard.
-2. Vào trang Dòng họ, tạo mã, bấm Chia sẻ: trên máy tính link được sao chép.
-3. Mở cửa sổ ẩn danh, dán link, đăng ký user B: B tự vào family.
-4. Manager chuyển quyền cho B: menu của A mất các mục quản lý.
-5. Kiểm tra mọi màn hình ở khổ 375px.
+2. Vào Thêm > Dòng họ, tạo mã, bấm Chia sẻ: trên máy tính link được sao chép (điện thoại thì mở hộp thoại chia sẻ).
+3. Mở cửa sổ ẩn danh, dán link, đăng ký user B: sau OTP, B thấy trang lời mời (mã điền sẵn); tick đồng ý rồi Tham gia: B vào Dashboard.
+4. Manager chuyển quyền cho B: A bị đưa về đăng nhập; đăng nhập lại thì trang Dòng họ của A không còn mục Mã mời và các nút Chuyển quyền/Loại, B thì có.
+5. Thu hồi mã, rồi mở lại link bằng user mới: báo mã đã bị thu hồi.
+6. Kiểm tra mọi màn hình ở khổ 375px và 1280px.
 
 **➡️ Đợt tiếp:** Đợt 6 — Lịch âm BE · Model **Opus** · Effort **high** · Skill: `code-review`
 ```text
@@ -689,7 +702,7 @@ BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill n�
 
 ### Đợt 21 — PWA ⬜
 IDEA §1, §9 · DECISIONS #38
-- [ ] `vite-plugin-pwa`: manifest (tên "Gia Phả", `theme_color` là màu primary, `display: standalone`), bộ icon 192/512/maskable.
+- [ ] `vite-plugin-pwa`: manifest (tên "Tộc Phả", `theme_color` là màu primary, `display: standalone`), bộ icon 192/512/maskable.
 - [ ] Service worker: precache app shell. Chiến lược NetworkFirst cho `GET /api/**`, trừ `/api/auth/**`. Không cache request ghi.
 - [ ] Toast "Có bản mới" kèm nút tải lại. Banner "Đang offline — dữ liệu có thể cũ".
 - [ ] Hướng dẫn cài: Android và máy tính dùng `beforeinstallprompt`, iOS hiện hướng dẫn "Chia sẻ → Thêm vào MH chính".

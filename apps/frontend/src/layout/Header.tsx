@@ -1,11 +1,16 @@
-import { ArrowLeft, Bell, Search, User } from 'lucide-react'
+import { ArrowLeft, Bell, Search } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
 import { useRouteTitle } from '@/hooks/useRouteTitle'
 
-// Ô tìm kiếm, chuông và avatar chỉ là khung giữ chỗ: chức năng làm ở các đợt sau (Auth Đợt 3, tìm kiếm Đợt 11, thông báo GĐ2).
+// Ô tìm kiếm và chuông chỉ là khung giữ chỗ: chức năng làm ở các đợt sau (tìm kiếm Đợt 11, thông báo GĐ2).
+// Tên người Việt thì tên gọi đứng cuối nên lấy chữ cái đầu của từ cuối làm avatar.
+const initialOf = (fullName?: string) =>
+  fullName?.trim().split(/\s+/).at(-1)?.[0]?.toUpperCase() ?? '?'
 export function Header() {
   const title = useRouteTitle()
+  const { user } = useAuth()
   const navigate = useNavigate()
   // key='default' nghĩa là trang đầu tiên của phiên, chưa có gì để quay lại trong app
   const canGoBack = useLocation().key !== 'default'
@@ -28,7 +33,7 @@ export function Header() {
         <div className="min-w-0 flex-1">
           <nav aria-label="Vị trí hiện tại" className="hidden lg:block">
             <ol className="flex items-center gap-1.5 text-sm text-text-muted">
-              <li>Gia phả</li>
+              <li>Tộc Phả</li>
               <li aria-hidden="true">/</li>
               <li aria-current="page">{title}</li>
             </ol>
@@ -56,10 +61,11 @@ export function Header() {
 
         <span
           role="img"
-          aria-label="Tài khoản"
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-fg"
+          aria-label={user?.fullName ? `Tài khoản: ${user.fullName}` : 'Tài khoản'}
+          title={user?.fullName}
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-base font-semibold text-secondary-fg"
         >
-          <User className="size-5" aria-hidden="true" />
+          {initialOf(user?.fullName)}
         </span>
       </div>
     </header>

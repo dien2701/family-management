@@ -115,12 +115,14 @@ class AuthApiTest {
         assertThat(jwt.getHeaders().get("alg")).isEqualTo("HS256");
 
         // Sau khi có family, claim mới xuất hiện ở lần refresh kế tiếp
-        jdbc.update("UPDATE user_account SET family_id = 5, family_role = 'MANAGER', member_id = 7 WHERE email = ?",
-                email);
+        jdbc.update("INSERT INTO family (name, created_by, created_at) VALUES ('Họ Test', ?, NOW(6))", userId(email));
+        long familyId = jdbc.queryForObject("SELECT MAX(id) FROM family", Long.class);
+        jdbc.update("UPDATE user_account SET family_id = ?, family_role = 'MANAGER', member_id = 7 WHERE email = ?",
+                familyId, email);
         MvcResult refreshed = refresh(cookie(login)).andExpect(status().isOk()).andReturn();
         Jwt after = jwtDecoder.decode(token(refreshed));
         assertThat(after.getClaimAsString("familyRole")).isEqualTo("MANAGER");
-        assertThat(((Number) after.getClaim("familyId")).longValue()).isEqualTo(5L);
+        assertThat(((Number) after.getClaim("familyId")).longValue()).isEqualTo(familyId);
         assertThat(((Number) after.getClaim("memberId")).longValue()).isEqualTo(7L);
     }
 

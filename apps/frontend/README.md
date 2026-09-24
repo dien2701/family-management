@@ -1,4 +1,4 @@
-# Gia Phả — Frontend
+# Tộc Phả — Frontend
 
 React 19 · Vite · TypeScript strict · Tailwind CSS 4 · shadcn/ui. Quy tắc và cấu trúc: `../../.claude/rules/frontend.md`, `../../docs/STRUCTURE.md` §4, giao diện: `../../docs/DESIGN.md`.
 

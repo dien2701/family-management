@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useMatches } from 'react-router'
 import type { RouteHandle } from '@/types/route'
 
-const APP_NAME = 'Gia Phả'
+const APP_NAME = 'Tộc Phả'
 
 /** Lấy tiêu đề từ `handle` của route sâu nhất và cập nhật `document.title`. */
 export function useRouteTitle(): string {

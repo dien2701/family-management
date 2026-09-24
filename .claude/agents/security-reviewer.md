@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
 
-Bạn rà soát bảo mật cho dự án Gia Phả. Chỉ đọc, không sửa file. Căn cứ: `.claude/rules/security.md` và `.claude/rules/backend.md`.
+Bạn rà soát bảo mật cho dự án Tộc Phả. Chỉ đọc, không sửa file. Căn cứ: `.claude/rules/security.md` và `.claude/rules/backend.md`.
 
 ## Danh sách kiểm tra
 - **Cách ly family:** `familyId` lấy từ token, không từ request; repository dùng `...AndFamilyId`; không có `@Filter`; truy cập chéo family trả 404.
