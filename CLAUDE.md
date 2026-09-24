@@ -81,6 +81,7 @@ npm test             # Vitest
 - **BE:** `.\mvnw.cmd verify` pass, bao gồm test Modulith và test truy cập chéo family.
 - **FE:** `npm run lint` và `npm run build` pass. `npm test` pass nếu có test. Đã chạy app và kiểm tra ở khổ 375px và 1280px.
 - Đã tick ✅ kèm ngày trong ROADMAP và điền đủ 4 mục cuối đợt.
+- **Cuối mỗi đợt in ra chat** khối "➡️ Đợt tiếp": tên đợt, model gợi ý · effort · skill, và nguyên văn prompt của đợt kế (mẫu ở `roadmap/ROADMAP.md`, mục Quy tắc). Sau đó DỪNG, không tự làm đợt kế.
 
 ## Quy ước chung
 - Tên biến, hàm và commit viết bằng tiếng Anh (Conventional Commits: `feat(member): ...`). Comment tiếng Việt, ngắn, chỉ viết khi cần giải thích "vì sao".

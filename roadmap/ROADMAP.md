@@ -11,7 +11,21 @@
 - **Khi xong một đợt:**
   - đổi `- [ ]` thành `- [x]` kèm ngày (ví dụ `- [x] … ✅ 2026-10-02`);
   - đổi ⬜ ở tiêu đề thành `✅ YYYY-MM-DD`;
-  - điền mục **✅ Đã làm**, cập nhật 🔧 và 🧪 nếu thực tế khác dự kiến.
+  - điền mục **✅ Đã làm**, cập nhật 🔧 và 🧪 nếu thực tế khác dự kiến;
+  - **in ra khung chat** (không chỉ nằm trong file) mục **➡️ Đợt tiếp** của đợt vừa xong, theo đúng mẫu dưới đây, rồi DỪNG. Không tự bắt đầu đợt kế.
+- **Mẫu hiển thị "Đợt tiếp" cuối mỗi đợt** (bắt buộc, đợt cuối lộ trình thì thay bằng dòng "Hết lộ trình"):
+
+  ````text
+  ➡️ Đợt tiếp: Đợt N — <Tên đợt>
+  Model gợi ý: <Sonnet|Opus> · Effort: <low|medium|high> · Skill: <skill 1>, <skill 2>
+  Lý do (nếu khác mặc định): <một dòng, ví dụ "đợt khó: lịch âm">
+
+  ```text
+  <nguyên văn prompt của đợt kế, copy từ mục ➡️ của đợt vừa xong>
+  ```
+  ````
+
+  Model · Effort phải khớp cột "Model · Effort" ở bảng Tiến độ; skill phải khớp bảng skill bên dưới và dòng "BẮT BUỘC gọi…" trong prompt. Có lệch thì sửa cho khớp trước khi in.
 - **Model:** mặc định Sonnet. Chỉ dùng Opus cho đợt kiến trúc hoặc đợt khó: lịch âm, cây gia phả, khóa nhánh.
 - **Skill bắt buộc theo loại đợt:**
 
@@ -28,7 +42,7 @@
 | Đợt | Tên | Module | Model · Effort | Trạng thái |
 |---|---|---|---|---|
 | **GĐ1** | **Lõi** | | | |
-| 0 | Nền tảng Backend | setup | Sonnet · high | ⬜ |
+| 0 | Nền tảng Backend | setup | Sonnet · high | ✅ 2026-09-25 |
 | 1 | Nền tảng Frontend | setup | Sonnet · high | ⬜ |
 | 2 | Auth BE | auth | Sonnet · high | ⬜ |
 | 3 | Auth FE | auth | Sonnet · high | ⬜ |
@@ -73,40 +87,39 @@
 | 40 | Import Excel BE | report | Sonnet · high | ⬜ |
 | 41 | Import Excel FE | report | Sonnet · medium | ⬜ |
 
-## ▶️ Bắt đầu: prompt cho Đợt 0
-Model **Sonnet** · effort **high** · skill: `code-review`
-```text
-Làm Đợt 0 — Nền tảng Backend theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 0 trong ROADMAP.md, docs/DECISIONS.md (#1–14, #39–44) và .claude/rules/backend.md. Dựng khung Spring Boot 4.1 + Modulith + Flyway + Testcontainers, docker-compose MySQL 8.4 cho dev, CI backend. Chỉ làm checklist Đợt 0, không làm tính năng. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ ở tiêu đề thành ✅ + ngày, điền mục ✅ Đã làm, cập nhật 🔧/🧪 nếu khác dự kiến, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
+## ▶️ Đợt đang chờ: Đợt 1 — Nền tảng Frontend
+Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 0 (bên dưới). Từ đợt này trở đi, prompt của đợt kế luôn nằm ở mục ➡️ cuối đợt vừa xong và được in ra chat khi đóng đợt.
 
 ---
 
 # GIAI ĐOẠN 1 — LÕI
 
-### Đợt 0 — Nền tảng Backend ⬜
+### Đợt 0 — Nền tảng Backend ✅ 2026-09-25
 IDEA §11 · DECISIONS #1–14, #39–44
-- [ ] `apps/backend`: dự án Maven, dùng Maven Wrapper, Java 21, Spring Boot 4.1.x (cố định bản patch). Các dependency: web, security, oauth2-resource-server, data-jpa, validation, flyway + flyway-mysql, mysql-connector-j, actuator, spring-modulith, mapstruct, springdoc 3.x, caffeine, bucket4j, testcontainers-mysql.
-- [ ] Package `vn.giapha`, tạo 13 module rỗng (`auth family member tree calendar event proposal notification file ai report admin common`), mỗi module có `package-info.java`.
-- [ ] `application.yml`, `application-dev.yml`, `application-prod.yml`, mọi bí mật đọc từ biến môi trường. JVM chạy UTC. Tạo `apps/backend/.env.example` liệt kê đủ các khóa (IDEA §11).
-- [ ] `infra/docker-compose.dev.yml`: MySQL 8.4, charset `utf8mb4`, collation `utf8mb4_0900_ai_ci`, có volume.
-- [ ] `V1__audit_log.sql` + module `common`: `AuditLogWriter`, `BusinessException`, `GlobalExceptionHandler` trả `ProblemDetail` kèm `errors[]`.
-- [ ] `SecurityConfig` tạm: stateless, mở `/actuator/health`, `/v3/api-docs/**`, `/swagger-ui/**`, mọi đường dẫn khác bắt buộc đăng nhập.
-- [ ] Test: `ModularityTests` (verify), `ApplicationSmokeTest` (Testcontainers, Flyway chạy được), test `GlobalExceptionHandler`.
-- [ ] `.github/workflows/ci.yml` có job `backend` (JDK 21, `./mvnw verify`). `.gitignore` gốc (`.env`, `target`, `node_modules`, `dist`).
-- [ ] Bố cục package theo `docs/STRUCTURE.md` §3 (thêm `config/`, `common/{audit,security,exception,consent,web,util}`).
-- [ ] `.claude/` theo `docs/STRUCTURE.md` §2: `settings.json` (hook chặn ghi `.env*` và file Flyway V đã có, nhắc đọc ROADMAP), 4 skill (`dot-close`, `be-slice`, `fe-feature`, `flyway-migration`), 3 agent (`code-reviewer`, `test-writer`, `security-reviewer`), và `.mcp.json` (playwright, mysql-dev chỉ đọc). Ghi `.claude/settings.local.json` vào `.gitignore`.
+- [x] `apps/backend`: dự án Maven, dùng Maven Wrapper, Java 21, Spring Boot 4.1.x (cố định bản patch). Các dependency: web, security, oauth2-resource-server, data-jpa, validation, flyway + flyway-mysql, mysql-connector-j, actuator, spring-modulith, mapstruct, springdoc 3.x, caffeine, bucket4j, testcontainers-mysql. ✅ 2026-09-25
+- [x] Package `vn.giapha`, tạo 13 module rỗng (`auth family member tree calendar event proposal notification file ai report admin common`), mỗi module có `package-info.java`. ✅ 2026-09-25
+- [x] `application.yml`, `application-dev.yml`, `application-prod.yml`, mọi bí mật đọc từ biến môi trường. JVM chạy UTC. Tạo `apps/backend/.env.example` liệt kê đủ các khóa (IDEA §11). ✅ 2026-09-25
+- [x] `infra/docker-compose.dev.yml`: MySQL 8.4, charset `utf8mb4`, collation `utf8mb4_0900_ai_ci`, có volume. ✅ 2026-09-25
+- [x] `V1__audit_log.sql` + module `common`: `AuditLogWriter`, `BusinessException`, `GlobalExceptionHandler` trả `ProblemDetail` kèm `errors[]`. ✅ 2026-09-25
+- [x] `SecurityConfig` tạm: stateless, mở `/actuator/health`, `/v3/api-docs/**`, `/swagger-ui/**`, mọi đường dẫn khác bắt buộc đăng nhập. ✅ 2026-09-25
+- [x] Test: `ModularityTests` (verify), `ApplicationSmokeTest` (Testcontainers, Flyway chạy được), test `GlobalExceptionHandler`. ✅ 2026-09-25
+- [x] `.github/workflows/ci.yml` có job `backend` (JDK 21, `./mvnw verify`). `.gitignore` gốc (`.env`, `target`, `node_modules`, `dist`). ✅ 2026-09-25
+- [x] Bố cục package theo `docs/STRUCTURE.md` §3 (thêm `config/`, `common/{audit,security,exception,consent,web,util}`). ✅ 2026-09-25
+- [x] `.claude/` theo `docs/STRUCTURE.md` §2: `settings.json` (hook chặn ghi `.env*` và file Flyway V đã có, nhắc đọc ROADMAP), 4 skill (`dot-close`, `be-slice`, `fe-feature`, `flyway-migration`), 3 agent (`code-reviewer`, `test-writer`, `security-reviewer`), và `.mcp.json` (playwright, mysql-dev chỉ đọc). Ghi `.claude/settings.local.json` vào `.gitignore`. ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong: ngày, tóm tắt, file chính)_
+**✅ Đã làm:** 2026-09-25. Dựng khung backend Spring Boot 4.1.1 (Java 21, Maven Wrapper, Modulith 2.1.1, Flyway, springdoc 3.1.1), 13 module rỗng, `common` (audit, exception), `SecurityConfig` tạm (stateless, JWT HS256), MySQL 8.4 dev bằng Docker, CI backend, cấu hình `.claude/` và `.mcp.json`. `.\mvnw.cmd verify` pass: 19 test (Modularity 2, Smoke 6, AuditLogWriter 3, GlobalExceptionHandler 8), Testcontainers MySQL 8.4 chạy trên Docker Desktop. Đã chạy thử app profile dev: health UP, swagger-ui 200, `/api/abc` 401.
+- File chính: `apps/backend/pom.xml`, `application*.yml`, `.env.example`, `db/migration/V1__audit_log.sql`, `common/audit/*`, `common/exception/*`, `config/SecurityConfig.java`, `infra/docker-compose.dev.yml`, `.github/workflows/ci.yml`, `.claude/{settings.json,hooks/,agents/}`, `.mcp.json`.
+- Khác dự kiến: (1) bảng `audit_log` đặt tên cột `before_data`/`after_data`/`created_at` vì `before` là từ khóa MySQL (IDEA ghi `before`/`after`/`at`); (2) `common` và `config` là module OPEN của Modulith để các module gọi trực tiếp `AuditLogWriter`, `BusinessException`; (3) `AuditLogWriter` bắt buộc chạy trong transaction có sẵn (MANDATORY) và repository chỉ có `save` để audit log không bị sửa/xóa; (4) hook của `.claude/settings.json` gọi script trong `.claude/hooks/*.mjs` (cần Node); (5) cổng MySQL dev trên host là **3307** vì máy đã có MySQL chiếm 3306.
+- Việc nên làm thêm (chưa làm, ngoài phạm vi): 401/403 do filter chain của Spring Security hiện trả body rỗng, chưa phải ProblemDetail (làm ở Đợt 2 cùng JWT, để FE `ApiError` đọc được); `mysql-dev` trong `.mcp.json` chỉ đọc nhờ cờ `ALLOW_*_OPERATION=false` của gói MCP, chưa ép ở tầng DB (nên tạo user MySQL chỉ có SELECT); `.mcp.json` chưa chạy thử với Claude Code thật; job `frontend` của CI thêm ở Đợt 1.
 
 **🔧 Setup thủ công cần làm:**
 - Cài JDK 21 và Docker Desktop (bật WSL2).
-- Copy `apps/backend/.env.example` thành `apps/backend/.env`, điền `DB_PASSWORD` và `JWT_SECRET` (≥ 32 byte ngẫu nhiên).
+- Copy `apps/backend/.env.example` thành `apps/backend/.env`, điền `JWT_SECRET` (≥ 32 byte ngẫu nhiên, ví dụ `openssl rand -base64 48`). `DB_PASSWORD` mặc định `giapha_dev` khớp với docker-compose; nếu đổi thì luôn khởi động DB bằng `--env-file` (xem bước 1) và xóa volume cũ (`docker compose ... down -v`) vì MySQL chỉ đặt mật khẩu ở lần khởi tạo đầu.
 
 **🧪 Test thủ công (từng bước):**
-1. `docker compose -f infra/docker-compose.dev.yml up -d`, rồi kiểm tra container MySQL đang `healthy`.
+1. `docker compose --env-file apps/backend/.env -f infra/docker-compose.dev.yml up -d` (chạy ở gốc repo), rồi kiểm tra `docker ps` thấy `giapha-mysql-dev` ở trạng thái `healthy`. Cổng host là 3307.
 2. Trong `apps/backend`, chạy `.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=dev`.
-3. Mở `http://localhost:8080/actuator/health`, kết quả phải là `{"status":"UP"}`.
+3. Mở `http://localhost:8080/actuator/health`, kết quả phải có `"status":"UP"` (kèm `groups`).
 4. Mở `http://localhost:8080/swagger-ui.html`, trang phải hiện ra.
 5. Mở `http://localhost:8080/api/abc`, kết quả phải là 401.
 6. Chạy `.\mvnw.cmd verify`, toàn bộ phải xanh.

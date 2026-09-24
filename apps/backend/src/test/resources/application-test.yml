@@ -1,0 +1,8 @@
+# Giá trị giả chỉ dùng cho test; kết nối DB thật do Testcontainers (@ServiceConnection) cấp
+spring:
+  datasource:
+    password: test
+
+app:
+  jwt:
+    secret: test-only-secret-test-only-secret-0123456789

@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: giapha-backend
+  config:
+    # Đọc bí mật từ apps/backend/.env khi chạy local; trên prod dùng biến môi trường thật
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3307}/${DB_NAME:giapha}?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&connectionCollation=utf8mb4_0900_ai_ci
+    username: ${DB_USERNAME:giapha}
+    password: ${DB_PASSWORD}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
+  error:
+    include-message: never
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}

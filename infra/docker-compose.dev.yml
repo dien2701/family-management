@@ -1,0 +1,33 @@
+# MySQL 8.4 cho dev. Mặc định khớp apps/backend/.env.example; đổi bằng
+#   docker compose --env-file apps/backend/.env -f infra/docker-compose.dev.yml up -d
+# Cổng host mặc định 3307 vì 3306 thường đã bị MySQL cài sẵn trên máy chiếm.
+name: giapha-dev
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: giapha-mysql-dev
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_dev}
+      MYSQL_DATABASE: ${DB_NAME:-giapha}
+      MYSQL_USER: ${DB_USERNAME:-giapha}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-giapha_dev}
+      TZ: UTC
+    ports:
+      # Chỉ mở ra localhost, không phơi DB ra mạng
+      - "127.0.0.1:${DB_PORT:-3307}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  mysql_data:

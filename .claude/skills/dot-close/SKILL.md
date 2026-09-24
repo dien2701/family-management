@@ -24,4 +24,5 @@ Mục tiêu: chỉ tick ✅ khi đợt thật sự đạt "định nghĩa xong" 
      - **➡️ Đợt tiếp:** giữ prompt của đợt kế, chỉnh nếu có phát sinh ảnh hưởng.
    - Việc phát sinh ngoài phạm vi: ghi vào ✅ Đã làm dưới dạng "Việc nên làm thêm", không tự làm.
 4. **In bảng skill** (theo mục ➡️ của đợt vừa làm): `skill | đã gọi (có/không)`. Ghi thật; skill nào chưa gọi thì nói rõ.
-5. **DỪNG.** Không bắt đầu đợt kế. Không commit/push nếu người dùng chưa yêu cầu (CLAUDE.md).
+5. **In "Đợt tiếp" ra chat** theo mẫu trong ROADMAP (mục Quy tắc): dòng `➡️ Đợt tiếp: Đợt N — Tên`, dòng `Model gợi ý · Effort · Skill`, rồi nguyên văn prompt trong khối ```text. Lấy từ mục ➡️ của đợt vừa đóng và đối chiếu với bảng Tiến độ; lệch thì sửa file trước khi in. Đợt cuối lộ trình (41) thì in "Hết lộ trình" thay cho prompt.
+6. **DỪNG.** Không bắt đầu đợt kế. Không commit/push nếu người dùng chưa yêu cầu (CLAUDE.md).

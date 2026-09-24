@@ -1,0 +1,13 @@
+logging:
+  level:
+    root: INFO
+
+# Prod không phơi tài liệu API
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+server:
+  forward-headers-strategy: framework
