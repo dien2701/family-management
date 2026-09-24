@@ -44,7 +44,7 @@
 | **GĐ1** | **Lõi** | | | |
 | 0 | Nền tảng Backend | setup | Sonnet · high | ✅ 2026-09-25 |
 | 1 | Nền tảng Frontend | setup | Sonnet · high | ✅ 2026-09-25 |
-| 2 | Auth BE | auth | Sonnet · high | ⬜ |
+| 2 | Auth BE | auth | Sonnet · high | ✅ 2026-09-25 |
 | 3 | Auth FE | auth | Sonnet · high | ⬜ |
 | 4 | Dòng họ BE | family | Sonnet · medium | ⬜ |
 | 5 | Dòng họ FE | family | Sonnet · medium | ⬜ |
@@ -87,8 +87,8 @@
 | 40 | Import Excel BE | report | Sonnet · high | ⬜ |
 | 41 | Import Excel FE | report | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 2 — Auth BE
-Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 1 (bên dưới).
+## ▶️ Đợt đang chờ: Đợt 3 — Auth FE
+Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`, `security-review`, `code-review`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 2 (bên dưới).
 
 ---
 
@@ -146,12 +146,12 @@ DECISIONS #4, #14, #36–38 · DESIGN toàn bộ
 **✅ Đã làm:** 2026-09-25. Dựng `apps/frontend`: Vite 8 + React 19 + TypeScript strict, ESLint flat config + Prettier, alias `@/`, Tailwind 4 với token của DESIGN.md (`@theme` + biến shadcn), font Be Vietnam Pro tự host, lucide. `AppShell` gồm Sidebar 240px (≥1024px), rail 72px (768–1023px), BottomNav 5 mục (<768px, chừa safe-area) và Header; 5 trang tạm cùng trang 404 trong khung; `services/client.ts` (fetch wrapper, `ApiError` từ ProblemDetail), `QueryClientProvider`, proxy `/api` sang :8080, `gen:api`. `npm run lint`, `npm run build` pass; `npm test` pass 11 test (AppShell/BottomNav 6, client 5). Đã chạy app ở 1280px, 900px và 375px: không cuộn ngang, sidebar 240px / rail 72px / bottom bar 5 mục, focus ring 2px accent, `gen:api` sinh được file (chạy với backend Đợt 0, proxy `/api/abc` trả 401).
 - File chính: `apps/frontend/{package.json,vite.config.ts,eslint.config.js,components.json}`, `src/index.css`, `src/layout/*`, `src/pages/routes.tsx`, `src/services/{client,queryClient}.ts`, `src/components/{ui/button,shared/EmptyState}.tsx`, `.github/workflows/ci.yml` (job `frontend`).
 - Khác dự kiến: (1) token đặt ở `src/index.css` (theo DESIGN/STRUCTURE) thay vì `src/styles/index.css` của ROADMAP; (2) nhãn BottomNav là **12px** theo DESIGN §6 (đã hỏi và chốt), không phải 16px như bước test 4 cũ; các chữ khác đều ≥16px; (3) TypeScript ghim **5.9.3** vì `openapi-typescript` 7.x chỉ chấp nhận peer TS 5.x (Vite template mặc định là TS 6); (4) font tự host bằng `@fontsource/be-vietnam-pro` (subset latin + vietnamese) thay vì `@import` Google Fonts của DESIGN §8.1, để PWA chạy offline (Đợt 21); (5) chỉ có Button + EmptyState trong `components/ui|shared`, tự viết theo DESIGN §6 và có `components.json` để `npx shadcn add` các thành phần khác khi cần (component shadcn dùng `bg-accent` phải đổi sang `bg-secondary` vì `--color-accent` của DESIGN là xanh nhấn); (6) ô tìm kiếm, chuông, avatar ở Header chỉ là khung giữ chỗ (vô hiệu hóa), làm ở Đợt 3, 11 và GĐ2; (7) các phiên bản patch đã ghim (không có ^ hay ~).
-- Việc nên làm thêm (chưa làm, ngoài phạm vi): `schema.d.ts` hiện rỗng vì backend chưa có endpoint, chạy lại `npm run gen:api` sau mỗi đợt BE; trên máy chưa có `apps/backend/.env` và volume MySQL cũ giữ mật khẩu lạ nên phải dựng MySQL tạm để chạy backend (xem mục 🔧); nên thêm `.env.example` cho frontend ở Đợt 3 cùng `VITE_GOOGLE_CLIENT_ID`.
+- Việc nên làm thêm (chưa làm, ngoài phạm vi): `schema.d.ts` hiện rỗng vì backend chưa có endpoint, chạy lại `npm run gen:api` sau mỗi đợt BE; đã chạy lại với backend thật trên MySQL cài sẵn (cổng 3306), database `family_management` (Flyway áp dụng V1, `/actuator/health` UP); nên thêm `.env.example` cho frontend ở Đợt 3 cùng `VITE_GOOGLE_CLIENT_ID`.
 
 **🔧 Setup thủ công cần làm:**
 - Cài Node 24 LTS (đã kiểm tra với v24.11.1).
 - `npm install` trong `apps/frontend`. Muốn chạy `gen:api` thì phải bật backend (Đợt 0) ở cổng 8080.
-- Nếu backend báo `Access denied` khi nối MySQL: volume `giapha-dev_mysql_data` giữ mật khẩu của lần khởi tạo đầu. Tạo `apps/backend/.env` khớp mật khẩu đó, hoặc `docker compose -f infra/docker-compose.dev.yml down -v` (xóa dữ liệu dev) rồi `up -d` lại.
+- Backend đọc `apps/backend/.env`: `DB_NAME=family_management` (tên có dấu gạch dưới, database phải được tạo trước, `CREATE DATABASE family_management CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;`), `JWT_SECRET` dài ≥ 32 byte (nếu ngắn hơn backend không khởi động được). Nếu dùng Docker MySQL thay vì MySQL cài sẵn: `docker compose --env-file apps/backend/.env -f infra/docker-compose.dev.yml up -d`.
 
 **🧪 Test thủ công (từng bước):**
 1. Chạy backend (Đợt 0). Trong `apps/frontend`, chạy `npm install` rồi `npm run dev`.
@@ -169,32 +169,36 @@ BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review
 
 ---
 
-### Đợt 2 — Auth BE ⬜
+### Đợt 2 — Auth BE ✅ 2026-09-25
 IDEA §6.1 · DECISIONS #15–21
-- [ ] `V2__auth.sql`: `user_account`, `email_otp`, `refresh_token` (theo IDEA §4).
-- [ ] `MailSender` + `ConsoleMailSender` (profile dev) + `SmtpMailSender` (dùng `MAIL_*`).
-- [ ] Đăng ký tạo tài khoản PENDING và gửi OTP (hiệu lực 10 phút, sai tối đa 5 lần, 60 giây mới được gửi lại). Xác thực OTP thì chuyển ACTIVE và đăng nhập luôn.
-- [ ] Đăng nhập bằng email/mật khẩu, lỗi chỉ báo chung. Sai 5 lần thì khóa 15 phút theo email (Caffeine + bucket4j). Rate limit cho gửi OTP.
-- [ ] Phát JWT HS256 hiệu lực 15 phút (claim: `sub`, `sysRole`, `familyId`, `familyRole`, `memberId`). Refresh token 30 ngày trong cookie `HttpOnly; Secure; SameSite=Strict; Path=/api/auth`, xoay vòng sau mỗi lần refresh, DB chỉ lưu SHA-256. Có `logout`.
-- [ ] `POST /api/auth/google`: xác minh ID token (aud, iss, exp), tự liên kết theo email (#16).
-- [ ] Quên mật khẩu: OTP RESET, đặt mật khẩu mới, thu hồi mọi refresh token.
-- [ ] `GET /api/me` và helper `CurrentUser`. Job hằng ngày xóa tài khoản PENDING quá 7 ngày.
-- [ ] Test: đăng ký rồi xác thực, OTP sai 5 lần, khóa đăng nhập, xoay vòng và thu hồi refresh token, đặt lại mật khẩu, response không chứa `passwordHash`, Google (mock bộ xác minh token).
+- [x] `V2__auth.sql`: `user_account`, `email_otp`, `refresh_token` (theo IDEA §4). ✅ 2026-09-25
+- [x] `MailSender` + `ConsoleMailSender` (profile dev) + `SmtpMailSender` (dùng `MAIL_*`). ✅ 2026-09-25
+- [x] Đăng ký tạo tài khoản PENDING và gửi OTP (hiệu lực 10 phút, sai tối đa 5 lần, 60 giây mới được gửi lại). Xác thực OTP thì chuyển ACTIVE và đăng nhập luôn. ✅ 2026-09-25
+- [x] Đăng nhập bằng email/mật khẩu, lỗi chỉ báo chung. Sai 5 lần thì khóa 15 phút theo email (Caffeine + bucket4j). Rate limit cho gửi OTP. ✅ 2026-09-25
+- [x] Phát JWT HS256 hiệu lực 15 phút (claim: `sub`, `sysRole`, `familyId`, `familyRole`, `memberId`). Refresh token 30 ngày trong cookie `HttpOnly; Secure; SameSite=Strict; Path=/api/auth`, xoay vòng sau mỗi lần refresh, DB chỉ lưu SHA-256. Có `logout`. ✅ 2026-09-25
+- [x] `POST /api/auth/google`: xác minh ID token (aud, iss, exp), tự liên kết theo email (#16). ✅ 2026-09-25
+- [x] Quên mật khẩu: OTP RESET, đặt mật khẩu mới, thu hồi mọi refresh token. ✅ 2026-09-25
+- [x] `GET /api/me` và helper `CurrentUser`. Job hằng ngày xóa tài khoản PENDING quá 7 ngày. ✅ 2026-09-25
+- [x] Test: đăng ký rồi xác thực, OTP sai 5 lần, khóa đăng nhập, xoay vòng và thu hồi refresh token, đặt lại mật khẩu, response không chứa `passwordHash`, Google (mock bộ xác minh token). ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** 2026-09-25. Module `auth` hoàn chỉnh: đăng ký + OTP (10 phút, 5 lần thử, 60 giây gửi lại, DB chỉ lưu HMAC của OTP), đăng nhập với lỗi chung và khóa 15 phút theo email, access JWT HS256 15 phút, refresh token 30 ngày trong cookie `HttpOnly; Secure; SameSite=Strict; Path=/api/auth` xoay vòng và chỉ lưu SHA-256, `logout`, Google ID token (xác minh chữ ký/aud/iss/exp, tự liên kết theo email), quên mật khẩu (kèm `verify-reset-otp`), `GET /api/me`, `CurrentUser`, job xóa PENDING quá 7 ngày, `MailSender` (Console cho dev, SMTP cho prod). 401/403 của filter chain nay trả `ProblemDetail`. `.\mvnw.cmd verify` pass: 65 test (AuthApiTest 33, Google verifier 7, LoginAttempt 3, RateLimiter 3, Modularity 2...). Đã chạy thật profile dev trên MySQL cài sẵn: đăng ký, OTP hiện trong log console, verify-otp trả 200 kèm `Set-Cookie`. Đã chạy lại `npm run gen:api` (schema.d.ts có các endpoint `/api/auth/*`, `/api/me`).
+- File chính: `db/migration/V2__auth.sql`, `auth/{controller,service,repository,entity,dto,mapper,mail,google}/*`, `common/security/{CurrentUser,JwtService,RateLimiter,ProblemDetailSecurityHandlers}.java`, `config/{AppProperties,SecurityConfig,WebConfig,SchedulingConfig}.java`, test `auth/AuthApiTest.java`.
+- Khác dự kiến: (1) `security-review` tìm ra lỗi **High** và đã sửa: collation `utf8mb4_0900_ai_ci` bỏ dấu nên `alice@gmaíl.com` khớp `alice@gmail.com` trong khi OTP gửi tới địa chỉ do người gọi nhập, có thể chiếm tài khoản qua quên mật khẩu. Cột `email` (user_account, email_otp) nay là `ascii_bin`, mọi DTO chỉ nhận email ASCII, Google từ chối email có dấu; (2) thêm `verify-reset-otp` (kiểm OTP chưa tiêu) và `resend-otp` vì luồng FE cần; (3) Google đăng nhập với email chưa có tài khoản thì tạo mới ACTIVE; khi liên kết vào tài khoản PENDING thì xóa mật khẩu (chống chiếm trước); (4) refresh token dùng lại chỉ bị từ chối, không thu hồi cả họ token (tránh đăng xuất oan khi FE gọi refresh song song); (5) thêm `spring-boot-starter-mail`; (6) job dọn dẹp còn xóa OTP và refresh token hết hạn; (7) `origin/HEAD` cục bộ được trỏ tới `dien2701/main` để chạy được skill security-review.
+- Việc nên làm thêm (chưa làm, ngoài phạm vi): đăng ký lại email PENDING ghi đè mật khẩu và thay OTP (nguy cơ pre-hijack, cần đúng thời điểm, cân nhắc cho verify-otp gửi lại mật khẩu); `forgot-password` chỉ gửi mail khi email tồn tại nên có kênh đo thời gian (gửi mail bất đồng bộ); refresh 401 chưa xóa cookie; gộp ràng buộc email thành một annotation `@AsciiEmail`; chưa có cách tạo System Admin đầu tiên (Đợt 32); FE (Đợt 3): `/api/auth/login` trả 401 khi sai mật khẩu nên `client.ts` không được tự refresh rồi thử lại với `/api/auth/*`.
 
 **🔧 Setup thủ công cần làm:**
-- Google Cloud Console: tạo OAuth Client ID loại *Web*, thêm origin `http://localhost:5173`, rồi điền `GOOGLE_CLIENT_ID` vào `.env`.
-- Đảm bảo `JWT_SECRET` dài ≥ 32 byte.
+- Google Cloud Console: tạo OAuth Client ID loại *Web*, thêm origin `http://localhost:5173`, rồi điền `GOOGLE_CLIENT_ID` vào `apps/backend/.env`.
+- `JWT_SECRET` dài ≥ 32 byte. Prod cần thêm `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM`.
+- Cookie refresh luôn `Secure`: Chrome/Firefox vẫn nhận trên `http://localhost`, Safari thì không.
 
 **🧪 Test thủ công (từng bước):**
 1. Chạy backend ở profile dev, mở Swagger.
-2. `POST /api/auth/register` với email mới, lấy OTP 6 số trong log console.
+2. `POST /api/auth/register` với email mới (chỉ ký tự ASCII), lấy OTP 6 số trong log console.
 3. `POST /api/auth/verify-otp`: nhận `accessToken`, và tab Network phải có header `Set-Cookie` HttpOnly.
 4. `GET /api/me` kèm Bearer token: phải thấy thông tin user và không có trường hash nào.
 5. Đăng nhập sai mật khẩu 5 lần: lần thứ 6 báo bị khóa, dù có nhập đúng mật khẩu.
 6. `POST /api/auth/refresh`: nhận token mới, dùng lại cookie cũ phải bị từ chối.
-7. Quên mật khẩu, nhập OTP trong log, đặt mật khẩu mới. Refresh token cũ phải không còn dùng được.
+7. Quên mật khẩu, nhập OTP trong log (có thể kiểm bằng `verify-reset-otp`), đặt mật khẩu mới. Refresh token cũ phải không còn dùng được.
 
 **➡️ Đợt tiếp:** Đợt 3 — Auth FE · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`, `security-review`, `code-review`
 ```text
