@@ -43,7 +43,7 @@
 |---|---|---|---|---|
 | **GĐ1** | **Lõi** | | | |
 | 0 | Nền tảng Backend | setup | Sonnet · high | ✅ 2026-09-25 |
-| 1 | Nền tảng Frontend | setup | Sonnet · high | ⬜ |
+| 1 | Nền tảng Frontend | setup | Sonnet · high | ✅ 2026-09-25 |
 | 2 | Auth BE | auth | Sonnet · high | ⬜ |
 | 3 | Auth FE | auth | Sonnet · high | ⬜ |
 | 4 | Dòng họ BE | family | Sonnet · medium | ⬜ |
@@ -87,8 +87,8 @@
 | 40 | Import Excel BE | report | Sonnet · high | ⬜ |
 | 41 | Import Excel FE | report | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 1 — Nền tảng Frontend
-Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 0 (bên dưới). Từ đợt này trở đi, prompt của đợt kế luôn nằm ở mục ➡️ cuối đợt vừa xong và được in ra chat khi đóng đợt.
+## ▶️ Đợt đang chờ: Đợt 2 — Auth BE
+Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 1 (bên dưới).
 
 ---
 
@@ -132,28 +132,33 @@ BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill n�
 
 ---
 
-### Đợt 1 — Nền tảng Frontend ⬜
+### Đợt 1 — Nền tảng Frontend ✅ 2026-09-25
 DECISIONS #4, #14, #36–38 · DESIGN toàn bộ
-- [ ] `apps/frontend`: Vite + React 19 + TypeScript strict, ESLint (flat config) + Prettier, alias `@/`.
-- [ ] Tailwind 4 + shadcn/ui. Đưa token từ `docs/DESIGN.md` vào `src/styles/index.css` (`@theme` + các biến của shadcn), font Be Vietnam Pro, icon lucide.
-- [ ] Bố cục thư mục theo `docs/STRUCTURE.md` §4 (`assets, components/{ui,shared}, layout, pages, features, hooks, context, services, utils, types`, không có `redux`).
-- [ ] React Router 7 + `layout/AppShell`: Sidebar (≥1024px), rail 72px (768–1023px), BottomNav 5 mục (<768px), Header. Có trang tạm cho: Tổng quan, Cây, Thành viên, Lịch, Thêm, và trang 404.
-- [ ] `src/services/client.ts` (wrapper của fetch, base `/api`, parse `ProblemDetail` thành `ApiError`), `QueryClientProvider`, Vite proxy `/api` sang `:8080`.
-- [ ] Script `gen:api` (openapi-typescript) và chạy một lần để sinh `src/services/schema.d.ts`.
-- [ ] Vitest + Testing Library, kèm một test cho BottomNav/AppShell.
-- [ ] `ci.yml` có thêm job `frontend`: `npm ci`, `lint`, `build`, `test`.
+- [x] `apps/frontend`: Vite + React 19 + TypeScript strict, ESLint (flat config) + Prettier, alias `@/`. ✅ 2026-09-25
+- [x] Tailwind 4 + shadcn/ui. Đưa token từ `docs/DESIGN.md` vào `src/index.css` (`@theme` + các biến của shadcn), font Be Vietnam Pro, icon lucide. ✅ 2026-09-25
+- [x] Bố cục thư mục theo `docs/STRUCTURE.md` §4 (`assets, components/{ui,shared}, layout, pages, features, hooks, context, services, utils, types`, không có `redux`). ✅ 2026-09-25
+- [x] React Router 7 + `layout/AppShell`: Sidebar (≥1024px), rail 72px (768–1023px), BottomNav 5 mục (<768px), Header. Có trang tạm cho: Tổng quan, Cây, Thành viên, Lịch, Thêm, và trang 404. ✅ 2026-09-25
+- [x] `src/services/client.ts` (wrapper của fetch, base `/api`, parse `ProblemDetail` thành `ApiError`), `QueryClientProvider`, Vite proxy `/api` sang `:8080`. ✅ 2026-09-25
+- [x] Script `gen:api` (openapi-typescript) và chạy một lần để sinh `src/services/schema.d.ts`. ✅ 2026-09-25
+- [x] Vitest + Testing Library, kèm một test cho BottomNav/AppShell. ✅ 2026-09-25
+- [x] `ci.yml` có thêm job `frontend`: `npm ci`, `lint`, `build`, `test`. ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** 2026-09-25. Dựng `apps/frontend`: Vite 8 + React 19 + TypeScript strict, ESLint flat config + Prettier, alias `@/`, Tailwind 4 với token của DESIGN.md (`@theme` + biến shadcn), font Be Vietnam Pro tự host, lucide. `AppShell` gồm Sidebar 240px (≥1024px), rail 72px (768–1023px), BottomNav 5 mục (<768px, chừa safe-area) và Header; 5 trang tạm cùng trang 404 trong khung; `services/client.ts` (fetch wrapper, `ApiError` từ ProblemDetail), `QueryClientProvider`, proxy `/api` sang :8080, `gen:api`. `npm run lint`, `npm run build` pass; `npm test` pass 11 test (AppShell/BottomNav 6, client 5). Đã chạy app ở 1280px, 900px và 375px: không cuộn ngang, sidebar 240px / rail 72px / bottom bar 5 mục, focus ring 2px accent, `gen:api` sinh được file (chạy với backend Đợt 0, proxy `/api/abc` trả 401).
+- File chính: `apps/frontend/{package.json,vite.config.ts,eslint.config.js,components.json}`, `src/index.css`, `src/layout/*`, `src/pages/routes.tsx`, `src/services/{client,queryClient}.ts`, `src/components/{ui/button,shared/EmptyState}.tsx`, `.github/workflows/ci.yml` (job `frontend`).
+- Khác dự kiến: (1) token đặt ở `src/index.css` (theo DESIGN/STRUCTURE) thay vì `src/styles/index.css` của ROADMAP; (2) nhãn BottomNav là **12px** theo DESIGN §6 (đã hỏi và chốt), không phải 16px như bước test 4 cũ; các chữ khác đều ≥16px; (3) TypeScript ghim **5.9.3** vì `openapi-typescript` 7.x chỉ chấp nhận peer TS 5.x (Vite template mặc định là TS 6); (4) font tự host bằng `@fontsource/be-vietnam-pro` (subset latin + vietnamese) thay vì `@import` Google Fonts của DESIGN §8.1, để PWA chạy offline (Đợt 21); (5) chỉ có Button + EmptyState trong `components/ui|shared`, tự viết theo DESIGN §6 và có `components.json` để `npx shadcn add` các thành phần khác khi cần (component shadcn dùng `bg-accent` phải đổi sang `bg-secondary` vì `--color-accent` của DESIGN là xanh nhấn); (6) ô tìm kiếm, chuông, avatar ở Header chỉ là khung giữ chỗ (vô hiệu hóa), làm ở Đợt 3, 11 và GĐ2; (7) các phiên bản patch đã ghim (không có ^ hay ~).
+- Việc nên làm thêm (chưa làm, ngoài phạm vi): `schema.d.ts` hiện rỗng vì backend chưa có endpoint, chạy lại `npm run gen:api` sau mỗi đợt BE; trên máy chưa có `apps/backend/.env` và volume MySQL cũ giữ mật khẩu lạ nên phải dựng MySQL tạm để chạy backend (xem mục 🔧); nên thêm `.env.example` cho frontend ở Đợt 3 cùng `VITE_GOOGLE_CLIENT_ID`.
 
 **🔧 Setup thủ công cần làm:**
-- Cài Node 24 LTS.
+- Cài Node 24 LTS (đã kiểm tra với v24.11.1).
+- `npm install` trong `apps/frontend`. Muốn chạy `gen:api` thì phải bật backend (Đợt 0) ở cổng 8080.
+- Nếu backend báo `Access denied` khi nối MySQL: volume `giapha-dev_mysql_data` giữ mật khẩu của lần khởi tạo đầu. Tạo `apps/backend/.env` khớp mật khẩu đó, hoặc `docker compose -f infra/docker-compose.dev.yml down -v` (xóa dữ liệu dev) rồi `up -d` lại.
 
 **🧪 Test thủ công (từng bước):**
 1. Chạy backend (Đợt 0). Trong `apps/frontend`, chạy `npm install` rồi `npm run dev`.
 2. Mở `http://localhost:5173` ở khổ 1280px: phải thấy sidebar trắng và mục đang chọn có nền navy.
 3. Thu về 900px: sidebar phải chỉ còn icon.
-4. Thu về 375px: phải hiện thanh điều hướng dưới với 5 mục, chữ không nhỏ hơn 16px.
-5. Bấm từng mục: URL đổi và trang tạm hiện ra. Vào `/abc` phải thấy trang 404.
+4. Thu về 375px: phải hiện thanh điều hướng dưới với 5 mục (nhãn 12px theo DESIGN), nội dung chính và các chữ khác không nhỏ hơn 16px, không cuộn ngang.
+5. Bấm từng mục: URL đổi và trang tạm hiện ra. Vào `/abc` phải thấy trang 404 kèm nút "Về Tổng quan". Bấm Tab: focus ring xanh 2px nhìn rõ.
 6. Chạy `npm run gen:api`: file `src/services/schema.d.ts` phải được tạo.
 
 **➡️ Đợt tiếp:** Đợt 2 — Auth BE · Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`
