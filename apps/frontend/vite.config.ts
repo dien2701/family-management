@@ -6,7 +6,11 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
-    alias: { '@': path.resolve(import.meta.dirname, 'src') },
+    alias: {
+      '@': path.resolve(import.meta.dirname, 'src'),
+      // Bộ đối chiếu lịch âm dùng chung với backend (DECISIONS #35), chỉ import trong test
+      '@fixtures': path.resolve(import.meta.dirname, '../../shared/fixtures'),
+    },
   },
   server: {
     port: 5173,

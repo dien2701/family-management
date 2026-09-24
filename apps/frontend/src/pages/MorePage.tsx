@@ -1,4 +1,4 @@
-import { ChevronRight, ShieldCheck, TreeDeciduous } from 'lucide-react'
+import { ArrowLeftRight, ChevronRight, ShieldCheck, TreeDeciduous } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Link } from 'react-router'
 import { AccountCard } from '@/features/auth/components/AccountCard'
@@ -9,6 +9,12 @@ const ITEMS: { to: string; label: string; description: string; icon: LucideIcon 
     label: 'Dòng họ',
     description: 'Thông tin, tài khoản và mã mời',
     icon: TreeDeciduous,
+  },
+  {
+    to: '/them/doi-lich',
+    label: 'Đổi lịch âm – dương',
+    description: 'Tra ngày âm lịch và dương lịch tương ứng',
+    icon: ArrowLeftRight,
   },
   {
     to: '/chinh-sach-bao-mat',

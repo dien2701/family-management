@@ -4,6 +4,7 @@ import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { RegisterPage } from '@/features/auth/pages/RegisterPage'
 import { VerifyOtpPage } from '@/features/auth/pages/VerifyOtpPage'
+import { LunarConverterPage } from '@/features/calendar/pages/LunarConverterPage'
 import { FamilyPage } from '@/features/family/pages/FamilyPage'
 import { InvitePage } from '@/features/family/pages/InvitePage'
 import { OnboardingPage } from '@/features/family/pages/OnboardingPage'
@@ -55,6 +56,11 @@ export const routes: RouteObject[] = [
               { path: 'lich', element: <CalendarPage />, handle: handle('Lịch') },
               { path: 'them', element: <MorePage />, handle: handle('Thêm') },
               { path: 'them/dong-ho', element: <FamilyPage />, handle: handle('Dòng họ') },
+              {
+                path: 'them/doi-lich',
+                element: <LunarConverterPage />,
+                handle: handle('Đổi lịch âm – dương'),
+              },
               { path: '*', element: <NotFoundPage />, handle: handle('Lỗi 404') },
             ],
           },

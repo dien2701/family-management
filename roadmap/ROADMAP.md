@@ -48,8 +48,8 @@
 | 3 | Auth FE | auth | Sonnet · high | ✅ 2026-09-25 |
 | 4 | Dòng họ BE | family | Sonnet · medium | ✅ 2026-09-25 |
 | 5 | Dòng họ FE | family | Sonnet · medium | ✅ 2026-09-25 |
-| 6 | Lịch âm BE | calendar | **Opus · high** | ⬜ |
-| 7 | Lịch âm FE | calendar | Sonnet · high | ⬜ |
+| 6 | Lịch âm BE | calendar | **Opus · high** | ✅ 2026-09-25 |
+| 7 | Lịch âm FE | calendar | Sonnet · high | ✅ 2026-09-25 |
 | 8 | Thành viên BE: cốt lõi | member | Sonnet · high | ⬜ |
 | 9 | Thành viên BE: quan hệ, đời, chi | member | Sonnet · high | ⬜ |
 | 10 | Upload ảnh BE | file | Sonnet · medium | ⬜ |
@@ -87,8 +87,8 @@
 | 40 | Import Excel BE | report | Sonnet · high | ⬜ |
 | 41 | Import Excel FE | report | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 6 — Lịch âm BE
-Model **Opus** · Effort **high** · Skill: `code-review`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 5 (bên dưới).
+## ▶️ Đợt đang chờ: Đợt 8 — Thành viên BE: cốt lõi
+Model **Sonnet** · Effort **high** · Skill: `code-review`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 7 (bên dưới).
 
 ---
 
@@ -307,24 +307,29 @@ BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào khô
 
 ---
 
-### Đợt 6 — Lịch âm BE ⬜
+### Đợt 6 — Lịch âm BE ✅ 2026-09-25
 IDEA §7 · DECISIONS #11, #30, #31, #35
-- [ ] `calendar`: lớp `LunarCalendar` theo thuật toán Hồ Ngọc Đức, TZ +7. Làm các phép đổi dương sang âm, âm sang dương (có cờ nhuận), số ngày của tháng âm (29/30), tháng nhuận của năm.
-- [ ] `AnniversaryRules`: xác định ngày giỗ trong năm âm Y. Thứ tự ưu tiên: ngày ghi đè, rồi tháng nhuận cúng tháng thường, rồi ngày 30 cúng 29. Sinh nhật âm và sự kiện âm dùng cùng quy tắc. Sinh nhật dương 29/2 dời sang 28/2.
-- [ ] `shared/fixtures/lunar/`: file JSON đối chiếu gồm mùng 1 Tết 1900–2100, các tháng nhuận, và các ngày mẫu. **Lấy từ nguồn độc lập** (bảng của Hồ Ngọc Đức hoặc lịch chính thức), ghi nguồn vào `README.md`.
-- [ ] Facade `CalendarFacade` và API: `GET /api/calendar/convert` (hai chiều), `GET /api/calendar/lunar-month-info`.
-- [ ] Test: toàn bộ fixture, Tết 1985 là **21/01/1985** (lịch Việt Nam, khác Trung Quốc), các năm nhuận 2020 (tháng 4), 2023 (tháng 2), 2025 (tháng 6), đủ các nhánh của `AnniversaryRules`.
+- [x] `calendar`: lớp `LunarCalendar` theo thuật toán Hồ Ngọc Đức, TZ +7. Làm các phép đổi dương sang âm, âm sang dương (có cờ nhuận), số ngày của tháng âm (29/30), tháng nhuận của năm. ✅ 2026-09-25
+- [x] `AnniversaryRules`: xác định ngày giỗ trong năm âm Y. Thứ tự ưu tiên: ngày ghi đè, rồi tháng nhuận cúng tháng thường, rồi ngày 30 cúng 29. Sinh nhật âm và sự kiện âm dùng cùng quy tắc. Sinh nhật dương 29/2 dời sang 28/2. ✅ 2026-09-25
+- [x] `shared/fixtures/lunar/`: file JSON đối chiếu gồm mùng 1 Tết 1900–2100, các tháng nhuận, và các ngày mẫu. **Lấy từ nguồn độc lập** (bảng của Hồ Ngọc Đức hoặc lịch chính thức), ghi nguồn vào `README.md`. ✅ 2026-09-25
+- [x] Facade `CalendarFacade` và API: `GET /api/calendar/convert` (hai chiều), `GET /api/calendar/lunar-month-info`. ✅ 2026-09-25
+- [x] Test: toàn bộ fixture, Tết 1985 là **21/01/1985** (lịch Việt Nam, khác Trung Quốc), các năm nhuận 2020 (tháng 4), 2023 (tháng 2), 2025 (tháng 6), đủ các nhánh của `AnniversaryRules`. ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** 2026-09-25. Module `calendar`: `LunarCalendar` (thuật toán Hồ Ngọc Đức, dựng từng năm âm thành danh sách tháng, có cache), `AnniversaryRules`, `CalendarService`, `CalendarFacade` (đổi hai chiều, kiểm tra ngày âm, tháng nhuận, ngày cúng giỗ/sinh nhật/sự kiện âm, sinh nhật dương 29/2), API `GET /api/calendar/convert` (`solar=` hoặc `lunarYear/lunarMonth/lunarDay/leap`) và `GET /api/calendar/lunar-month-info` (cần đăng nhập, lỗi trả ProblemDetail `LUNAR_DATE_INVALID`/`CALENDAR_OUT_OF_RANGE`/`CALENDAR_QUERY_INVALID`). Fixture `shared/fixtures/lunar/` giải mã từ bảng tiền tính TK19–TK22 của Hồ Ngọc Đức (`amlich-hnd.js`, bản lưu trữ web.archive.org, có SHA-256) bằng `generate.mjs`, không chạy công thức thiên văn nên độc lập với code; kèm 21 mốc tra tay trong `samples.json` mà script kiểm tra khớp bảng. `.\mvnw.cmd clean verify` pass: 129 test (calendar 44: `LunarCalendarTest` 18 so **mọi ngày** 01/01/1900–31/12/2100 hai chiều và mọi tháng của 202 năm âm, `AnniversaryRulesTest` 13, `CalendarApiTest` 13), Modularity xanh. Đã gọi `code-review` (5 phát hiện: sửa 3, bỏ qua 2).
+- File chính: `calendar/{CalendarFacade,LunarDate,LunarMonthDay}.java`, `calendar/service/{LunarCalendar,AnniversaryRules,CalendarService}.java`, `calendar/controller/CalendarController.java`, `calendar/dto/*`, `calendar/mapper/CalendarMapper.java`, test `calendar/{LunarCalendarTest,AnniversaryRulesTest,CalendarApiTest,LunarFixtures}.java`, `shared/fixtures/lunar/{lunar-years.json,samples.json,generate.mjs,README.md}`.
+- Khác dự kiến (đã hỏi và chốt): (1) **Múi giờ UTC+8 cho năm âm trước 1968**, UTC+7 từ 1968 (không phải +7 toàn bộ). Bảng HND dùng quy tắc này, và dùng +7 cho mọi năm thì lệch 31 tháng (Tết 1903/1935/1965, nhuận 1917/1922/1938/1947). Tết 1968 là 29/01 nên tháng Chạp 1967 chỉ có 29 ngày. (2) **Bảng hiệu chỉnh 8 ngày sóc** (`NEW_MOON_FIXES`: 1906/4, 1914/10, Tết 1916, 1920/10, Tết 1925, 2054/4, 2072/11, 2077/10), ở những tháng này trăng mới sát nửa đêm và công thức rút gọn lệch bảng 1 ngày. Riêng 7/5/2054, công thức gốc còn trả "ngày 0". (3) Chỉ hỗ trợ năm dương 1900–2100 và năm âm 1899–2100 (đúng khoảng đã đối chiếu), ngoài khoảng thì trả 400. (4) Mốc Tết 2030 là **02/02/2030** theo lịch Việt Nam (03/02 là lịch Trung Quốc, đã kiểm bằng PyEphem). (5) Endpoint calendar không đọc dữ liệu family nên không có test truy cập chéo family, chỉ có test 401 khi thiếu token. (6) Ngày ghi đè cũng áp quy tắc ngày 30 thành 29 để ngày cúng luôn tồn tại.
+- Việc nên làm thêm (chưa làm, ngoài phạm vi): bản TS (Đợt 7) phải port y nguyên quy tắc múi giờ 1968 và bảng `NEW_MOON_FIXES`. Muốn hỗ trợ trước 1900 thì cần đối chiếu thêm, vì bảng TK19 lệch cả tháng nhuận ở 1800–1811 (miền Nam dùng lịch +8 tới 1975 cũng chưa xử lý). Chạy lại `npm run gen:api` để FE có kiểu `ConvertResponse`/`LunarMonthInfoResponse`. `code-review` bỏ qua 2 điểm: kiểm tra tháng/ngày lặp lại ở `CalendarService` và `AnniversaryRules` (giữ lại để lớp thuần tự bảo vệ), và response ghép tay thay vì MapStruct (response ghép từ giá trị tính ra, không map từ object nào).
 
-**🔧 Setup thủ công cần làm:** Không có.
+**🔧 Setup thủ công cần làm:** Không có. (Muốn sinh lại fixture: Node 24, `node shared/fixtures/lunar/generate.mjs`, cần mạng để tải bản lưu trữ.)
 
 **🧪 Test thủ công (từng bước):**
-1. Swagger, `GET /api/calendar/convert?solar=2026-02-17`: kết quả là 1/1 âm (Tết Bính Ngọ).
-2. `?solar=2025-01-29`: kết quả 1/1 âm.
-3. `?solar=1985-01-21`: kết quả 1/1 âm.
-4. Đổi ngược một ngày thuộc tháng 6 nhuận năm 2025, rồi đổi lại: phải ra đúng ngày ban đầu.
-5. Chạy `.\mvnw.cmd test -Dtest=*Lunar*`: toàn bộ xanh.
+1. Chạy backend, đăng nhập lấy access token (`POST /api/auth/login`), bấm **Authorize** trong Swagger và dán token vào (API lịch cần đăng nhập, thiếu token sẽ trả 401).
+2. `GET /api/calendar/convert?solar=2026-02-17`: `lunar` = năm 2026, tháng 1, ngày 1, `leap=false` (Tết Bính Ngọ).
+3. `?solar=2025-01-29` và `?solar=1985-01-21`: đều là mùng 1/1 âm.
+4. `?lunarYear=2025&lunarMonth=6&lunarDay=15&leap=true`: `solar` = `2025-08-08`. Đổi lại `?solar=2025-08-08`: ra 15/6 nhuận 2025 (`leap=true`).
+5. `?lunarYear=2025&lunarMonth=5&lunarDay=1&leap=true`: trả 400, mã `LUNAR_DATE_INVALID`, thông báo "không có tháng 5 nhuận (năm này nhuận tháng 6)".
+6. `GET /api/calendar/lunar-month-info?year=2025&month=6&leap=true`: `days=29`, `firstDay=2025-07-25`, `yearLeapMonth=6`.
+7. Chạy `.\mvnw.cmd test -Dtest=*Lunar*`: toàn bộ xanh.
 
 **➡️ Đợt tiếp:** Đợt 7 — Lịch âm FE · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
 ```text
@@ -334,19 +339,22 @@ BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill n�
 
 ---
 
-### Đợt 7 — Lịch âm FE ⬜
+### Đợt 7 — Lịch âm FE ✅ 2026-09-25
 IDEA §7 · DECISIONS #35
-- [ ] `src/utils/lunar/`: bản TS của `LunarCalendar` và `AnniversaryRules`, API giống bản Java.
-- [ ] Vitest chạy **cùng** fixture `shared/fixtures/lunar/` với Java.
-- [ ] Component `DualDateInput` (`components/ui`): chọn nhập theo Âm hoặc Dương, hiện ngày tương ứng ở lịch còn lại, có cờ nhuận, cho phép nhập "chỉ năm" hoặc "chỉ ngày/tháng âm".
-- [ ] Trang "Đổi lịch âm–dương" trong menu Thêm, dùng `DualDateInput`.
+- [x] `src/utils/lunar/`: bản TS của `LunarCalendar` và `AnniversaryRules`, API giống bản Java. ✅ 2026-09-25
+- [x] Vitest chạy **cùng** fixture `shared/fixtures/lunar/` với Java. ✅ 2026-09-25
+- [x] Component `DualDateInput` (`components/ui`): chọn nhập theo Âm hoặc Dương, hiện ngày tương ứng ở lịch còn lại, có cờ nhuận, cho phép nhập "chỉ năm" hoặc "chỉ ngày/tháng âm". ✅ 2026-09-25
+- [x] Trang "Đổi lịch âm–dương" trong menu Thêm, dùng `DualDateInput`. ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** 2026-09-25. `src/utils/lunar/`: bản TS của backend, port từng dòng `LunarCalendar` (thuật toán Hồ Ngọc Đức, múi giờ UTC+8 trước 1968 và UTC+7 từ 1968, bảng `NEW_MOON_FIXES` 8 ngày sóc, cache theo năm âm) và `AnniversaryRules` (ghi đè, tháng nhuận cúng tháng thường, ngày 30 cúng 29, sinh nhật dương 29/2), cùng tên hàm và cùng quy tắc lỗi (`LunarError` thay `IllegalArgumentException`). Ngày dương là `{year, month, day}` thuần (không dùng `Date` cục bộ). `lunarCalendar.test.ts` đọc **cùng** `shared/fixtures/lunar/{lunar-years,samples}.json` qua alias `@fixtures` (không chép số liệu): so Tết và tháng nhuận 202 năm âm, ngày mùng 1 và độ dài mọi tháng, và đổi hai chiều **mọi ngày** 01/01/1900–31/12/2100 (73.414 ngày), toàn khớp ngay lần chạy đầu. Component `DualDateInput` (`components/ui`): nút chọn Dương/Âm, ba ô Ngày·Tháng·Năm (chỉ nhận số), ô tick "Tháng nhuận" kèm gợi ý năm nào nhuận tháng nào, vùng kết quả `aria-live` hiện ngày ở lịch còn lại (kèm thứ và tháng đủ/thiếu), cảnh báo tại chỗ khi ngày không tồn tại (tháng thiếu, cờ nhuận sai, 29/2 năm thường, năm ngoài 1900–2100). `allowYearOnly` cho nhập chỉ năm, `allowNoYear` cho nhập chỉ ngày/tháng âm (áp `AnniversaryRules`, hiện ngày rơi vào năm âm tham chiếu). Đổi lịch mà ngày đang hợp lệ thì tự chuyển số sang lịch kia. Logic giải mã nằm ở `utils/lunar/dualDate.ts` (hàm thuần `resolveDualDate`, `switchCalendar`) để form dùng lại. Trang `features/calendar/pages/LunarConverterPage` ở `/them/doi-lich`, thêm mục "Đổi lịch âm – dương" vào trang Thêm; mặc định điền hôm nay (giờ +7) và có nút "Hôm nay". `npm run lint`, `npm run build` (gồm `tsc -b`) và `npm test` đều pass: 105 test (mới: `lunarCalendar` 20, `anniversaryRules` 13, `dualDate` 16, `DualDateInput` 8). Đã chạy app ở 375px và 1280px (xem ghi chú dưới). Đã gọi `ui-ux-pro-max` và `run`.
+- File chính: `utils/lunar/{types,solarDate,lunarCalendar,anniversaryRules,dualDate,format,fixtures,index}.ts` và test `{lunarCalendar,anniversaryRules,dualDate}.test.ts`, `components/ui/DualDateInput.tsx` (+ test), `features/calendar/{strings.ts,pages/LunarConverterPage.tsx}`, sửa `pages/routes.tsx`, `pages/MorePage.tsx`, `vite.config.ts` và `tsconfig.app.json` (alias `@fixtures` tới `shared/fixtures`).
+- Khác dự kiến: (1) Trang đổi lịch tính hoàn toàn ở máy bằng bản TS, **không gọi** `/api/calendar/convert`, nên chưa cần chạy `npm run gen:api` (kiểu `ConvertResponse` để dành cho khi có màn hình cần gọi API). Test thủ công bước 2 "khớp với API" đã được bảo đảm bằng fixture chung và bằng việc bản Java đối chiếu cùng fixture. (2) Chưa có backend/DB trong lúc kiểm tra giao diện, nên dùng một máy chủ giả tạm (ngoài repo, chỉ trả phiên đăng nhập) để mở được trang sau đăng nhập; đã tắt sau khi xong. (3) Khung trình duyệt của app chỉ rộng khoảng 800px, nên khổ 1280px được kiểm bằng giả lập kích thước: đo bố cục (không cuộn ngang, sidebar 240px, thẻ 768px căn giữa) và xem ảnh chụp bị cắt, chưa xem trọn cả màn hình 1280px bằng mắt. (4) `fixtures.ts` chỉ dùng trong test; JSON fixture không lọt vào bản build. (5) Vite báo chunk >500 kB (554 kB), là cảnh báo có từ trước, không do đợt này.
+- Việc nên làm thêm (chưa làm, ngoài phạm vi): khi làm form thành viên (Đợt 10) và sự kiện thì tích hợp `DualDateInput` qua React Hook Form (dùng `resolveDualDate` để lấy giá trị đã kiểm tra và gán lỗi vào trường). Chưa có Playwright E2E cho trang này (E2E bắt đầu từ cuối GĐ1). Chưa hiển thị Can Chi của năm âm.
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. Mở trang Đổi lịch, nhập dương 17/02/2026: phải hiện 1/1 âm.
+1. Chạy `npm run dev` trong `apps/frontend`, đăng nhập bằng user thuộc một dòng họ, vào Thêm > Đổi lịch âm – dương (`/them/doi-lich`). Mở trang Đổi lịch, nhập dương 17/02/2026: phải hiện 1/1 âm.
 2. Chuyển sang nhập âm 15/6 nhuận năm 2025: phải hiện đúng ngày dương, khớp với API `/api/calendar/convert`.
 3. Nhập âm 30/12 của một năm có tháng 12 thiếu: phải hiện cảnh báo rằng ngày không tồn tại.
 4. Ở khổ 375px, dùng bàn phím Tab qua các ô: focus ring phải nhìn thấy rõ.
