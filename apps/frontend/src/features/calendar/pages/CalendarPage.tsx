@@ -60,12 +60,10 @@ export function CalendarPage() {
             </button>
           ))}
         </div>
-        {isAdmin && (
-          <Button onClick={() => openCreate()}>
-            <Plus aria-hidden="true" />
-            {s.addEvent}
-          </Button>
-        )}
+        <Button onClick={() => openCreate()}>
+          <Plus aria-hidden="true" />
+          {isAdmin ? s.addEvent : s.proposeCreateTitle || 'Đề xuất sự kiện'}
+        </Button>
       </div>
 
       <div role="tabpanel" id="calendar-panel" aria-labelledby={`calendar-tab-${tab}`}>
@@ -82,14 +80,13 @@ export function CalendarPage() {
         )}
       </div>
 
-      {isAdmin && (
-        <EventFormDialog
-          open={form.open}
-          eventId={form.eventId}
-          initialDate={form.initialDate}
-          onClose={closeForm}
-        />
-      )}
+      <EventFormDialog
+        open={form.open}
+        eventId={form.eventId}
+        initialDate={form.initialDate}
+        mode={isAdmin ? 'direct' : 'proposal'}
+        onClose={closeForm}
+      />
     </div>
   )
 }

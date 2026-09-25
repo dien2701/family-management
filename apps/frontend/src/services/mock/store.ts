@@ -71,6 +71,9 @@ export type MockStore = {
   links?: StoredAccountLink[]
   linkRequests?: StoredLinkRequest[]
   events?: StoredEvent[]
+  proposals?: Schemas['Proposal'][]
+  notifications?: Schemas['Notification'][]
+  notificationPrefs?: Record<number, Schemas['NotificationPref']>
 }
 
 type SeedMember = {

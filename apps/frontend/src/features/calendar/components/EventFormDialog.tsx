@@ -16,6 +16,7 @@ import { applyApiError } from '@/utils/formErrors'
 import { cn } from '@/utils/cn'
 import { emptyDualDate, type DualDateValue } from '@/utils/lunar'
 import { useCreateEvent, useDeleteEvent, useEvent, useUpdateEvent } from '../hooks'
+import { useCreateProposal } from '../../proposal/hooks'
 import {
   EVENT_DATE_FIELDS,
   EVENT_FORM_FIELDS,
@@ -37,6 +38,7 @@ type EventFormDialogProps = {
   eventId: number | null
   /** Ngày điền sẵn khi thêm từ một ô ngày (ngày/tháng, để trống năm). */
   initialDate?: DualDateValue
+  mode: 'direct' | 'proposal'
   onClose: () => void
 }
 
@@ -46,10 +48,11 @@ const REPEATS: { value: Repeat; label: string }[] = [
 ]
 
 /** Thêm, sửa, xóa sự kiện chung (chỉ Admin; nơi gọi chỉ hiện nút cho Admin, quyền thật do máy chủ). */
-export function EventFormDialog({ open, eventId, initialDate, onClose }: EventFormDialogProps) {
+export function EventFormDialog({ open, eventId, initialDate, mode, onClose }: EventFormDialogProps) {
   const editing = eventId !== null
   const event = useEvent(open ? eventId : null)
   const remove = useDeleteEvent()
+  const createProposal = useCreateProposal()
   const [confirming, setConfirming] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
@@ -63,7 +66,15 @@ export function EventFormDialog({ open, eventId, initialDate, onClose }: EventFo
     if (eventId === null) return
     setDeleteError(null)
     try {
-      await remove.mutateAsync(eventId)
+      if (mode === 'proposal') {
+        await createProposal.mutateAsync({
+          targetType: 'EVENT',
+          action: 'DELETE',
+          targetId: eventId,
+        })
+      } else {
+        await remove.mutateAsync(eventId)
+      }
       close()
     } catch (e) {
       setDeleteError(e instanceof ApiError ? e.message : s.deleteFailed)
@@ -72,7 +83,15 @@ export function EventFormDialog({ open, eventId, initialDate, onClose }: EventFo
 
   return (
     <>
-      <ModalDialog open={open} title={editing ? s.editTitle : s.createTitle} onClose={close}>
+      <ModalDialog 
+        open={open} 
+        title={
+          mode === 'proposal' 
+            ? (editing ? s.proposeEditTitle : s.proposeCreateTitle)
+            : (editing ? s.editTitle : s.createTitle)
+        } 
+        onClose={close}
+      >
         {editing && event.isPending ? (
           <p role="status" className="flex items-center gap-2 text-text-muted">
             <Loader2 className="size-5 animate-spin" aria-hidden="true" />
@@ -84,6 +103,7 @@ export function EventFormDialog({ open, eventId, initialDate, onClose }: EventFo
           <EventForm
             event={event.data}
             initialDate={initialDate}
+            mode={mode}
             onDone={close}
             onDelete={editing ? () => setConfirming(true) : undefined}
           />
@@ -111,11 +131,12 @@ export function EventFormDialog({ open, eventId, initialDate, onClose }: EventFo
 type EventFormProps = {
   event?: CustomEvent
   initialDate?: DualDateValue
+  mode: 'direct' | 'proposal'
   onDone: () => void
   onDelete?: () => void
 }
 
-function EventForm({ event, initialDate, onDone, onDelete }: EventFormProps) {
+function EventForm({ event, initialDate, mode, onDone, onDelete }: EventFormProps) {
   const create = useCreateEvent()
   const update = useUpdateEvent()
   const {
@@ -135,8 +156,17 @@ function EventForm({ event, initialDate, onDone, onDelete }: EventFormProps) {
   const submit = handleSubmit(async (values) => {
     const input = formValuesToInput(values)
     try {
-      if (event) await update.mutateAsync({ id: event.id, input })
-      else await create.mutateAsync(input)
+      if (mode === 'proposal') {
+        await createProposal.mutateAsync({
+          targetType: 'EVENT',
+          action: event ? 'UPDATE' : 'CREATE',
+          targetId: event?.id,
+          payload: input,
+        })
+      } else {
+        if (event) await update.mutateAsync({ id: event.id, input })
+        else await create.mutateAsync(input)
+      }
       onDone()
     } catch (e) {
       if (e instanceof ApiError) {
@@ -212,11 +242,11 @@ function EventForm({ event, initialDate, onDone, onDelete }: EventFormProps) {
       <div className="flex flex-col-reverse gap-2 md:flex-row md:justify-end">
         {onDelete && (
           <Button type="button" variant="ghost" className="text-danger md:mr-auto" onClick={onDelete}>
-            {s.delete}
+            {mode === 'proposal' ? s.proposeDelete : s.delete}
           </Button>
         )}
         <Button type="submit" loading={isSubmitting}>
-          {s.save}
+          {mode === 'proposal' ? s.sendProposal : s.save}
         </Button>
       </div>
     </form>

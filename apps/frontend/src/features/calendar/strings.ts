@@ -69,6 +69,8 @@ export const calendarStrings = {
   form: {
     createTitle: 'Thêm sự kiện chung',
     editTitle: 'Sửa sự kiện chung',
+    proposeCreateTitle: 'Đề xuất sự kiện',
+    proposeEditTitle: 'Đề xuất sửa sự kiện',
     title: 'Tên sự kiện',
     description: 'Ghi chú',
     descriptionHint: 'Không bắt buộc. Địa điểm, giờ, người phụ trách...',
@@ -81,7 +83,9 @@ export const calendarStrings = {
     save: 'Lưu',
     cancel: 'Hủy',
     delete: 'Xóa sự kiện',
+    proposeDelete: 'Đề xuất xóa',
     saveFailed: 'Không lưu được sự kiện, vui lòng thử lại.',
+    sendProposal: 'Gửi đề xuất',
     titleRequired: 'Vui lòng nhập tên sự kiện.',
     titleTooLong: 'Tên sự kiện tối đa 200 ký tự.',
     descriptionTooLong: 'Ghi chú tối đa 2000 ký tự.',

@@ -37,17 +37,15 @@ export function DaySheet({ day, isAdmin, onEdit, onAdd, onClose }: DaySheetProps
                   key={o.eventKey}
                   occurrence={o}
                   hideDate
-                  onEdit={isAdmin ? onEdit : undefined}
+                  onEdit={onEdit}
                 />
               ))}
             </ul>
           )}
-          {isAdmin && (
-            <Button variant="secondary" onClick={() => onAdd(day)}>
-              <Plus aria-hidden="true" />
-              {s.addHere}
-            </Button>
-          )}
+          <Button variant="secondary" onClick={() => onAdd(day)}>
+            <Plus aria-hidden="true" />
+            {isAdmin ? s.addHere : 'Đề xuất sự kiện vào ngày này'}
+          </Button>
         </>
       )}
     </ModalDialog>

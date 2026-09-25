@@ -7,6 +7,7 @@ import { AccountCard } from '@/features/auth/components/AccountCard'
 import { isAdmin } from '@/features/auth/routing'
 import { linkStrings } from '@/features/link/strings'
 import { useAuth } from '@/hooks/useAuth'
+import { InstallAppItem } from '@/features/pwa/components/InstallAppItem'
 
 // Mục "Dữ liệu tạm" chỉ có ở chế độ giả lập. Điều kiện viết trực tiếp (không qua hằng số khác) để Vite
 // cắt luôn import động khỏi bản build prod.
@@ -26,6 +27,12 @@ const ADMIN_ITEM: Item = {
 }
 
 const ITEMS: Item[] = [
+  {
+    to: '/de-xuat',
+    label: 'Đề xuất của tôi',
+    description: 'Quản lý các đề xuất thay đổi sự kiện',
+    icon: UserCog,
+  },
   {
     to: '/them/toi-la-ai',
     label: linkStrings.menu,
@@ -55,6 +62,7 @@ export function MorePage() {
       <AccountCard />
       <nav aria-label="Các mục khác">
         <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
+          <InstallAppItem />
           {items.map(({ to, label, description, icon: Icon }) => (
             <li key={to} className="border-b border-border last:border-b-0">
               <Link

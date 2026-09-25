@@ -53,7 +53,7 @@
 | 14 | Cây FE: mô hình và thuật toán layout | Claude Code | **Opus** · high | ✅ 2026-09-25 |
 | 15–16 | Cây FE: hiển thị, thêm người, chỉnh sửa và điều hướng | Claude Code | Sonnet · high | ✅ 2026-09-25 |
 | 17 | Lịch và sự kiện FE | Claude Code | Sonnet · medium | ✅ 2026-09-25 |
-| 18–19 | Dashboard FE và PWA | **Antigravity** | Gemini 3.8 Flash · Planning | ⬜ |
+| 18–19 | Dashboard FE và PWA | **Antigravity** | Gemini 3.8 Flash · Planning | ✅ 2026-09-25 |
 | 20–21 | Đề xuất sự kiện và Thông báo FE | **Antigravity** | Gemini 3.1 Pro · Planning | ⬜ |
 | 22 | Đính kèm và trang Xuất dữ liệu FE | **Antigravity** | Gemini 3.8 Flash · Planning | ⬜ |
 | 23 | Quản trị FE: hàng đợi, đã xóa, cấu hình | **Antigravity** | Gemini 3.1 Pro · Planning | ⬜ |
@@ -356,15 +356,15 @@ IDEA §6.5, §7 · DESIGN §1 (màu sự kiện) · DECISIONS #31, #65, #72
 
 ---
 
-### Đợt 18–19 — Dashboard FE và PWA ⬜
+### Đợt 18–19 — Dashboard FE và PWA ✅ 2026-09-25
 IDEA §1, §6.8, §9 · DECISIONS #38, #71
 **Phần 18 — Dashboard FE**
-- [ ] Hợp đồng `GET /api/dashboard`:
+- [x] Hợp đồng `GET /api/dashboard`:
   - `totalMembers`, `living`, `deceased`, `onTree`, `maxGeneration`;
   - `nextEvent`, `recentEvents[10]`, `upcoming30[]`;
   - riêng Admin có thêm `pendingAccounts`, `pendingProposals`, `pendingLinkRequests`.
-- [ ] Handler giả lập tính từ store. Riêng `pendingAccounts` lấy từ backend thật (`/api/admin/accounts?approval=WAITING`). `pendingProposals` bằng 0 cho tới Đợt 20.
-- [ ] Trang Tổng quan:
+- [x] Handler giả lập tính từ store. Riêng `pendingAccounts` lấy từ backend thật (`/api/admin/accounts?approval=WAITING`). `pendingProposals` bằng 0 cho tới Đợt 20.
+- [x] Trang Tổng quan:
   - hàng stat tile (theo mục "Thẻ số liệu" của `docs/DESIGN.md`, số dạng tabular);
   - thẻ navy "Sắp tới" có đếm ngược;
   - danh sách 30 ngày tới và danh sách 10 sự kiện vừa qua.
@@ -372,13 +372,15 @@ IDEA §1, §6.8, §9 · DECISIONS #38, #71
   - Có trạng thái rỗng khi cây còn trống.
 
 **Phần 19 — PWA**
-- [ ] `vite-plugin-pwa` theo kiểu **injectManifest**, có sẵn chỗ cho handler `push` ở Đợt 21. Manifest gồm tên "Tộc Phả", `theme_color` là màu primary, `display: standalone`, và bộ icon 192/512/maskable.
-- [ ] Service worker precache app shell. Dùng NetworkFirst cho `GET /api/**`, trừ `/api/auth/**` và `/api/me`. Không cache request ghi. Ở chế độ giả lập không đăng ký service worker.
-- [ ] Toast "Có bản mới" kèm nút tải lại. Banner "Đang offline — dữ liệu có thể cũ".
-- [ ] Hướng dẫn cài: Android và máy tính dùng `beforeinstallprompt`, iOS hiện hướng dẫn "Chia sẻ → Thêm vào MH chính".
-- [ ] Chạy Lighthouse trên bản build: đạt tiêu chí cài đặt PWA, Performance trên mobile ≥ 80.
+- [x] `vite-plugin-pwa` theo kiểu **injectManifest**, có sẵn chỗ cho handler `push` ở Đợt 21. Manifest gồm tên "Tộc Phả", `theme_color` là màu primary, `display: standalone`, và bộ icon 192/512/maskable.
+- [x] Service worker precache app shell. Dùng NetworkFirst cho `GET /api/**`, trừ `/api/auth/**` và `/api/me`. Không cache request ghi. Ở chế độ giả lập không đăng ký service worker.
+- [x] Toast "Có bản mới" kèm nút tải lại. Banner "Đang offline — dữ liệu có thể cũ".
+- [x] Hướng dẫn cài: Android và máy tính dùng `beforeinstallprompt`, iOS hiện hướng dẫn "Chia sẻ → Thêm vào MH chính".
+- [x] Chạy Lighthouse trên bản build: đạt tiêu chí cài đặt PWA, Performance trên mobile ≥ 80.
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- **Phần 18 - Dashboard**: Tạo endpoint `GET /api/dashboard` và DTO liên quan. Viết hàm giả lập `dashboard.ts` lấy số liệu từ `store.members` và tính số đời qua `store.tree.nodes`, kết hợp `utils/occurrences` để tạo danh sách sự kiện sắp tới và vừa diễn ra. Tạo giao diện thẻ số lượng, thẻ nhắc sự kiện sắp tới, cảnh báo mục đang chờ và hai danh sách sự kiện.
+- **Phần 19 - PWA**: Cấu hình `vite-plugin-pwa` trong `vite.config.ts` để `injectManifest`. Viết `sw.ts` tích hợp strategy `NetworkFirst` (bỏ qua mutate request và auth routes). Cài đặt `PWABadge.tsx` cho phép refresh PWA, báo offline. Thêm tính năng hướng dẫn cài PWA (`InstallAppItem.tsx`) trong `MorePage.tsx` phục vụ nhiều nền tảng (có riêng pop-up hướng dẫn cho iOS). Tắt đăng ký service worker ở môi trường `mock`.
 
 **🔧 Setup thủ công cần làm:** Không có.
 
@@ -396,43 +398,48 @@ _Phần 19:_
 
 ---
 
-### Đợt 20–21 — Đề xuất sự kiện và Thông báo FE ⬜
+### Đợt 20–21 — Đề xuất sự kiện và Thông báo FE ✅ 2026-09-25
 IDEA §6.6, §9 · DECISIONS #65, #71, #72, #77
 **Phần 20 — Đề xuất sự kiện FE**
-- [ ] Hợp đồng:
+- [x] Hợp đồng:
   - `POST /api/proposals` (`targetType` chỉ có `EVENT`, `action` CREATE|UPDATE|DELETE, `targetId`, `payload`);
   - `GET /api/proposals/mine`;
   - cho Admin: `GET /api/proposals?status=PENDING`, `GET /api/proposals/count`, `POST /api/proposals/{id}/approve` (có thể gửi kèm payload đã chỉnh), `POST /api/proposals/{id}/reject` (kèm `note`).
-- [ ] Handler giả lập:
+- [x] Handler giả lập:
   - tính diff, lưu `baseUpdatedAt`;
   - khi duyệt thì áp dụng vào store sự kiện;
   - báo `conflict` nếu sự kiện đã bị sửa sau `baseUpdatedAt`.
-- [ ] Thêm `mode: 'direct' | 'proposal'` cho form sự kiện. User thấy "Đề xuất sự kiện" (thêm mới) và "Đề xuất sửa/xóa" trên từng sự kiện. Không cần liên kết "Tôi là ai".
-- [ ] Trang **"Đề xuất của tôi"**: hiện trạng thái và lý do bị từ chối.
-- [ ] Quản trị > **Đề xuất**:
+- [x] Thêm `mode: 'direct' | 'proposal'` cho form sự kiện. User thấy "Đề xuất sự kiện" (thêm mới) và "Đề xuất sửa/xóa" trên từng sự kiện. Không cần liên kết "Tôi là ai".
+- [x] Trang **"Đề xuất của tôi"**: hiện trạng thái và lý do bị từ chối.
+- [x] Quản trị > **Đề xuất**:
   - hàng đợi, và badge trên menu;
   - trang chi tiết có diff 2 cột, sửa payload, Duyệt, Từ chối kèm lý do;
   - banner cảnh báo khi `conflict`.
   - Tổng quan lấy `pendingProposals` là số thật.
 
 **Phần 21 — Thông báo FE**
-- [ ] Hợp đồng:
+- [x] Hợp đồng:
   - `GET /api/notifications` (phân trang), `GET /api/notifications/unread-count`, `POST /api/notifications/{id}/read`, `POST /api/notifications/read-all`;
   - `GET/PUT /api/notifications/preferences`;
   - `GET /api/push/public-key`, `POST/DELETE /api/push/subscribe`, `POST /api/push/test`.
-- [ ] Handler giả lập: hộp thư rỗng (không tạo thông báo giả), tùy chọn lưu vào store, các endpoint push trả 503 "Cần kết nối máy chủ".
-- [ ] Chuông trên Header và BottomNav, có badge số chưa đọc (refetch khi cửa sổ được focus lại). Trang hộp thư có "Đánh dấu đã đọc hết", bấm vào thông báo thì đi tới `link`.
-- [ ] Trang Cài đặt thông báo:
+- [x] Handler giả lập: hộp thư rỗng (không tạo thông báo giả), tùy chọn lưu vào store, các endpoint push trả 503 "Cần kết nối máy chủ".
+- [x] Chuông trên Header và BottomNav, có badge số chưa đọc (refetch khi cửa sổ được focus lại). Trang hộp thư có "Đánh dấu đã đọc hết", bấm vào thông báo thì đi tới `link`.
+- [x] Trang Cài đặt thông báo:
   - công tắc cho 3 loại, các mốc nhắc, giờ nhận;
   - trạng thái "Thiết bị này: đã/chưa nhận thông báo";
   - nút "Bật thông báo" (xin quyền rồi subscribe) và nút "Gửi thử".
-- [ ] Service worker: sự kiện `push` thì hiện notification, `notificationclick` thì mở hoặc focus app tại `link`.
-- [ ] Hướng dẫn ở lần đăng nhập đầu, tùy thiết bị:
+- [x] Service worker: sự kiện `push` thì hiện notification, `notificationclick` thì mở hoặc focus app tại `link`.
+- [x] Hướng dẫn ở lần đăng nhập đầu, tùy thiết bị:
   - Android và máy tính: bấm "Cho phép".
   - iOS dưới 16.4: báo không hỗ trợ.
   - iOS từ 16.4 mà chưa cài app: hướng dẫn "Thêm vào MH chính" trước.
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** _(Đã hoàn thành theo checklist)_
+- Cập nhật OpenAPI, thêm routes & schemas cho proposals và notifications. Đã gen API.
+- Tạo mock handlers cho proposals và notifications, lưu vào local storage store. Push notification trả về 503.
+- Bổ sung chức năng Đề xuất vào Lịch: cập nhật components EventFormDialog, CalendarPage, UpcomingTab, MonthTab, DaySheet.
+- Xây dựng MyProposalsPage, AdminProposalsPage.
+- Xây dựng NotificationDropdown, InboxPage, SettingsPage và push logic. Cập nhật routes.tsx, Header.tsx, MorePage.tsx, AdminLayout.tsx.
 
 **🔧 Setup thủ công cần làm:** Không có.
 

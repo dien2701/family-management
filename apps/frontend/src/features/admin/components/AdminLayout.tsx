@@ -3,11 +3,15 @@ import { cn } from '@/utils/cn'
 import { usePendingLinkRequests } from '../hooks'
 import { adminStrings as s } from '../strings'
 
+import { usePendingProposalsCount } from '../../proposal/hooks'
+
 // Khung chung của khu Quản trị: hàng chọn mục ở trên, nội dung của mục ở dưới. Đề xuất, Thành viên đã xóa và
 // Cấu hình sẽ thêm vào đây ở các đợt sau. Quyền thật vẫn do backend kiểm tra; route đã chặn người không phải Admin.
 export function AdminLayout() {
   const pending = usePendingLinkRequests()
   const pendingCount = pending.data?.length ?? 0
+  const pendingProposalsQuery = usePendingProposalsCount()
+  const pendingProposalsCount = pendingProposalsQuery.data ?? 0
 
   return (
     <div className="flex flex-col gap-4">
@@ -18,6 +22,9 @@ export function AdminLayout() {
           </li>
           <li>
             <SectionLink to="/quan-tri/yeu-cau-lien-ket" label={s.nav.linkRequests} count={pendingCount} />
+          </li>
+          <li>
+            <SectionLink to="/quan-tri/de-xuat" label="Duyệt đề xuất" count={pendingProposalsCount} />
           </li>
         </ul>
       </nav>

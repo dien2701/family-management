@@ -1,4 +1,8 @@
 import { Navigate, type RouteObject } from 'react-router'
+import { AdminProposalsPage } from '@/features/admin/pages/ProposalsPage'
+import { MyProposalsPage } from '@/features/proposal/pages/MyProposalsPage'
+import { InboxPage } from '@/features/notification/pages/InboxPage'
+import { SettingsPage } from '@/features/notification/pages/SettingsPage'
 import { AdminLayout } from '@/features/admin/components/AdminLayout'
 import { AccountsPage } from '@/features/admin/pages/AccountsPage'
 import { LinkRequestsPage } from '@/features/admin/pages/LinkRequestsPage'
@@ -23,7 +27,7 @@ import { MyIdentityPage } from '@/features/link/pages/MyIdentityPage'
 import { AppShell } from '@/layout/AppShell'
 import { PlainLayout } from '@/layout/PlainLayout'
 import type { RouteHandle } from '@/types/route'
-import { DashboardPage } from './DashboardPage'
+import { DashboardPage } from '@/features/dashboard/pages/DashboardPage'
 import { MembersPage } from '@/features/member/pages/MembersPage'
 import { TreePage } from '@/features/tree/pages/TreePage'
 import { MemberDetailPage } from '@/features/member/pages/MemberDetailPage'
@@ -117,6 +121,9 @@ export const routes: RouteObject[] = [
                 element: <LunarConverterPage />,
                 handle: handle('Đổi lịch âm – dương'),
               },
+              { path: 'de-xuat', element: <MyProposalsPage />, handle: handle('Đề xuất của tôi') },
+              { path: 'thong-bao', element: <InboxPage />, handle: handle('Thông báo') },
+              { path: 'thong-bao/cai-dat', element: <SettingsPage />, handle: handle('Cài đặt thông báo') },
               // Khu Quản trị dùng chung AppShell, chỉ Admin vào được
               {
                 path: 'quan-tri',
@@ -135,6 +142,11 @@ export const routes: RouteObject[] = [
                         path: 'yeu-cau-lien-ket',
                         element: <LinkRequestsPage />,
                         handle: handle(adminStrings.linkRequests.title),
+                      },
+                      {
+                        path: 'de-xuat',
+                        element: <AdminProposalsPage />,
+                        handle: handle('Duyệt đề xuất'),
                       },
                     ],
                   },

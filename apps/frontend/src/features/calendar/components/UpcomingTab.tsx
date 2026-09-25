@@ -86,7 +86,7 @@ export function UpcomingTab({ isAdmin, onEdit }: UpcomingTabProps) {
           data-busy={query.isFetching && query.isPlaceholderData}
         >
           {query.data.map((o) => (
-            <OccurrenceRow key={o.eventKey} occurrence={o} onEdit={isAdmin ? onEdit : undefined} />
+            <OccurrenceRow key={o.eventKey} occurrence={o} onEdit={onEdit} />
           ))}
         </ul>
       )}
