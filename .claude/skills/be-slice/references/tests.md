@@ -1,31 +1,45 @@
-# Mẫu test
+# Mẫu test (bản v2)
 
-## Truy cập chéo family (bắt buộc cho mỗi endpoint mới)
+## Phân quyền và duyệt (bắt buộc cho mỗi endpoint mới, DECISIONS #74)
 ```java
 @SpringBootTest @AutoConfigureMockMvc
-class MemberCrossFamilyTest extends AbstractIntegrationTest { // Testcontainers MySQL 8.4
+class MemberAccessTest extends AbstractIntegrationTest { // Testcontainers MySQL 8.4
     @Test
-    void userOfFamilyB_cannotReadMemberOfFamilyA_returns404() throws Exception {
-        Long memberIdOfA = fixtures.createMember(familyA);
-        mvc.perform(get("/api/members/{id}", memberIdOfA)
-                .with(jwtFor(userOfFamilyB)))
-           .andExpect(status().isNotFound());   // 404, không phải 403, để không lộ sự tồn tại
+    void anonymous_returns401() throws Exception {
+        mvc.perform(get("/api/members")).andExpect(status().isUnauthorized());
     }
 
     @Test
-    void lockedMember_isHiddenFromBusinessQueries() throws Exception {
-        Long id = fixtures.createLockedMember(familyA);
-        mvc.perform(get("/api/members/{id}", id).with(jwtFor(managerOfA)))
-           .andExpect(status().isNotFound());
+    void waitingAccount_returns403NotApproved() throws Exception {
+        mvc.perform(get("/api/members").with(jwtFor(waitingUser)))
+           .andExpect(status().isForbidden())
+           .andExpect(jsonPath("$.code").value("ACCOUNT_NOT_APPROVED"));
+    }
+
+    @Test
+    void user_cannotCreateMember_returns403() throws Exception {
+        mvc.perform(post("/api/members").with(jwtFor(approvedUser))
+                .contentType(APPLICATION_JSON).content("{\"fullName\":\"A\"}"))
+           .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void user_cannotSeeContactOfOthers() throws Exception {
+        Long id = fixtures.createMember("Cụ Nguyễn Văn Tỵ", "0900000000");
+        mvc.perform(get("/api/members/{id}", id).with(jwtFor(approvedUser)))
+           .andExpect(jsonPath("$.phone").doesNotExist());
     }
 }
 ```
 
-## Repository
-`@DataJpaTest` + `@ServiceConnection` Testcontainers, kiểm tra `...AndFamilyIdAndLockedFalse` trả rỗng khi sai family hoặc member bị khóa.
+## Hợp đồng
+`ContractTest` (từ Đợt 26) so `/v3/api-docs` với `shared/api/openapi.yaml`. Làm xong endpoint thì bỏ khỏi `NOT_YET_IMPLEMENTED`.
+
+## Fixture dùng chung
+Logic có bản TS ở frontend (cây, lịch nhắc, seed) phải có test chạy toàn bộ fixture trong `shared/fixtures/<tên>/` và cho kết quả giống hệt.
 
 ## Controller
-`@WebMvcTest`: kiểm tra `@Valid` trả `ProblemDetail` có `errors[{field,message}]` tiếng Việt, và phân quyền vai trò (User gọi endpoint của Manager → 403).
+`@WebMvcTest`: kiểm tra `@Valid` trả `ProblemDetail` có `errors[{field,message}]` tiếng Việt.
 
 ## Luôn chạy
 `ModularityTests` (`ApplicationModules.of(GiaPhaApplication.class).verify()`) phải pass.

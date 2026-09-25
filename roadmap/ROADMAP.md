@@ -1,13 +1,23 @@
 # ROADMAP — Tộc Phả
 
 > Đầu mỗi phiên đọc `CLAUDE.md` và file này. Mỗi phiên **chỉ làm một đợt**, xong thì DỪNG.
-> Đặc tả nằm ở `roadmap/IDEA.md`, quyết định kỹ thuật ở `docs/DECISIONS.md` (thắng IDEA khi có mâu thuẫn), giao diện ở `docs/DESIGN.md`.
+> Đặc tả nằm ở `roadmap/IDEA.md` (**bản chốt v2**), quyết định kỹ thuật ở `docs/DECISIONS.md` (thắng IDEA khi có mâu thuẫn; **mục J #54–#74 là đổi hướng v2**), giao diện ở `docs/DESIGN.md`.
+> **Đổi hướng v2 (2026-09-25):**
+> - Bỏ dòng họ, chỉ còn một gia phả chung. Chỉ còn hai vai trò Admin và User, tài khoản mới phải được Admin duyệt.
+> - Cây do Admin dựng tay.
+> - **Hồ sơ tự quản (DECISIONS mục K #75–#78):** mỗi hồ sơ có danh sách **người thân** một chiều (thành viên đã có + nhãn). User đã liên kết tự sửa trực tiếp hồ sơ, người thân và ảnh đại diện của mình, trừ các trường về việc đã mất (chỉ Admin). Đề xuất chỉ còn cho sự kiện chung.
+> - **Làm toàn bộ frontend trước** (dùng chế độ giả lập với dữ liệu thật của 28 thành viên), sau đó mới làm backend.
+>
+> Đợt 0–7 đã xong theo kế hoạch cũ và được giữ nguyên để tra cứu. Từ Đợt 8 trở đi là kế hoạch mới.
 
 ## Quy tắc
-- Mỗi đợt làm **tối đa 1 module**, vừa **một phiên**, và phải có **kết quả chạy được**. Làm BE trước, sau đó nối FE theo từng module.
+- Mỗi đợt làm **tối đa 1 module**, vừa **một phiên**, và phải có **kết quả chạy được**.
+- **Thứ tự (DECISIONS #69):** Đợt 8 (backend nhỏ) → **GĐ A: toàn bộ frontend** → **GĐ B: toàn bộ backend** → **GĐ C: nối, E2E, deploy**.
+- **Hợp đồng trước (#70):** đợt FE nào đụng API mới thì viết phần hợp đồng trong `shared/api/openapi.yaml` trước, chạy `npm run gen:api`, rồi mới làm UI. Đợt BE phải khớp hợp đồng đã có. Muốn đổi thì sửa `openapi.yaml` trước và ghi vào ✅ Đã làm.
+- **Giả lập (#71, #72):** ở GĐ A, frontend chạy bằng `VITE_API_MODE=mock`. Mỗi đợt FE thêm handler giả lập cho endpoint của module mình. Không tạo dữ liệu giả.
 - **Định nghĩa xong:**
-  - BE: `.\mvnw.cmd verify` pass (gồm test Modulith và test truy cập chéo family).
-  - FE: `npm run lint` và `npm run build` pass (`npm test` pass nếu có test), đã chạy app và kiểm tra ở khổ 375px và 1280px.
+  - BE: `.\mvnw.cmd verify` pass, gồm test Modulith, test phân quyền và test tài khoản chưa duyệt (#74). Từ Đợt 26 có thêm test hợp đồng.
+  - FE: `npm run lint` và `npm run build` pass (`npm test` pass nếu có test). Đã chạy app (GĐ A chạy ở chế độ giả lập) và kiểm tra ở khổ 375px và 1280px.
 - **Khi xong một đợt:**
   - đổi `- [ ]` thành `- [x]` kèm ngày (ví dụ `- [x] … ✅ 2026-10-02`);
   - đổi ⬜ ở tiêu đề thành `✅ YYYY-MM-DD`;
@@ -18,7 +28,7 @@
   ````text
   ➡️ Đợt tiếp: Đợt N — <Tên đợt>
   Model gợi ý: <Sonnet|Opus> · Effort: <low|medium|high> · Skill: <skill 1>, <skill 2>
-  Lý do (nếu khác mặc định): <một dòng, ví dụ "đợt khó: lịch âm">
+  Lý do (nếu khác mặc định): <một dòng, ví dụ "đợt khó: cây gia phả">
 
   ```text
   <nguyên văn prompt của đợt kế, copy từ mục ➡️ của đợt vừa xong>
@@ -26,73 +36,75 @@
   ````
 
   Model · Effort phải khớp cột "Model · Effort" ở bảng Tiến độ; skill phải khớp bảng skill bên dưới và dòng "BẮT BUỘC gọi…" trong prompt. Có lệch thì sửa cho khớp trước khi in.
-- **Model:** mặc định Sonnet. Chỉ dùng Opus cho đợt kiến trúc hoặc đợt khó: lịch âm, cây gia phả, khóa nhánh.
+- **Model:** mặc định Sonnet. Chỉ dùng Opus cho đợt kiến trúc hoặc đợt khó: hợp đồng + giả lập, cây gia phả.
 - **Skill bắt buộc theo loại đợt:**
 
 | Loại đợt | Skill |
 |---|---|
 | BE thường | `code-review` |
-| Auth, AI, khóa nhánh, quản trị | `security-review` + `code-review` |
+| Auth, tài khoản, quản trị, upload, AI | `security-review` + `code-review` |
 | FE | `ui-ux-pro-max` + `run` |
 | Có số liệu hoặc biểu đồ | thêm `dataviz` |
-| Export, import | thêm `anthropic-skills:xlsx` và/hoặc `anthropic-skills:pdf` |
+| Export | thêm `anthropic-skills:xlsx` và/hoặc `anthropic-skills:pdf` |
 
 ## Tiến độ
 
 | Đợt | Tên | Module | Model · Effort | Trạng thái |
 |---|---|---|---|---|
-| **GĐ1** | **Lõi** | | | |
+| **Đã xong** | **Nền tảng (kế hoạch cũ)** | | | |
 | 0 | Nền tảng Backend | setup | Sonnet · high | ✅ 2026-09-25 |
 | 1 | Nền tảng Frontend | setup | Sonnet · high | ✅ 2026-09-25 |
 | 2 | Auth BE | auth | Sonnet · high | ✅ 2026-09-25 |
 | 3 | Auth FE | auth | Sonnet · high | ✅ 2026-09-25 |
-| 4 | Dòng họ BE | family | Sonnet · medium | ✅ 2026-09-25 |
-| 5 | Dòng họ FE | family | Sonnet · medium | ✅ 2026-09-25 |
+| 4 | Dòng họ BE *(sẽ gỡ ở Đợt 26)* | family | Sonnet · medium | ✅ 2026-09-25 |
+| 5 | Dòng họ FE *(sẽ gỡ ở Đợt 10)* | family | Sonnet · medium | ✅ 2026-09-25 |
 | 6 | Lịch âm BE | calendar | **Opus · high** | ✅ 2026-09-25 |
 | 7 | Lịch âm FE | calendar | Sonnet · high | ✅ 2026-09-25 |
-| 8 | Thành viên BE: cốt lõi | member | Sonnet · high | ⬜ |
-| 9 | Thành viên BE: quan hệ, đời, chi | member | Sonnet · high | ⬜ |
-| 10 | Upload ảnh BE | file | Sonnet · medium | ⬜ |
+| **Chuẩn bị** | | | | |
+| 8 | Tài khoản BE: Admin gốc, duyệt, consent | auth | Sonnet · high | ⬜ |
+| **GĐ A** | **Frontend (chế độ giả lập)** | | | |
+| 9 | Hợp đồng API, dữ liệu 28 người, lớp giả lập | contract | **Opus · high** | ⬜ |
+| 10 | FE tài khoản: gỡ dòng họ, chờ duyệt, quản lý tài khoản | auth/admin | Sonnet · high | ⬜ |
 | 11 | Thành viên FE: danh sách, chi tiết | member | Sonnet · high | ⬜ |
-| 12 | Thành viên FE: form, quan hệ, ảnh | member | Sonnet · high | ⬜ |
-| 13 | Liên kết "Tôi là ai" (BE + FE) | family | Sonnet · medium | ⬜ |
-| 14 | Cây BE | tree | Sonnet · medium | ⬜ |
-| 15 | Cây FE: thuật toán layout | tree | **Opus · high** | ⬜ |
-| 16 | Cây FE: hiển thị và thao tác | tree | **Opus · high** | ⬜ |
-| 17 | Sự kiện chung BE | event | Sonnet · low | ⬜ |
-| 18 | Lịch nhắc BE (occurrences) | calendar | Sonnet · high | ⬜ |
-| 19 | Lịch FE | calendar | Sonnet · high | ⬜ |
-| 20 | Dashboard (BE + FE) | dashboard | Sonnet · medium | ⬜ |
-| 21 | PWA | pwa | Sonnet · medium | ⬜ |
-| 22 | E2E Playwright GĐ1 | test | Sonnet · medium | ⬜ |
-| 23 | Deploy production GĐ1 | infra | Sonnet · high | ⬜ |
-| **GĐ2** | **Tương tác** | | | |
-| 24 | Lịch sử thay đổi (BE + FE) | audit | Sonnet · medium | ⬜ |
-| 25 | Đề xuất BE | proposal | Sonnet · high | ⬜ |
-| 26 | Đề xuất FE | proposal | Sonnet · high | ⬜ |
-| 27 | Thông báo BE: hộp thư, tùy chọn | notification | Sonnet · medium | ⬜ |
-| 28 | Web Push BE | notification | Sonnet · high | ⬜ |
-| 29 | Thông báo FE | notification | Sonnet · high | ⬜ |
-| 30 | Đính kèm BE | file | Sonnet · medium | ⬜ |
-| 31 | Đính kèm FE | file | Sonnet · medium | ⬜ |
-| **GĐ3** | **Nâng cao** | | | |
-| 32 | Quản trị BE: user, family, cấu hình | admin | Sonnet · high | ⬜ |
-| 33 | Khóa nhánh và xóa member BE | admin | **Opus · high** | ⬜ |
-| 34 | Quản trị FE | admin | Sonnet · high | ⬜ |
-| 35 | AI BE: provider, tool, SSE, quota | ai | Sonnet · high | ⬜ |
-| 36 | AI BE: soạn đề xuất, phạm vi | ai | Sonnet · high | ⬜ |
-| 37 | AI FE | ai | Sonnet · high | ⬜ |
+| 12 | Thành viên FE: form, xóa, ảnh đại diện | member | Sonnet · high | ⬜ |
+| 13 | Người thân, "Tôi là ai" và tự sửa hồ sơ FE | member | Sonnet · high | ⬜ |
+| 14 | Cây FE: mô hình và thuật toán layout | tree | **Opus · high** | ⬜ |
+| 15 | Cây FE: hiển thị và thêm người | tree | **Opus · high** | ⬜ |
+| 16 | Cây FE: chỉnh sửa và điều hướng | tree | **Opus · high** | ⬜ |
+| 17 | Lịch và sự kiện FE | calendar/event | Sonnet · high | ⬜ |
+| 18 | Dashboard FE | dashboard | Sonnet · medium | ⬜ |
+| 19 | PWA | pwa | Sonnet · medium | ⬜ |
+| 20 | Đề xuất sự kiện FE | proposal | Sonnet · medium | ⬜ |
+| 21 | Thông báo FE | notification | Sonnet · high | ⬜ |
+| 22 | Đính kèm FE | file | Sonnet · medium | ⬜ |
+| 23 | Quản trị FE: hàng đợi, đã xóa, cấu hình | admin | Sonnet · medium | ⬜ |
+| 24 | Trợ lý AI FE | ai | Sonnet · high | ⬜ |
+| 25 | Export FE và in cây khổ lớn | report | Sonnet · high | ⬜ |
+| **GĐ B** | **Backend** | | | |
+| 26 | Gỡ dòng họ BE và test hợp đồng | auth/common | Sonnet · high | ⬜ |
+| 27 | Thành viên BE + seed 28 người | member | Sonnet · high | ⬜ |
+| 28 | Người thân, "Tôi là ai" và tự sửa hồ sơ BE | member | Sonnet · high | ⬜ |
+| 29 | Cây BE | tree | **Opus · high** | ⬜ |
+| 30 | Upload và đính kèm BE | file | Sonnet · high | ⬜ |
+| 31 | Sự kiện chung và lịch nhắc BE | event/calendar | Sonnet · high | ⬜ |
+| 32 | Dashboard và quản trị BE | admin | Sonnet · medium | ⬜ |
+| 33 | Đề xuất sự kiện BE | proposal | Sonnet · medium | ⬜ |
+| 34 | Thông báo BE: hộp thư, tùy chọn | notification | Sonnet · medium | ⬜ |
+| 35 | Web Push BE | notification | Sonnet · high | ⬜ |
+| 36 | AI BE: provider, tool, SSE, quota | ai | Sonnet · high | ⬜ |
+| 37 | AI BE: soạn đề xuất sự kiện, phạm vi | ai | Sonnet · high | ⬜ |
 | 38 | Export BE (Excel, PDF) | report | Sonnet · high | ⬜ |
-| 39 | Export FE và in cây khổ lớn | report | Sonnet · high | ⬜ |
-| 40 | Import Excel BE | report | Sonnet · high | ⬜ |
-| 41 | Import Excel FE | report | Sonnet · medium | ⬜ |
+| **GĐ C** | **Nối và phát hành** | | | |
+| 39 | Nối FE với BE thật, gỡ lớp giả lập | integration | Sonnet · high | ⬜ |
+| 40 | E2E Playwright | test | Sonnet · medium | ⬜ |
+| 41 | Deploy production | infra | Sonnet · high | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 8 — Thành viên BE: cốt lõi
-Model **Sonnet** · Effort **high** · Skill: `code-review`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 7 (bên dưới).
+## ▶️ Đợt đang chờ: Đợt 8 — Tài khoản BE: Admin gốc, duyệt, consent
+Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 7 (bên dưới).
 
 ---
 
-# GIAI ĐOẠN 1 — LÕI
+# ĐÃ XONG — NỀN TẢNG (kế hoạch cũ, giữ để tra cứu)
 
 ### Đợt 0 — Nền tảng Backend ✅ 2026-09-25
 IDEA §11 · DECISIONS #1–14, #39–44
@@ -359,891 +371,1149 @@ IDEA §7 · DECISIONS #35
 3. Nhập âm 30/12 của một năm có tháng 12 thiếu: phải hiện cảnh báo rằng ngày không tồn tại.
 4. Ở khổ 375px, dùng bàn phím Tab qua các ô: focus ring phải nhìn thấy rõ.
 
-**➡️ Đợt tiếp:** Đợt 8 — Thành viên BE: cốt lõi · Model **Sonnet** · Effort **high** · Skill: `code-review`
+**➡️ Đợt tiếp:** Đợt 8 — Tài khoản BE: Admin gốc, duyệt, consent · Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`
 ```text
-Làm Đợt 8 — Thành viên BE: cốt lõi theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 8, roadmap/IDEA.md §4 và §6.3, docs/DECISIONS.md (#9, #25, #30, #31), .claude/rules/backend.md. Tạo bảng member + branch (đủ cột locked), CRUD member, danh sách có lọc/sắp xếp/tìm không dấu, ẩn SĐT/email theo quyền, ghi audit log. Chỉ làm checklist Đợt 8. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+Làm Đợt 8 — Tài khoản BE: Admin gốc, duyệt, consent theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 8, roadmap/IDEA.md §3 và §5, docs/DECISIONS.md (#55–57, #74), .claude/rules/backend.md và .claude/rules/security.md. Thêm approval_status cho user_account, Admin gốc qua ROOT_ADMIN_EMAIL, chặn API nghiệp vụ với tài khoản chưa duyệt, consent không gắn dòng họ, API quản lý tài khoản cho Admin (duyệt, từ chối, khóa, cấp/gỡ Admin, chặn Admin cuối cùng). Chưa gỡ module family (để Đợt 26). Chỉ làm checklist Đợt 8. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 8 — Thành viên BE: cốt lõi ⬜
-IDEA §4, §6.3 · DECISIONS #9, #25, #30, #31
-- [ ] `V4__member.sql`: `branch`, `member`. Bảng `member` có đủ cột theo IDEA, thêm `birth_lunar_leap`, `search_name`, và **đầy đủ các cột locked**. Tạo index `(family_id, locked)` và `(family_id, search_name)`.
-- [ ] CRUD member (chỉ Manager/Admin), không có xóa. Chỉ `full_name` là bắt buộc. Các trường về cái chết chỉ hợp lệ khi `is_deceased`. Nhập ngày mất theo một lịch thì tự điền lịch còn lại qua `CalendarFacade`, trừ trường hợp không có năm (#31).
-- [ ] `GET /api/members`: phân trang. Sắp xếp theo tên, tuổi, thời gian thêm, chi, đời. Lọc theo tên không dấu, khoảng tuổi, chi, đời, sống/mất. Luôn kèm `locked = false`.
-- [ ] `GET /api/members/{id}`. SĐT và email chỉ trả cho Admin, Manager hoặc chính chủ (`user.member_id`).
-- [ ] Ghi `AuditLogWriter` khi tạo hoặc sửa. Viết facade `MemberFacade`.
-- [ ] Test: tìm "dang van" ra "Đặng Văn…", ẩn SĐT/email với User, truy cập chéo family trả 404, member bị khóa không xuất hiện.
+# CHUẨN BỊ
+
+### Đợt 8 — Tài khoản BE: Admin gốc, duyệt, consent ⬜
+IDEA §3, §5 · DECISIONS #55–57, #74
+- [ ] `V4__account_approval.sql`: thêm `approval_status` (NOT NULL, mặc định `WAITING`), `approved_by`, `approved_at` vào `user_account`. Cho phép `user_consent.family_id` NULL. Tài khoản đã có trong DB giữ `WAITING`.
+- [ ] `ROOT_ADMIN_EMAIL` (`AppProperties`, `.env.example`): khi email này xác thực OTP, đăng nhập hoặc đăng nhập Google **mà hệ thống chưa có ADMIN nào** thì nâng thành `ADMIN` + `APPROVED`. Chống hai request song song cùng nâng (khóa hoặc UPDATE có điều kiện).
+- [ ] JWT có thêm claim `approval`. Chặn mọi API nghiệp vụ với tài khoản chưa `APPROVED`, trả 403 ProblemDetail `ACCOUNT_NOT_APPROVED`. Ngoại lệ: `/api/auth/**`, `GET /api/me`, `POST /api/me/consent`. Thao tác ghi kiểm tra trạng thái từ DB, không chỉ tin claim.
+- [ ] Consent: đăng ký bằng email lưu `user_consent` (family_id NULL, `app.policy.version`, IP). `GET /api/me` trả thêm `approvalStatus` và `consentRequired`. `POST /api/me/consent` lưu consent (dùng cho người đăng nhập Google lần đầu, hoặc khi đổi phiên bản chính sách).
+- [ ] `/api/admin/accounts` (chỉ ADMIN):
+  - `GET`: lọc theo trạng thái duyệt, trạng thái, vai trò; tìm theo tên hoặc email; phân trang.
+  - `POST /{id}/approve`, `/reject`, `/lock`, `/unlock`, `/grant-admin`, `/revoke-admin`.
+  - Admin không tự gỡ quyền và không tự khóa mình (`SELF_ACTION_FORBIDDEN`). Chặn gỡ quyền hoặc khóa Admin cuối cùng (`LAST_ADMIN`).
+  - Từ chối, khóa và đổi vai trò đều thu hồi refresh token của người bị ảnh hưởng.
+  - Ghi audit log (family_id NULL).
+- [ ] Module `family` giữ nguyên, sẽ gỡ ở Đợt 26. Endpoint family cũng yêu cầu tài khoản đã duyệt.
+- [ ] Test:
+  - Admin gốc tự nâng quyền, nhưng chỉ khi chưa có Admin nào.
+  - Tài khoản WAITING gọi API nghiệp vụ nhận 403, còn gọi `/api/me` thì được.
+  - Consent của người dùng Google.
+  - Duyệt, từ chối, khóa rồi mở khóa.
+  - Chặn Admin cuối cùng và chặn tự thao tác.
+  - User gọi `/api/admin/accounts` nhận 403.
+  - Refresh token bị thu hồi sau khi từ chối, khóa hoặc đổi vai trò.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Điền `ROOT_ADMIN_EMAIL=<email của bạn>` vào `apps/backend/.env`.
+
+**🧪 Test thủ công (từng bước):**
+1. Đăng ký bằng đúng `ROOT_ADMIN_EMAIL` và nhập OTP. Gọi `GET /api/me`: phải thấy `systemRole=ADMIN`, `approvalStatus=APPROVED`.
+2. Đăng ký user B, nhập OTP. `GET /api/me` của B: `approvalStatus=WAITING`. B gọi `GET /api/calendar/convert?solar=2026-02-17`: nhận 403 `ACCOUNT_NOT_APPROVED`.
+3. Admin gọi `GET /api/admin/accounts?approval=WAITING`: có B. Duyệt B. B refresh rồi gọi lại API lịch: nhận 200.
+4. Admin cấp quyền Admin cho B, rồi thử tự gỡ quyền của chính mình: bị chặn. B gỡ quyền Admin của A: thành công. B thử tự gỡ quyền của mình khi chỉ còn B là Admin: bị chặn.
+5. Khóa một User: refresh của người đó bị từ chối, đăng nhập lại cũng bị từ chối.
+
+**➡️ Đợt tiếp:** Đợt 9 — Hợp đồng API, dữ liệu 28 người, lớp giả lập · Model **Opus** · Effort **high** · Skill: `ui-ux-pro-max`, `run`, `code-review`
+```text
+Làm Đợt 9 — Hợp đồng API, dữ liệu 28 người, lớp giả lập theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 9, roadmap/IDEA.md §4, §11 và Phụ lục A, docs/DECISIONS.md (#68, #70–72), .claude/rules/frontend.md. Tạo shared/api/openapi.yaml (khởi tạo từ /v3/api-docs hiện tại, bỏ /api/family, thêm hợp đồng đọc thành viên), đổi gen:api sang đọc file này, tạo shared/fixtures/seed/members.json đúng 28 người của Phụ lục A (không thêm, không bớt, không bịa trường nào), dựng lớp giả lập src/services/mock (localStorage, chỉ endpoint có handler, còn lại gọi backend thật, không lọt vào build prod), handler GET /api/members và /api/members/{id}, nút Khôi phục và Tải dữ liệu tạm. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập (backend thật cho đăng nhập) và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 9. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+# GIAI ĐOẠN A — FRONTEND (CHẾ ĐỘ GIẢ LẬP)
+
+> Mọi đợt GĐ A chạy frontend bằng `npm run dev:mock` (`VITE_API_MODE=mock`). Đăng nhập, `/api/me` và tài khoản vẫn gọi backend thật (Đợt 2–3, 8), nên backend dev phải đang chạy.
+> Mỗi đợt làm theo thứ tự: (1) viết hợp đồng của module trong `shared/api/openapi.yaml` → (2) `npm run gen:api` → (3) handler giả lập → (4) UI → (5) test.
+> Phần cần máy chủ (AI, push, upload, file Excel/PDF từ backend) hiện "Cần kết nối máy chủ" (#72).
+
+### Đợt 9 — Hợp đồng API, dữ liệu 28 người, lớp giả lập ⬜
+IDEA §4, §11, Phụ lục A · DECISIONS #68, #70–72
+- [ ] `shared/api/openapi.yaml` (OpenAPI 3.1):
+  - Khởi tạo từ `/v3/api-docs` hiện tại (auth, me, calendar, admin/accounts của Đợt 8). **Bỏ** `/api/family/**`.
+  - Có schema `ProblemDetail` dùng chung, và `MemberSummary`, `MemberDetail`, `MemberPage`.
+  - Thêm `GET /api/members` (tham số `q`, `sort`, `ageMin`, `ageMax`, `generation`, `deceased`, `onTree`, `page`, `size`) và `GET /api/members/{id}`.
+  - Chạy `@redocly/cli lint` pass (script `npm run lint:api`).
+- [ ] `gen:api` đọc `../../shared/api/openapi.yaml` (không cần backend chạy). Chạy lại để sinh `schema.d.ts`. Sửa những chỗ đang dùng kiểu family trong `schema.d.ts` (nếu build vỡ thì chỉ gỡ phần import, còn phần UI dòng họ để Đợt 10 gỡ).
+- [ ] `shared/fixtures/seed/members.json`:
+  - Đúng 28 người theo IDEA Phụ lục A, giữ họ tên nguyên văn.
+  - Có `deathLunar{day,month,leap:false,year?}`, và `deathSolar` được tính bằng `utils/lunar` khi có năm.
+  - Mọi người có `isDeceased: true` và cùng nơi an táng. Các trường khác để trống.
+  - Kèm `README.md` ghi nguồn và quy ước.
+  - Có Vitest kiểm tra: đủ 28 người, khớp Phụ lục A, và `deathSolar` khớp lịch âm.
+- [ ] `src/services/mock/`:
+  - `router` (method + mẫu path → handler).
+  - `store` trong localStorage (key `giapha.mock.v1`), lần đầu khởi tạo từ `members.json`.
+  - Helper tạo `ProblemDetail`, phân trang, tìm không dấu (dùng chung `utils/text`), và vai trò người dùng lấy từ `/api/me` thật.
+  - Handler được phép **bọc** endpoint thật: gọi backend rồi bổ sung dữ liệu từ store.
+- [ ] `client.ts`: ở chế độ giả lập, request có handler thì chạy handler (có trễ nhỏ để thấy trạng thái đang tải), không có handler thì gọi backend thật. Module mock được import động theo `import.meta.env.VITE_API_MODE`. Có test đảm bảo bản build prod không chứa mã mock.
+- [ ] Handler `GET /api/members` và `GET /api/members/{id}`:
+  - tìm không dấu, lọc, sắp xếp, phân trang;
+  - `generation` và `onTree` lấy từ store cây (lúc này còn trống);
+  - SĐT và email chỉ trả cho Admin và chính chủ.
+- [ ] Trang Thêm có mục "Dữ liệu tạm" (chỉ hiện ở chế độ giả lập), gồm:
+  - banner "Dữ liệu đang lưu tạm trên trình duyệt này";
+  - nút **"Tải dữ liệu tạm (JSON)"** để giữ lại dữ liệu đã nhập cho Đợt 39;
+  - nút **"Khôi phục dữ liệu gốc"** (có hộp xác nhận).
+- [ ] `apps/frontend/.env.example` thêm `VITE_API_MODE`. Thêm script `dev:mock`.
+- [ ] Test Vitest:
+  - router;
+  - tìm "nguyen van tham" ra "Cụ Nguyễn Văn Tham (Tức Cụ Kai)";
+  - ẩn SĐT/email với User;
+  - id không tồn tại trả ProblemDetail 404;
+  - khôi phục dữ liệu gốc.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** `npm install` (có thêm `@redocly/cli`). Chạy backend dev như cũ.
+
+**🧪 Test thủ công (từng bước):**
+1. `npm run gen:api` khi **tắt** backend: vẫn sinh được `schema.d.ts`.
+2. `npm run dev:mock`, đăng nhập bằng tài khoản đã duyệt. Trong DevTools Console gọi `GET /api/members?q=nguyen van` qua app (hoặc xem tab Network): có các "Nguyễn Văn…".
+3. Thêm > Dữ liệu tạm: bấm "Khôi phục dữ liệu gốc": localStorage `giapha.mock.v1` được tạo lại với 28 người.
+4. `npm run build`, rồi tìm chuỗi `giapha.mock` trong `dist`: không có.
+
+**➡️ Đợt tiếp:** Đợt 10 — FE tài khoản: gỡ dòng họ, chờ duyệt, quản lý tài khoản · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`, `security-review`
+```text
+Làm Đợt 10 — FE tài khoản: gỡ dòng họ, chờ duyệt, quản lý tài khoản theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 10, roadmap/IDEA.md §3, §5 và §6.10, docs/DECISIONS.md (#54–57), .claude/rules/frontend.md và .claude/rules/security.md. Gỡ features/family và các trang /bat-dau, /moi/:code, /them/dong-ho; route guard theo approvalStatus; trang Chờ duyệt (consent cho Google, tự kiểm tra lại) và trang Không được duyệt; bỏ khu /quan-tri riêng, thêm menu Quản trị; trang Quản trị > Tài khoản dùng backend thật của Đợt 8. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập (backend thật cho đăng nhập và tài khoản) và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 10. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, security-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 10 — FE tài khoản: gỡ dòng họ, chờ duyệt, quản lý tài khoản ⬜
+IDEA §3, §5, §6.10 · DECISIONS #54–57
+- [ ] Gỡ `features/family`, các trang `/bat-dau`, `/moi/:code`, `/them/dong-ho` và mục "Dòng họ" trong trang Thêm. Gỡ các test liên quan. Không còn chỗ nào đọc `familyId` hoặc `familyRole`.
+- [ ] Route guard mới theo `approvalStatus` của `/api/me`: WAITING vào `/cho-duyet`, REJECTED vào `/khong-duoc-duyet`, APPROVED vào app. Bỏ khu `/quan-tri` riêng: Admin dùng chung AppShell, và có thêm mục **"Quản trị"** (sidebar, rail, trang Thêm). Toàn bộ route `/quan-tri/**` có guard chỉ cho Admin.
+- [ ] `/cho-duyet`:
+  - giải thích ngắn;
+  - nếu `consentRequired` thì bắt tick đồng ý (có link chính sách) và gọi `POST /api/me/consent`;
+  - tự gọi `/api/me` mỗi 30 giây và khi cửa sổ được focus lại, được duyệt thì refresh rồi vào Tổng quan;
+  - có nút Đăng xuất.
+- [ ] `/khong-duoc-duyet`: thông báo và nút Đăng xuất.
+- [ ] Quản trị > **Tài khoản** (backend thật):
+  - tab "Chờ duyệt" (có badge số) và tab "Tất cả";
+  - ô tìm, lọc trạng thái và vai trò;
+  - hiện dạng thẻ trên điện thoại, dạng bảng trên máy tính.
+  - Hành động: Duyệt, Từ chối, Khóa, Mở khóa, Cấp Admin, Gỡ Admin, đều qua `ConfirmDialog`.
+  - Lỗi `LAST_ADMIN` và `SELF_ACTION_FORBIDDEN` hiện đúng thông báo. Không hiện nút tự gỡ quyền hoặc tự khóa trên dòng của chính mình.
+- [ ] Trang Chính sách bảo mật: sửa nội dung, bỏ phần dòng họ, nêu rõ "một gia phả chung, Admin duyệt tài khoản".
+- [ ] Test Vitest:
+  - guard theo 3 trạng thái;
+  - trang chờ duyệt tự chuyển khi được duyệt;
+  - menu Quản trị ẩn với User;
+  - URL `/quan-tri/tai-khoan` với User bị chặn.
 
 **✅ Đã làm:** _(điền khi xong)_
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. Dùng tài khoản Manager, tạo 3 member qua Swagger. Một người đã mất, ngày mất nhập âm.
-2. Gọi `GET /api/members?q=dang`: có kết quả dù tên trong DB có dấu.
-3. Đăng nhập bằng User, xem chi tiết người có SĐT: không thấy SĐT.
-4. Trong MySQL, đặt `locked=1` cho một người: người đó biến mất khỏi danh sách.
-5. Xem bảng `audit_log`: có bản ghi `before`/`after`.
-
-**➡️ Đợt tiếp:** Đợt 9 — Thành viên BE: quan hệ, đời, chi · Model **Sonnet** · Effort **high** · Skill: `code-review`
-```text
-Làm Đợt 9 — Thành viên BE: quan hệ, đời, chi theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 9, roadmap/IDEA.md §4 và §8, docs/DECISIONS.md (#26–28, #32), .claude/rules/backend.md. Làm bảng marriage (có husband_order), gán cha mẹ, thêm con/vợ chồng/cha mẹ, tính lại đời theo từng cây rời, tự suy lineage, tự gán chi, API người thân. Chỉ làm checklist Đợt 9. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 9 — Thành viên BE: quan hệ, đời, chi ⬜
-IDEA §4, §8 · DECISIONS #26–28, #32
-- [ ] `V5__marriage.sql`: `marriage`, thêm cột `husband_order`.
-- [ ] Các thao tác: "+ Con" (theo một cặp cha–mẹ, có `child_type`, `birth_order`), "+ Vợ/Chồng" (lineage DAU_RE, cùng đời), "+ Cha/Mẹ". Kiểm tra: không tạo vòng quan hệ, cha là nam, mẹ là nữ, cả hai cùng family.
-- [ ] `GenerationService`: tính lại đời theo từng cây rời, Đời 01 là người cao nhất, dâu/rể cùng đời với vợ/chồng. Thêm tổ tiên thì đánh số lại (#28).
-- [ ] Tự suy `lineage` (#27), Manager sửa tay được. CRUD `branch`, đặt `root_member_id` thì tự gán chi cho con cháu (#32).
-- [ ] `GET /api/members/{id}/relatives`: cha mẹ, vợ/chồng (theo thứ tự), con theo từng cặp, anh chị em (suy ra, ghi rõ cùng cha khác mẹ nếu có).
-- [ ] Test: đánh số lại đời, nhiều vợ và nhiều chồng, NGOAI truyền xuống, chống vòng, anh em cùng cha khác mẹ, truy cập chéo family.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có.
-
-**🧪 Test thủ công (từng bước):**
-1. Tạo ông A, thêm vợ Cả B và vợ Hai C. Thêm con D (A+B) và con E (A+C).
-2. `GET /api/members/D/relatives`: E là anh em cùng cha khác mẹ.
-3. Thêm cha F cho A: F thành Đời 01, A thành Đời 02, D thành Đời 03.
-4. Thêm con gái G cho A, rồi thêm con H cho G: lineage của H là NGOAI.
-5. Gán A làm gốc của chi "Chi 1": D, E, G, H đều có `branch_id` = Chi 1.
-
-**➡️ Đợt tiếp:** Đợt 10 — Upload ảnh BE · Model **Sonnet** · Effort **medium** · Skill: `code-review`
-```text
-Làm Đợt 10 — Upload ảnh BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 10, roadmap/IDEA.md §6.7, docs/DECISIONS.md (#33c), .claude/rules/backend.md và .claude/rules/security.md. Làm module file: bảng attachment có cột kind, cấp chữ ký Cloudinary, xác nhận upload, kiểm tra MIME/10 MB/quota 1 GB, cập nhật avatar_url/cover_url. Chỉ làm checklist Đợt 10. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 10 — Upload ảnh BE ⬜
-IDEA §6.7 · DECISIONS #33c
-- [ ] `V6__attachment.sql`: `attachment`, thêm cột `kind` (AVATAR, COVER, DOCUMENT).
-- [ ] `POST /api/files/sign`: cấp chữ ký upload Cloudinary, folder `family/{familyId}`. Kiểm tra quota trước khi cấp.
-- [ ] `POST /api/files/confirm`: dùng Cloudinary Admin API để xác minh `public_id` (định dạng, kích thước ≤ 10 MB, đúng folder), rồi lưu `attachment`. Nếu là AVATAR hoặc COVER thì cập nhật `member.avatar_url` hoặc `family.cover_url`, và xóa file cũ.
-- [ ] `GET /api/files/quota` trả dung lượng đã dùng / 1 GB.
-- [ ] Cloudinary đặt sau interface `FileStorage`, test dùng bản giả.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:**
-- Tạo tài khoản Cloudinary (gói miễn phí), điền `CLOUDINARY_URL` vào `.env`.
-
-**🧪 Test thủ công (từng bước):**
-1. Gọi `POST /api/files/sign` với `kind=AVATAR`, `memberId`.
-2. Upload một ảnh bằng curl lên Cloudinary theo chữ ký vừa nhận.
-3. Gọi `POST /api/files/confirm`: `avatar_url` của member được cập nhật.
-4. Thử confirm một file PDF 12 MB: bị từ chối.
-5. Gọi `GET /api/files/quota`: dung lượng đã dùng tăng lên.
+1. Đăng ký user mới, nhập OTP: phải vào `/cho-duyet`.
+2. Mở cửa sổ khác bằng tài khoản Admin, vào Quản trị > Tài khoản > Chờ duyệt, bấm Duyệt. Trong vòng 30 giây, cửa sổ user tự vào Tổng quan.
+3. Đăng nhập Google bằng tài khoản mới: trang chờ duyệt bắt tick đồng ý.
+4. Từ chối một tài khoản: người đó thấy `/khong-duoc-duyet`.
+5. User gõ thẳng `/quan-tri/tai-khoan`: bị chặn. Không còn đường nào dẫn tới trang Dòng họ.
+6. Kiểm tra ở khổ 375px và 1280px.
 
 **➡️ Đợt tiếp:** Đợt 11 — Thành viên FE: danh sách, chi tiết · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
 ```text
-Làm Đợt 11 — Thành viên FE: danh sách, chi tiết theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 11, roadmap/IDEA.md §6.3, .claude/rules/frontend.md. Chạy npm run gen:api trước. Làm trang danh sách (bảng trên máy tính, thẻ trên điện thoại, lọc/sắp xếp/tìm không dấu) và trang chi tiết (thẻ hồ sơ navy theo DESIGN.md, quan hệ). Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 11. Xong khi `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+Làm Đợt 11 — Thành viên FE: danh sách, chi tiết theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 11, roadmap/IDEA.md §6.1, docs/DECISIONS.md (#58, #66, #71), .claude/rules/frontend.md. Làm features/member (api, hooks, lọc trên URL), danh sách (bảng/thẻ, tìm không dấu, lọc, sắp xếp) và trang chi tiết (thẻ hồ sơ, liên hệ theo quyền, chỗ cho khối Người thân, Trên cây, Tệp) trên dữ liệu thật 28 người ở chế độ giả lập. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 11. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
 BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
 ### Đợt 11 — Thành viên FE: danh sách, chi tiết ⬜
-IDEA §6.3 · DESIGN §5
-- [ ] `features/member`: `api.ts`, `hooks.ts` (TanStack Query, lưu tham số lọc trên URL).
-- [ ] Danh sách: bảng trên máy tính, thẻ trên điện thoại. Sắp xếp theo 5 tiêu chí. Lọc theo tên (không dấu), khoảng tuổi, chi, đời, sống/mất. Có trạng thái rỗng và skeleton khi tải.
-- [ ] Trang chi tiết: thẻ hồ sơ navy (avatar, badge sống/mất, năm sinh – năm mất, đời, nhãn), các ô liên hệ (chỉ hiện khi API có trả), khối quan hệ (cha mẹ, vợ/chồng, con theo cặp, anh chị em), mỗi người là một link.
-- [ ] Để tab trống cho "Tệp đính kèm" và "Lịch sử" (làm ở GĐ2).
+IDEA §6.1 · DECISIONS #58, #66, #71
+- [ ] `features/member`: `api.ts`, `hooks.ts` (TanStack Query, tham số lọc lưu trên URL), `strings.ts`.
+- [ ] Danh sách:
+  - dạng bảng trên máy tính, dạng thẻ trên điện thoại;
+  - sắp xếp theo tên, tuổi, thời gian thêm, đời;
+  - tìm không dấu;
+  - lọc theo khoảng tuổi, đời, sống/mất, có trên cây;
+  - có trạng thái rỗng (khác nhau cho "không có kết quả" và "chưa có ai"), skeleton khi tải, và trạng thái lỗi.
+- [ ] Trang chi tiết:
+  - Thẻ hồ sơ navy: avatar hoặc chữ cái đầu, họ tên nguyên văn, badge "Đã mất", ngày mất âm kèm dương (hoặc chỉ ngày/tháng âm), nơi an táng.
+  - Các ô liên hệ chỉ hiện khi API có trả.
+  - Người chưa có giới tính thì hiện trung tính, không đoán.
+- [ ] Để chỗ sẵn các khối: Người thân (Đợt 13), Trên cây (Đợt 16), Tệp đính kèm (Đợt 22).
+- [ ] Test: hook lọc đồng bộ với URL, thẻ hồ sơ khi thiếu dữ liệu (chỉ có tên), hiển thị ngày mất không có năm.
 
 **✅ Đã làm:** _(điền khi xong)_
 
-**🔧 Setup thủ công cần làm:** Không có. Cần dữ liệu mẫu từ Đợt 9.
+**🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. Ở khổ 1280px, mở Thành viên: hiện dạng bảng. Sắp xếp theo đời và lọc "đã mất".
-2. Gõ "dang" vào ô tìm: có kết quả. F5: bộ lọc vẫn giữ nguyên.
-3. Ở khổ 375px: hiện dạng thẻ, lọc mở bằng sheet.
-4. Mở chi tiết D: thấy cha mẹ, anh em khác mẹ E. Bấm vào E thì chuyển sang trang của E.
-5. Đăng nhập bằng User: không thấy SĐT của người khác.
+1. `npm run dev:mock`, vào Thành viên: có 28 người, tất cả đều "Đã mất".
+2. Gõ "kai": ra 3 người (Tham, Kai Nhất, Phí Thị Giản). Gõ "hang": ra "Nguyễn Thị Hằng".
+3. Mở "Cụ Nguyễn Thị Thêm": ngày mất hiện "01/11 âm lịch", không có năm dương.
+4. Mở "Nguyễn Văn Thành": ngày mất 02/05/2025 âm lịch kèm ngày dương tương ứng. Nơi an táng là Kim Hoàng.
+5. F5 khi đang lọc: bộ lọc vẫn còn (nằm trên URL). Kiểm tra ở khổ 375px và 1280px.
 
-**➡️ Đợt tiếp:** Đợt 12 — Thành viên FE: form, quan hệ, ảnh · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
+**➡️ Đợt tiếp:** Đợt 12 — Thành viên FE: form, xóa, ảnh đại diện · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
 ```text
-Làm Đợt 12 — Thành viên FE: form, quan hệ, ảnh theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 12, roadmap/IDEA.md §6.3, docs/DECISIONS.md (#27, #30–33), .claude/rules/frontend.md. Làm form thêm/sửa member (dùng DualDateInput), các dialog + Con/+ Vợ-Chồng/+ Cha-Mẹ để dùng lại ở trang cây, quản lý chi, upload avatar lên Cloudinary bằng chữ ký. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 12. Xong khi `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+Làm Đợt 12 — Thành viên FE: form, xóa, ảnh đại diện theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 12, roadmap/IDEA.md §6.1 và §6.7, docs/DECISIONS.md (#58, #62, #67, #72), .claude/rules/frontend.md. Viết hợp đồng tạo/sửa/xóa thành viên và sign/confirm ảnh, handler giả lập (xóa bị chặn khi có trên cây), MemberForm (chỉ họ tên bắt buộc, giới tính "Chưa rõ", DualDateInput cho ngày sinh/mất, cho phép chỉ ngày/tháng âm, khối "đã mất" tách riêng có lockDeathFields), nút Xóa, AvatarUpload (giả lập báo cần máy chủ). Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 12. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
 BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 12 — Thành viên FE: form, quan hệ, ảnh ⬜
-IDEA §6.3 · DECISIONS #27, #30–33
-- [ ] `MemberForm` (RHF + Zod): chỉ họ tên bắt buộc. Khối "Đã qua đời" chỉ hiện khi được chọn. Ngày sinh và ngày mất dùng `DualDateInput`. Chọn sinh nhật Dương hoặc Âm. Có nhãn, tiểu sử, `prefix_override`, `lineage`, chi.
-- [ ] Các dialog `AddChildDialog`, `AddSpouseDialog`, `AddParentDialog`, đặt trong `features/member/components`, dùng lại được ở Đợt 16.
-- [ ] Trang quản lý Chi: CRUD, chọn người gốc.
-- [ ] `AvatarUpload`: xin chữ ký, upload thẳng lên Cloudinary, gọi confirm. Có preview và báo lỗi kích thước/định dạng. Ảnh bìa family cũng dùng component này.
-- [ ] Chỉ Manager và Admin thấy các nút sửa/thêm (#33a).
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có (Cloudinary đã cấu hình ở Đợt 10).
-
-**🧪 Test thủ công (từng bước):**
-1. Thêm member chỉ nhập họ tên: lưu được.
-2. Tick "Đã qua đời", nhập ngày mất theo âm: ngày dương tự điền.
-3. Trên trang A, bấm "+ Vợ/Chồng", rồi "+ Con" chọn đúng cặp: trang chi tiết hiện đúng quan hệ.
-4. Upload avatar 2 MB: ảnh hiện ngay. Upload file 12 MB: báo lỗi.
-5. Đăng nhập bằng User: không thấy nút sửa hay thêm nào.
-
-**➡️ Đợt tiếp:** Đợt 13 — Liên kết "Tôi là ai" · Model **Sonnet** · Effort **medium** · Skill: `code-review`, `ui-ux-pro-max`, `run`
-```text
-Làm Đợt 13 — Liên kết "Tôi là ai" (BE rồi FE) theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 13, roadmap/IDEA.md §6.2, .claude/rules/backend.md và .claude/rules/frontend.md. BE: bảng member_link_request, gửi/duyệt/từ chối, mỗi member chỉ liên kết tối đa 1 tài khoản. FE: bước chọn "Tôi là ai" sau khi tham gia, trang duyệt cho Manager. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 13. Xong khi `.\mvnw.cmd verify`, `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review, ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 13 — Liên kết "Tôi là ai" (BE + FE) ⬜
-IDEA §6.2
-- [ ] BE `V7__member_link_request.sql` (thêm `family_id`, `created_at`). User gửi yêu cầu. Manager xem danh sách chờ, duyệt thì gán `user.member_id` và làm mới claim. Không cho liên kết member đã có tài khoản, hoặc member đang bị khóa. Có hủy liên kết.
-- [ ] BE test: một member chỉ liên kết một tài khoản, truy cập chéo family, chỉ Manager được duyệt.
-- [ ] FE: sau khi tham gia (và trong menu Thêm), user tìm member qua ô tìm không dấu, rồi "Đây là tôi" để gửi yêu cầu. Có hiện trạng thái đang chờ.
-- [ ] FE: trang "Yêu cầu liên kết" của Manager có số đang chờ, duyệt và từ chối.
+### Đợt 12 — Thành viên FE: form, xóa, ảnh đại diện ⬜
+IDEA §6.1, §6.7 · DECISIONS #58, #62, #67, #72
+- [ ] Hợp đồng: `POST /api/members`, `PUT /api/members/{id}`, `DELETE /api/members/{id}` (409 `MEMBER_ON_TREE`), `POST /api/files/sign`, `POST /api/files/confirm` (kind AVATAR).
+- [ ] Handler giả lập:
+  - Tạo và sửa: tính `search_name`. Ngày mất nhập âm mà có năm thì tự đổi sang dương, còn nhập dương thì tự đổi sang âm (bằng `utils/lunar`). Các trường về cái chết chỉ hợp lệ khi đã mất.
+  - Xóa: chặn nếu có trên cây; xóa các dòng người thân liên quan (cả dòng trong hồ sơ người đó lẫn dòng người đó xuất hiện ở hồ sơ khác, sau khi Đợt 13 có store người thân) và ghi snapshot "đã xóa" vào store (dùng ở Đợt 23).
+  - Upload: trả 503 "Cần kết nối máy chủ".
+- [ ] `MemberForm` (RHF + Zod):
+  - Chỉ họ tên bắt buộc. Giới tính có 3 lựa chọn Nam / Nữ / Chưa rõ.
+  - Khối "Đã qua đời": ngày mất dùng `DualDateInput` (cho phép chỉ ngày/tháng âm), ngày giỗ ghi đè, nơi an táng.
+  - Ngày sinh dùng `DualDateInput` (cho phép chỉ năm). Chọn sinh nhật Dương hoặc Âm.
+  - Có tên húy, nhãn, tiểu sử, SĐT, email.
+  - Tách nhóm "đã mất" (đã qua đời, ngày mất, ngày giỗ ghi đè, nơi an táng) thành một khối riêng trong form và trong schema, có prop `lockDeathFields` để Đợt 13 dùng cho User tự sửa hồ sơ (#76).
+- [ ] Nút Xóa (chỉ Admin) kèm xác nhận. Khi bị chặn thì giải thích "Hãy gỡ người này khỏi cây trước".
+- [ ] `AvatarUpload` (`components/shared`): chọn ảnh, kiểm tra định dạng và giới hạn 10 MB ngay ở máy, có preview. Ở chế độ giả lập thì báo "Cần kết nối máy chủ".
+- [ ] Ở đợt này chỉ Admin thấy các nút Thêm, Sửa, Xóa. Nút "Sửa hồ sơ của tôi" cho User làm ở Đợt 13 (cần liên kết "Tôi là ai").
+- [ ] Test: schema form (chỉ tên, đã mất không có ngày, ngày âm không năm), handler tự đổi ngày âm sang dương, handler xóa bị chặn.
 
 **✅ Đã làm:** _(điền khi xong)_
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. User B chọn "Đây là tôi" cho member D: hiện "Đang chờ duyệt".
-2. Manager mở Yêu cầu liên kết, duyệt.
-3. B tải lại trang: thấy SĐT và email của chính mình (D).
-4. User C gửi yêu cầu liên kết với D: bị báo đã có người liên kết.
+1. Admin thêm một thành viên chỉ có họ tên: lưu được, và người đó hiện trong danh sách.
+2. Sửa "Cụ Nguyễn Văn Tỵ": đặt giới tính Nam, lưu. F5 vẫn còn (dữ liệu nằm trong localStorage).
+3. Nhập ngày mất âm 15/6 nhuận 2025: ngày dương được tự điền.
+4. Xóa thành viên vừa thêm: xóa được. Đăng nhập bằng User: không thấy nút Thêm, Sửa, Xóa.
+5. Chọn ảnh 12 MB: bị báo quá kích thước ngay.
 
-**➡️ Đợt tiếp:** Đợt 14 — Cây BE · Model **Sonnet** · Effort **medium** · Skill: `code-review`
+**➡️ Đợt tiếp:** Đợt 13 — Người thân, "Tôi là ai" và tự sửa hồ sơ FE · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
 ```text
-Làm Đợt 14 — Cây BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 14, roadmap/IDEA.md §8, docs/DECISIONS.md (#29, #34), .claude/rules/backend.md. Làm module tree: API trả đồ thị (nút + cạnh, không có toạ độ), tính tiền tố Cụ/Ông/Bà theo người xem, lưu lựa chọn "Ẩn dòng ngoại", API tổ tiên của tôi. Chỉ làm checklist Đợt 14. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 14 — Cây BE ⬜
-IDEA §8 · DECISIONS #29, #34
-- [ ] `GET /api/tree?rootId=&hideMaternal=`: trả `nodes` (id, tên, tiền tố, giới tính, năm sinh – năm mất, đã mất, nhãn, avatar, đời, lineage, `birth_order`) và `edges` (hôn nhân kèm thứ tự, cặp cha–mẹ → con). Loại bỏ member bị khóa.
-- [ ] Tải toàn bộ member của family trong một lần truy vấn, rồi dựng đồ thị trong bộ nhớ. Test với 500 người phải chạy dưới 300 ms.
-- [ ] Tiền tố theo #29, tính từ `user.member_id` của người xem. Chưa liên kết thì không có tiền tố, trừ khi có `prefix_override`.
-- [ ] `GET /api/tree/ancestors?memberId=` ("Xem tổ tiên của tôi"). `PUT /api/me/preferences` để lưu `hide_maternal_line`.
-- [ ] Test: tiền tố (đời cao hơn, thấp hơn, chưa liên kết, override), hideMaternal, member bị khóa không có trong đồ thị, truy cập chéo family.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có.
-
-**🧪 Test thủ công (từng bước):**
-1. Đăng nhập bằng user đã liên kết với D (Đời 03). Gọi `GET /api/tree`: F (Đời 01) có tiền tố "Ông", còn con của D không có tiền tố.
-2. Gọi với `hideMaternal=true`: không còn con rể của G, cũng không còn H.
-3. Gọi `/api/tree/ancestors?memberId=D`: chỉ có A, B, F (và vợ của F nếu có).
-
-**➡️ Đợt tiếp:** Đợt 15 — Cây FE: thuật toán layout · Model **Opus** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
-```text
-Làm Đợt 15 — Cây FE: thuật toán layout theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 15, roadmap/IDEA.md §8, docs/DECISIONS.md (#26, #28, #34), .claude/rules/frontend.md. Viết hàm thuần layoutTree(graph, options) ở features/tree/layout: mỗi đời một hàng, đơn vị xếp là cặp vợ chồng, nhiều vợ/chồng xếp hai bên theo thứ tự, con đi xuống từ đúng cặp cha–mẹ, không chồng lấn, hỗ trợ thu gọn và nhiều cây rời. Có Vitest và trang /dev/cay vẽ SVG để kiểm tra bằng mắt. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 15. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+Làm Đợt 13 — Người thân, "Tôi là ai" và tự sửa hồ sơ FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 13, roadmap/IDEA.md §6.1, §6.2, §6.3 và §6.7, docs/DECISIONS.md (#71, #75, #76, #78), .claude/rules/frontend.md và .claude/rules/security.md. Viết hợp đồng người thân và yêu cầu liên kết, bổ sung quyền chủ hồ sơ cho PUT /api/members/{id} và sign/confirm AVATAR; handler giả lập (danh sách một chiều, mỗi người một lần trong một hồ sơ, nhãn ≤50, chỉ chủ hồ sơ và Admin ghi, chặn User sửa nhóm "đã mất", bọc /api/me để gắn memberId); khối Người thân trên hồ sơ, nút "Sửa hồ sơ của tôi" (MemberForm với lockDeathFields), trang "Tôi là ai" và Quản trị > Yêu cầu liên kết. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 13. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
 BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 15 — Cây FE: thuật toán layout ⬜
-IDEA §8 · DECISIONS #26, #28, #34
-- [ ] `features/tree/layout/layoutTree.ts`: hàm thuần, kết quả xác định (cùng đầu vào cho cùng kết quả). Đầu vào là đồ thị từ Đợt 14 và options (`collapsedIds`, `hideMaternal`, `rootId`, `maxDepth`). Đầu ra gồm toạ độ nút, đường nối, và `y` của từng hàng đời.
-- [ ] Quy tắc: mỗi đời một hàng. Đơn vị xếp là cặp vợ chồng, chồng ở giữa, vợ Cả, vợ Hai… xếp hai bên. Người phụ nữ có nhiều chồng cũng xếp tương tự. Con đi xuống từ trung điểm của đúng cặp cha–mẹ, anh em theo `birth_order`. Nén cây con để không chồng lấn. Các cây rời đặt cạnh nhau.
-- [ ] Vitest gồm: nhiều vợ, nhiều chồng, con riêng hoặc con nuôi, thu gọn, dòng ngoại bị ẩn, 2 cây rời, **kiểm tra không có nút nào chồng lấn**, và 500 nút chạy dưới 50 ms.
-- [ ] Trang `/dev/cay` (chỉ có ở chế độ dev): vẽ SVG thô từ kết quả layout với dữ liệu thật.
+### Đợt 13 — Người thân, "Tôi là ai" và tự sửa hồ sơ FE ⬜
+IDEA §6.1, §6.2, §6.3, §6.7 · DECISIONS #71, #75, #76, #78
+- [ ] Hợp đồng:
+  - Người thân: `GET /api/members/{id}/relatives` (mỗi dòng có `id`, người thân dạng `MemberSummary`, `label`), `POST /api/members/{id}/relatives` (`relativeMemberId`, `label`), `PUT /api/members/{id}/relatives/{relativeId}` (`label`), `DELETE /api/members/{id}/relatives/{relativeId}`. Lỗi: 409 `RELATIVE_EXISTS`, 400 khi tự thêm chính mình, 403 khi không phải chủ hồ sơ hay Admin.
+  - Liên kết: `POST /api/link-requests`, `GET /api/link-requests/mine`, `DELETE /api/me/member-link`, và cho Admin `GET /api/link-requests?status=PENDING`, `POST /api/link-requests/{id}/approve`, `POST /api/link-requests/{id}/reject`.
+  - `PUT /api/members/{id}`: bổ sung quyền của chủ hồ sơ (#76) và lỗi 403 `DEATH_FIELDS_ADMIN_ONLY`. `POST /api/files/sign` và `/confirm` với `kind=AVATAR`: chủ hồ sơ được gọi cho hồ sơ của mình (#78).
+- [ ] Handler giả lập:
+  - Người thân: một chiều; một người chỉ xuất hiện một lần trong danh sách của một hồ sơ; không tự thêm chính mình; nhãn bắt buộc, cắt khoảng trắng, dài ≤ 50 ký tự; người thân phải là thành viên đã có. Chỉ chủ hồ sơ (theo `memberId` của `/api/me` đã bọc) hoặc Admin được ghi.
+  - Sửa hồ sơ: User chỉ sửa được hồ sơ của mình. Đổi giá trị ở nhóm "đã mất" thì trả 403 `DEATH_FIELDS_ADMIN_ONLY`, giá trị giữ nguyên thì bỏ qua.
+  - Liên kết: không liên kết được thành viên đã có tài khoản khác.
+  - **Bọc** `GET /api/me` để gắn `memberId` từ store.
+  - Handler xóa thành viên (Đợt 12): dọn các dòng người thân ở cả hai phía.
+- [ ] Khối **Người thân** trên hồ sơ:
+  - danh sách "Tên — nhãn", mỗi tên là một link;
+  - chủ hồ sơ và Admin có "Thêm người thân": chọn thành viên (tìm không dấu, loại chủ hồ sơ và những người đã có trong danh sách), nhập nhãn; sửa nhãn và xóa được;
+  - người khác chỉ xem.
+- [ ] **Tự sửa hồ sơ:** trên hồ sơ của chính mình, User thấy nút "Sửa hồ sơ của tôi". Nút mở `MemberForm` với `lockDeathFields`: nhóm "đã mất" chỉ để xem, kèm ghi chú "Chỉ Admin sửa được phần này". `AvatarUpload` cũng mở cho chủ hồ sơ (ở chế độ giả lập vẫn báo "Cần kết nối máy chủ").
+- [ ] Trang **"Tôi là ai"** (menu Thêm): tìm thành viên, bấm "Đây là tôi", có trạng thái đang chờ, và hủy liên kết. Hồ sơ của chính mình có dấu "Đây là bạn".
+- [ ] Quản trị > **Yêu cầu liên kết**: danh sách chờ, Duyệt, Từ chối, badge số đang chờ.
+- [ ] Test: danh sách một chiều (thêm ở hồ sơ B không hiện ở hồ sơ A), chặn trùng, chặn tự thêm, User ghi vào hồ sơ người khác bị 403, User đổi nhóm "đã mất" bị 403, handler liên kết.
 
 **✅ Đã làm:** _(điền khi xong)_
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. Mở `/dev/cay` với dữ liệu mẫu (A có 2 vợ, mỗi vợ có con): con của vợ Cả nằm dưới cặp A–B, con của vợ Hai nằm dưới cặp A–C.
-2. Thu gọn A: toàn bộ con cháu của A biến mất và không để lại khoảng trống.
-3. Bật ẩn dòng ngoại: rể và cháu ngoại biến mất.
-4. Chạy `npm test`: toàn bộ test layout xanh.
+1. Admin mở hồ sơ "Nguyễn Văn Kỷ", thêm người thân "Cụ Nguyễn Văn Uyên" với nhãn "cha". Hồ sơ Kỷ hiện "Cụ Nguyễn Văn Uyên — cha". Hồ sơ Uyên không có dòng nào về Kỷ.
+2. Thêm Uyên vào hồ sơ Kỷ lần nữa: bị báo đã có. Mở hồ sơ Uyên, thêm Kỷ với nhãn "con": thêm được.
+3. Admin thêm một thành viên thử còn sống. User chọn "Đây là tôi" cho người đó, Admin duyệt ở Quản trị > Yêu cầu liên kết. Hồ sơ đó hiện "Đây là bạn".
+4. User đó bấm "Sửa hồ sơ của tôi", sửa tiểu sử và lưu: có hiệu lực ngay. Nhóm "đã mất" bị khóa.
+5. User đó thêm người thân vào hồ sơ của mình: thêm được. Mở hồ sơ người khác: không có nút sửa và không có nút thêm người thân.
+6. *(Dữ liệu thử ở các bước trên chỉ để kiểm tra, xong thì "Khôi phục dữ liệu gốc".)*
 
-**➡️ Đợt tiếp:** Đợt 16 — Cây FE: hiển thị và thao tác · Model **Opus** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
+**➡️ Đợt tiếp:** Đợt 14 — Cây FE: mô hình và thuật toán layout · Model **Opus** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
 ```text
-Làm Đợt 16 — Cây FE: hiển thị và thao tác theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 16, roadmap/IDEA.md §8, docs/DECISIONS.md (#33a), .claude/rules/frontend.md. Dùng @xyflow/react hiển thị kết quả của layoutTree: node thành viên theo DESIGN.md, cột "Đời 01…N" cố định bên trái, zoom/kéo/pinch, thu gọn, tìm và nhảy tới, xem cây từ người này, tổ tiên của tôi, mặc định 3 đời trên điện thoại, nút "Ẩn dòng ngoại", menu ô cho Manager dùng lại dialog của Đợt 12. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 16. Xong khi `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+Làm Đợt 14 — Cây FE: mô hình và thuật toán layout theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 14, roadmap/IDEA.md §8, docs/DECISIONS.md (#34, #60, #61), .claude/rules/frontend.md. Viết hợp đồng GET /api/tree, mô hình thuần utils/tree (đời theo độ sâu từng cây rời, kiểm tra hợp lệ mọi thao tác dựng cây, chặn vòng) kèm fixture dùng chung shared/fixtures/tree, và hàm thuần layoutTree (hàng đời, ô + vợ/chồng hai bên, con từ đúng cặp, ô trống, nhiều gốc, không chồng lấn), trang /dev/cay vẽ SVG thô. Trước khi code UI, đọc docs/DESIGN.md; thiết kế ưu tiên điện thoại. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 14. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
 BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 16 — Cây FE: hiển thị và thao tác ⬜
-IDEA §8 · DECISIONS #33a
-- [ ] Trang Cây: React Flow chỉ hiển thị kết quả của `layoutTree`. `MemberNode` theo DESIGN §5 (người đã mất có viền xám và ✝, nhãn đặc biệt). Đường nối hôn nhân và cha mẹ–con.
-- [ ] Cột trái cố định "Đời 01…N", đồng bộ trục y với viewport.
-- [ ] Zoom, kéo, pinch. Thu gọn hoặc mở từng nhánh. Ô tìm kiếm nhảy tới người cần tìm và làm nổi bật. "Xem cây từ người này", "Xem tổ tiên của tôi". Bật `onlyRenderVisibleElements` để 500 nút vẫn mượt.
-- [ ] Trên điện thoại: mặc định hiện 3 đời quanh người được chọn (hoặc chính mình), chạm để mở rộng.
-- [ ] Nút "Ẩn dòng ngoại", lưu qua `PUT /api/me/preferences`.
-- [ ] Menu khi bấm vào ô: Manager và Admin có "+ Con", "+ Vợ/Chồng", "+ Cha/Mẹ", "Sửa". User **không có menu** thao tác, chỉ có "Xem chi tiết". Mục khóa/xóa để GĐ3.
+### Đợt 14 — Cây FE: mô hình và thuật toán layout ⬜
+IDEA §8 · DECISIONS #34, #60, #61
+- [ ] Hợp đồng `GET /api/tree`: trả `nodes` (`id`, `memberId|null`, `parentNodeId`, `coParentNodeId`, `sortOrder`, cùng tóm tắt thành viên gồm họ tên, giới tính, đã mất, năm sinh–mất, nhãn, avatar) và `spouses` (`nodeId`, `spouseNodeId`, `order`). Đời **không** nằm trong response, frontend tự tính.
+- [ ] `src/utils/tree/` (hàm thuần, lớp giả lập và UI dùng chung):
+  - tính đời theo từng cây rời; lấy tổ tiên, con cháu, nhánh;
+  - danh sách thành viên chưa có trên cây;
+  - kiểm tra hợp lệ cho mọi thao tác theo #60 và #61: "+ Cha/Mẹ" chỉ ở Đời 01, bắt buộc chọn cặp khi có ≥ 2 vợ/chồng, ô vợ/chồng không có "+ Vợ/Chồng", xóa ô trống, di chuyển chặn vòng, mỗi thành viên chỉ có một ô.
+- [ ] `shared/fixtures/tree/`: các ca đồ thị kèm thao tác và kết quả mong đợi (hợp lệ, hoặc mã lỗi). Dùng lại cho backend ở Đợt 29. Tên trong fixture là "Ô 1, Ô 2…", không dùng người thật.
+- [ ] `features/tree/layout/layoutTree.ts`: hàm thuần, kết quả xác định.
+  - Đầu vào: đồ thị cùng options (`collapsedIds`, `rootNodeId`, `maxDepth`, `focusNodeId`).
+  - Đầu ra: toạ độ các ô, đường nối (hôn nhân, cặp đến con, một mình cha/mẹ đến con), và `y` của từng hàng đời.
+  - Quy tắc: mỗi đời một hàng. Đơn vị xếp là ô thuộc dòng cùng các vợ/chồng xếp hai bên theo `order`. Con đi xuống từ trung điểm của đúng cặp. Anh em xếp theo `sortOrder`. Ô trống có cùng kích thước. Nén cây con để không chồng lấn. Các cây rời đặt cạnh nhau.
+- [ ] Vitest gồm các ca:
+  - nhiều vợ, có con với từng vợ;
+  - con không thuộc cặp nào;
+  - ô trống vẫn có con cháu;
+  - nhiều gốc (nối vợ chồng và không nối);
+  - thêm cha/mẹ cho gốc thì đời dịch xuống;
+  - thu gọn nhánh;
+  - **không có ô nào chồng lấn**;
+  - 500 ô chạy dưới 50 ms;
+  - toàn bộ `shared/fixtures/tree/`.
+- [ ] Trang `/dev/cay` (chỉ có ở chế độ dev): vẽ SVG thô từ các đồ thị trong fixture.
 
 **✅ Đã làm:** _(điền khi xong)_
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. Mở Cây ở khổ 1280px: cột Đời vẫn đứng yên khi kéo ngang và khớp khi kéo dọc.
-2. Tìm "Chấn": camera bay tới và ô được làm nổi bật.
-3. Bấm vào ô A, chọn "+ Con" rồi lưu: cây cập nhật mà không phải tải lại trang.
-4. Bật Ẩn dòng ngoại, F5: lựa chọn vẫn được giữ.
-5. Ở khổ 375px: chỉ thấy 3 đời, pinch zoom mượt, chạm vào ô thì mở rộng.
-6. Đăng nhập bằng User: bấm vào ô chỉ thấy "Xem chi tiết".
+1. `npm test -- tree`: xanh.
+2. Mở `/dev/cay`, chọn ca "nhiều vợ + ô trống": con nối đúng từ trung điểm của cặp, ô trống có viền đứt, không có ô nào chồng lên nhau.
+3. Chọn ca "2 gốc không nối": hai cây đứng cạnh nhau, cùng ở Đời 01.
 
-**➡️ Đợt tiếp:** Đợt 17 — Sự kiện chung BE · Model **Sonnet** · Effort **low** · Skill: `code-review`
+**➡️ Đợt tiếp:** Đợt 15 — Cây FE: hiển thị và thêm người · Model **Opus** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
 ```text
-Làm Đợt 17 — Sự kiện chung BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 17, roadmap/IDEA.md §4 và §6.5, .claude/rules/backend.md. Làm bảng custom_event và CRUD (Manager/Admin), sự kiện theo âm hoặc dương, lặp hằng năm khi year để trống, kiểm tra ngày âm hợp lệ qua CalendarFacade. Chỉ làm checklist Đợt 17. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 17 — Sự kiện chung BE ⬜
-IDEA §4, §6.5
-- [ ] `V8__custom_event.sql`.
-- [ ] CRUD `/api/events` (Manager/Admin ghi, mọi người trong family đọc). Kiểm tra `calendar`, `is_leap`, ngày/tháng hợp lệ. `year = NULL` nghĩa là lặp hằng năm.
-- [ ] Ghi audit log. Viết facade `EventFacade` để module calendar dùng.
-- [ ] Test: validation, User không ghi được, truy cập chéo family.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có.
-
-**🧪 Test thủ công (từng bước):**
-1. Dùng Manager, tạo "Họp họ" vào 10/1 âm, lặp hằng năm.
-2. Tạo "Khánh thành nhà thờ" vào 20/11/2026 dương, chỉ một lần.
-3. Dùng User gọi `POST /api/events`: nhận 403.
-
-**➡️ Đợt tiếp:** Đợt 18 — Lịch nhắc BE · Model **Sonnet** · Effort **high** · Skill: `code-review`
-```text
-Làm Đợt 18 — Lịch nhắc BE (occurrences) theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 18, roadmap/IDEA.md §6.5 và §7, docs/DECISIONS.md (#31), .claude/rules/backend.md. Viết OccurrenceService sinh các lần xảy ra của giỗ/sinh nhật/sự kiện chung trong một khoảng ngày (dùng AnniversaryRules, bỏ member bị khóa), API sắp tới, lịch tháng, vừa qua. Chỉ làm checklist Đợt 18. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 18 — Lịch nhắc BE (occurrences) ⬜
-IDEA §6.5, §7 · DECISIONS #31
-- [ ] `OccurrenceService.between(familyId, from, to, types)`: sinh các lần xảy ra của giỗ (người đã mất, theo `AnniversaryRules`, ghi "giỗ lần thứ N" nếu biết năm mất), sinh nhật (người còn sống, âm hoặc dương, "tròn N tuổi" nếu biết năm sinh), và sự kiện chung. Loại member bị khóa. Mỗi lần xảy ra có một `eventKey` ổn định (dùng lại ở Đợt 28).
-- [ ] `GET /api/calendar/upcoming?days=7|15|30|90|365&type=&sort=asc|desc`, có "còn N ngày".
-- [ ] `GET /api/calendar/month?year=&month=&mode=solar|lunar`: trả các ngày kèm ngày âm và sự kiện.
-- [ ] `GET /api/calendar/recent?limit=10`.
-- [ ] Test: khoảng ngày vắt qua năm (tháng 12 sang tháng 1), tháng nhuận, ngày 30 dời sang 29, 29/2, ngày ghi đè, người bị khóa không xuất hiện.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có.
-
-**🧪 Test thủ công (từng bước):**
-1. Tạo người đã mất có ngày giỗ âm rơi vào khoảng 10 ngày tới.
-2. Gọi `GET /api/calendar/upcoming?days=15`: có mục "Giỗ … còn N ngày, giỗ lần thứ N".
-3. Gọi `GET /api/calendar/month` cho tháng hiện tại: ngày đó có sự kiện, và mỗi ngày đều có ngày âm.
-4. Đặt `memorial_override_*` cho người đó: ngày giỗ đổi theo.
-
-**➡️ Đợt tiếp:** Đợt 19 — Lịch FE · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
-```text
-Làm Đợt 19 — Lịch FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 19, roadmap/IDEA.md §6.5, .claude/rules/frontend.md. Chạy npm run gen:api trước. Làm trang Lịch gồm tab "Sắp tới" (khoảng ngày, lọc, sắp xếp), tab "Lịch tháng" (ô ngày dương lớn/âm nhỏ, chấm màu theo loại, nút gạt xem theo âm, bấm ngày để xem sự kiện, danh sách theo tuần trên điện thoại), và form sự kiện chung cho Manager. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 19. Xong khi `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+Làm Đợt 15 — Cây FE: hiển thị và thêm người theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 15, roadmap/IDEA.md §8, docs/DECISIONS.md (#60, #71), .claude/rules/frontend.md. Viết hợp đồng các thao tác thêm (gốc, con, vợ/chồng, cha/mẹ), handler giả lập dùng utils/tree, trang Cây bằng React Flow hiển thị kết quả layoutTree (MemberNode, ô trống, cột Đời cố định, zoom/kéo/pinch), ba nút "+" cho Admin mở hộp chọn thành viên chưa có trên cây, chọn cặp khi có ≥2 vợ/chồng. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 15. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
 BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 19 — Lịch FE ⬜
-IDEA §6.5 · DESIGN §1 (màu sự kiện), §5
-- [ ] Tab "Sắp tới": chọn khoảng 7/15/30/90 ngày hoặc cả năm, lọc theo loại, sắp xếp gần nhất/xa nhất. Mỗi dòng có icon và màu theo loại, kèm "còn N ngày", "giỗ lần thứ N", "tròn N tuổi".
-- [ ] Tab "Lịch tháng": mỗi ô có ngày dương lớn, ngày âm nhỏ và chấm màu. Nút gạt "Xem theo âm". Bấm vào ngày thì mở sheet danh sách sự kiện. Trên điện thoại (<768px) hiện danh sách theo tuần.
-- [ ] Form sự kiện chung cho Manager (dùng `DualDateInput`, lặp hằng năm hoặc một lần), có sửa và xóa.
-- [ ] Chú giải màu có kèm chữ, không phân biệt loại chỉ bằng màu.
+### Đợt 15 — Cây FE: hiển thị và thêm người ⬜
+IDEA §8 · DECISIONS #60, #71
+- [ ] Hợp đồng: `POST /api/tree/roots`, `POST /api/tree/nodes/{id}/children` (có `coParentNodeId`), `POST /api/tree/nodes/{id}/spouses`, `POST /api/tree/nodes/{id}/parent`. Body chứa `memberId`. Lỗi trả ProblemDetail với mã như `TREE_NEEDS_CO_PARENT`, `TREE_PARENT_ONLY_AT_TOP`, `MEMBER_ALREADY_ON_TREE`.
+- [ ] Handler giả lập cho `GET /api/tree` và các thao tác thêm. Store cây nằm trong localStorage và **lúc đầu trống**. Kiểm tra hợp lệ bằng `utils/tree`.
+- [ ] Trang Cây:
+  - React Flow chỉ hiển thị kết quả của `layoutTree`.
+  - `MemberNode` theo DESIGN §5: họ tên nguyên văn, ảnh hoặc chữ cái đầu, người đã mất có viền xám và ✝ kèm năm mất, có nhãn.
+  - Ô trống viền đứt. Ô của người chưa rõ giới tính vẽ trung tính.
+  - Đường nối hôn nhân (kèm thứ tự) và đường cha mẹ–con.
+- [ ] Cột trái cố định "Đời 01…N", đồng bộ trục y với viewport. Zoom, kéo, pinch. Bật `onlyRenderVisibleElements`.
+- [ ] Cây trống:
+  - User thấy trạng thái rỗng "Cây chưa được dựng".
+  - Admin thấy nút **"+ Thêm người gốc"**, và thêm được nhiều gốc.
+- [ ] Admin thấy ba nút "+" trên ô (dưới: Con, cạnh: Vợ/Chồng, trên: Cha/Mẹ), chỉ hiện ở chỗ được phép theo `utils/tree`.
+  - Mỗi nút mở hộp chọn **thành viên chưa có trên cây**, có tìm không dấu. Hộp này là bottom sheet trên điện thoại.
+  - "+ Con" trên người có ≥ 2 vợ/chồng thì hỏi thêm "Con với ai".
+- [ ] Test: hiện "+" đúng chỗ, hộp chọn loại người đã có trên cây, handler thêm cha/mẹ làm cả cây dịch xuống một đời.
 
 **✅ Đã làm:** _(điền khi xong)_
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. Mở Lịch > Sắp tới, chọn 30 ngày, lọc Giỗ: chỉ còn các ngày giỗ.
-2. Mở Lịch tháng ở khổ 1280px: ô ngày giỗ có chấm tím, ngày âm hiện đúng.
-3. Bật "Xem theo âm": lưới đổi sang tháng âm.
-4. Ở khổ 375px: hiện danh sách theo tuần.
-5. Dùng Manager thêm sự kiện chung: sự kiện hiện ngay trên lịch.
+1. User vào Cây: thấy "Cây chưa được dựng".
+2. Admin bấm "+ Thêm người gốc", chọn một người: người đó hiện ở Đời 01.
+3. Bấm "+" cạnh để thêm 2 vợ/chồng, rồi bấm "+" dưới: phải hỏi "Con với ai". Con hiện đúng dưới cặp đã chọn.
+4. Bấm "+" trên của người gốc: người mới thành Đời 01, cả cây dịch xuống. Ô ở Đời 02 không còn nút "+" trên.
+5. Hộp chọn không còn những người đã có trên cây. Ở khổ 375px thì pinch và kéo đều mượt.
+6. *(Xong thì "Khôi phục dữ liệu gốc" nếu chỉ thử nghiệm.)*
 
-**➡️ Đợt tiếp:** Đợt 20 — Dashboard · Model **Sonnet** · Effort **medium** · Skill: `code-review`, `ui-ux-pro-max`, `run`, `dataviz`
+**➡️ Đợt tiếp:** Đợt 16 — Cây FE: chỉnh sửa và điều hướng · Model **Opus** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
 ```text
-Làm Đợt 20 — Dashboard (BE rồi FE) theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 20, roadmap/IDEA.md §6.8, .claude/rules/backend.md và .claude/rules/frontend.md. BE: GET /api/dashboard (thẻ số liệu, sự kiện gần nhất, 10 sự kiện vừa qua, 30 ngày tới, số yêu cầu chờ duyệt cho Manager). FE: trang Tổng quan gồm các ô số liệu, đếm ngược, danh sách. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 20. Xong khi `.\mvnw.cmd verify`, `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review, ui-ux-pro-max, run, dataviz. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 20 — Dashboard (BE + FE) ⬜
-IDEA §6.8
-- [ ] BE `GET /api/dashboard`: tổng thành viên, còn sống/đã mất, số đời, số chi, sự kiện gần nhất, 10 sự kiện vừa qua, danh sách 30 ngày tới. Manager có thêm `pendingLinkRequests`, và `pendingProposals` (bằng 0 cho tới GĐ2). Không tính member bị khóa.
-- [ ] BE test: số liệu đúng khi có member bị khóa, truy cập chéo family.
-- [ ] FE trang Tổng quan: hàng thẻ số liệu (dùng stat tile theo dataviz, số dạng tabular), thẻ navy "Sắp tới" có đếm ngược, danh sách 30 ngày, danh sách 10 sự kiện vừa qua. Manager có thẻ "Chờ duyệt" dẫn tới trang duyệt.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có.
-
-**🧪 Test thủ công (từng bước):**
-1. Mở Tổng quan ở khổ 1280px: 4 thẻ số liệu khớp với số liệu trên trang Thành viên.
-2. Khóa một người trong DB (`locked=1`), F5: tổng giảm đi 1.
-3. Dùng Manager, tạo một yêu cầu liên kết: thẻ Chờ duyệt hiện 1.
-4. Ở khổ 375px: các thẻ xếp thành một cột và đọc được rõ.
-
-**➡️ Đợt tiếp:** Đợt 21 — PWA · Model **Sonnet** · Effort **medium** · Skill: `ui-ux-pro-max`, `run`
-```text
-Làm Đợt 21 — PWA theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 21, roadmap/IDEA.md §1 và §9, docs/DECISIONS.md (#38), .claude/rules/frontend.md. Cấu hình vite-plugin-pwa: manifest, icon, cache app shell, NetworkFirst cho GET /api (trừ /api/auth), thông báo khi có bản cập nhật, hướng dẫn cài lên màn hình chính cho iOS, banner khi mất mạng. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 21. Xong khi `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+Làm Đợt 16 — Cây FE: chỉnh sửa và điều hướng theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 16, roadmap/IDEA.md §6.1 và §8, docs/DECISIONS.md (#60–62), .claude/rules/frontend.md. Viết hợp đồng và handler giả lập cho gỡ khỏi cây (ô trống), điền ô trống, xóa ô trống, di chuyển nhánh (kéo thả trên máy tính, menu trên điện thoại, chặn vòng), đổi thứ tự anh em, đổi cặp cha–mẹ; thêm thu gọn nhánh, tìm và nhảy tới, "Xem cây từ người này", "Xem tổ tiên của tôi", chế độ 3 đời trên điện thoại, khối "Trên cây" ở hồ sơ, lọc đời/có trên cây ở danh sách. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 16. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
 BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 21 — PWA ⬜
-IDEA §1, §9 · DECISIONS #38
-- [ ] `vite-plugin-pwa`: manifest (tên "Tộc Phả", `theme_color` là màu primary, `display: standalone`), bộ icon 192/512/maskable.
-- [ ] Service worker: precache app shell. Chiến lược NetworkFirst cho `GET /api/**`, trừ `/api/auth/**`. Không cache request ghi.
-- [ ] Toast "Có bản mới" kèm nút tải lại. Banner "Đang offline — dữ liệu có thể cũ".
-- [ ] Hướng dẫn cài: Android và máy tính dùng `beforeinstallprompt`, iOS hiện hướng dẫn "Chia sẻ → Thêm vào MH chính".
-- [ ] Chạy Lighthouse trên bản build: PWA đạt yêu cầu cài đặt, Performance trên mobile ≥ 80.
+### Đợt 16 — Cây FE: chỉnh sửa và điều hướng ⬜
+IDEA §6.1, §8 · DECISIONS #60–62
+- [ ] Hợp đồng:
+  - `DELETE /api/tree/nodes/{id}/member` (gỡ khỏi cây, ô thành ô trống);
+  - `PUT /api/tree/nodes/{id}/member` (điền ô trống);
+  - `DELETE /api/tree/nodes/{id}` (xóa ô trống, lỗi `TREE_SLOT_NOT_EMPTY` hoặc `TREE_SLOT_HAS_LINKS`);
+  - `POST /api/tree/nodes/{id}/move` (`newParentNodeId|null`, `coParentNodeId`; lỗi `TREE_CYCLE`);
+  - `PUT /api/tree/nodes/{id}/order`;
+  - `PUT /api/tree/nodes/{id}/co-parent`.
 
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có (chạy thật trên HTTPS ở Đợt 23).
-
-**🧪 Test thủ công (từng bước):**
-1. `npm run build` rồi `npm run preview`, mở Chrome, trên thanh địa chỉ phải có nút cài app.
-2. Cài app: mở ra dạng cửa sổ riêng, có icon đúng.
-3. Xem cây và lịch một lần. DevTools > Network > Offline, F5: vẫn xem được dữ liệu cũ, có banner offline.
-4. Build lại sau khi sửa một chữ bất kỳ: hiện toast "Có bản mới".
-
-**➡️ Đợt tiếp:** Đợt 22 — E2E Playwright GĐ1 · Model **Sonnet** · Effort **medium** · Skill: `run`, `code-review`
-```text
-Làm Đợt 22 — E2E Playwright GĐ1 theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 22, docs/DECISIONS.md (#45), .claude/rules/frontend.md. Cài Playwright trong apps/frontend, viết 3 luồng: đăng ký + OTP (đọc OTP qua endpoint test chỉ bật ở profile e2e), tạo dòng họ + mời, thêm member + thấy trên cây. Chạy app và kiểm tra ở khổ 375px và 1280px. Chỉ làm checklist Đợt 22. Xong khi `npm run lint`, `npm run build` và `npx playwright test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: run, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 22 — E2E Playwright GĐ1 ⬜
-DECISIONS #45
-- [ ] Cài Playwright, dùng 2 project `mobile` (375px) và `desktop` (1280px).
-- [ ] BE profile `e2e`: `InMemoryMailSender` + endpoint `GET /api/test/last-otp`. **Chỉ bật ở profile e2e**, và có test đảm bảo endpoint này không tồn tại ở profile prod.
-- [ ] 3 luồng: đăng ký + OTP; tạo dòng họ + tạo mã + user thứ hai tham gia; thêm member + "+ Con" + thấy người đó trên cây.
-- [ ] Script `npm run e2e`, có hướng dẫn chạy trong README của frontend.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** `npx playwright install chromium`.
-
-**🧪 Test thủ công (từng bước):**
-1. Chạy backend với `-Dspring-boot.run.profiles=dev,e2e` và `npm run dev`.
-2. Chạy `npm run e2e`: cả 3 luồng đều xanh ở cả 2 khổ màn hình.
-3. Chạy backend ở profile `prod` (local), gọi `/api/test/last-otp`: nhận 404.
-
-**➡️ Đợt tiếp:** Đợt 23 — Deploy production GĐ1 · Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`
-```text
-Làm Đợt 23 — Deploy production GĐ1 theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 23, roadmap/IDEA.md §11, docs/DECISIONS.md (#39–43), .claude/rules/security.md. Viết Dockerfile BE (arm64), image nginx chứa FE, docker-compose.prod.yml, cấu hình nginx (HTTPS, /api, SPA fallback, security header), certbot, script backup lên Object Storage, workflow deploy.yml (build arm64, đẩy GHCR, deploy qua SSH). Chỉ làm checklist Đợt 23. Xong khi `.\mvnw.cmd verify`, `npm run build` pass và `docker compose -f infra/docker-compose.prod.yml config` hợp lệ. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 23 — Deploy production GĐ1 ⬜
-IDEA §11 · DECISIONS #39–43
-- [ ] `apps/backend/Dockerfile` (multi-stage, JRE 21, `linux/arm64`, chạy bằng user không phải root). `infra/nginx/Dockerfile` build FE rồi copy `dist` vào nginx.
-- [ ] `infra/docker-compose.prod.yml`: nginx, app, mysql (có volume, không mở cổng ra ngoài), certbot. Healthcheck cho từng service.
-- [ ] Cấu hình nginx: chuyển HTTP sang HTTPS, `/api` proxy tới app, SPA fallback, gzip, cache dài cho asset có hash, header HSTS, CSP, `X-Content-Type-Options`, `Referrer-Policy`. `sw.js` không cache.
-- [ ] `infra/backup/backup.sh`: `mysqldump`, gzip, đẩy lên Object Storage, xóa bản cũ hơn 30 ngày. Có mẫu dòng cron.
-- [ ] `.github/workflows/deploy.yml`: chạy bằng `workflow_dispatch` hoặc tag `v*`. Build buildx arm64, đẩy GHCR, SSH vào server chạy `docker compose pull && up -d`.
-- [ ] `infra/README.md`: runbook gồm lần deploy đầu, gia hạn chứng chỉ, khôi phục từ backup.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:**
-- Tạo VM Oracle Cloud Always Free (Ampere A1, Ubuntu). Mở cổng 80 và 443 ở cả Security List lẫn iptables. Cài Docker.
-- Tạo tên miền DuckDNS, đặt cron cập nhật IP.
-- Chạy certbot lần đầu để lấy chứng chỉ.
-- Đặt `.env` production lên server (`chmod 600`).
-- Thêm GitHub Secrets: `SSH_HOST`, `SSH_USER`, `SSH_KEY`. Kiểm tra quyền GHCR.
-- Tạo bucket Object Storage và cấu hình credential cho script backup.
-- Google OAuth: thêm origin `https://<ten>.duckdns.org`. Cấu hình SMTP thật (`MAIL_*`).
-
-**🧪 Test thủ công (từng bước):**
-1. Chạy workflow Deploy: tất cả các bước xanh.
-2. Mở `https://<ten>.duckdns.org`: có ổ khóa HTTPS, trang đăng nhập hiện ra.
-3. Kiểm tra `curl -I`: có đủ các security header. Truy cập bằng `http://` thì bị chuyển sang `https://`.
-4. Đăng ký bằng email thật: nhận được OTP qua mail.
-5. Cài PWA trên Android và iPhone (Thêm vào màn hình chính).
-6. Chạy `backup.sh` bằng tay: có file trên Object Storage. Khôi phục vào DB tạm để thử.
-
-**➡️ Đợt tiếp:** Đợt 24 — Lịch sử thay đổi · Model **Sonnet** · Effort **medium** · Skill: `code-review`, `ui-ux-pro-max`, `run`
-```text
-Làm Đợt 24 — Lịch sử thay đổi (BE rồi FE) theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 24, roadmap/IDEA.md §6.3 và §12, docs/DECISIONS.md (#33b), .claude/rules/backend.md và .claude/rules/frontend.md. BE: API đọc audit_log theo member (phân trang, ghi tên người sửa). FE: tab "Lịch sử thay đổi" hiện diff trước/sau dễ đọc. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 24. Xong khi `.\mvnw.cmd verify`, `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review, ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-# GIAI ĐOẠN 2 — TƯƠNG TÁC
-
-### Đợt 24 — Lịch sử thay đổi (BE + FE) ⬜
-IDEA §6.3, §12 · DECISIONS #33b
-- [ ] BE `GET /api/members/{id}/history`: phân trang, gồm người sửa, thời điểm, và danh sách trường thay đổi (tính từ `before`/`after`). Ẩn SĐT và email trong diff với người không có quyền xem.
-- [ ] BE test: ẩn trường nhạy cảm, truy cập chéo family.
-- [ ] FE: tab "Lịch sử" trong trang chi tiết, dạng timeline, mỗi mục hiện "Trường: cũ → mới" với nhãn tiếng Việt.
+  Kèm handler giả lập.
+- [ ] Menu khi bấm vào ô:
+  - Mọi người thấy "Xem hồ sơ" và "Xem cây từ người này".
+  - Admin thấy thêm "Gỡ khỏi cây", "Di chuyển nhánh", "Đổi thứ tự", "Đổi cặp cha–mẹ", và "Xóa ô" (với ô trống).
+  - Bấm vào ô trống thì mở hộp chọn người để điền.
+- [ ] Di chuyển nhánh:
+  - Máy tính (≥ 1024px): kéo thả, hiện vùng thả hợp lệ, thả sai chỗ thì báo lý do.
+  - Điện thoại: dùng menu "Di chuyển nhánh" rồi chọn ô đích hoặc "Thành gốc mới".
+  - Luôn có hộp xác nhận ghi số người trong nhánh.
+- [ ] Điều hướng:
+  - thu gọn hoặc mở rộng từng nhánh;
+  - ô tìm kiếm nhảy tới người cần tìm và làm nổi bật;
+  - "Xem cây từ người này";
+  - **"Xem tổ tiên của tôi"** (cần đã liên kết và có trên cây, nếu không thì giải thích lý do);
+  - trên điện thoại mặc định hiện 3 đời quanh người được chọn (hoặc chính mình), chạm để mở rộng.
+- [ ] Hồ sơ thành viên: khối **"Trên cây"** gồm đời, cha/mẹ, vợ/chồng, con theo cây, và nút "Xem trên cây". Người chưa có trên cây thì ghi rõ. Handler danh sách thành viên lọc được theo đời và theo có trên cây.
+- [ ] Xóa thành viên đang có trên cây (Đợt 12) nay bị chặn thật.
+- [ ] Test: gỡ khỏi cây giữ nguyên con cháu, chặn di chuyển vào trong chính nhánh, điều kiện xóa ô trống, đổi cặp, toàn bộ `shared/fixtures/tree/`.
 
 **✅ Đã làm:** _(điền khi xong)_
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. Sửa tên và năm sinh của D.
-2. Mở tab Lịch sử: thấy "Họ tên: … → …", "Năm sinh: … → …", kèm người sửa và thời gian.
-3. Dùng User xem lịch sử có đổi SĐT: SĐT bị ẩn.
+1. Dựng một cây thử có 3 đời. Gỡ người ở giữa: ô của họ thành ô trống, con cháu vẫn nối vào ô trống, và người đó vẫn còn trong danh sách thành viên.
+2. Bấm ô trống, điền một người khác: cây vẽ lại đúng.
+3. Kéo một nhánh vào trong chính con cháu của nó: bị chặn. Kéo sang một ô khác: cả nhánh đi theo.
+4. Xóa ô trống còn con: bị chặn. Xóa ô trống không còn liên kết: xóa được.
+5. Liên kết tài khoản với một người trên cây rồi bấm "Xem tổ tiên của tôi": chỉ hiện đường đi lên các đời trên.
+6. Ở khổ 375px chỉ thấy 3 đời, chạm để mở rộng.
 
-**➡️ Đợt tiếp:** Đợt 25 — Đề xuất BE · Model **Sonnet** · Effort **high** · Skill: `code-review`
+**➡️ Đợt tiếp:** Đợt 17 — Lịch và sự kiện FE · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
 ```text
-Làm Đợt 25 — Đề xuất BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 25, roadmap/IDEA.md §4 và §6.6, .claude/rules/backend.md. Làm bảng proposal, User tạo đề xuất (payload + diff do server tính + base_updated_at), hàng đợi của Manager, duyệt (có thể chỉnh payload) và áp dụng qua facade trong một transaction, từ chối kèm lý do, cảnh báo xung đột, publish event ProposalReviewed. Chỉ làm checklist Đợt 25. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 25 — Đề xuất BE ⬜
-IDEA §4, §6.6
-- [ ] `V9__proposal.sql`.
-- [ ] `POST /api/proposals`: `target_type` MEMBER/MARRIAGE/EVENT/BRANCH, `action` CREATE/UPDATE/DELETE. Server tự tính `diff` và lưu `base_updated_at`. Validate payload bằng cùng validator với API ghi trực tiếp.
-- [ ] `GET /api/proposals/mine`. Manager có `GET /api/proposals?status=PENDING` và `count`.
-- [ ] `POST /{id}/approve` (nhận payload đã chỉnh, tùy chọn): áp dụng qua `MemberFacade`/`EventFacade` trong một transaction, có ghi audit log. `POST /{id}/reject` kèm `note`. Proposal DELETE chỉ mang tính thông báo: duyệt là đánh dấu "đã ghi nhận", không xóa.
-- [ ] Cảnh báo xung đột: khi `target.updated_at > base_updated_at` thì response có `conflict: true`.
-- [ ] Publish `ProposalReviewed` (application event) để Đợt 27 tiêu thụ. `pendingProposals` trên dashboard lấy số thật.
-- [ ] Test: User tạo, Manager duyệt đúng dữ liệu, trường hợp xung đột, User không duyệt được, truy cập chéo family.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có.
-
-**🧪 Test thủ công (từng bước):**
-1. User đề xuất sửa năm sinh của D. Manager gọi `GET /api/proposals`: thấy diff.
-2. Manager tự sửa tên D trực tiếp, rồi mở đề xuất: có `conflict: true`.
-3. Manager duyệt kèm năm sinh đã chỉnh lại: D được cập nhật, `audit_log` có bản ghi.
-4. Tạo đề xuất khác rồi từ chối kèm lý do: trạng thái là REJECTED, có `review_note`.
-
-**➡️ Đợt tiếp:** Đợt 26 — Đề xuất FE · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
-```text
-Làm Đợt 26 — Đề xuất FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 26, roadmap/IDEA.md §6.6 và §8 (menu), .claude/rules/frontend.md. Chạy npm run gen:api. Làm menu "Đề xuất…" cho User trên cây và trang member (dùng lại form/dialog ở chế độ đề xuất), trang "Đề xuất của tôi", hàng đợi của Manager có badge, xem diff, chỉnh rồi duyệt, từ chối kèm lý do, cảnh báo xung đột. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 26. Xong khi `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+Làm Đợt 17 — Lịch và sự kiện FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 17, roadmap/IDEA.md §6.5 và §7, docs/DECISIONS.md (#31, #65, #72), .claude/rules/frontend.md. Viết hợp đồng sự kiện chung và lịch (upcoming, month, recent), hàm thuần utils/occurrences (giỗ theo AnniversaryRules, sinh nhật, sự kiện chung, eventKey ổn định) kèm fixture dùng chung shared/fixtures/occurrences, handler giả lập, tab Sắp tới, tab Lịch tháng, form sự kiện chung cho Admin. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 17. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
 BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 26 — Đề xuất FE ⬜
-IDEA §6.6, §8
-- [ ] Thêm prop `mode: 'direct' | 'proposal'` cho form và dialog của Đợt 12. User thấy các mục "Đề xuất thêm con…", "Đề xuất sửa…", "Đề xuất xóa…" trên cây và trang member.
-- [ ] Trang "Đề xuất của tôi" hiện trạng thái và lý do bị từ chối.
-- [ ] Manager có badge số đang chờ trên menu, trang hàng đợi, và trang chi tiết gồm diff 2 cột, sửa payload, Duyệt, Từ chối kèm lý do. Banner cảnh báo khi `conflict`.
+### Đợt 17 — Lịch và sự kiện FE ⬜
+IDEA §6.5, §7 · DESIGN §1 (màu sự kiện) · DECISIONS #31, #65, #72
+- [ ] Hợp đồng:
+  - CRUD `/api/events` (Admin ghi, mọi người đọc; `year = null` nghĩa là lặp hằng năm);
+  - `GET /api/calendar/upcoming?days=7|15|30|90|365&type=&sort=asc|desc`;
+  - `GET /api/calendar/month?year=&month=&mode=solar|lunar`;
+  - `GET /api/calendar/recent?limit=10`.
+- [ ] `src/utils/occurrences/` (hàm thuần): sinh các lần xảy ra trong một khoảng ngày.
+  - **Giỗ:** người đã mất có ngày mất âm hoặc ngày ghi đè, theo `AnniversaryRules`. Ghi "giỗ lần thứ N" nếu biết năm mất.
+  - **Sinh nhật:** người còn sống có ngày/tháng sinh. Ghi "tròn N tuổi" nếu biết năm sinh.
+  - **Sự kiện chung.**
+  - Mỗi lần xảy ra có một `eventKey` ổn định.
+- [ ] `shared/fixtures/occurrences/`: các ca đầu vào kèm kết quả mong đợi (vắt qua năm, tháng nhuận, ngày 30 dời sang 29, 29/2, ngày ghi đè, giỗ không có năm). Backend dùng lại ở Đợt 31.
+- [ ] Handler giả lập cho sự kiện và lịch, dùng `utils/occurrences` trên store.
+- [ ] Tab **"Sắp tới"**:
+  - chọn khoảng thời gian, lọc theo loại, sắp xếp;
+  - mỗi dòng có icon và màu theo loại, kèm "còn N ngày", "giỗ lần thứ N", "tròn N tuổi".
+- [ ] Tab **"Lịch tháng"**:
+  - mỗi ô có ngày dương lớn, ngày âm nhỏ và chấm màu;
+  - nút gạt "Xem theo âm";
+  - bấm vào ngày thì mở sheet danh sách sự kiện;
+  - dưới 768px hiện danh sách theo tuần.
+- [ ] Form sự kiện chung (chỉ Admin): dùng `DualDateInput`, chọn lặp hằng năm hoặc một lần, có sửa và xóa. Chú giải màu có kèm chữ.
+- [ ] Test: toàn bộ fixture occurrences. Riêng "Cụ Nguyễn Thị Thêm" (01/11 âm, không năm) có giỗ mỗi năm nhưng không có "lần thứ N".
 
 **✅ Đã làm:** _(điền khi xong)_
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. Đăng nhập bằng User, bấm vào ô trên cây, chọn "Đề xuất sửa…", đổi năm sinh rồi gửi.
-2. Đăng nhập bằng Manager: badge hiện 1. Mở đề xuất: diff đỏ/xanh dễ đọc.
-3. Chỉnh năm sinh rồi Duyệt: cây cập nhật.
-4. Ở khổ 375px: diff hiện theo chiều dọc, không bị tràn ngang.
+1. Vào Lịch > Sắp tới, chọn "Cả năm": thấy giỗ của các cụ có ngày mất (ví dụ "Giỗ Cụ Nguyễn Văn Sửu — 11/7 âm — giỗ lần thứ N").
+2. Lịch tháng 12 âm (bật "Xem theo âm"): có giỗ Bà Trần Thị Nhung (29/12) và Nguyễn Văn Thông (29/12).
+3. Admin tạo sự kiện "Giỗ tổ" lặp hằng năm theo âm: sự kiện hiện ở cả hai tab.
+4. Ở khổ 375px, lịch tháng chuyển thành danh sách theo tuần.
 
-**➡️ Đợt tiếp:** Đợt 27 — Thông báo BE: hộp thư, tùy chọn · Model **Sonnet** · Effort **medium** · Skill: `code-review`
+**➡️ Đợt tiếp:** Đợt 18 — Dashboard FE · Model **Sonnet** · Effort **medium** · Skill: `ui-ux-pro-max`, `run`, `dataviz`
 ```text
-Làm Đợt 27 — Thông báo BE: hộp thư, tùy chọn theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 27, roadmap/IDEA.md §4 và §9, .claude/rules/backend.md. Làm bảng notification và notification_pref, API hộp thư (danh sách, số chưa đọc, đánh dấu đã đọc), API tùy chọn, listener ProposalReviewed và kết quả liên kết để tạo thông báo. Chỉ làm checklist Đợt 27. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 27 — Thông báo BE: hộp thư, tùy chọn ⬜
-IDEA §4, §9
-- [ ] `V10__notification.sql`: `notification`, `notification_pref` (giá trị mặc định được tạo khi user được tạo, hoặc tạo lười khi đọc lần đầu).
-- [ ] `GET /api/notifications` (phân trang), `GET /unread-count`, `POST /{id}/read`, `POST /read-all`.
-- [ ] `GET/PUT /api/notifications/preferences`: bật/tắt 3 loại, các mốc `[30,7,3,1,0]`, giờ `send_hour` từ 0 đến 23.
-- [ ] Listener: `ProposalReviewed` → thông báo cho người đề xuất. Duyệt/từ chối liên kết → thông báo cho user. Đề xuất mới → thông báo cho Manager.
-- [ ] Test: chỉ đọc được thông báo của chính mình, giá trị mặc định của tùy chọn.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có.
-
-**🧪 Test thủ công (từng bước):**
-1. User gửi đề xuất: Manager gọi `unread-count` được 1.
-2. Manager duyệt: User nhận thông báo "Đề xuất đã được duyệt".
-3. `PUT /preferences` tắt sinh nhật, rồi `GET` lại: giá trị được giữ.
-
-**➡️ Đợt tiếp:** Đợt 28 — Web Push BE · Model **Sonnet** · Effort **high** · Skill: `code-review`
-```text
-Làm Đợt 28 — Web Push BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 28, roadmap/IDEA.md §9, docs/DECISIONS.md (#46), .claude/rules/backend.md. Làm bảng push_subscription và notification_dispatch, đăng ký/hủy đăng ký, gửi thử, job chạy mỗi giờ (+7) gom bản tin theo send_hour, các mốc và loại đã bật, chống gửi trùng, xóa subscription khi gặp 404/410. Web push đặt sau interface. Chỉ làm checklist Đợt 28. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 28 — Web Push BE ⬜
-IDEA §9 · DECISIONS #46
-- [ ] `V11__push.sql`: `push_subscription`, `notification_dispatch` (UNIQUE trên 4 cột).
-- [ ] `PushSender` (interface) và bản cài bằng `nl.martijndwars:web-push` + khóa VAPID. `GET /api/push/public-key`, `POST /api/push/subscribe`, `DELETE /api/push/subscribe`, `POST /api/push/test`.
-- [ ] `DigestJob` (`@Scheduled` mỗi giờ, zone +7): với user có `send_hour` bằng giờ hiện tại, lấy `OccurrenceService` tại các mốc đã bật (30/7/3/1/0) và loại đã bật, gộp thành một bản tin. Không còn mục nào thì không gửi. Ghi `notification` (vào hộp thư) và gửi push. Ghi `notification_dispatch` để chống gửi trùng.
-- [ ] Gặp 404/410 thì xóa subscription. Gửi thành công thì cập nhật `last_ok_at`.
-- [ ] Test: nội dung bản tin (ví dụ "Còn 3 ngày: Giỗ cụ …; Hôm nay: sinh nhật …"), mốc bị tắt thì bỏ khỏi bản tin, bản tin rỗng thì không gửi, chạy job 2 lần không gửi trùng, 410 thì xóa.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:**
-- Sinh khóa VAPID (`npx web-push generate-vapid-keys`), điền `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT=mailto:…` vào `.env` (cả dev lẫn prod).
-
-**🧪 Test thủ công (từng bước):**
-1. Dùng một trang HTML tạm hoặc chờ Đợt 29 để có subscription, rồi `POST /api/push/test`: nhận được push.
-2. Đặt `send_hour` bằng giờ hiện tại, tạo một ngày giỗ còn 3 ngày, rồi gọi endpoint chạy job (chỉ có ở dev): nhận một bản tin.
-3. Chạy lại job: không nhận thêm (chống trùng).
-
-**➡️ Đợt tiếp:** Đợt 29 — Thông báo FE · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
-```text
-Làm Đợt 29 — Thông báo FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 29, roadmap/IDEA.md §9, .claude/rules/frontend.md. Chạy npm run gen:api. Làm chuông có số chưa đọc và trang hộp thư, trang Cài đặt thông báo (loại, mốc, giờ nhận, trạng thái thiết bị, nút đăng ký push, Gửi thử), xử lý push trong service worker, hướng dẫn bật thông báo theo từng loại thiết bị ở lần đăng nhập đầu. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 29. Xong khi `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 29 — Thông báo FE ⬜
-IDEA §9
-- [ ] Chuông trên Header và BottomNav, có badge số chưa đọc (refetch khi focus lại cửa sổ). Trang hộp thư có "Đánh dấu đã đọc hết", bấm vào thông báo thì đi tới `link`.
-- [ ] Trang Cài đặt thông báo: công tắc 3 loại, các mốc, giờ nhận. Trạng thái "Thiết bị này: đã/chưa nhận thông báo". Nút "Bật thông báo" (xin quyền và subscribe). Nút "Gửi thử".
-- [ ] Service worker (injectManifest): xử lý sự kiện `push` để hiện notification, `notificationclick` để mở hoặc focus app tại `link`.
-- [ ] Hướng dẫn ở lần đăng nhập đầu, tùy thiết bị: Android/máy tính thì bấm "Cho phép", iOS <16.4 thì báo không hỗ trợ, iOS ≥16.4 chưa cài app thì hướng dẫn "Thêm vào MH chính" trước.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có (VAPID đã có ở Đợt 28). Muốn test trên điện thoại thì cần HTTPS (dùng prod hoặc tunnel).
-
-**🧪 Test thủ công (từng bước):**
-1. Chrome máy tính: vào Cài đặt thông báo, bấm Bật, rồi cho phép. Trạng thái chuyển sang "đã nhận".
-2. Bấm "Gửi thử": notification của hệ điều hành hiện lên, bấm vào thì mở đúng app.
-3. User gửi đề xuất: chuông của Manager tăng lên 1.
-4. Trên iPhone đã cài PWA (bản prod): bật thông báo và Gửi thử thành công.
-
-**➡️ Đợt tiếp:** Đợt 30 — Đính kèm BE · Model **Sonnet** · Effort **medium** · Skill: `code-review`
-```text
-Làm Đợt 30 — Đính kèm BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 30, roadmap/IDEA.md §6.7, .claude/rules/backend.md và .claude/rules/security.md. Mở rộng module file cho kind DOCUMENT: gắn vào member hoặc family, có tiêu đề, danh sách, xóa (Manager), kiểm tra jpg/png/webp/pdf/docx/xlsx, 10 MB, quota 1 GB. Chỉ làm checklist Đợt 30. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 30 — Đính kèm BE ⬜
-IDEA §6.7
-- [ ] Mở rộng `sign/confirm` cho `kind=DOCUMENT` (resource type `raw` cho pdf/docx/xlsx), có `title`, gắn vào `member_id` hoặc family.
-- [ ] `GET /api/members/{id}/attachments`, `GET /api/family/attachments`, `DELETE /api/attachments/{id}` (Manager/Admin, xóa luôn trên Cloudinary).
-- [ ] Link tải file docx/xlsx dùng URL có chữ ký, hết hạn sau một thời gian ngắn.
-- [ ] Ghi audit log. Test: sai MIME, quá 10 MB, vượt quota, truy cập chéo family.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có.
-
-**🧪 Test thủ công (từng bước):**
-1. Upload một file PDF gắn vào D: xuất hiện trong danh sách đính kèm của D.
-2. Upload file `.exe` đổi đuôi thành `.pdf`: bị từ chối.
-3. Manager xóa file: file biến mất cả ở danh sách lẫn trên Cloudinary.
-
-**➡️ Đợt tiếp:** Đợt 31 — Đính kèm FE · Model **Sonnet** · Effort **medium** · Skill: `ui-ux-pro-max`, `run`, `dataviz`
-```text
-Làm Đợt 31 — Đính kèm FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 31, roadmap/IDEA.md §6.7, .claude/rules/frontend.md. Chạy npm run gen:api. Làm tab "Tệp đính kèm" ở trang member và mục đính kèm của family: upload có tiến độ, xem trước ảnh/PDF, tải file, xóa (Manager), thanh quota dung lượng. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 31. Xong khi `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+Làm Đợt 18 — Dashboard FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 18, roadmap/IDEA.md §6.8, docs/DECISIONS.md (#71), .claude/rules/frontend.md. Viết hợp đồng GET /api/dashboard, handler giả lập (tổng, sống/mất, số người trên cây, số đời, sự kiện; số chờ duyệt cho Admin), trang Tổng quan với stat tile, thẻ Sắp tới đếm ngược, danh sách 30 ngày và 10 sự kiện vừa qua, thẻ Chờ duyệt cho Admin. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 18. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
 BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, dataviz. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 31 — Đính kèm FE ⬜
-IDEA §6.7
-- [ ] Tab "Tệp đính kèm": lưới ảnh thu nhỏ và danh sách tài liệu. Upload bằng kéo thả hoặc chọn file, có thanh tiến độ. Báo lỗi ngay khi sai định dạng hoặc quá kích thước.
-- [ ] Xem trước ảnh (lightbox) và PDF (tab mới). docx/xlsx thì tải về.
-- [ ] Manager có nút xóa (kèm hộp xác nhận). Trang Dòng họ có mục "Tài liệu chung".
-- [ ] Thanh quota "x MB / 1 GB" dạng meter theo dataviz, có kèm chữ.
+### Đợt 18 — Dashboard FE ⬜
+IDEA §6.8 · DECISIONS #71
+- [ ] Hợp đồng `GET /api/dashboard`:
+  - `totalMembers`, `living`, `deceased`, `onTree`, `maxGeneration`;
+  - `nextEvent`, `recentEvents[10]`, `upcoming30[]`;
+  - riêng Admin có thêm `pendingAccounts`, `pendingProposals`, `pendingLinkRequests`.
+- [ ] Handler giả lập tính từ store. Riêng `pendingAccounts` lấy từ backend thật (`/api/admin/accounts?approval=WAITING`). `pendingProposals` bằng 0 cho tới Đợt 20.
+- [ ] Trang Tổng quan:
+  - hàng stat tile (theo dataviz, số dạng tabular);
+  - thẻ navy "Sắp tới" có đếm ngược;
+  - danh sách 30 ngày tới và danh sách 10 sự kiện vừa qua.
+  - Admin có thẻ "Chờ duyệt" gồm 3 số, bấm vào dẫn tới trang tương ứng.
+  - Có trạng thái rỗng khi cây còn trống.
+- [ ] Test: handler tính số liệu đúng (28 người, 0 còn sống, 0 trên cây lúc đầu), thẻ Chờ duyệt ẩn với User.
 
 **✅ Đã làm:** _(điền khi xong)_
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. Kéo 3 ảnh vào tab Tệp đính kèm: tiến độ chạy, ảnh thu nhỏ hiện ra.
-2. Bấm vào ảnh: lightbox mở. Bấm vào PDF: mở tab mới.
-3. Upload file 12 MB: báo lỗi trước khi gửi đi.
-4. Thanh quota tăng đúng với dung lượng vừa upload.
+1. Tổng quan với dữ liệu gốc: Tổng 28, Còn sống 0, Đã mất 28, Trên cây 0.
+2. Admin thêm một người vào cây, quay lại Tổng quan: Trên cây 1, Số đời 1.
+3. Có tài khoản chờ duyệt: thẻ Chờ duyệt của Admin hiện đúng số, bấm vào mở Quản trị > Tài khoản.
+4. Kiểm tra ở khổ 375px và 1280px, số không bị nhảy độ rộng.
 
-**➡️ Đợt tiếp:** Đợt 32 — Quản trị BE: user, family, cấu hình · Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`
+**➡️ Đợt tiếp:** Đợt 19 — PWA · Model **Sonnet** · Effort **medium** · Skill: `ui-ux-pro-max`, `run`
 ```text
-Làm Đợt 32 — Quản trị BE: user, family, cấu hình theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 32, roadmap/IDEA.md §3 và §6.10, docs/DECISIONS.md (#22), .claude/rules/backend.md và .claude/rules/security.md. Làm module admin: tìm user, khóa/mở tài khoản (MANUAL, thu hồi token), danh sách family, Admin chọn family làm ngữ cảnh, chuyển quyền Manager, bảng system_setting (policy_version, quota AI, giới hạn upload). Chỉ ADMIN được gọi. Chỉ làm checklist Đợt 32. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-# GIAI ĐOẠN 3 — NÂNG CAO
-
-### Đợt 32 — Quản trị BE: user, family, cấu hình ⬜
-IDEA §3, §6.10 · DECISIONS #22
-- [ ] `/api/admin/**` chỉ cho `sysRole=ADMIN` (có test cho từng endpoint).
-- [ ] User: tìm kiếm, khóa/mở khóa (`lock_reason=MANUAL`, thu hồi refresh token). Không được tự khóa chính mình.
-- [ ] Family: xem danh sách và chi tiết, chuyển quyền Manager.
-- [ ] Ngữ cảnh family của Admin: header `X-Family-Id`, **chỉ có hiệu lực với ADMIN**. `CurrentUser.familyId()` trả family đang chọn, nên mọi API nghiệp vụ dùng lại được cho Admin.
-- [ ] `V12__system_setting.sql`: key-value (`policy_version`, `ai_quota_user`, `ai_quota_manager`, `upload_max_mb`, `family_quota_mb`), có cache Caffeine. `GET/PUT /api/admin/settings`.
-- [ ] Ghi audit log cho mọi thao tác admin. Test: User hoặc Manager gọi `/api/admin` nhận 403. User gửi `X-Family-Id` thì bị bỏ qua.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:**
-- Tạo tài khoản Admin đầu tiên. Đề xuất: biến `BOOTSTRAP_ADMIN_EMAIL`, khi user có email này đăng ký và xác thực thì tự thành ADMIN (một lần duy nhất).
-
-**🧪 Test thủ công (từng bước):**
-1. Đăng nhập bằng Admin, `GET /api/admin/users?q=…`, khóa user B. B gọi refresh thì bị từ chối, đăng nhập cũng bị từ chối.
-2. Admin gửi header `X-Family-Id: 1` và gọi `GET /api/members`: thấy member của family 1.
-3. User thường gửi `X-Family-Id` của family khác: vẫn chỉ thấy family của mình.
-4. Đổi `ai_quota_user` thành 20: `GET` trả về 20.
-
-**➡️ Đợt tiếp:** Đợt 33 — Khóa nhánh và xóa member BE · Model **Opus** · Effort **high** · Skill: `security-review`, `code-review`
-```text
-Làm Đợt 33 — Khóa nhánh và xóa member BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 33, roadmap/IDEA.md §5 (toàn bộ), .claude/rules/backend.md và .claude/rules/security.md. Làm khóa nhánh (DIRECT/INHERITED, lock_root_id, gồm cả dâu/rể trong nhánh, chặn khi nhánh chứa Manager, khóa tài khoản liên kết với MEMBER_LOCKED và thu hồi token), mở khóa (giữ nguyên người bị khóa DIRECT riêng), xóa cứng (chỉ người chưa có con, tự gỡ hôn nhân, gỡ liên kết tài khoản, lưu snapshot đầy đủ vào audit). Chỉ ADMIN. Chỉ làm checklist Đợt 33. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 33 — Khóa nhánh và xóa member BE ⬜
-IDEA §5
-- [ ] `BranchLockService.lock(memberId, reason)`: duyệt nhánh (người đó, toàn bộ con cháu, và dâu/rể của mọi người trong nhánh). Người được chọn là `DIRECT`, những người còn lại là `INHERITED` với `lock_root_id` là người được chọn. Người **đã bị khóa từ trước thì giữ nguyên** trạng thái cũ. Nếu nhánh có Manager thì chặn với lỗi rõ ràng.
-- [ ] Tài khoản liên kết với người bị khóa chuyển `LOCKED` + `MEMBER_LOCKED` và bị thu hồi mọi refresh token.
-- [ ] `unlock(rootId)`: mở những người `INHERITED` có cùng `lock_root_id`. Người `DIRECT` khác trong nhánh vẫn giữ khóa. Mở lại tài khoản có `MEMBER_LOCKED`.
-- [ ] `delete(memberId)`: chặn nếu người đó có con (gợi ý dùng Khóa). Tự gỡ hôn nhân. Đặt `user.member_id = NULL`. Audit ghi **snapshot đầy đủ** (member, các hôn nhân, file đính kèm) trước khi xóa cứng. Tất cả trong một transaction.
-- [ ] `GET /api/admin/members/locked?familyId=&rootId=`, `GET /api/admin/audit/deleted` (xem các snapshot).
-- [ ] Test: nhánh 3 đời có dâu, khóa lồng nhau rồi mở khóa gốc, chặn khi nhánh có Manager, tài khoản bị khóa rồi mở lại, xóa người có con bị chặn, snapshot đủ dữ liệu, sau khi khóa thì cây/lịch/dashboard/occurrences không còn người đó.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có.
-
-**🧪 Test thủ công (từng bước):**
-1. Admin khóa A (có con D, E và con dâu): trên cây không còn nhánh A, dashboard giảm đúng số người.
-2. User đã liên kết với D thử đăng nhập: bị từ chối.
-3. Trước đó khóa riêng E, rồi mở khóa A: D mở lại, E vẫn bị khóa.
-4. Thử khóa nhánh chứa Manager: bị chặn kèm thông báo "chuyển quyền Manager trước".
-5. Xóa H (không có con, có vợ): hôn nhân bị gỡ, snapshot hiện trong `/api/admin/audit/deleted`.
-
-**➡️ Đợt tiếp:** Đợt 34 — Quản trị FE · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
-```text
-Làm Đợt 34 — Quản trị FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 34, roadmap/IDEA.md §6.10 và §8 (menu Admin), .claude/rules/frontend.md. Chạy npm run gen:api. Làm khu /quan-tri: user (tìm, khóa/mở), family (danh sách, chọn làm ngữ cảnh, chuyển quyền Manager), member bị khóa theo nhánh, người đã xóa (snapshot), cấu hình hệ thống; thêm "Khóa nhánh" và "Xóa" vào menu ô trên cây cho Admin (có hộp xác nhận nêu rõ hậu quả). Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 34. Xong khi `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+Làm Đợt 19 — PWA theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 19, roadmap/IDEA.md §1 và §9, docs/DECISIONS.md (#38), .claude/rules/frontend.md. Cấu hình vite-plugin-pwa theo kiểu injectManifest (để Đợt 21 thêm xử lý push), manifest + icon, precache app shell, NetworkFirst cho GET /api/** trừ /api/auth/**, toast có bản mới, banner offline, hướng dẫn cài theo thiết bị. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 19. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
 BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 34 — Quản trị FE ⬜
-IDEA §6.10, §8
-- [ ] Layout `/quan-tri` riêng, có bộ chọn "Family đang xem" (lưu vào context và gắn `X-Family-Id`).
-- [ ] Các trang: Người dùng (tìm, khóa/mở), Dòng họ (danh sách, chuyển quyền Manager), Member bị khóa (lọc theo nhánh, mở khóa), Đã xóa (xem snapshot), Cấu hình.
-- [ ] Menu ô trên cây cho Admin có thêm "Khóa nhánh" và "Xóa". Hộp xác nhận nêu số người bị ảnh hưởng và tài khoản bị khóa theo. Khi bị chặn (có con, hoặc nhánh có Manager) thì hiện đúng lý do.
+### Đợt 19 — PWA ⬜
+IDEA §1, §9 · DECISIONS #38
+- [ ] `vite-plugin-pwa` theo kiểu **injectManifest**, có sẵn chỗ cho handler `push` ở Đợt 21. Manifest gồm tên "Tộc Phả", `theme_color` là màu primary, `display: standalone`, và bộ icon 192/512/maskable.
+- [ ] Service worker precache app shell. Dùng NetworkFirst cho `GET /api/**`, trừ `/api/auth/**` và `/api/me`. Không cache request ghi. Ở chế độ giả lập không đăng ký service worker.
+- [ ] Toast "Có bản mới" kèm nút tải lại. Banner "Đang offline — dữ liệu có thể cũ".
+- [ ] Hướng dẫn cài: Android và máy tính dùng `beforeinstallprompt`, iOS hiện hướng dẫn "Chia sẻ → Thêm vào MH chính".
+- [ ] Chạy Lighthouse trên bản build: đạt tiêu chí cài đặt PWA, Performance trên mobile ≥ 80.
 
 **✅ Đã làm:** _(điền khi xong)_
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. Admin đăng nhập: vào `/quan-tri`, chọn một family.
-2. Vào Cây, bấm vào A, chọn "Khóa nhánh": hộp xác nhận ghi "Sẽ khóa N người, M tài khoản". Xác nhận xong thì nhánh biến mất.
-3. Vào Member bị khóa: A xuất hiện, bấm Mở khóa thì nhánh quay lại.
-4. Xóa một người có con: hiện "Không thể xóa — người này có con, hãy dùng Khóa".
-5. Ở khổ 375px: các bảng chuyển thành dạng thẻ.
+1. `npm run build && npm run preview`, mở Chrome: có biểu tượng cài đặt, cài được.
+2. Tắt mạng (DevTools Offline): hiện banner offline, các trang đã xem vẫn mở được.
+3. Build lại có thay đổi: toast "Có bản mới" hiện ra.
 
-**➡️ Đợt tiếp:** Đợt 35 — AI BE: provider, tool, SSE, quota · Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`
+**➡️ Đợt tiếp:** Đợt 20 — Đề xuất sự kiện FE · Model **Sonnet** · Effort **medium** · Skill: `ui-ux-pro-max`, `run`
 ```text
-Làm Đợt 35 — AI BE: provider, tool, SSE, quota theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 35, roadmap/IDEA.md §10, docs/DECISIONS.md (#47), .claude/rules/backend.md và .claude/rules/security.md. Làm interface AiProvider + GeminiProvider (com.google.genai, streaming, function calling), các tool chỉ đọc (searchMembers, getMember, getRelatives, upcomingEvents, lunarConvert, stats) luôn lọc theo family và bỏ member bị khóa, KHÔNG BAO GIỜ gửi SĐT/email; endpoint SSE, bảng ai_usage (quota 15/30 câu, reset 0h +7), bảng ai_message. Có FakeAiProvider cho profile dev và test. Chỉ làm checklist Đợt 35. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+Làm Đợt 20 — Đề xuất sự kiện FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 20, roadmap/IDEA.md §6.6, docs/DECISIONS.md (#65, #71, #77), .claude/rules/frontend.md. Viết hợp đồng /api/proposals (chỉ targetType EVENT), handler giả lập (tính diff, áp dụng vào store khi duyệt, báo xung đột), thêm mode direct|proposal cho form sự kiện, trang Đề xuất của tôi, Quản trị > Đề xuất (diff 2 cột, sửa, duyệt, từ chối, cảnh báo xung đột). Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 20. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 20 — Đề xuất sự kiện FE ⬜
+IDEA §6.6 · DECISIONS #65, #71, #77
+- [ ] Hợp đồng:
+  - `POST /api/proposals` (`targetType` chỉ có `EVENT`, `action` CREATE|UPDATE|DELETE, `targetId`, `payload`);
+  - `GET /api/proposals/mine`;
+  - cho Admin: `GET /api/proposals?status=PENDING`, `GET /api/proposals/count`, `POST /api/proposals/{id}/approve` (có thể gửi kèm payload đã chỉnh), `POST /api/proposals/{id}/reject` (kèm `note`).
+- [ ] Handler giả lập:
+  - tính diff, lưu `baseUpdatedAt`;
+  - khi duyệt thì áp dụng vào store sự kiện;
+  - báo `conflict` nếu sự kiện đã bị sửa sau `baseUpdatedAt`.
+- [ ] Thêm `mode: 'direct' | 'proposal'` cho form sự kiện. User thấy "Đề xuất sự kiện" (thêm mới) và "Đề xuất sửa/xóa" trên từng sự kiện. Không cần liên kết "Tôi là ai".
+- [ ] Trang **"Đề xuất của tôi"**: hiện trạng thái và lý do bị từ chối.
+- [ ] Quản trị > **Đề xuất**:
+  - hàng đợi, và badge trên menu;
+  - trang chi tiết có diff 2 cột, sửa payload, Duyệt, Từ chối kèm lý do;
+  - banner cảnh báo khi `conflict`.
+  - Tổng quan lấy `pendingProposals` là số thật.
+- [ ] Test: User không duyệt được, duyệt áp dụng đúng vào sự kiện, xung đột, `targetType` khác EVENT bị từ chối.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):**
+1. User (chưa liên kết cũng được) đề xuất sự kiện "Họp họ đầu năm" ngày 10/1 âm. Admin duyệt: sự kiện hiện trên lịch, User thấy trạng thái "Đã duyệt".
+2. User đề xuất đổi địa điểm của sự kiện đó. Admin từ chối kèm lý do: User thấy lý do.
+3. Admin sửa sự kiện trong lúc một đề xuất sửa đang chờ: mở đề xuất đó thấy banner xung đột.
+
+**➡️ Đợt tiếp:** Đợt 21 — Thông báo FE · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`
+```text
+Làm Đợt 21 — Thông báo FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 21, roadmap/IDEA.md §9, docs/DECISIONS.md (#72), .claude/rules/frontend.md. Viết hợp đồng hộp thư, tùy chọn và push; handler giả lập (hộp thư rỗng, lưu tùy chọn, push báo cần máy chủ); chuông + badge, trang hộp thư, trang Cài đặt thông báo, xử lý push/notificationclick trong service worker, hướng dẫn bật thông báo theo thiết bị. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 21. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 21 — Thông báo FE ⬜
+IDEA §9 · DECISIONS #72
+- [ ] Hợp đồng:
+  - `GET /api/notifications` (phân trang), `GET /api/notifications/unread-count`, `POST /api/notifications/{id}/read`, `POST /api/notifications/read-all`;
+  - `GET/PUT /api/notifications/preferences`;
+  - `GET /api/push/public-key`, `POST/DELETE /api/push/subscribe`, `POST /api/push/test`.
+- [ ] Handler giả lập: hộp thư rỗng (không tạo thông báo giả), tùy chọn lưu vào store, các endpoint push trả 503 "Cần kết nối máy chủ".
+- [ ] Chuông trên Header và BottomNav, có badge số chưa đọc (refetch khi cửa sổ được focus lại). Trang hộp thư có "Đánh dấu đã đọc hết", bấm vào thông báo thì đi tới `link`.
+- [ ] Trang Cài đặt thông báo:
+  - công tắc cho 3 loại, các mốc nhắc, giờ nhận;
+  - trạng thái "Thiết bị này: đã/chưa nhận thông báo";
+  - nút "Bật thông báo" (xin quyền rồi subscribe) và nút "Gửi thử".
+- [ ] Service worker: sự kiện `push` thì hiện notification, `notificationclick` thì mở hoặc focus app tại `link`.
+- [ ] Hướng dẫn ở lần đăng nhập đầu, tùy thiết bị:
+  - Android và máy tính: bấm "Cho phép".
+  - iOS dưới 16.4: báo không hỗ trợ.
+  - iOS từ 16.4 mà chưa cài app: hướng dẫn "Thêm vào MH chính" trước.
+- [ ] Test: nhận diện thiết bị cho phần hướng dẫn, form tùy chọn, parser payload push trong service worker (dùng dữ liệu test).
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):**
+1. Chuông hiện 0. Hộp thư có trạng thái rỗng.
+2. Tắt "Sinh nhật", đổi giờ nhận thành 20h, F5: vẫn giữ nguyên.
+3. Bấm "Bật thông báo" ở chế độ giả lập: xin quyền được, nhưng subscribe báo "Cần kết nối máy chủ".
+4. Mô phỏng thiết bị iPhone iOS 16.4 chưa cài app: hướng dẫn đúng.
+
+**➡️ Đợt tiếp:** Đợt 22 — Đính kèm FE · Model **Sonnet** · Effort **medium** · Skill: `ui-ux-pro-max`, `run`, `dataviz`
+```text
+Làm Đợt 22 — Đính kèm FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 22, roadmap/IDEA.md §6.7, docs/DECISIONS.md (#67, #72), .claude/rules/frontend.md và .claude/rules/security.md. Viết hợp đồng tệp của thành viên, tài liệu chung, xóa, quota, link tải có chữ ký; handler giả lập (danh sách rỗng, upload cần máy chủ); tab Tệp đính kèm, trang Tài liệu chung, upload kéo thả có tiến độ (chỉ Admin), lightbox, thanh quota 1 GB. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 22. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, dataviz. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 22 — Đính kèm FE ⬜
+IDEA §6.7 · DECISIONS #67, #72
+- [ ] Hợp đồng:
+  - mở rộng sign/confirm cho `kind=DOCUMENT` (có `title`, `memberId|null`);
+  - `GET /api/members/{id}/attachments`, `GET /api/attachments/common`, `DELETE /api/attachments/{id}`;
+  - `GET /api/attachments/{id}/download` (trả URL có chữ ký, hết hạn sau thời gian ngắn);
+  - `GET /api/files/quota`.
+- [ ] Handler giả lập: danh sách rỗng, quota 0 / 1 GB, upload và tải về trả 503 "Cần kết nối máy chủ".
+- [ ] Tab **"Tệp đính kèm"** trên hồ sơ: lưới ảnh thu nhỏ và danh sách tài liệu.
+  - Admin upload bằng kéo thả hoặc chọn file, có thanh tiến độ.
+  - Báo lỗi ngay khi sai định dạng hoặc quá 10 MB.
+- [ ] Xem trước: ảnh mở bằng lightbox, PDF mở ở tab mới, docx/xlsx thì tải về. Admin có nút xóa kèm xác nhận.
+- [ ] Trang **"Tài liệu chung"** (menu Thêm).
+- [ ] Thanh quota "x MB / 1 GB" dạng meter theo dataviz, có kèm chữ (hiện cho Admin).
+- [ ] Test: kiểm tra định dạng và kích thước ở máy, meter ở các mức 0% và 100%.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):**
+1. Hồ sơ bất kỳ > Tệp đính kèm: có trạng thái rỗng. User không thấy nút tải lên.
+2. Admin kéo thả file `.exe`: bị báo sai định dạng ngay. Kéo file PDF 11 MB: bị báo quá kích thước.
+3. Kéo file PDF hợp lệ: báo "Cần kết nối máy chủ".
+4. Thanh quota hiện "0 MB / 1 GB" và đọc được bằng trình đọc màn hình.
+
+**➡️ Đợt tiếp:** Đợt 23 — Quản trị FE: hàng đợi, đã xóa, cấu hình · Model **Sonnet** · Effort **medium** · Skill: `ui-ux-pro-max`, `run`, `security-review`
+```text
+Làm Đợt 23 — Quản trị FE: hàng đợi, đã xóa, cấu hình theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 23, roadmap/IDEA.md §6.10, docs/DECISIONS.md (#55, #62), .claude/rules/frontend.md và .claude/rules/security.md. Viết hợp đồng cấu hình hệ thống và thành viên đã xóa, handler giả lập, trang Quản trị tổng (có badge), Thành viên đã xóa (xem snapshot), Cấu hình; rà toàn khu Quản trị chỉ Admin vào được. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 23. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, security-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 23 — Quản trị FE: hàng đợi, đã xóa, cấu hình ⬜
+IDEA §6.10 · DECISIONS #55, #62
+- [ ] Hợp đồng:
+  - `GET/PUT /api/admin/settings` (`policyVersion`, `aiQuotaUser`, `aiQuotaAdmin`, `uploadMaxMb`, `totalQuotaMb`);
+  - `GET /api/admin/deleted-members` và `GET /api/admin/deleted-members/{auditId}`.
+- [ ] Handler giả lập: cấu hình lưu vào store; danh sách đã xóa lấy từ các snapshot mà thao tác xóa ở Đợt 12 đã ghi.
+- [ ] Trang **Quản trị** tổng: các thẻ dẫn tới Tài khoản, Yêu cầu liên kết, Đề xuất, Thành viên đã xóa, Cấu hình. Mỗi thẻ có badge số đang chờ.
+- [ ] **Thành viên đã xóa:** danh sách (ai xóa, lúc nào), bấm vào xem snapshot gồm thông tin, các dòng người thân liên quan và danh sách tệp.
+- [ ] **Cấu hình:** form RHF + Zod. Khi đổi phiên bản chính sách thì cảnh báo rằng mọi người sẽ phải đồng ý lại.
+- [ ] Rà cả khu Quản trị: guard route, ẩn menu với User, không có đường nào tới trang Admin từ giao diện của User.
+- [ ] Test: guard route, schema cấu hình.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):**
+1. Admin xóa một thành viên thử (không có trên cây), rồi mở Quản trị > Thành viên đã xóa: thấy snapshot.
+2. Đổi lượt AI của User thành 20: lưu được.
+3. User gõ thẳng URL của từng trang quản trị: đều bị chặn.
+
+**➡️ Đợt tiếp:** Đợt 24 — Trợ lý AI FE · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`, `security-review`
+```text
+Làm Đợt 24 — Trợ lý AI FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 24, roadmap/IDEA.md §10, docs/DECISIONS.md (#72, #73, #77), .claude/rules/frontend.md và .claude/rules/security.md. Viết hợp đồng chat SSE, quota, lịch sử, draft submit/apply; handler giả lập (chat báo cần máy chủ, quota theo vai trò); trang Trợ lý (luồng chat, chip gợi ý, đọc SSE bằng fetch + ReadableStream có Bearer và refresh, nút Dừng, markdown an toàn, thẻ draft, còn N câu). Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 24. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, security-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 24 — Trợ lý AI FE ⬜
+IDEA §10 · DECISIONS #72, #73, #77
+- [ ] Hợp đồng:
+  - `POST /api/ai/chat` trả `text/event-stream`, gồm các event `token`, `draft`, `done`, `error`;
+  - `GET /api/ai/quota`, `GET /api/ai/messages`;
+  - `POST /api/ai/drafts/{id}/submit` (User) và `POST /api/ai/drafts/{id}/apply` (Admin).
+- [ ] Handler giả lập: chat trả 503 "Cần kết nối máy chủ", quota trả 15 hoặc 30 theo vai trò, lịch sử rỗng.
+- [ ] Trang **"Trợ lý"** (menu Thêm và sidebar):
+  - luồng chat, các chip gợi ý câu hỏi;
+  - ô nhập dính ở đáy, trên điện thoại không bị bàn phím che;
+  - ở chế độ giả lập hiện banner "Cần kết nối máy chủ".
+- [ ] Đọc SSE bằng `fetch` + `ReadableStream`: gắn Bearer, gặp 401 thì refresh rồi thử lại, chữ hiện dần, có nút Dừng. Render markdown **an toàn** (không có HTML thô, link chỉ nhận http/https).
+- [ ] Thẻ xem trước draft: có diff, nút "Gửi đề xuất" (User) hoặc "Áp dụng" (Admin). Sau khi bấm thì thẻ chuyển sang trạng thái đã xử lý.
+- [ ] Hiện "Còn N câu hôm nay". Hết lượt thì khóa ô nhập và ghi giờ reset (0h giờ Việt Nam).
+- [ ] Test: parser SSE với luồng mẫu (bị cắt giữa chừng, nhiều event trong một chunk), chặn XSS trong markdown, trạng thái hết lượt.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):**
+1. Mở Trợ lý ở khổ 375px: ô nhập nằm ở đáy, có chip gợi ý, có banner cần máy chủ.
+2. User thấy "Còn 15 câu hôm nay", Admin thấy 30.
+3. Gửi câu hỏi: báo lỗi thân thiện, không treo giao diện.
+
+**➡️ Đợt tiếp:** Đợt 25 — Export FE và in cây khổ lớn · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`, `anthropic-skills:pdf`
+```text
+Làm Đợt 25 — Export FE và in cây khổ lớn theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 25, roadmap/IDEA.md §6.9 và §8, docs/DECISIONS.md (#34, #72), .claude/rules/frontend.md. Viết hợp đồng 4 báo cáo (members.xlsx, events.xlsx, members.pdf, memorials.pdf), handler giả lập báo cần máy chủ, trang Xuất dữ liệu, và In cây chạy hoàn toàn ở máy: dùng lại layoutTree, SVG vector nhúng font, PDF A3/A2 chia trang có dấu cắt ghép, PNG ~300 dpi, chạy trong Web Worker. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app ở chế độ giả lập và kiểm tra ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 25. Xong khi `npm run lint`, `npm run build` và `npm test` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, anthropic-skills:pdf. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 25 — Export FE và in cây khổ lớn ⬜
+IDEA §6.9, §8 · DECISIONS #34, #72
+- [ ] Hợp đồng: `GET /api/reports/members.xlsx`, `GET /api/reports/events.xlsx?year=`, `GET /api/reports/members.pdf`, `GET /api/reports/memorials.pdf?lunarYear=`. Handler giả lập trả 503 "Cần kết nối máy chủ".
+- [ ] Trang **"Xuất dữ liệu"** (menu Thêm): 4 nút tải (chọn năm hoặc năm âm), có trạng thái đang tải. Ở chế độ giả lập thì báo cần máy chủ.
+- [ ] **"In cây"** (từ trang Cây), chạy được đầy đủ ở chế độ giả lập vì tính hoàn toàn ở máy:
+  - chọn gốc, khổ A3 hoặc A2, dọc hoặc ngang, có hoặc không có ảnh;
+  - dùng lại `layoutTree` và render sang SVG vector (nhúng font Be Vietnam Pro);
+  - xuất PDF (cây quá lớn thì chia trang theo khổ, có dấu cắt ghép) và PNG khoảng 300 dpi;
+  - có cột "Đời" và tiêu đề.
+- [ ] Chạy trong Web Worker hoặc chia nhỏ công việc để không treo giao diện với 500 ô.
+- [ ] Test: tính số trang theo khổ giấy, SVG có đủ chữ có dấu.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):**
+1. Dựng một cây thử vài đời, bấm In cây, chọn A3 ngang: file PDF mở ra với chữ có dấu đúng và nét vector (phóng to không vỡ).
+2. Chọn PNG: ảnh rõ khi in.
+3. Trang Xuất dữ liệu ở chế độ giả lập: báo cần máy chủ.
+
+**➡️ Đợt tiếp:** Đợt 26 — Gỡ dòng họ BE và test hợp đồng · Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`
+```text
+Làm Đợt 26 — Gỡ dòng họ BE và test hợp đồng theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 26, docs/DECISIONS.md (#54, #57, #63, #70, #74), .claude/rules/backend.md và .claude/rules/security.md. Xóa module family và mọi chỗ dùng familyId/familyRole/ROLE_MANAGER, thêm file Flyway V mới xóa bảng family/family_invitation và các cột family_id, family_role, hide_maternal_line (không sửa V3), viết ContractTest so /v3/api-docs với shared/api/openapi.yaml (có danh sách endpoint chưa làm, rút dần qua các đợt), sửa annotation cho khớp hợp đồng. Chỉ làm checklist Đợt 26. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
 BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 35 — AI BE: provider, tool, SSE, quota ⬜
-IDEA §10 · DECISIONS #47
-- [ ] `V13__ai.sql`: `ai_usage`, `ai_message`. Mỗi user một luồng chat, job dọn tin nhắn cũ hơn 30 ngày.
+# GIAI ĐOẠN B — BACKEND
+
+> Mỗi đợt BE làm đúng những endpoint mà `shared/api/openapi.yaml` đã có. Xong endpoint nào thì bỏ nó khỏi danh sách "chưa làm" của `ContractTest`.
+> Hành vi phải giống handler giả lập. Chỗ nào giả lập sai so với IDEA/DECISIONS thì sửa theo IDEA/DECISIONS và ghi vào ✅ Đã làm.
+
+### Đợt 26 — Gỡ dòng họ BE và test hợp đồng ⬜
+DECISIONS #54, #57, #63, #70, #74
+- [ ] Xóa module `family`: code, test, `FamilyFacade` và mọi chỗ gọi tới nó. Bỏ claim `familyId` và `familyRole`, bỏ `ROLE_MANAGER` trong `SecurityConfig`, bỏ `app.family.*`. `CurrentUser` không còn `familyId`.
+- [ ] `V5__drop_family.sql`:
+  - bỏ FK rồi xóa bảng `family_invitation` và `family`;
+  - bỏ các cột `user_account.family_id`, `family_role`, `hide_maternal_line`;
+  - bỏ `user_consent.family_id`;
+  - bỏ `audit_log.family_id` cùng index của nó.
+  - Entity phải khớp (`ddl-auto: validate`).
+- [ ] `ContractTest`:
+  - Khởi động app, tải `/v3/api-docs` và so với `shared/api/openapi.yaml`. Mọi path + method **đã làm** phải khớp về tham số, mã trạng thái và schema của body.
+  - Endpoint có trong hợp đồng mà backend chưa làm thì nằm trong danh sách `NOT_YET_IMPLEMENTED`. Endpoint có ở backend mà không có trong hợp đồng thì test đỏ.
+- [ ] Sửa annotation springdoc của auth, me, calendar, admin/accounts cho khớp hợp đồng.
+- [ ] Test: `/api/family/**` trả 404, JWT không còn claim family, `ContractTest` xanh.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có (DB dev chạy thêm V5 khi khởi động).
+
+**🧪 Test thủ công (từng bước):**
+1. Chạy backend: Flyway áp dụng V5, app khởi động được.
+2. Đăng nhập, giải mã access token: không còn `familyId` và `familyRole`.
+3. Chạy frontend ở chế độ **thật** (không mock): đăng nhập, trang chờ duyệt và Quản trị > Tài khoản vẫn chạy.
+4. `.\mvnw.cmd test -Dtest=ContractTest`: xanh.
+
+**➡️ Đợt tiếp:** Đợt 27 — Thành viên BE + seed 28 người · Model **Sonnet** · Effort **high** · Skill: `code-review`
+```text
+Làm Đợt 27 — Thành viên BE + seed 28 người theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 27, roadmap/IDEA.md §4, §6.1 và Phụ lục A, docs/DECISIONS.md (#58, #62, #66, #68, #74), .claude/rules/backend.md. Tạo bảng member (khớp hợp đồng), migration seed sinh từ shared/fixtures/seed/members.json bằng script (không sửa tay) kèm test đối chiếu, CRUD + danh sách tìm không dấu, ẩn SĐT/email theo quyền, xóa phát MemberDeletedEvent và hỏi MemberDeletionGuard, audit log. Chỉ làm checklist Đợt 27. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 27 — Thành viên BE + seed 28 người ⬜
+IDEA §4, §6.1, Phụ lục A · DECISIONS #58, #62, #66, #68, #74
+- [ ] `V6__member.sql`: bảng `member` theo IDEA §4, có index `search_name`. Thêm FK và UNIQUE cho `user_account.member_id`.
+- [ ] `V7__seed_members.sql` **sinh bằng script** `shared/fixtures/seed/to-sql.mjs` từ `members.json` (cách chạy ghi trong README), không sửa tay. `SeedMembersTest` so DB với JSON: đủ 28 người, họ tên, ngày mất âm và dương, nơi an táng, `is_deceased`.
+- [ ] CRUD theo hợp đồng (ở đợt này chỉ Admin ghi, quyền chủ hồ sơ tự sửa làm ở Đợt 28):
+  - `search_name` do Service chuẩn hóa;
+  - ngày mất nhập theo một lịch thì tự điền lịch còn lại qua `CalendarFacade`, trừ khi không có năm;
+  - các trường về cái chết chỉ hợp lệ khi đã mất.
+- [ ] `GET /api/members` và `GET /api/members/{id}`: tìm không dấu, lọc, sắp xếp, phân trang. Riêng lọc `generation` và `onTree` để lại cho Đợt 29 (nằm trong `NOT_YET_IMPLEMENTED` dạng tham số). SĐT và email chỉ trả cho Admin và chính chủ.
+- [ ] Xóa:
+  - hỏi các bean `MemberDeletionGuard` (Đợt 29 thêm guard của cây);
+  - ghi snapshot vào audit log;
+  - phát `MemberDeletedEvent` trong transaction để các đợt sau tự dọn người thân, liên kết, tệp.
+- [ ] Viết `MemberFacade`. Ghi audit log khi tạo, sửa, xóa.
+- [ ] Test:
+  - tìm "nguyen van tham";
+  - User không ghi được (403);
+  - tài khoản chưa duyệt nhận 403;
+  - ẩn SĐT/email;
+  - ngày âm không có năm;
+  - seed;
+  - `ContractTest`.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):**
+1. Chạy backend: bảng `member` có đúng 28 dòng.
+2. Chạy frontend ở chế độ thật, vào Thành viên: có 28 người như ở chế độ giả lập.
+3. Admin thêm, sửa, xóa một người: làm được. User không thấy các nút này, và gọi thẳng API thì nhận 403.
+
+**➡️ Đợt tiếp:** Đợt 28 — Người thân, "Tôi là ai" và tự sửa hồ sơ BE · Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`
+```text
+Làm Đợt 28 — Người thân, "Tôi là ai" và tự sửa hồ sơ BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 28, roadmap/IDEA.md §6.1, §6.2 và §6.3, docs/DECISIONS.md (#62, #74, #75, #76), .claude/rules/backend.md và .claude/rules/security.md. Làm bảng member_relative (một chiều, UNIQUE(member_id, relative_member_id), không tự thêm, nhãn ≤50) và member_link_request, API theo hợp đồng, quyền chủ hồ sơ (user.member_id đọc từ DB) cho PUT /api/members/{id} và API người thân, chặn User sửa nhóm "đã mất" (403 DEATH_FIELDS_ADMIN_ONLY), /api/me trả memberId thật, listener MemberDeletedEvent xóa người thân ở cả hai phía, hủy yêu cầu và gỡ liên kết. Chỉ làm checklist Đợt 28. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 28 — Người thân, "Tôi là ai" và tự sửa hồ sơ BE ⬜
+IDEA §6.1, §6.2, §6.3 · DECISIONS #62, #74, #75, #76
+- [ ] `V8__relative_link.sql`: `member_relative` (`UNIQUE(member_id, relative_member_id)`, CHECK không tự thêm, FK tới `member`) và `member_link_request`.
+- [ ] API người thân theo hợp đồng. Chủ hồ sơ (`user.member_id` đọc từ DB) và Admin được ghi, mọi tài khoản đã duyệt được đọc. Ghi audit log.
+- [ ] Quyền chủ hồ sơ cho `PUT /api/members/{id}` (#76):
+  - User chỉ sửa được hồ sơ của mình, sửa hồ sơ người khác thì 403;
+  - nhóm "đã mất" đổi giá trị thì 403 `DEATH_FIELDS_ADMIN_ONLY`, giữ nguyên thì bỏ qua;
+  - Admin sửa được mọi trường của mọi hồ sơ.
+- [ ] API yêu cầu liên kết theo hợp đồng:
+  - không liên kết được thành viên đã có tài khoản;
+  - Admin duyệt thì gán `user.member_id` (UNIQUE chống đua);
+  - có hủy liên kết.
+  - `/api/me` trả `memberId`.
+- [ ] Listener `MemberDeletedEvent`: xóa các dòng người thân ở cả hai phía, hủy các yêu cầu đang chờ, gỡ `user.member_id`.
+- [ ] Test: trùng người trong một hồ sơ, tự thêm chính mình, nhãn quá 50 ký tự, User ghi vào hồ sơ người khác bị 403, User đổi nhóm "đã mất" bị 403, User chưa liên kết không sửa được hồ sơ nào, hai Admin duyệt song song cho cùng một thành viên, xóa thành viên thì dọn sạch, phân quyền, `ContractTest`.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):**
+1. Frontend ở chế độ thật: lặp lại các bước 🧪 của Đợt 13, kết quả phải giống ở chế độ giả lập.
+2. Xóa một thành viên đang có trong danh sách người thân của người khác: hồ sơ của người kia không còn dòng đó.
+
+**➡️ Đợt tiếp:** Đợt 29 — Cây BE · Model **Opus** · Effort **high** · Skill: `code-review`
+```text
+Làm Đợt 29 — Cây BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 29, roadmap/IDEA.md §8, docs/DECISIONS.md (#60–62, #74), .claude/rules/backend.md. Làm bảng tree_node và tree_spouse, GET /api/tree (một truy vấn, 500 ô dưới 300 ms), mọi thao tác dựng cây theo hợp đồng với quy tắc giống utils/tree (chạy toàn bộ shared/fixtures/tree), khóa khi thao tác đồng thời, MemberDeletionGuard chặn xóa người đang có trên cây, lọc generation/onTree ở danh sách thành viên, audit log. Chỉ làm checklist Đợt 29. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 29 — Cây BE ⬜
+IDEA §8 · DECISIONS #60–62, #74
+- [ ] `V9__tree.sql`: `tree_node` (`member_id` NULL UNIQUE, FK tự tham chiếu), `tree_spouse` (`spouse_node_id` UNIQUE).
+- [ ] `GET /api/tree`: tải toàn bộ bằng một truy vấn, dựng đồ thị trong bộ nhớ. Test với 500 ô phải chạy dưới 300 ms.
+- [ ] Các thao tác ghi theo hợp đồng (thêm gốc, con, vợ/chồng, cha/mẹ, gỡ, điền, xóa ô trống, di chuyển, đổi thứ tự, đổi cặp):
+  - chỉ Admin được làm;
+  - quy tắc giống hệt `utils/tree`: `TreeRulesTest` chạy toàn bộ `shared/fixtures/tree/`;
+  - khóa các dòng liên quan (`SELECT … FOR UPDATE`) để hai Admin thao tác cùng lúc không làm hỏng cây;
+  - ghi audit log.
+- [ ] `TreeDeletionGuard` (hiện thực `MemberDeletionGuard`): chặn xóa người đang có trên cây, trả 409 `MEMBER_ON_TREE`.
+- [ ] Danh sách thành viên: lọc theo `generation` và `onTree` (đời tính theo cùng thuật toán). Bỏ các tham số này khỏi `NOT_YET_IMPLEMENTED`.
+- [ ] Test: fixture chung, chặn vòng, "+ Cha/Mẹ" chỉ ở Đời 01, bắt buộc chọn cặp, thao tác song song, phân quyền, `ContractTest`.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):**
+1. Frontend ở chế độ thật: lặp lại các bước 🧪 của Đợt 15 và 16, kết quả phải giống ở chế độ giả lập.
+2. Hai cửa sổ Admin cùng di chuyển hai nhánh chồng lên nhau: một cái thành công, cái kia báo lỗi rõ ràng, và cây không bị hỏng.
+
+**➡️ Đợt tiếp:** Đợt 30 — Upload và đính kèm BE · Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`
+```text
+Làm Đợt 30 — Upload và đính kèm BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 30, roadmap/IDEA.md §6.7, docs/DECISIONS.md (#62, #67, #74), .claude/rules/backend.md và .claude/rules/security.md. Làm bảng attachment, sign/confirm Cloudinary (xác minh public_id, MIME, ≤10 MB, folder giapha/, quota 1 GB toàn hệ thống), avatar (Admin, hoặc chủ hồ sơ cho ảnh của mình theo #78), tài liệu của thành viên và tài liệu chung, link tải có chữ ký, xóa, FileStorage có bản giả cho test, listener MemberDeletedEvent xóa tệp sau commit. Chỉ làm checklist Đợt 30. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 30 — Upload và đính kèm BE ⬜
+IDEA §6.7 · DECISIONS #62, #67, #74
+- [ ] `V10__attachment.sql`: bảng `attachment` (`kind` AVATAR|DOCUMENT, `member_id` NULL nghĩa là tài liệu chung).
+- [ ] `POST /api/files/sign`: cấp chữ ký Cloudinary, folder `giapha/`, kiểm tra quota trước khi cấp.
+- [ ] `POST /api/files/confirm`: xác minh `public_id` bằng Cloudinary Admin API (định dạng, ≤ 10 MB, đúng folder) rồi lưu. AVATAR thì cập nhật `member.avatar_url` và xóa ảnh cũ.
+- [ ] Các API còn lại theo hợp đồng: danh sách tệp của thành viên, tài liệu chung, xóa (chỉ Admin, xóa luôn trên Cloudinary), link tải có chữ ký và hết hạn ngắn, quota.
+- [ ] Cloudinary đặt sau interface `FileStorage`, test dùng bản giả. Listener `MemberDeletedEvent` xóa tệp **sau khi commit**.
+- [ ] Quyền upload (#78): User đã liên kết chỉ được `sign`/`confirm` `kind=AVATAR` cho hồ sơ của mình (kiểm `memberId = user.member_id` ở cả hai bước, chỉ jpg/png/webp). `DOCUMENT`, tài liệu chung và xóa tệp chỉ Admin.
+- [ ] Test: sai MIME, quá 10 MB, vượt quota, sai folder, User tải avatar của mình được, User tải avatar của người khác hoặc DOCUMENT bị 403, `ContractTest`.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Tạo tài khoản Cloudinary, điền `CLOUDINARY_*` vào `apps/backend/.env`.
+
+**🧪 Test thủ công (từng bước):**
+1. Frontend ở chế độ thật: Admin tải ảnh đại diện cho một cụ, ảnh hiện ở hồ sơ và trên cây.
+2. Tải một PDF vào Tài liệu chung: User mở xem được. Thanh quota tăng lên.
+3. Xóa tệp: tệp biến mất cả trên Cloudinary.
+
+**➡️ Đợt tiếp:** Đợt 31 — Sự kiện chung và lịch nhắc BE · Model **Sonnet** · Effort **high** · Skill: `code-review`
+```text
+Làm Đợt 31 — Sự kiện chung và lịch nhắc BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 31, roadmap/IDEA.md §6.5 và §7, docs/DECISIONS.md (#31, #65, #72, #74), .claude/rules/backend.md. Làm bảng custom_event và CRUD (Admin), OccurrenceService (giỗ, sinh nhật, sự kiện chung, eventKey ổn định) phải khớp toàn bộ shared/fixtures/occurrences, API upcoming/month/recent theo hợp đồng. Chỉ làm checklist Đợt 31. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 31 — Sự kiện chung và lịch nhắc BE ⬜
+IDEA §6.5, §7 · DECISIONS #31, #65, #72, #74
+- [ ] `V11__custom_event.sql`. CRUD `/api/events`: Admin ghi, mọi tài khoản đã duyệt đọc. Kiểm tra lịch, cờ nhuận, ngày/tháng hợp lệ. Ghi audit log. Viết `EventFacade`.
+- [ ] `OccurrenceService.between(from, to, types)`: giỗ, sinh nhật và sự kiện chung theo IDEA §6.5 và §7. `eventKey` phải giống bản FE (dùng lại ở Đợt 35).
+- [ ] `GET /api/calendar/upcoming`, `/month`, `/recent` theo hợp đồng.
+- [ ] Test: `OccurrenceFixturesTest` chạy toàn bộ `shared/fixtures/occurrences/`, phải cho kết quả giống hệt bản TS. Thêm test phân quyền và `ContractTest`.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):**
+1. Frontend ở chế độ thật: tab Sắp tới "Cả năm" ra đúng danh sách như ở chế độ giả lập (so vài dòng: Cụ Sửu 11/7, Bà Nhung 29/12).
+2. Admin tạo, sửa, xóa sự kiện chung. User không làm được.
+
+**➡️ Đợt tiếp:** Đợt 32 — Dashboard và quản trị BE · Model **Sonnet** · Effort **medium** · Skill: `security-review`, `code-review`
+```text
+Làm Đợt 32 — Dashboard và quản trị BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 32, roadmap/IDEA.md §6.8 và §6.10, docs/DECISIONS.md (#55, #62, #74), .claude/rules/backend.md và .claude/rules/security.md. Làm GET /api/dashboard, bảng system_setting + API cấu hình (cache Caffeine, dùng cho quota AI, upload, phiên bản chính sách), API thành viên đã xóa đọc snapshot từ audit log. Chỉ làm checklist Đợt 32. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 32 — Dashboard và quản trị BE ⬜
+IDEA §6.8, §6.10 · DECISIONS #55, #62, #74
+- [ ] `GET /api/dashboard` theo hợp đồng. Số người trên cây và số đời lấy qua `TreeFacade`. Admin có thêm 3 số chờ duyệt (`pendingProposals` bằng 0 cho tới Đợt 33).
+- [ ] `V12__system_setting.sql` (key-value), có cache Caffeine. `GET/PUT /api/admin/settings`. Các chỗ đang dùng giá trị cấu hình (phiên bản chính sách, giới hạn upload) chuyển sang đọc từ đây.
+- [ ] `GET /api/admin/deleted-members` và `GET /api/admin/deleted-members/{auditId}` đọc snapshot từ `audit_log`.
+- [ ] Ghi audit log cho mọi thao tác quản trị.
+- [ ] Test: số liệu đúng, User gọi `/api/admin/**` nhận 403, đổi phiên bản chính sách thì `consentRequired=true`, `ContractTest`.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):**
+1. Frontend ở chế độ thật: Tổng quan hiện Tổng 28 (cộng với số người đã thêm).
+2. Admin đổi phiên bản chính sách: đăng nhập lại bằng User thì phải đồng ý lại.
+3. Xóa một thành viên thử: Quản trị > Thành viên đã xóa có snapshot.
+
+**➡️ Đợt tiếp:** Đợt 33 — Đề xuất sự kiện BE · Model **Sonnet** · Effort **medium** · Skill: `code-review`
+```text
+Làm Đợt 33 — Đề xuất sự kiện BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 33, roadmap/IDEA.md §6.6, docs/DECISIONS.md (#65, #74, #77), .claude/rules/backend.md. Làm bảng proposal (target_type chỉ EVENT), API theo hợp đồng, duyệt thì áp dụng qua EventFacade trong một transaction, cảnh báo xung đột, phát ProposalReviewed. Chỉ làm checklist Đợt 33. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 33 — Đề xuất sự kiện BE ⬜
+IDEA §6.6 · DECISIONS #65, #74, #77
+- [ ] `V13__proposal.sql` (`target_type` chỉ có `EVENT`).
+- [ ] `POST /api/proposals`:
+  - chỉ nhận `targetType=EVENT`, không cần liên kết;
+  - server tự tính `diff` và lưu `base_updated_at`;
+  - validate payload bằng **cùng validator** với API sự kiện ghi trực tiếp.
+- [ ] Các API còn lại theo hợp đồng: `mine`, danh sách chờ, `count`, `approve` (nhận payload đã chỉnh), `reject`.
+  - Khi duyệt thì áp dụng qua `EventFacade` trong một transaction và ghi audit log.
+  - Báo `conflict: true` khi `updated_at > base_updated_at`.
+- [ ] Phát `ProposalReviewed` (để Đợt 34 dùng). Dashboard lấy `pendingProposals` là số thật.
+- [ ] Test: `targetType` khác EVENT bị từ chối, duyệt đúng dữ liệu, xung đột, User không duyệt được, `ContractTest`.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):** Frontend ở chế độ thật, lặp lại các bước 🧪 của Đợt 20, kết quả phải giống ở chế độ giả lập.
+
+**➡️ Đợt tiếp:** Đợt 34 — Thông báo BE: hộp thư, tùy chọn · Model **Sonnet** · Effort **medium** · Skill: `code-review`
+```text
+Làm Đợt 34 — Thông báo BE: hộp thư, tùy chọn theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 34, roadmap/IDEA.md §9, docs/DECISIONS.md (#74), .claude/rules/backend.md. Làm bảng notification và notification_pref, API hộp thư và tùy chọn theo hợp đồng, listener tạo thông báo nghiệp vụ (tài khoản mới chờ duyệt → mọi Admin, được duyệt → user, kết quả liên kết, đề xuất mới → Admin, ProposalReviewed → người đề xuất). Chỉ làm checklist Đợt 34. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 34 — Thông báo BE: hộp thư, tùy chọn ⬜
+IDEA §9 · DECISIONS #74
+- [ ] `V14__notification.sql`: `notification` và `notification_pref` (giá trị mặc định tạo lười ở lần đọc đầu tiên).
+- [ ] API hộp thư và tùy chọn theo hợp đồng. Mỗi người chỉ đọc được thông báo của chính mình.
+- [ ] Listener tạo thông báo:
+  - tài khoản mới chờ duyệt → mọi Admin;
+  - được duyệt → người đó;
+  - kết quả liên kết → người yêu cầu;
+  - đề xuất mới → mọi Admin;
+  - `ProposalReviewed` → người đề xuất.
+
+  Đợt 8 cần phát event cho tài khoản chờ duyệt: nếu chưa có thì thêm ở đợt này.
+- [ ] Test: chỉ đọc được của mình, giá trị mặc định, đủ các listener, `ContractTest`.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Không có.
+
+**🧪 Test thủ công (từng bước):**
+1. Đăng ký user mới: Admin thấy chuông tăng thêm 1, bấm vào thì tới Quản trị > Tài khoản.
+2. Admin duyệt user đó: user thấy thông báo "Tài khoản đã được duyệt".
+
+**➡️ Đợt tiếp:** Đợt 35 — Web Push BE · Model **Sonnet** · Effort **high** · Skill: `code-review`
+```text
+Làm Đợt 35 — Web Push BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 35, roadmap/IDEA.md §9, docs/DECISIONS.md (#46, #74), .claude/rules/backend.md. Làm bảng push_subscription và notification_dispatch, PushSender dùng nl.martijndwars:web-push + VAPID, API push theo hợp đồng, DigestJob mỗi giờ (zone +7) gộp bản tin từ OccurrenceService theo mốc và loại đã bật, chống gửi trùng, xóa subscription khi gặp 404/410. Chỉ làm checklist Đợt 35. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 35 — Web Push BE ⬜
+IDEA §9 · DECISIONS #46, #74
+- [ ] `V15__push.sql`: `push_subscription` và `notification_dispatch` (UNIQUE trên 4 cột).
+- [ ] `PushSender` (interface) và bản cài bằng `nl.martijndwars:web-push` + khóa VAPID. API push theo hợp đồng.
+- [ ] `DigestJob` (`@Scheduled` mỗi giờ, zone +7):
+  - với tài khoản **đã duyệt** có `send_hour` bằng giờ hiện tại, lấy các lần xảy ra tại những mốc và loại đã bật, gộp thành một bản tin;
+  - bản tin rỗng thì không gửi;
+  - ghi `notification`, gửi push, và ghi `notification_dispatch` để chống gửi trùng.
+- [ ] Gặp 404/410 thì xóa subscription. Gửi thành công thì cập nhật `last_ok_at`.
+- [ ] Test: nội dung bản tin ("Còn 3 ngày: Giỗ Cụ Nguyễn Văn Sửu (11/7 âm); …"), mốc bị tắt thì bỏ khỏi bản tin, chạy job 2 lần không gửi trùng, 410 thì xóa, tài khoản chưa duyệt không nhận, `ContractTest`.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+**🔧 Setup thủ công cần làm:** Sinh khóa VAPID (`npx web-push generate-vapid-keys`), điền vào `apps/backend/.env`.
+
+**🧪 Test thủ công (từng bước):**
+1. Frontend ở chế độ thật trên Chrome: bấm "Bật thông báo" rồi "Gửi thử", thông báo hiện ra trên máy.
+2. Đặt giờ nhận bằng giờ hiện tại, rồi chạy job bằng tay (endpoint dev hoặc test): nhận được một bản tin gộp.
+
+**➡️ Đợt tiếp:** Đợt 36 — AI BE: provider, tool, SSE, quota · Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`
+```text
+Làm Đợt 36 — AI BE: provider, tool, SSE, quota theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 36, roadmap/IDEA.md §10, docs/DECISIONS.md (#47, #73, #74), .claude/rules/backend.md và .claude/rules/security.md. Làm bảng ai_usage và ai_message, AiProvider + GeminiProvider (com.google.genai, streaming, function calling) + FakeAiProvider, các tool chỉ đọc qua facade với DTO không có SĐT/email, POST /api/ai/chat trả SSE theo hợp đồng, quota 15/30 đọc từ system_setting và reset 0h +7, rate limit. Chỉ làm checklist Đợt 36. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+```
+
+---
+
+### Đợt 36 — AI BE: provider, tool, SSE, quota ⬜
+IDEA §10 · DECISIONS #47, #73, #74
+- [ ] `V16__ai.sql`: `ai_usage` và `ai_message`. Mỗi user có một luồng chat, job dọn tin nhắn cũ hơn 30 ngày.
 - [ ] `AiProvider` và `GeminiProvider` (`com.google.genai`, streaming, function calling). `FakeAiProvider` dùng cho profile dev và test.
-- [ ] 6 tool chỉ đọc, gọi qua các facade. DTO riêng cho AI **không có trường SĐT/email**. `familyId` lấy từ token. Member bị khóa không bao giờ được trả về.
-- [ ] `POST /api/ai/chat` trả SSE: stream các token, ghi lại `ai_message`. Kiểm tra và tăng `ai_usage` (15 câu với User, 30 câu với Manager/Admin, đọc từ `system_setting`, reset lúc 0h +7). Rate limit bằng bucket4j. `GET /api/ai/quota`.
-- [ ] System prompt nêu rõ vai trò, phạm vi, và việc từ chối câu hỏi ngoài phạm vi (phần gợi ý câu hỏi làm ở Đợt 36).
-- [ ] Test: DTO của tool không chứa phone/email (kiểm tra bằng reflection), member bị khóa không có trong kết quả, family khác không truy cập được, hết quota thì nhận 429, reset theo giờ +7.
+- [ ] Các tool chỉ đọc (#73), gọi qua facade. DTO riêng cho AI **không có trường SĐT/email**.
+- [ ] `POST /api/ai/chat` trả SSE (`token`/`done`/`error`), và ghi lại `ai_message`.
+  - Kiểm tra rồi tăng `ai_usage` (15 hoặc 30, đọc từ `system_setting`, reset lúc 0h giờ +7).
+  - Có rate limit bằng bucket4j.
+  - `GET /api/ai/quota` và `GET /api/ai/messages`.
+- [ ] System prompt nêu vai trò và phạm vi (phần từ chối và gợi ý câu hỏi làm ở Đợt 37).
+- [ ] Test: DTO của tool không có phone/email (kiểm bằng reflection), hết quota nhận 429, reset theo giờ +7, tài khoản chưa duyệt nhận 403, `ContractTest`.
 
 **✅ Đã làm:** _(điền khi xong)_
 
-**🔧 Setup thủ công cần làm:**
-- Điền `GEMINI_API_KEY` vào `.env` (prod, và dev nếu muốn thử Gemini thật với `app.ai.provider=gemini`).
+**🔧 Setup thủ công cần làm:** Điền `GEMINI_API_KEY` vào `apps/backend/.env`.
 
 **🧪 Test thủ công (từng bước):**
-1. Ở profile dev dùng Fake: `curl -N` tới `/api/ai/chat` thấy các token stream về.
-2. Bật Gemini thật, hỏi "Ông A có mấy người con?": câu trả lời đúng với dữ liệu.
-3. Hỏi "Số điện thoại của D là gì?": AI không có dữ liệu đó để trả lời.
-4. Hỏi đủ 15 câu bằng User: câu thứ 16 nhận 429, `/api/ai/quota` bằng 0.
+1. Frontend ở chế độ thật, hỏi "Giỗ Cụ Nguyễn Văn Sửu ngày nào?": chữ hiện dần, trả lời đúng 11/7 âm.
+2. Hỏi SĐT của một người: AI không có dữ liệu này.
+3. Hỏi đến khi hết lượt: ô nhập bị khóa.
 
-**➡️ Đợt tiếp:** Đợt 36 — AI BE: soạn đề xuất, phạm vi · Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`
+**➡️ Đợt tiếp:** Đợt 37 — AI BE: soạn đề xuất sự kiện, phạm vi · Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`
 ```text
-Làm Đợt 36 — AI BE: soạn đề xuất, phạm vi theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 36, roadmap/IDEA.md §10 và §6.6, .claude/rules/backend.md và .claude/rules/security.md. Thêm tool draftProposal: backend tạo thẻ xem trước có diff (không ghi dữ liệu), sau đó User bấm "Gửi đề xuất" (tạo proposal source=AI) hoặc Manager bấm "Áp dụng" (đi qua đúng luồng duyệt). Từ chối câu hỏi ngoài phạm vi kèm gợi ý. Có test chứng minh AI không bao giờ tự ghi dữ liệu. Chỉ làm checklist Đợt 36. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+Làm Đợt 37 — AI BE: soạn đề xuất sự kiện, phạm vi theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 37, roadmap/IDEA.md §6.6 và §10, docs/DECISIONS.md (#73, #74, #77), .claude/rules/backend.md và .claude/rules/security.md. Làm tool draftProposal (AiDraft có TTL, chỉ đề xuất sự kiện chung, không ghi dữ liệu gia phả), event SSE draft, submit (User) và apply (Admin) theo hợp đồng, hướng dẫn tự sửa trên hồ sơ khi người dùng muốn sửa hồ sơ/người thân, từ chối câu hỏi ngoài phạm vi kèm 3 câu gợi ý. Chỉ làm checklist Đợt 37. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
 BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 36 — AI BE: soạn đề xuất, phạm vi ⬜
-IDEA §6.6, §10
-- [ ] Tool `draftProposal`: tạo `AiDraft` (lưu tạm, có TTL) gồm payload và diff tính theo cùng logic của module proposal. SSE gửi một event `draft` kèm id. **Không ghi vào dữ liệu gia phả.**
-- [ ] `POST /api/ai/drafts/{id}/submit`: User tạo proposal với `source=AI`. `POST /api/ai/drafts/{id}/apply`: Manager tạo và duyệt proposal ngay, có audit log.
-- [ ] Câu hỏi ngoài phạm vi: từ chối lịch sự và gợi ý 3 câu hỏi mẫu (có trong system prompt và có test với Fake).
-- [ ] Test: tool không có đường ghi dữ liệu nào (không gọi facade ghi), submit/apply chỉ dành cho chủ của draft, draft hết hạn, truy cập chéo family.
+### Đợt 37 — AI BE: soạn đề xuất sự kiện, phạm vi ⬜
+IDEA §6.6, §10 · DECISIONS #73, #74, #77
+- [ ] Tool `draftProposal`: tạo `AiDraft` (lưu tạm, có TTL), **chỉ cho sự kiện chung**, gồm payload và diff tính theo cùng logic của module proposal. SSE gửi event `draft` kèm id. **Không ghi vào dữ liệu gia phả.**
+- [ ] `POST /api/ai/drafts/{id}/submit`: User tạo proposal với `source=AI`. `POST /api/ai/drafts/{id}/apply`: Admin tạo và duyệt proposal ngay, có ghi audit log.
+- [ ] Người dùng nhờ sửa hồ sơ hoặc người thân: AI không soạn draft, chỉ hướng dẫn tự sửa trên trang hồ sơ (có trong system prompt, có test với Fake).
+- [ ] Câu hỏi ngoài phạm vi: từ chối lịch sự và gợi ý 3 câu hỏi mẫu (có trong system prompt, có test với Fake).
+- [ ] Test: tool không có đường ghi dữ liệu nào (không gọi facade ghi), chỉ chủ của draft được submit/apply, draft hết hạn, draft cho loại khác sự kiện bị từ chối, `ContractTest`.
 
 **✅ Đã làm:** _(điền khi xong)_
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. Dùng User nói "Thêm con trai tên Đặng Văn X cho ông D": nhận event `draft`, DB chưa có member mới.
-2. Gọi submit: có proposal `source=AI` trong hàng đợi của Manager.
-3. Hỏi "Thời tiết mai thế nào?": bị từ chối kèm gợi ý.
+1. User nói "Thêm sự kiện họp họ ngày 10 tháng Giêng âm": có thẻ draft, bấm "Gửi đề xuất" thì Admin thấy đề xuất trong hàng đợi.
+2. User nói "Sửa tiểu sử của tôi": AI hướng dẫn vào trang hồ sơ để tự sửa, không có thẻ draft.
+3. Hỏi chuyện không liên quan: AI từ chối và gợi ý 3 câu.
 
-**➡️ Đợt tiếp:** Đợt 37 — AI FE · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`, `security-review`, `code-review`
+**➡️ Đợt tiếp:** Đợt 38 — Export BE (Excel, PDF) · Model **Sonnet** · Effort **high** · Skill: `code-review`, `anthropic-skills:xlsx`, `anthropic-skills:pdf`
 ```text
-Làm Đợt 37 — AI FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 37, roadmap/IDEA.md §10, .claude/rules/frontend.md và .claude/rules/security.md. Chạy npm run gen:api. Làm trang Trợ lý: đọc SSE qua fetch (có Bearer), chữ hiện dần, render markdown an toàn (không dùng dangerouslySetInnerHTML), thẻ xem trước diff có nút "Gửi đề xuất" (User) hoặc "Áp dụng" (Manager), hiện số câu còn lại, hết lượt thì khóa ô nhập, có gợi ý câu hỏi. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 37. Xong khi `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, security-review, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
-```
-
----
-
-### Đợt 37 — AI FE ⬜
-IDEA §10
-- [ ] Trang "Trợ lý" (trong menu Thêm và sidebar): luồng chat, các chip gợi ý câu hỏi, ô nhập dính ở đáy, trên điện thoại tránh bị bàn phím che.
-- [ ] Đọc SSE bằng `fetch` + `ReadableStream` (có Bearer, tự refresh token), chữ hiện dần, có nút Dừng. Render markdown **an toàn**.
-- [ ] Thẻ xem trước draft: diff và nút "Gửi đề xuất" (User) hoặc "Áp dụng" (Manager). Sau khi bấm, thẻ chuyển sang trạng thái đã xử lý.
-- [ ] Hiện "Còn N câu hôm nay". Hết lượt thì khóa ô nhập và ghi rõ giờ reset.
-
-**✅ Đã làm:** _(điền khi xong)_
-
-**🔧 Setup thủ công cần làm:** Không có.
-
-**🧪 Test thủ công (từng bước):**
-1. Hỏi "Ai là cụ tổ?": chữ hiện dần, bộ đếm giảm đi 1.
-2. Yêu cầu thêm con cho D: thẻ diff hiện ra. Bấm Gửi đề xuất: thẻ đổi trạng thái, Manager thấy đề xuất mới.
-3. Gửi nội dung `<img src=x onerror=alert(1)>`: không có alert nào bật lên.
-4. Hết lượt: ô nhập bị khóa, kèm dòng "Làm mới lúc 0h".
-
-**➡️ Đợt tiếp:** Đợt 38 — Export BE · Model **Sonnet** · Effort **high** · Skill: `code-review`, `anthropic-skills:xlsx`, `anthropic-skills:pdf`
-```text
-Làm Đợt 38 — Export BE (Excel, PDF) theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 38, roadmap/IDEA.md §6.9, docs/DECISIONS.md (#48), .claude/rules/backend.md. Làm module report: Excel danh sách thành viên và sự kiện trong năm (Apache POI), PDF danh sách thành viên và lịch giỗ cả năm theo tháng âm (OpenPDF, nhúng font Be Vietnam Pro); bỏ member bị khóa, SĐT/email chỉ khi người xuất có quyền. Chỉ làm checklist Đợt 38. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+Làm Đợt 38 — Export BE (Excel, PDF) theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 38, roadmap/IDEA.md §6.9, docs/DECISIONS.md (#48, #66, #74), .claude/rules/backend.md. Làm 4 báo cáo theo hợp đồng bằng Apache POI và OpenPDF (nhúng Be Vietnam Pro, A4, có số trang), cột SĐT/email chỉ cho Admin, lịch giỗ nhóm theo tháng âm. Sau đợt này danh sách NOT_YET_IMPLEMENTED của ContractTest phải rỗng. Chỉ làm checklist Đợt 38. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
 BẮT BUỘC gọi qua công cụ Skill các skill: code-review, anthropic-skills:xlsx, anthropic-skills:pdf. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
 ### Đợt 38 — Export BE (Excel, PDF) ⬜
-IDEA §6.9 · DECISIONS #48
+IDEA §6.9 · DECISIONS #48, #66, #74
 - [ ] `GET /api/reports/members.xlsx`: có header, cột ngày dạng date, dòng tiêu đề đông cứng, tự căn độ rộng cột. `GET /api/reports/events.xlsx?year=`.
-- [ ] `GET /api/reports/members.pdf`, `GET /api/reports/memorials.pdf?lunarYear=` (nhóm theo tháng âm, ghi ngày dương tương ứng). Nhúng font Be Vietnam Pro, khổ A4, có số trang.
-- [ ] Bỏ member bị khóa. Cột SĐT/email chỉ có khi người xuất là Manager hoặc Admin. Tên file có tên family và ngày xuất.
-- [ ] Test: đọc lại file xlsx bằng POI để kiểm tra số dòng, file PDF chứa đúng chữ có dấu (trích text), member bị khóa không có trong file.
+- [ ] `GET /api/reports/members.pdf` và `GET /api/reports/memorials.pdf?lunarYear=` (nhóm theo tháng âm, kèm ngày dương tương ứng). Nhúng font Be Vietnam Pro, khổ A4, có số trang.
+- [ ] Cột SĐT/email chỉ có khi người xuất là Admin. Tên file có ngày xuất.
+- [ ] Danh sách `NOT_YET_IMPLEMENTED` của `ContractTest` **rỗng**.
+- [ ] Test: đọc lại file xlsx bằng POI để kiểm tra số dòng (28 + số người đã thêm), trích text PDF để kiểm tra chữ có dấu ("Cụ Nguyễn Văn Tham (Tức Cụ Kai)"), User xuất thì không có cột SĐT.
 
 **✅ Đã làm:** _(điền khi xong)_
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
-1. Tải `members.xlsx`, mở bằng Excel: tiếng Việt hiện đúng, cột ngày lọc được.
-2. Tải `memorials.pdf`: nhóm theo tháng âm, dấu tiếng Việt không bị vỡ.
-3. Tải bằng tài khoản User: không có cột SĐT/email.
+1. Frontend ở chế độ thật, trang Xuất dữ liệu: tải đủ 4 file và mở được. Chữ tiếng Việt đúng.
+2. Lịch giỗ PDF: tháng 12 âm có Bà Trần Thị Nhung và Nguyễn Văn Thông.
 
-**➡️ Đợt tiếp:** Đợt 39 — Export FE và in cây khổ lớn · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`, `anthropic-skills:pdf`
+**➡️ Đợt tiếp:** Đợt 39 — Nối FE với BE thật, gỡ lớp giả lập · Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`, `code-review`
 ```text
-Làm Đợt 39 — Export FE và in cây khổ lớn theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 39, roadmap/IDEA.md §6.9 và §8 (Kỹ thuật), docs/DECISIONS.md (#34), .claude/rules/frontend.md. Làm trang Xuất dữ liệu (các nút tải Excel/PDF) và chức năng "In cây": dùng lại layoutTree, xuất SVG vector rồi ra PDF khổ A3/A2 (chia trang nếu cần) và PNG độ phân giải cao. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 39. Xong khi `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, anthropic-skills:pdf. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+Làm Đợt 39 — Nối FE với BE thật, gỡ lớp giả lập theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 39, docs/DECISIONS.md (#70–72), .claude/rules/frontend.md. Chạy toàn bộ app với backend thật, đi hết mọi màn hình ở 375px và 1280px và sửa chỗ lệch; làm công cụ chuyển dữ liệu đã nhập ở chế độ giả lập (file JSON tải từ "Dữ liệu tạm") vào backend qua API; gỡ src/services/mock, dev:mock, VITE_API_MODE và mục Dữ liệu tạm; cập nhật CLAUDE.md và rules bỏ phần giả lập. Trước khi sửa UI, đọc docs/DESIGN.md. Chỉ làm checklist Đợt 39. Xong khi `npm run lint`, `npm run build`, `npm test` và `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 39 — Export FE và in cây khổ lớn ⬜
-IDEA §6.9, §8 · DECISIONS #34
-- [ ] Trang "Xuất dữ liệu": các nút tải 4 báo cáo của Đợt 38 (chọn năm hoặc năm âm), có trạng thái đang tải.
-- [ ] "In cây" (từ trang Cây): chọn gốc, khổ A3 hoặc A2, dọc hoặc ngang, có hoặc không có ảnh. Dùng lại `layoutTree`, render sang SVG vector (nhúng font), xuất PDF (chia trang theo khổ nếu cây quá lớn, có dấu cắt ghép) và PNG khoảng 300 dpi.
-- [ ] Chạy trong Web Worker hoặc chia nhỏ công việc để không treo giao diện với 500 người.
+# GIAI ĐOẠN C — NỐI VÀ PHÁT HÀNH
+
+### Đợt 39 — Nối FE với BE thật, gỡ lớp giả lập ⬜
+DECISIONS #70–72
+- [ ] Chạy frontend với backend thật, đi hết mọi màn hình (bằng tài khoản Admin, User đã liên kết, User chưa liên kết, và tài khoản chờ duyệt) ở khổ 375px và 1280px. Sửa mọi chỗ lệch giữa giả lập và thật (ghi lại danh sách vào ✅ Đã làm).
+- [ ] Công cụ **chuyển dữ liệu tạm**: script dev `apps/frontend/scripts/import-mock-data.ts`.
+  - Đọc file JSON đã tải ở mục "Dữ liệu tạm", rồi gọi API thật bằng token Admin để tạo lại: thành viên thêm mới hoặc đã sửa, người thân, cây, sự kiện.
+  - Có chế độ chạy thử (dry-run) và báo cáo.
+  - Không tạo trùng 28 người đã có sẵn trong seed (khớp theo id seed).
+- [ ] Gỡ `src/services/mock/`, script `dev:mock`, `VITE_API_MODE`, mục "Dữ liệu tạm" và các banner "Cần kết nối máy chủ". Giữ lại `shared/fixtures/seed/members.json` (nguồn của seed).
+- [ ] Cập nhật `CLAUDE.md`, `.claude/rules/frontend.md`, `docs/STRUCTURE.md` và DECISIONS #71 (ghi "đã gỡ ở Đợt 39").
 
 **✅ Đã làm:** _(điền khi xong)_
 
-**🔧 Setup thủ công cần làm:** Không có.
+**🔧 Setup thủ công cần làm:** Nếu đã nhập dữ liệu thật ở chế độ giả lập: vào Thêm > Dữ liệu tạm > "Tải dữ liệu tạm (JSON)" **trước khi** cập nhật lên bản của đợt này.
 
 **🧪 Test thủ công (từng bước):**
-1. Tải từng báo cáo: file mở được.
-2. In cây A3 ngang: PDF sắc nét khi zoom 400%, chữ có dấu đúng, bố cục giống hệt màn hình.
-3. In cây 500 người khổ A2: có chia trang và dấu ghép, giao diện không bị treo.
-4. Xuất PNG: mở được, độ phân giải cao.
+1. Chạy script chuyển dữ liệu ở chế độ dry-run, rồi chạy thật: cây và danh sách người thân đã dựng ở chế độ giả lập hiện ra y hệt ở chế độ thật.
+2. `npm run build`: không còn mã mock nào.
+3. Đi hết các màn hình bằng 4 loại tài khoản: không có lỗi console.
 
-**➡️ Đợt tiếp:** Đợt 40 — Import Excel BE · Model **Sonnet** · Effort **high** · Skill: `code-review`, `anthropic-skills:xlsx`
+**➡️ Đợt tiếp:** Đợt 40 — E2E Playwright · Model **Sonnet** · Effort **medium** · Skill: `run`, `code-review`
 ```text
-Làm Đợt 40 — Import Excel BE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 40, roadmap/IDEA.md §6.9, .claude/rules/backend.md. TRƯỚC KHI CODE: đề xuất mẫu Excel chi tiết (cột, định dạng, cách khớp tên cha/mẹ/vợ chồng, xử lý trùng tên) và hỏi tôi chốt; ghi quyết định vào docs/DECISIONS.md. Sau đó làm: tải file mẫu, bước kiểm tra thử (dry-run) báo lỗi theo từng dòng, bước nhập thật trong một transaction, tính lại đời/lineage, ghi audit. Chỉ làm checklist Đợt 40. Xong khi `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: code-review, anthropic-skills:xlsx. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+Làm Đợt 40 — E2E Playwright theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 40, docs/DECISIONS.md (#45, #74), .claude/rules/frontend.md và .claude/rules/backend.md. Cài Playwright (project mobile 375px và desktop 1280px), profile e2e cho backend (InMemoryMailSender + endpoint last-otp chỉ có ở e2e, có test chứng minh không có ở prod), viết 3 luồng: đăng ký + OTP + Admin duyệt; Admin thêm thành viên + người thân + dựng cây + gỡ thành ô trống; User liên kết "Tôi là ai", tự sửa hồ sơ và người thân của mình, bị chặn khi sửa nhóm "đã mất". Chỉ làm checklist Đợt 40. Xong khi `npm run e2e` và `.\mvnw.cmd verify` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: run, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 40 — Import Excel BE ⬜
-IDEA §6.9
-- [ ] **Chốt mẫu Excel với người dùng** rồi ghi vào `docs/DECISIONS.md`.
-- [ ] `GET /api/import/template.xlsx`: có sheet hướng dẫn và data validation (giới tính, ngày âm).
-- [ ] `POST /api/import/preview` (dry-run): parse và khớp quan hệ theo tên (ưu tiên trong file, sau đó mới tới DB). Trả lỗi và cảnh báo theo từng dòng (thiếu tên, trùng tên mơ hồ, vòng quan hệ).
-- [ ] `POST /api/import/commit`: nhập thật trong một transaction, tính lại đời và lineage, ghi audit (một bản ghi tổng kèm số lượng).
-- [ ] Chỉ Manager/Admin. Giới hạn 2.000 dòng. Test: file mẫu hợp lệ, dòng lỗi, trùng tên, rollback khi có lỗi.
+### Đợt 40 — E2E Playwright ⬜
+DECISIONS #45, #74
+- [ ] Cài Playwright với 2 project `mobile` (375px) và `desktop` (1280px).
+- [ ] Profile `e2e` của backend: `InMemoryMailSender` và endpoint `GET /api/test/last-otp`, **chỉ bật ở profile e2e**, có test chứng minh endpoint này không tồn tại ở profile prod. `ROOT_ADMIN_EMAIL` riêng cho e2e.
+- [ ] 3 luồng:
+  1. Đăng ký + OTP, vào trang chờ duyệt, Admin duyệt, người đó vào Tổng quan.
+  2. Admin thêm thành viên và người thân, dựng cây (gốc, vợ, con), gỡ một người thành ô trống rồi điền lại.
+  3. User liên kết "Tôi là ai", Admin duyệt, User tự sửa tiểu sử và thêm người thân, bị chặn khi sửa nhóm "đã mất".
+- [ ] Script `npm run e2e`, hướng dẫn chạy ghi trong README của frontend. Thêm job e2e vào CI (chạy khi có nhãn hoặc chạy hằng đêm).
 
 **✅ Đã làm:** _(điền khi xong)_
 
-**🔧 Setup thủ công cần làm:** Không có.
+**🔧 Setup thủ công cần làm:** `npx playwright install`.
 
-**🧪 Test thủ công (từng bước):**
-1. Tải file mẫu, điền 20 người có quan hệ cha/mẹ/vợ chồng.
-2. Gọi preview: không có lỗi, số người khớp.
-3. Cố ý nhập sai tên cha ở dòng 5: preview báo lỗi ở dòng 5.
-4. Commit: cây hiện đủ 20 người, đúng đời.
+**🧪 Test thủ công (từng bước):** `npm run e2e`: cả 3 luồng đều xanh ở cả 2 project.
 
-**➡️ Đợt tiếp:** Đợt 41 — Import Excel FE · Model **Sonnet** · Effort **medium** · Skill: `ui-ux-pro-max`, `run`, `anthropic-skills:xlsx`
+**➡️ Đợt tiếp:** Đợt 41 — Deploy production · Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`
 ```text
-Làm Đợt 41 — Import Excel FE theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 41, roadmap/IDEA.md §6.9, docs/DECISIONS.md (mẫu Excel đã chốt ở Đợt 40), .claude/rules/frontend.md. Chạy npm run gen:api. Làm trình hướng dẫn nhập gồm 3 bước: tải mẫu → upload để xem trước (bảng lỗi theo dòng) → xác nhận nhập, sau đó hiện kết quả. Trước khi code UI, đọc docs/DESIGN.md và chỉ dùng token màu/font/spacing ở đó; thiết kế ưu tiên điện thoại, chữ nền ≥16px, đạt WCAG AA. Chạy app và kiểm tra màn hình ở khổ 375px và 1280px trước khi báo xong. Chỉ làm checklist Đợt 41. Xong khi `npm run lint` và `npm run build` pass. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
-BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, anthropic-skills:xlsx. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
+Làm Đợt 41 — Deploy production theo roadmap/ROADMAP.md. Đọc CLAUDE.md, mục Đợt 41, roadmap/IDEA.md §11, docs/DECISIONS.md (#39–43), .claude/rules/security.md. Làm Dockerfile backend (arm64, không chạy bằng root), nginx build FE, docker-compose.prod.yml (nginx, app, mysql, certbot, có healthcheck), cấu hình nginx (HTTPS, proxy /api, SPA fallback, header bảo mật, forward headers), backup.sh + cron, deploy.yml (workflow_dispatch/tag v*, GHCR, SSH), runbook infra/README.md (có ROOT_ADMIN_EMAIL, seed 28 người chạy lần đầu). Chỉ làm checklist Đợt 41. Khi xong: tick checkbox kèm ngày, đổi ⬜ thành ✅ + ngày, điền ✅ Đã làm, cập nhật 🔧/🧪, rồi DỪNG.
+BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review. Skill nào không gọi được thì dừng và báo tôi. Cuối phiên in bảng: skill | đã gọi (có/không).
 ```
 
 ---
 
-### Đợt 41 — Import Excel FE ⬜
-IDEA §6.9
-- [ ] Trang "Nhập từ Excel" (chỉ Manager/Admin), trình hướng dẫn 3 bước có thanh tiến trình.
-- [ ] Bước 2 hiện bảng xem trước, lọc được "chỉ dòng lỗi". Mỗi lỗi ghi số dòng và cách sửa. Còn lỗi thì không cho sang bước 3.
-- [ ] Bước 3 xác nhận, sau đó hiện kết quả (số người đã thêm) và link sang trang Cây.
+### Đợt 41 — Deploy production ⬜
+IDEA §11 · DECISIONS #39–43
+- [ ] `apps/backend/Dockerfile` (multi-stage, JRE 21, `linux/arm64`, không chạy bằng root). `infra/nginx/Dockerfile` build frontend rồi copy `dist` vào nginx.
+- [ ] `infra/docker-compose.prod.yml`: nginx, app, mysql (có volume, không mở cổng ra ngoài), certbot. Mỗi service có healthcheck.
+- [ ] Cấu hình nginx:
+  - chuyển HTTP sang HTTPS, `/api` proxy tới app, SPA fallback;
+  - gzip, cache dài cho asset có hash, `sw.js` không cache;
+  - header HSTS, CSP, `X-Content-Type-Options`, `Referrer-Policy`.
+  - Backend đặt `forward-headers-strategy` để IP của consent và rate limit là IP thật.
+- [ ] `infra/backup/backup.sh`: `mysqldump`, gzip, đẩy lên Object Storage, xóa bản cũ hơn 30 ngày. Có mẫu dòng cron.
+- [ ] `.github/workflows/deploy.yml`: chạy bằng `workflow_dispatch` hoặc tag `v*`. Build buildx arm64, đẩy GHCR, SSH vào server chạy `docker compose pull && up -d`.
+- [ ] `infra/README.md` (runbook): lần deploy đầu (đặt `ROOT_ADMIN_EMAIL`, seed 28 người tự chạy qua Flyway), gia hạn chứng chỉ, khôi phục từ backup.
 
 **✅ Đã làm:** _(điền khi xong)_
 
-**🔧 Setup thủ công cần làm:** Không có.
+**🔧 Setup thủ công cần làm:** Tạo VM Oracle ARM, DuckDNS, secrets GitHub (SSH, GHCR), file `.env` prod trên server.
 
 **🧪 Test thủ công (từng bước):**
-1. Tải mẫu từ trang, điền dữ liệu rồi upload: bảng xem trước hiện ra.
-2. Upload file có lỗi: nút Tiếp bị khóa, lọc "chỉ dòng lỗi" hoạt động.
-3. Sửa lỗi rồi nhập: có link sang Cây, và người mới hiện trên cây.
-4. Ở khổ 375px: bảng xem trước cuộn ngang bên trong khung, trang không bị tràn.
+1. Mở `https://<tên miền>`: có HTTPS, cài được PWA.
+2. Đăng ký bằng `ROOT_ADMIN_EMAIL`: thành Admin ngay. Danh sách có 28 thành viên.
+3. Chạy `backup.sh` bằng tay: file backup có trên Object Storage.
 
-**➡️ Đợt tiếp:** Hết lộ trình. Rà soát lại `roadmap/IDEA.md` §14 (việc còn chờ) và cân nhắc nâng cấp Capacitor + FCM (IDEA §9.6).
+**➡️ Đợt tiếp:** Hết lộ trình.

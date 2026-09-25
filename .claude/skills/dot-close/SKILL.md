@@ -11,7 +11,7 @@ Mục tiêu: chỉ tick ✅ khi đợt thật sự đạt "định nghĩa xong" 
 
 1. **Xác định đợt và loại đợt.** Đọc mục đợt trong `roadmap/ROADMAP.md`. Loại: BE, FE, hoặc cả hai (đợt setup).
 2. **Chạy kiểm tra, xem kết quả thật (không đoán):**
-   - BE (trong `apps/backend`): `.\mvnw.cmd verify` (Git Bash: `./mvnw verify`). Cần Docker chạy. Phải pass gồm `ModularityTests` và test truy cập chéo family.
+   - BE (trong `apps/backend`): `.\mvnw.cmd verify` (Git Bash: `./mvnw verify`). Cần Docker chạy. Phải pass gồm `ModularityTests`, test phân quyền và tài khoản chưa duyệt, và `ContractTest` (từ Đợt 26).
    - FE (trong `apps/frontend`): `npm run lint`, `npm run build`, và `npm test` nếu có test. Đã chạy app và kiểm tra ở 375px và 1280px (dùng skill `run`).
    - Có bước nào đỏ: **không tick**. Báo lỗi nguyên văn, sửa nếu nằm trong phạm vi đợt, chạy lại.
 3. **Cập nhật ROADMAP** (chỉ đợt này):

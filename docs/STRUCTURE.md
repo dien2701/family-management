@@ -1,6 +1,6 @@
 # CẤU TRÚC DỰ ÁN
 
-> Chốt 2026-09-25 (DECISIONS #51–53). Đây là cấu trúc **đích**. Đợt 0 dựng backend, Đợt 1 dựng frontend, các thư mục còn lại tạo dần theo từng đợt.
+> Chốt 2026-09-25 (DECISIONS #51–53), cập nhật theo đổi hướng v2 (DECISIONS #54–#74: bỏ dòng họ, hợp đồng API trước, lớp giả lập FE). Đây là cấu trúc **đích**. Đợt 0 dựng backend, Đợt 1 dựng frontend, các thư mục còn lại tạo dần theo từng đợt.
 > Quy tắc chung: Controller mỏng, logic nằm ở Service. Cấu hình, tiện ích và kiểu dùng chung tách riêng. Cấu trúc phải mở rộng được mà không phải đổi chỗ file.
 
 ## 1. Toàn repo
@@ -14,7 +14,12 @@ Family-Management/
 │   ├── backend/                  Spring Boot (mục 3)
 │   └── frontend/                 React + Vite (mục 4)
 ├── shared/
-│   └── fixtures/lunar/           Dữ liệu đối chiếu âm–dương dùng chung BE và FE
+│   ├── api/openapi.yaml          Hợp đồng API viết tay, nguồn sự thật (DECISIONS #70)
+│   └── fixtures/                 Dữ liệu đối chiếu dùng chung BE và FE
+│       ├── lunar/                  Âm–dương 1900–2100
+│       ├── seed/                   members.json: 28 thành viên ban đầu (IDEA Phụ lục A) + script sinh SQL
+│       ├── tree/                   Các ca thao tác dựng cây và kết quả mong đợi
+│       └── occurrences/            Các ca lịch nhắc (giỗ, sinh nhật, sự kiện)
 ├── infra/                        docker-compose.dev|prod.yml, nginx/, backup/
 ├── .github/workflows/            ci.yml, deploy.yml
 ├── docs/                         DECISIONS.md, DESIGN.md, STRUCTURE.md, theme.png
@@ -48,7 +53,7 @@ Family-Management/
 └── agents/                       Subagent chuyên biệt (Markdown + YAML frontmatter)
     ├── code-reviewer.md            Rà soát diff theo rules
     ├── test-writer.md              Viết test theo mẫu của dự án
-    └── security-reviewer.md        Rà soát auth, phân quyền, cách ly family
+    └── security-reviewer.md        Rà soát auth, duyệt tài khoản, phân quyền Admin, upload, AI
 ```
 
 **Hook trong `settings.json`:**
@@ -64,7 +69,7 @@ Family-Management/
 
 | Server | Dùng cho |
 |---|---|
-| `playwright` | Điều khiển trình duyệt khi kiểm tra UI và viết E2E (Đợt 22) |
+| `playwright` | Điều khiển trình duyệt khi kiểm tra UI và viết E2E (Đợt 40) |
 | `mysql-dev` | Chỉ đọc DB dev để kiểm tra dữ liệu, không trỏ tới prod |
 
 ## 3. Backend: `apps/backend/`
@@ -94,11 +99,11 @@ apps/backend/
     │   │   │   ├── security/                CurrentUser, JwtService, RateLimiter, hằng số vai trò
     │   │   │   ├── exception/               BusinessException, GlobalExceptionHandler (ProblemDetail)
     │   │   │   ├── consent/                 user_consent
-    │   │   │   ├── web/                     Trang kết quả, header X-Family-Id cho Admin
+    │   │   │   ├── web/                     Trang kết quả (phân trang)
     │   │   │   └── util/                    TextNormalizer (bỏ dấu), DateUtils, IdGenerator
     │   │   │
     │   │   ├── auth/                      ┐
-    │   │   ├── family/                    │
+    │   │   ├── family/                    │  (module cũ, gỡ ở Đợt 26)
     │   │   ├── member/                    │
     │   │   ├── tree/                      │  Mỗi module có cùng bố cục
     │   │   ├── calendar/                  │  (xem ví dụ member/ bên dưới)
@@ -115,7 +120,7 @@ apps/backend/
     │   │   ├── package-info.java          @ApplicationModule
     │   │   ├── controller/                Nhận request, @Valid, trả response
     │   │   ├── service/                   Toàn bộ nghiệp vụ, @Transactional
-    │   │   ├── repository/                Spring Data JPA, ...AndFamilyId
+    │   │   ├── repository/                Spring Data JPA, truy vấn tường minh
     │   │   ├── entity/                    Entity JPA, khớp SQL Flyway
     │   │   ├── dto/                       record request/response
     │   │   ├── mapper/                    MapStruct
@@ -131,7 +136,7 @@ apps/backend/
         ├── java/vn/giapha/
         │   ├── ModularityTests.java       ApplicationModules.verify()
         │   ├── support/                   Base class Testcontainers, dữ liệu mẫu, helper JWT
-        │   └── <module>/                  Test theo module (controller, service, cách ly family)
+        │   └── <module>/                  Test theo module (controller, service, phân quyền, chưa duyệt), ContractTest
         └── resources/                   Fixture test
 ```
 
@@ -154,7 +159,7 @@ apps/backend/
 
 ## 4. Frontend: `apps/frontend/`
 
-Tên thư mục theo ảnh, bỏ `redux/` (DECISIONS #52). Trạng thái từ server dùng TanStack Query, trạng thái toàn cục nhỏ (đăng nhập, family) dùng `context/`.
+Tên thư mục theo ảnh, bỏ `redux/` (DECISIONS #52). Trạng thái từ server dùng TanStack Query, trạng thái toàn cục nhỏ (đăng nhập) dùng `context/`.
 
 ```
 apps/frontend/
@@ -188,7 +193,6 @@ apps/frontend/
     │   ├── BottomNav.tsx             <768px, 5 mục
     │   ├── Header.tsx                Quay lại, tìm kiếm, chuông, avatar
     │   ├── AuthLayout.tsx            Trang đăng nhập, đăng ký
-    │   └── AdminLayout.tsx           Khu /quan-tri
     ├── pages/                    Chỉ ghép route với trang của feature, không chứa logic
     │   ├── routes.tsx                Bảng route, guard theo vai trò
     │   ├── DashboardPage.tsx
@@ -201,7 +205,6 @@ apps/frontend/
     │   └── NotFoundPage.tsx
     ├── features/                 Mỗi module nghiệp vụ một thư mục, khớp module backend
     │   ├── auth/                     api.ts, hooks.ts, schemas.ts (Zod), strings.ts, components/, pages/
-    │   ├── family/
     │   ├── member/
     │   ├── tree/
     │   │   └── layout/               layoutTree.ts (hàm thuần) + test
@@ -214,13 +217,16 @@ apps/frontend/
     │   ├── report/
     │   └── admin/
     ├── hooks/                    Hook dùng chung: useMediaQuery, useDebounce, useOnlineStatus
-    ├── context/                  AuthContext (token trong bộ nhớ), FamilyContext (Admin chọn family)
+    ├── context/                  AuthContext (token trong bộ nhớ, approvalStatus, vai trò)
     ├── services/                 Tầng gọi API dùng chung
     │   ├── client.ts                 Wrapper fetch, gắn Bearer, tự refresh khi 401, parse ProblemDetail
     │   ├── queryClient.ts            Cấu hình TanStack Query
-    │   └── schema.d.ts               Sinh bằng `npm run gen:api`, KHÔNG sửa tay
+    │   ├── schema.d.ts               Sinh từ shared/api/openapi.yaml bằng `npm run gen:api`, KHÔNG sửa tay
+    │   └── mock/                     Lớp giả lập GĐ A (router, store localStorage, handlers/<module>.ts); gỡ ở Đợt 39
     ├── utils/                    Hàm thuần dùng chung
     │   ├── lunar/                    Bản TS của lịch âm (chạy chung fixture với Java)
+    │   ├── tree/                     Mô hình cây thuần: đời, tổ tiên, kiểm tra thao tác (fixture shared/fixtures/tree)
+    │   ├── occurrences/              Lịch nhắc thuần (fixture shared/fixtures/occurrences)
     │   ├── date.ts                   Định dạng dd/MM/yyyy, múi giờ +7
     │   ├── text.ts                   Bỏ dấu tiếng Việt, chuẩn hóa tìm kiếm
     │   └── cn.ts                     Ghép className
@@ -263,4 +269,8 @@ Không tạo sẵn thư mục rỗng. Mỗi đợt chỉ tạo phần mình cầ
 | `.claude/skills/*`, `.claude/agents/*`, hook, `.mcp.json` | Đợt 0 (viết ngay, dùng từ Đợt 2) |
 | Từng module BE và `features/<module>` | Đợt của module đó |
 | `utils/lunar/`, `shared/fixtures/lunar/` | Đợt 6–7 |
-| `infra/`, `.github/workflows/deploy.yml` | Đợt 23 |
+| `shared/api/openapi.yaml`, `shared/fixtures/seed/`, `services/mock/` | Đợt 9 |
+| `utils/tree/`, `shared/fixtures/tree/` | Đợt 14 |
+| `utils/occurrences/`, `shared/fixtures/occurrences/` | Đợt 17 |
+| Gỡ `features/family` (FE) / module `family` (BE) | Đợt 10 / Đợt 26 |
+| `infra/`, `.github/workflows/deploy.yml` | Đợt 41 |

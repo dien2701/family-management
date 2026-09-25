@@ -1,12 +1,15 @@
-# Mẫu DTO, mapper, service, controller
+# Mẫu DTO, mapper, service, controller (bản v2)
+
+Tên record, trường và mã lỗi phải khớp schema trong `shared/api/openapi.yaml`.
 
 ```java
 // dto/
 public record MemberCreateRequest(
-    @NotBlank(message = "Vui lòng nhập họ tên") @Size(max = 120) String fullName,
-    @NotNull(message = "Vui lòng chọn giới tính") Gender gender) {}
+    @NotBlank(message = "Vui lòng nhập họ tên") @Size(max = 200) String fullName,
+    Gender gender) {}                       // null = chưa rõ
 
-public record MemberResponse(Long id, String fullName, Gender gender, boolean locked) {}
+public record MemberResponse(Long id, String fullName, Gender gender,
+                             String phone, String email) {}   // phone/email null nếu người xem không có quyền
 ```
 
 ```java
@@ -15,7 +18,6 @@ public record MemberResponse(Long id, String fullName, Gender gender, boolean lo
 public interface MemberMapper {
     MemberResponse toResponse(Member m);
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "familyId", ignore = true)
     Member toEntity(MemberCreateRequest r);
 }
 ```
@@ -30,19 +32,20 @@ public class MemberService {
     private final AuditLogWriter audit;
 
     @Transactional(readOnly = true)
-    public MemberResponse get(Long familyId, Long id) {
-        return repo.findByIdAndFamilyIdAndLockedFalse(id, familyId)
-            .map(mapper::toResponse)
-            .orElseThrow(() -> new BusinessException("MEMBER_NOT_FOUND", "Không tìm thấy thành viên")); // 404
+    public MemberResponse get(CurrentUser viewer, Long id) {
+        Member m = repo.findById(id)
+            .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "MEMBER_NOT_FOUND", "Không tìm thấy thành viên"));
+        MemberResponse r = mapper.toResponse(m);
+        // SĐT/email chỉ cho Admin hoặc chính chủ (DECISIONS #66)
+        return viewer.isAdmin() || id.equals(viewer.memberId()) ? r : r.withoutContact();
     }
 
     @Transactional
-    public MemberResponse create(Long familyId, MemberCreateRequest req) {
+    public MemberResponse create(MemberCreateRequest req) {
         Member m = mapper.toEntity(req);
-        m.setFamilyId(familyId);
         m.setSearchName(TextUtils.normalize(req.fullName()));
         Member saved = repo.save(m);
-        audit.write("MEMBER_CREATE", familyId, null, saved);
+        audit.write("MEMBER_CREATE", null, saved);
         return mapper.toResponse(saved);
     }
 }
@@ -57,16 +60,15 @@ class MemberController {
     private final MemberService service;
 
     @GetMapping("/{id}")
-    MemberResponse get(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
-        return service.get(FamilyContext.familyId(jwt), id);   // familyId từ token
+    MemberResponse get(@PathVariable Long id, CurrentUser viewer) {   // tài khoản chưa duyệt đã bị chặn ở tầng security
+        return service.get(viewer, id);
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
-    ResponseEntity<MemberResponse> create(@Valid @RequestBody MemberCreateRequest req,
-                                          @AuthenticationPrincipal Jwt jwt) {
-        return ResponseEntity.status(201).body(service.create(FamilyContext.familyId(jwt), req));
+    @PreAuthorize("hasRole('ADMIN')")
+    ResponseEntity<MemberResponse> create(@Valid @RequestBody MemberCreateRequest req) {
+        return ResponseEntity.status(201).body(service.create(req));
     }
 }
 ```
-Tên lớp tiện ích (`FamilyContext`, `TextUtils`) theo những gì đã có trong `common/`; chưa có thì tạo đúng chỗ theo `docs/STRUCTURE.md` §3. Import Boot 4 lấy theo phiên bản đang dùng.
+Tên lớp tiện ích (`CurrentUser`, `TextUtils`) và chữ ký `AuditLogWriter.write` theo những gì đã có trong `common/`; chưa có thì tạo đúng chỗ theo `docs/STRUCTURE.md` §3. Import Boot 4 lấy theo phiên bản đang dùng.
