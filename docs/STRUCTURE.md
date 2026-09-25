@@ -8,7 +8,9 @@
 ```
 Family-Management/
 ├── CLAUDE.md                     Hướng dẫn cho Claude (ngắn, rõ)
+├── AGENTS.md                     Ngữ cảnh cho Antigravity, dẫn về CLAUDE.md (DECISIONS #83)
 ├── .claude/                      Cấu hình Claude Code (mục 2)
+├── .agents/skills/               Skill cho Antigravity (ui-ux-pro-max…)
 ├── .mcp.json                     Kết nối công cụ ngoài, dùng HTTP
 ├── apps/
 │   ├── backend/                  Spring Boot (mục 3)

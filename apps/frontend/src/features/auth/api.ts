@@ -1,5 +1,5 @@
 import { api } from '@/services/client'
-import type { AuthResponse, OtpSent, Schemas } from '@/types/api'
+import type { AuthResponse, Me, OtpSent, Schemas } from '@/types/api'
 
 export const authApi = {
   register: (body: Schemas['RegisterRequest']) => api.post<OtpSent>('/auth/register', body),
@@ -14,4 +14,6 @@ export const authApi = {
     api.post<void>('/auth/verify-reset-otp', body),
   resetPassword: (body: Schemas['ResetPasswordRequest']) =>
     api.post<void>('/auth/reset-password', body),
+  me: () => api.get<Me>('/me'),
+  consent: (body: Schemas['ConsentRequest']) => api.post<Me>('/me/consent', body),
 }

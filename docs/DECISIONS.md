@@ -1,7 +1,7 @@
 # QUYẾT ĐỊNH KỸ THUẬT (chốt 2026-09-25, đổi hướng v2 cùng ngày)
 
 > Bổ sung cho `roadmap/IDEA.md` (bản chốt v2), không thay thế IDEA.md. Nếu có chỗ khác với IDEA.md thì **file này thắng**.
-> **Mục J (#54–#74) là đổi hướng v2** và thắng mọi mục trước nó. **Mục K (#75–#78) là điều chỉnh "hồ sơ tự quản"**, thắng mục J khi mâu thuẫn. Quyết định cũ không còn đúng được đánh dấu **❌ Hủy** hoặc **🔁 Thay bằng #N**, giữ lại để tra lịch sử.
+> **Mục J (#54–#74) là đổi hướng v2** và thắng mọi mục trước nó. **Mục K (#75–#78) là điều chỉnh "hồ sơ tự quản"**, thắng mục J khi mâu thuẫn. **Mục L (#79–#83) là tài khoản ≠ thành viên, liên kết và chia việc Claude Code / Antigravity**, thắng mục K khi mâu thuẫn. Quyết định cũ không còn đúng được đánh dấu **❌ Hủy** hoặc **🔁 Thay bằng #N**, giữ lại để tra lịch sử.
 > Cách chốt: người dùng chọn **"lấy toàn bộ khuyến nghị (KN)"** cho 50 câu hỏi làm rõ.
 > Các câu mang nhãn **⏳ Chưa chốt** đang dùng giá trị tạm, đổi được mà không ảnh hưởng kiến trúc.
 
@@ -137,7 +137,7 @@
 
 ## H. File dự án và ROADMAP
 
-49. **`AGENTS.md`** (của dự án khác)
+49. 🔁 **Thay bằng #83** (có `AGENTS.md` mới cho Antigravity, chỉ dẫn tới `CLAUDE.md`). **`AGENTS.md`** (của dự án khác)
     → **Chốt:** xóa, thay bằng `CLAUDE.md` và `.claude/rules/*`.
 50. 🔁 **Thứ tự đợt thay bằng #69.** **ROADMAP**
     → **Chốt:** chia theo **đợt**. Mỗi đợt tối đa 1 module, vừa một phiên làm việc, và có kết quả chạy được. ⏳ **Chưa chốt:** nhân lực (tạm: 1 người) và mốc thời gian (chưa có), nên chưa ước lượng thời gian.
@@ -300,6 +300,39 @@
     → **Chốt:** User đã liên kết được tải ảnh `AVATAR` cho hồ sơ của chính mình. Chỉ nhận jpg/png/webp, tối đa 10 MB, tính vào quota 1 GB, ảnh cũ bị xóa khi thay.
     - Tệp `DOCUMENT`, tài liệu chung và thao tác xóa tệp vẫn chỉ Admin.
     - Backend kiểm tra `memberId = user.member_id` ở cả `sign` và `confirm`.
+
+## L. Tài khoản, liên kết và chia việc hai công cụ (chốt 2026-09-25, hỏi đáp với người dùng)
+
+79. **Thuật ngữ: tài khoản ≠ thành viên**
+    → **Chốt:** hai khái niệm tách hẳn.
+    - **Tài khoản (user, `user_account`):** người đăng ký, đăng nhập vào hệ thống, có vai trò Admin hoặc User, phải được duyệt.
+    - **Thành viên (member, `member`):** một người trong gia phả, là dữ liệu nội dung của hệ thống. Còn sống hay đã mất, có tài khoản hay không đều được.
+    - Một tài khoản **có thể** là một thành viên khi đã liên kết ("Tôi là ai"). Admin cũng là tài khoản, không bắt buộc là thành viên.
+    - Giao diện gọi người đăng nhập là **"tài khoản"** và người trong gia phả là **"thành viên"**, không dùng lẫn. Trong tài liệu, "User" viết hoa là **vai trò**, còn "tài khoản" là đối tượng.
+80. **Liên kết tài khoản – thành viên (bổ sung IDEA §6.3)**
+    → **Chốt:** quan hệ **1–1**: `user_account.member_id` NULL UNIQUE, một tài khoản có tối đa một thành viên và ngược lại.
+    - **Hai cách liên kết:**
+      - User gửi yêu cầu "Đây là tôi", Admin duyệt (giữ như cũ);
+      - **Admin gán trực tiếp** ở Quản trị > Tài khoản ("Gán thành viên"), không cần yêu cầu: `PUT /api/admin/accounts/{id}/member-link` (`memberId`).
+    - **Ràng buộc khi Admin gán:** chỉ gán cho tài khoản đã duyệt (ACTIVE + APPROVED, sai thì 409 `INVALID_ACCOUNT_STATE`); thành viên đã có tài khoản khác thì 409 `MEMBER_ALREADY_LINKED`; tài khoản đã liên kết thì 409 `ACCOUNT_ALREADY_LINKED` (phải hủy trước); yêu cầu "Đây là tôi" đang chờ của tài khoản đó tự chuyển sang hủy; người được gán nhận thông báo cùng loại với "kết quả liên kết"; ghi audit log.
+    - **Hủy liên kết:** User tự hủy của mình (`DELETE /api/me/member-link`), Admin hủy của bất kỳ ai ở Quản trị > Tài khoản (`DELETE /api/admin/accounts/{id}/member-link`).
+    - `GET /api/admin/accounts` trả thêm thành viên đang liên kết của mỗi tài khoản.
+    - Làm ở Đợt 13 (FE, giả lập) và Đợt 28 (BE); thông báo ở Đợt 34.
+81. **Chép email khi liên kết**
+    → **Chốt:** **một chiều, một lần**. Khi liên kết có hiệu lực (Admin duyệt yêu cầu hoặc Admin gán), nếu `member.email` đang trống thì chép `user_account.email` sang. Hồ sơ đã có email thì giữ nguyên, không ghi đè.
+    - Sau đó hai bên độc lập: sửa email trên hồ sơ **không bao giờ** đổi email đăng nhập (chống chiếm tài khoản qua sửa hồ sơ); đổi email đăng nhập (nếu sau này có) không đổi hồ sơ. Hủy liên kết không xóa email đã chép.
+    - Không đồng bộ SĐT (tài khoản không có SĐT, SĐT vẫn nhập ở hồ sơ), không đồng bộ họ tên (họ tên thành viên ghi nguyên văn) và ảnh đại diện.
+82. **Liên kết khi khóa hoặc từ chối tài khoản**
+    → **Chốt:** giữ nguyên liên kết. Mở khóa hoặc duyệt lại thì tài khoản dùng tiếp như cũ. Muốn giải phóng thành viên thì Admin tự hủy liên kết. Tài khoản bị tự xóa chỉ là tài khoản PENDING quá 7 ngày, chưa bao giờ được duyệt nên không có liên kết.
+83. **Chia việc Claude Code / Antigravity (thay #49)**
+    → **Chốt:** các đợt FE nhẹ của GĐ A làm bằng **Antigravity**, mọi đợt khác làm bằng **Claude Code**.
+    - **Antigravity:** Đợt 11, 20, 21, 23 dùng **Gemini 3.1 Pro**; Đợt 18, 19, 22 dùng **Gemini 3.8 Flash**. Chế độ **Planning**. Không dùng Gemini 3.6/3.7 Flash.
+    - Skill duy nhất là `ui-ux-pro-max` (ở `.agents/skills/`). Không có `run`, `dataviz`, `code-review`, `security-review`: đợt Antigravity tự chạy lint/build/test và tự kiểm tra 375px, 1280px bằng trình duyệt của Antigravity. **Không có bước rà lại bằng Claude.**
+    - Đợt 23 (quản trị FE) bỏ `security-review` (ngoại lệ so với bảng skill), bù bằng test guard route; quyền thật vẫn do backend chặn ở Đợt 32.
+    - Trang "Xuất dữ liệu" (hợp đồng 4 báo cáo, handler 503) chuyển từ Đợt 25 sang Đợt 22. Đợt 25 chỉ còn In cây.
+    - `AGENTS.md` ở gốc repo là file ngữ cảnh cho Antigravity: dẫn tới `CLAUDE.md`, ROADMAP, `.claude/rules/*` và ghi rõ các điều cấm mà hook của `.claude/settings.json` không chặn được ở Antigravity (ghi `.env*`, sửa file Flyway cũ, sửa `apps/backend`).
+    - Git như cũ: mỗi đợt một nhánh `dot-NN-…`, chỉ commit khi người dùng yêu cầu. Các đợt làm lần lượt, **không chạy song song** hai công cụ.
+    - ROADMAP có cột "Công cụ", mẫu "➡️ Đợt tiếp" có thêm "Công cụ".
 
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.

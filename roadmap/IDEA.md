@@ -14,6 +14,10 @@
 > - Quan hệ nhãn hai chiều được thay bằng **danh sách người thân một chiều** trong hồ sơ mỗi thành viên.
 > - User đã liên kết **tự sửa trực tiếp** hồ sơ và danh sách người thân của mình, trừ các trường về việc đã mất.
 > - Đề xuất chỉ còn dùng cho sự kiện chung.
+>
+> **Điều chỉnh "tài khoản ≠ thành viên" (2026-09-25, DECISIONS mục L #79–#82):**
+> - Tài khoản (người đăng nhập) và thành viên (người trong gia phả) là hai khái niệm tách hẳn, liên kết 1–1.
+> - Admin gán hoặc hủy liên kết trực tiếp được, User tự hủy được. Khi liên kết, email của tài khoản được chép một lần sang hồ sơ nếu ô email đang trống.
 
 ## 1. Tổng quan
 
@@ -31,8 +35,14 @@
 | **Người thân** | Danh sách trong hồ sơ của một thành viên. Mỗi dòng gồm một thành viên đã có cùng nhãn tự nhập, ví dụ "cha", "vợ", "chú họ". **Một chiều**: dòng trong hồ sơ B không tự hiện ở hồ sơ A. Chủ hồ sơ và Admin quản lý. Tách hẳn khỏi cây |
 | **Cây gia phả** | Cấu trúc do Admin **dựng tay** bằng các nút "+". Chỉ những thành viên được đưa vào mới có trên cây. Hệ thống không tự sinh cây từ danh sách người thân |
 | **Ô trên cây (node)** | Một vị trí trên cây. Ô có thể đang chứa một thành viên, hoặc là **ô trống** sau khi người trong ô bị gỡ ra |
-| **UserAccount** | Người đăng nhập. Phải được Admin duyệt mới xem được gia phả. Có thể liên kết với một Member ("Tôi là ai") |
+| **UserAccount (Tài khoản)** | Người đăng ký và đăng nhập vào hệ thống. Phải được Admin duyệt mới xem được gia phả. **Có thể** liên kết với **một** Member ("Tôi là ai", §6.3); mỗi Member cũng chỉ liên kết với tối đa một tài khoản |
 | **Proposal (Đề xuất)** | Thay đổi **sự kiện chung** do User đề xuất (tự soạn hoặc nhờ AI soạn), chờ Admin duyệt |
+
+**Thuật ngữ (DECISIONS #79):** **tài khoản ≠ thành viên.**
+- *Tài khoản* (user) là người dùng hệ thống.
+- *Thành viên* (member) là dữ liệu nội dung của gia phả.
+- Một tài khoản chỉ "là" một thành viên khi đã liên kết. Phần lớn thành viên (ví dụ 28 cụ đã mất ở Phụ lục A) không có tài khoản.
+- Giao diện gọi người đăng nhập là "tài khoản", người trong gia phả là "thành viên", không dùng lẫn. Trong tài liệu, "User" viết hoa là **vai trò**, còn "tài khoản" là đối tượng.
 
 ## 3. Vai trò và phân quyền
 
@@ -49,6 +59,7 @@ Chỉ có hai vai trò: **Admin** và **User**. Có thể có nhiều Admin, và
 | Dựng cây (thêm, gỡ, điền ô trống, di chuyển nhánh) | ✅ | ❌ |
 | Tạo, sửa, xóa sự kiện chung | ✅ | Chỉ gửi đề xuất |
 | Duyệt yêu cầu liên kết "Tôi là ai" và duyệt đề xuất | ✅ | – |
+| Gán thành viên cho tài khoản, hủy liên kết của tài khoản bất kỳ (§6.3) | ✅ | Chỉ gửi yêu cầu "Đây là tôi" và tự hủy liên kết của mình |
 | Xem danh sách, chi tiết, cây, lịch, dashboard | ✅ | ✅ |
 | Xem SĐT, email của thành viên | ✅ | Chỉ của chính mình |
 | Tùy chọn thông báo của bản thân | ✅ | ✅ |
@@ -181,7 +192,7 @@ audit_log(id, actor_id, action, target_type, target_id, before_data JSON, after_
   - Ngày mất nhập được theo âm hoặc dương. Nếu có năm thì hệ thống tự đổi sang lịch còn lại. Nếu chỉ có ngày/tháng âm (không có năm) thì vẫn lưu được, và không hiện "giỗ lần thứ N".
   - Không có ngày mất thì để trống toàn bộ các trường về thời gian mất.
   - Ngày sinh được phép chỉ có năm. Sinh nhật tính theo Dương (mặc định) hoặc Âm, chọn riêng cho từng người.
-  - Có ảnh đại diện, tên húy, nhãn đặc biệt (ví dụ "Liệt sỹ"), tiểu sử, SĐT, email.
+  - Có ảnh đại diện, tên húy, nhãn đặc biệt (ví dụ "Liệt sỹ"), tiểu sử, SĐT, email. Email và SĐT của thành viên là dữ liệu của hồ sơ, tách khỏi email đăng nhập của tài khoản. Riêng email được tự điền một lần khi liên kết (§6.3).
   - Khi User sửa hồ sơ của mình, form ẩn hoặc khóa nhóm "đã mất".
 - **Xóa thành viên (chỉ Admin):**
   - **Bị chặn nếu người đó đang có trên cây.** Admin phải gỡ người đó khỏi cây trước.
@@ -208,9 +219,13 @@ audit_log(id, actor_id, action, target_type, target_id, before_data JSON, after_
 - Mọi thay đổi ghi audit log, không gửi thông báo.
 
 ### 6.3 Liên kết "Tôi là ai"
-- User đã được duyệt tìm thành viên (tìm không dấu) rồi bấm "Đây là tôi". Hệ thống tạo `member_link_request`.
-- Admin duyệt thì gán `user.member_id`.
-- Không liên kết được với thành viên đã có tài khoản khác. Có chức năng hủy liên kết.
+- Quan hệ **1–1**: một tài khoản liên kết tối đa một thành viên, một thành viên có tối đa một tài khoản (DECISIONS #80).
+- **Cách 1, User gửi yêu cầu:** tài khoản đã được duyệt tìm thành viên (tìm không dấu) rồi bấm "Đây là tôi". Hệ thống tạo `member_link_request`. Admin duyệt thì gán `user.member_id`.
+- **Cách 2, Admin gán trực tiếp:** ở Quản trị > Tài khoản, Admin bấm "Gán thành viên" trên một tài khoản đã duyệt, không cần yêu cầu. Yêu cầu "Đây là tôi" đang chờ của tài khoản đó tự hủy. Người được gán nhận thông báo như khi được duyệt liên kết.
+- Không liên kết được với thành viên đã có tài khoản khác. Tài khoản đã liên kết muốn đổi người thì phải hủy liên kết trước.
+- **Hủy liên kết:** User tự hủy của mình; Admin hủy được của bất kỳ tài khoản nào ở Quản trị > Tài khoản.
+- **Chép email (DECISIONS #81):** khi liên kết có hiệu lực (bằng cách 1 hoặc 2), nếu hồ sơ chưa có email thì email của tài khoản được chép sang. Hồ sơ đã có email thì giữ nguyên. Chỉ chép một lần: sau đó sửa email hồ sơ không đổi email đăng nhập. Không chép SĐT, họ tên, ảnh. Hủy liên kết không xóa email đã chép.
+- Tài khoản bị khóa hoặc bị từ chối vẫn giữ liên kết. Admin tự hủy nếu cần (DECISIONS #82).
 - Liên kết xong thì User mới **tự sửa** được hồ sơ, danh sách người thân và ảnh đại diện của mình (§6.1, §6.2). Chưa liên kết thì User chỉ xem.
 
 ### 6.4 Cây gia phả (xem mục 8)
@@ -273,7 +288,8 @@ audit_log(id, actor_id, action, target_type, target_id, before_data JSON, after_
   - danh sách Chờ duyệt và Tất cả, có ô tìm;
   - duyệt, từ chối;
   - khóa, mở khóa;
-  - cấp hoặc gỡ quyền Admin.
+  - cấp hoặc gỡ quyền Admin;
+  - xem thành viên đang liên kết của từng tài khoản, "Gán thành viên" và "Hủy liên kết" (§6.3).
 - **Yêu cầu liên kết** và **Đề xuất**: hàng đợi duyệt.
 - **Thành viên đã xóa:** xem bản sao trong audit log.
 - **Cấu hình hệ thống:**
@@ -374,7 +390,7 @@ audit_log(id, actor_id, action, target_type, target_id, before_data JSON, after_
    - Bảng `notification_dispatch` chống gửi trùng. Subscription trả về lỗi 404/410 thì bị xóa.
 5. **Thông báo nghiệp vụ:**
    - Admin nhận thông báo khi có tài khoản mới chờ duyệt, đề xuất mới, hoặc yêu cầu liên kết mới.
-   - User nhận thông báo khi được duyệt tài khoản, khi có kết quả liên kết, và khi có kết quả đề xuất.
+   - User nhận thông báo khi được duyệt tài khoản, khi có kết quả liên kết (kể cả khi được Admin gán trực tiếp), và khi có kết quả đề xuất.
 6. Mỗi người tự bật/tắt từng loại (giỗ, sinh nhật, sự kiện chung), từng mốc nhắc và chọn giờ nhận.
 
 ## 10. Trợ lý AI
@@ -443,7 +459,7 @@ event · proposal · notification(push, inbox, scheduler) · file · ai · repor
 |---|---|
 | **Đã xong (Đợt 0–7)** | Nền tảng BE/FE, Auth (OTP, Google), dòng họ (sẽ bị gỡ), lịch âm BE + FE |
 | **Chuẩn bị (Đợt 8)** | Backend nhỏ: Admin gốc, duyệt tài khoản, consent không gắn dòng họ |
-| **A. Frontend (Đợt 9–25)** | Hợp đồng API + lớp giả lập + dữ liệu 27 người, bỏ dòng họ ở FE, tài khoản và duyệt, thành viên (User tự sửa hồ sơ của mình), người thân, "Tôi là ai", cây (layout, hiển thị, dựng tay), lịch và sự kiện, dashboard, đề xuất sự kiện, thông báo, đính kèm, quản trị, AI, export và in cây, PWA |
+| **A. Frontend (Đợt 9–25)** | Hợp đồng API + lớp giả lập + dữ liệu 28 người, bỏ dòng họ ở FE, tài khoản và duyệt, thành viên (User tự sửa hồ sơ của mình), người thân, "Tôi là ai", cây (layout, hiển thị, dựng tay), lịch và sự kiện, dashboard, đề xuất sự kiện, thông báo, đính kèm, quản trị, AI, export và in cây, PWA |
 | **B. Backend (Đợt 26–38)** | Gỡ dòng họ + test hợp đồng, thành viên + seed, người thân + liên kết, cây, file, sự kiện + lịch nhắc, dashboard + quản trị, đề xuất sự kiện, thông báo, Web Push, AI, export |
 | **C. Nối và phát hành (Đợt 39–41)** | Nối FE với BE thật và gỡ lớp giả lập, E2E Playwright, deploy production |
 

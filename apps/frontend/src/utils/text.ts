@@ -9,6 +9,11 @@ export function removeDiacritics(text: string): string {
     .normalize('NFC')
 }
 
+/** Chữ cái đầu của từ cuối (tên gọi đứng cuối trong tên người Việt), dùng làm avatar chữ. */
+export function initialOf(fullName?: string): string {
+  return fullName?.trim().split(/\s+/).at(-1)?.[0]?.toUpperCase() ?? '?'
+}
+
 export function toSearchName(text: string): string {
   return removeDiacritics(text).toLowerCase().replace(/\s+/g, ' ').trim()
 }

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { AuthContext, type AuthContextValue } from '@/context/authContext'
 import { routes } from '@/pages/routes'
 
-// Người dùng đã đăng nhập và thuộc một dòng họ, để route guard cho vào khung chính
+// Người dùng đã đăng nhập và được duyệt, để route guard cho vào khung chính
 const auth: AuthContextValue = {
   status: 'authenticated',
   user: {
@@ -13,10 +13,11 @@ const auth: AuthContextValue = {
     fullName: 'Đặng Văn An',
     email: 'an@example.com',
     systemRole: 'USER',
-    familyId: 1,
+    approvalStatus: 'APPROVED',
   },
   setSession: () => {},
   refresh: async () => true,
+  updateUser: () => {},
   logout: async () => {},
 }
 

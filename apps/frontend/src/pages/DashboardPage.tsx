@@ -7,7 +7,7 @@ export function DashboardPage() {
     <EmptyState
       icon={LayoutDashboard}
       title="Tổng quan đang được xây dựng"
-      description="Số liệu và sự kiện sắp tới của dòng họ sẽ hiện ở đây."
+      description="Số liệu và sự kiện sắp tới của gia phả sẽ hiện ở đây."
     />
   )
 }

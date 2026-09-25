@@ -36,7 +36,7 @@ type RequestOptions = {
 // ---------- Phiên đăng nhập (chỉ trong bộ nhớ) ----------
 
 type SessionHooks = {
-  /** Refresh thành công: claim trong token có thể đã đổi (family, vai trò). */
+  /** Refresh thành công: claim trong token có thể đã đổi (vai trò, trạng thái duyệt). */
   onRefreshed: (session: AuthResponse) => void
   /** Refresh bị từ chối: phiên đã hết hạn hoặc bị thu hồi. */
   onExpired: () => void

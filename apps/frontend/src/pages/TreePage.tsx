@@ -7,7 +7,7 @@ export function TreePage() {
     <EmptyState
       icon={Network}
       title="Cây gia phả đang được xây dựng"
-      description="Sơ đồ các đời trong dòng họ sẽ hiện ở đây."
+      description="Sơ đồ các đời trong gia phả sẽ hiện ở đây."
     />
   )
 }

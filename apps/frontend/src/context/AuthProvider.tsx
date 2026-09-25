@@ -62,6 +62,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const updateUser = useCallback((user: Me) => {
+    setSessionState((current) => (current.status === 'authenticated' ? { ...current, user } : current))
+  }, [])
+
   const logout = useCallback(async () => {
     // Refresh cookie chỉ bị thu hồi khi server nhận được lời gọi này, nên lỗi thì không xóa phiên phía trình duyệt
     await api.post('/auth/logout')
@@ -71,8 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient])
 
   const value = useMemo<AuthContextValue>(
-    () => ({ ...session, setSession, refresh, logout }),
-    [session, setSession, refresh, logout],
+    () => ({ ...session, setSession, refresh, updateUser, logout }),
+    [session, setSession, refresh, updateUser, logout],
   )
 
   return <AuthContext value={value}>{children}</AuthContext>

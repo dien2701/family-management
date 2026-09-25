@@ -3,11 +3,9 @@ import { useLocation, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouteTitle } from '@/hooks/useRouteTitle'
+import { initialOf } from '@/utils/text'
 
 // Ô tìm kiếm và chuông chỉ là khung giữ chỗ: chức năng làm ở các đợt sau (tìm kiếm Đợt 11, thông báo GĐ2).
-// Tên người Việt thì tên gọi đứng cuối nên lấy chữ cái đầu của từ cuối làm avatar.
-const initialOf = (fullName?: string) =>
-  fullName?.trim().split(/\s+/).at(-1)?.[0]?.toUpperCase() ?? '?'
 export function Header() {
   const title = useRouteTitle()
   const { user } = useAuth()

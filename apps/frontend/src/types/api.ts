@@ -1,9 +1,13 @@
-import type { components } from '@/services/schema'
+import type { components, operations } from '@/services/schema'
 
 /** Kiểu DTO lấy từ schema.d.ts (sinh tự động bằng `npm run gen:api`), không viết tay lại. */
 export type Schemas = components['schemas']
 
 export type Me = Schemas['MeResponse']
+export type AccountAdmin = Schemas['AccountAdminResponse']
+export type AccountAdminPage = Schemas['PageResponseAccountAdminResponse']
+/** Tham số lọc của `GET /api/admin/accounts`. */
+export type AccountListQuery = NonNullable<operations['list']['parameters']['query']>
 export type AuthResponse = Schemas['AuthResponse']
 export type OtpSent = Schemas['OtpSentResponse']
 export type MemberSummary = Schemas['MemberSummary']

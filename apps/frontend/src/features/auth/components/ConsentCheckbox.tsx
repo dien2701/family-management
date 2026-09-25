@@ -1,7 +1,7 @@
 import type { Ref } from 'react'
 import { Link } from 'react-router'
 import { Checkbox } from '@/components/ui/checkbox'
-import { familyStrings as s, POLICY_VERSION } from '../strings'
+import { authStrings as s, POLICY_VERSION } from '../strings'
 
 type ConsentCheckboxProps = {
   checked: boolean
@@ -12,7 +12,7 @@ type ConsentCheckboxProps = {
   error?: string
 }
 
-// Đồng ý dữ liệu cá nhân theo NĐ 13 (IDEA §6.2). Link chính sách mở tab mới để không mất dữ liệu đã nhập.
+// Đồng ý dữ liệu cá nhân theo NĐ 13 (IDEA §5). Link chính sách mở tab mới để không mất trang chờ duyệt.
 export function ConsentCheckbox({
   checked,
   onChange,

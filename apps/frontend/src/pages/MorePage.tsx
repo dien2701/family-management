@@ -1,8 +1,11 @@
-import { ArrowLeftRight, ChevronRight, ShieldCheck, TreeDeciduous } from 'lucide-react'
+import { ArrowLeftRight, ChevronRight, ShieldCheck, UserCog } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
+import { adminStrings } from '@/features/admin/strings'
 import { AccountCard } from '@/features/auth/components/AccountCard'
+import { isAdmin } from '@/features/auth/routing'
+import { useAuth } from '@/hooks/useAuth'
 
 // Mục "Dữ liệu tạm" chỉ có ở chế độ giả lập. Điều kiện viết trực tiếp (không qua hằng số khác) để Vite
 // cắt luôn import động khỏi bản build prod.
@@ -11,13 +14,17 @@ const MockDataSection =
     ? lazy(() => import('@/features/mockdata/components/MockDataSection'))
     : null
 
-const ITEMS: { to: string; label: string; description: string; icon: LucideIcon }[] = [
-  {
-    to: '/them/dong-ho',
-    label: 'Dòng họ',
-    description: 'Thông tin, tài khoản và mã mời',
-    icon: TreeDeciduous,
-  },
+type Item = { to: string; label: string; description: string; icon: LucideIcon }
+
+// Chỉ Admin thấy; trên điện thoại thanh dưới chỉ có 5 mục nên Quản trị vào từ đây (Sidebar và rail có mục riêng)
+const ADMIN_ITEM: Item = {
+  to: '/quan-tri',
+  label: adminStrings.menu,
+  description: adminStrings.menuDescription,
+  icon: UserCog,
+}
+
+const ITEMS: Item[] = [
   {
     to: '/them/doi-lich',
     label: 'Đổi lịch âm – dương',
@@ -32,14 +39,16 @@ const ITEMS: { to: string; label: string; description: string; icon: LucideIcon 
   },
 ]
 
-// Thẻ tài khoản + Đăng xuất (Đợt 3), mục Dòng họ (Đợt 5); các mục khác được thêm ở các đợt sau
+// Thẻ tài khoản + Đăng xuất (Đợt 3), mục Quản trị cho Admin (Đợt 10); các mục khác được thêm ở các đợt sau
 export function MorePage() {
+  const { user } = useAuth()
+  const items = isAdmin(user) ? [ADMIN_ITEM, ...ITEMS] : ITEMS
   return (
     <div className="mx-auto w-full max-w-3xl">
       <AccountCard />
       <nav aria-label="Các mục khác">
         <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
-          {ITEMS.map(({ to, label, description, icon: Icon }) => (
+          {items.map(({ to, label, description, icon: Icon }) => (
             <li key={to} className="border-b border-border last:border-b-0">
               <Link
                 to={to}

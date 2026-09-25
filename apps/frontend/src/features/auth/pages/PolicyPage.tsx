@@ -2,14 +2,15 @@ import { ArrowLeft, TreeDeciduous } from 'lucide-react'
 import { Link } from 'react-router'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouteTitle } from '@/hooks/useRouteTitle'
-import { POLICY_VERSION } from '../strings'
 import { policySections } from '../policyContent'
+import { POLICY_VERSION } from '../strings'
 
 // Trang tĩnh, công khai (cả người chưa đăng nhập cũng đọc được) nên nằm ngoài các route guard.
 export function PolicyPage() {
   useRouteTitle()
   const { status } = useAuth()
   // Có phiên thì "quay lại" về trang chính, chưa có thì về đăng nhập; link mở ở tab mới nên không dùng history.
+  // Người chờ duyệt về `/` sẽ được guard đưa về trang chờ duyệt.
   const backTo = status === 'authenticated' ? '/' : '/dang-nhap'
 
   return (
