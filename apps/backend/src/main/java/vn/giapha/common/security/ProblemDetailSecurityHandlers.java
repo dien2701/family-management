@@ -41,7 +41,8 @@ public class ProblemDetailSecurityHandlers implements AuthenticationEntryPoint, 
                 "Bạn không có quyền thực hiện thao tác này.");
     }
 
-    private void write(HttpServletResponse response, HttpStatus status, String title, String code, String detail)
+    /** Cũng dùng cho {@link ApprovalGateFilter} để 403 {@code ACCOUNT_NOT_APPROVED} cùng dạng với các lỗi khác. */
+    public void write(HttpServletResponse response, HttpStatus status, String title, String code, String detail)
             throws IOException {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detail);
         pd.setTitle(title);

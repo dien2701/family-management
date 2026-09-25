@@ -53,6 +53,17 @@ public class UserAccount {
     @Column(name = "lock_reason", length = 20)
     private LockReason lockReason;
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "approval_status", nullable = false, length = 10)
+    private ApprovalStatus approvalStatus = ApprovalStatus.WAITING;
+
+    @Column(name = "approved_by")
+    private Long approvedBy;
+
+    @Column(name = "approved_at")
+    private Instant approvedAt;
+
     @Column(name = "family_id")
     private Long familyId;
 
@@ -124,6 +135,10 @@ public class UserAccount {
         return systemRole;
     }
 
+    public void setSystemRole(SystemRole systemRole) {
+        this.systemRole = systemRole;
+    }
+
     public AccountStatus getStatus() {
         return status;
     }
@@ -134,6 +149,41 @@ public class UserAccount {
 
     public LockReason getLockReason() {
         return lockReason;
+    }
+
+    public void setLockReason(LockReason lockReason) {
+        this.lockReason = lockReason;
+    }
+
+    public ApprovalStatus getApprovalStatus() {
+        return approvalStatus;
+    }
+
+    public Long getApprovedBy() {
+        return approvedBy;
+    }
+
+    public Instant getApprovedAt() {
+        return approvedAt;
+    }
+
+    /** Duyệt (hoặc duyệt lại) tài khoản; ghi lại Admin và thời điểm duyệt. */
+    public void approve(Long adminId, Instant at) {
+        this.approvalStatus = ApprovalStatus.APPROVED;
+        this.approvedBy = adminId;
+        this.approvedAt = at;
+    }
+
+    /** Từ chối: không còn "đã duyệt" nên xóa dấu vết duyệt; ai từ chối nằm trong audit log. */
+    public void reject() {
+        this.approvalStatus = ApprovalStatus.REJECTED;
+        this.approvedBy = null;
+        this.approvedAt = null;
+    }
+
+    /** Tài khoản đã xác thực OTP, không bị khóa và đã được duyệt: đủ điều kiện dùng dữ liệu gia phả. */
+    public boolean isActiveAndApproved() {
+        return status == AccountStatus.ACTIVE && approvalStatus == ApprovalStatus.APPROVED;
     }
 
     public Long getFamilyId() {

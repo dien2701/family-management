@@ -21,7 +21,8 @@ public class UserConsent {
     @Column(name = "user_id", nullable = false, updatable = false)
     private Long userId;
 
-    @Column(name = "family_id", nullable = false, updatable = false)
+    /** NULL với consent không gắn dòng họ (đăng ký email, Google, đổi phiên bản chính sách). */
+    @Column(name = "family_id", updatable = false)
     private Long familyId;
 
     @Column(name = "policy_version", nullable = false, updatable = false, length = 20)

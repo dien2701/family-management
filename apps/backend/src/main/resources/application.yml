@@ -45,3 +45,4 @@ app:
     version: "1.0"
   family:
     frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:5173}
+  root-admin-email: ${ROOT_ADMIN_EMAIL:}

@@ -13,7 +13,9 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "gen:api": "openapi-typescript http://localhost:8080/v3/api-docs -o src/services/schema.d.ts"
+    "gen:api": "openapi-typescript ../../shared/api/openapi.yaml -o src/services/schema.d.ts",
+    "dev:mock": "node scripts/dev-mock.mjs",
+    "lint:api": "redocly lint ../../shared/api/openapi.yaml --config ../../shared/api/redocly.yaml"
   },
   "dependencies": {
     "@fontsource/be-vietnam-pro": "5.3.0",
@@ -32,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@redocly/cli": "2.54.3",
     "@tailwindcss/vite": "4.3.3",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "7.0.1",

@@ -4,23 +4,7 @@
  */
 
 export interface paths {
-    "/api/family": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["get"];
-        put?: never;
-        post: operations["create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/family/transfer-manager": {
+    "/api/me/consent": {
         parameters: {
             query?: never;
             header?: never;
@@ -29,55 +13,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["transferManager"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/family/leave": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["leave"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/family/join": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["join"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/family/invitations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["listInvitations"];
-        put?: never;
-        post: operations["createInvitation"];
+        /** Ghi nhận đồng ý chính sách dữ liệu cá nhân */
+        post: operations["consent"];
         delete?: never;
         options?: never;
         head?: never;
@@ -93,6 +30,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Kiểm tra OTP đặt lại mật khẩu (chưa tiêu OTP) */
         post: operations["verifyResetOtp"];
         delete?: never;
         options?: never;
@@ -109,6 +47,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Xác thực OTP đăng ký và đăng nhập luôn */
         post: operations["verifyOtp"];
         delete?: never;
         options?: never;
@@ -125,6 +64,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Đặt mật khẩu mới bằng OTP */
         post: operations["resetPassword"];
         delete?: never;
         options?: never;
@@ -141,6 +81,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Gửi lại OTP đăng ký */
         post: operations["resendOtp"];
         delete?: never;
         options?: never;
@@ -157,6 +98,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Đăng ký bằng email và gửi OTP */
         post: operations["register"];
         delete?: never;
         options?: never;
@@ -173,6 +115,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Đổi refresh cookie lấy access token mới */
         post: operations["refresh"];
         delete?: never;
         options?: never;
@@ -189,6 +132,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Đăng xuất, thu hồi refresh token */
         post: operations["logout"];
         delete?: never;
         options?: never;
@@ -205,6 +149,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Đăng nhập bằng email và mật khẩu */
         post: operations["login"];
         delete?: never;
         options?: never;
@@ -221,6 +166,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Đăng nhập bằng Google ID token */
         post: operations["google"];
         delete?: never;
         options?: never;
@@ -237,7 +183,110 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /** Quên mật khẩu, gửi OTP đặt lại */
         post: operations["forgotPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mở khóa tài khoản */
+        post: operations["unlock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/revoke-admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Gỡ quyền Admin */
+        post: operations["revokeAdmin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Từ chối duyệt tài khoản */
+        post: operations["reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/lock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Khóa tài khoản */
+        post: operations["lock"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/grant-admin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cấp quyền Admin */
+        post: operations["grantAdmin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duyệt tài khoản */
+        post: operations["approve"];
         delete?: never;
         options?: never;
         head?: never;
@@ -251,6 +300,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /** Thông tin tài khoản đang đăng nhập */
         get: operations["me"];
         put?: never;
         post?: never;
@@ -260,14 +310,18 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/family/{id}": {
+    "/api/calendar/lunar-month-info": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getById"];
+        /**
+         * Thông tin một tháng âm
+         * @description Số ngày (29/30), ngày dương đầu và cuối của một tháng âm, kèm tháng nhuận của năm
+         */
+        get: operations["lunarMonthInfo"];
         put?: never;
         post?: never;
         delete?: never;
@@ -276,33 +330,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/family/invitations/{id}": {
+    "/api/calendar/convert": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Đổi ngày dương và âm
+         * @description Đổi ngày dương sang âm (truyền solar) hoặc âm sang dương (truyền lunarYear, lunarMonth, lunarDay, leap)
+         */
+        get: operations["convert"];
         put?: never;
         post?: never;
-        delete: operations["revokeInvitation"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/family/accounts/{userId}": {
+    "/api/admin/accounts": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Danh sách tài khoản (Admin) */
+        get: operations["list"];
         put?: never;
         post?: never;
-        delete: operations["removeAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Danh sách thành viên
+         * @description Mọi tài khoản đã duyệt xem được. Tìm theo tên **không cần gõ dấu**. Các bộ lọc kết hợp bằng AND.
+         *     `ageMin`/`ageMax` tính theo năm (còn sống: đến năm hiện tại; đã mất: đến năm mất dương). Người chưa rõ
+         *     năm sinh, hoặc đã mất mà chưa rõ năm mất, không tính được tuổi nên bị loại khi có một trong hai tham số. `generation` và `onTree` lấy từ cây gia phả (cây trống thì
+         *     không ai có đời và mọi người đều `onTree=false`).
+         */
+        get: operations["listMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chi tiết thành viên
+         * @description Mọi tài khoản đã duyệt xem được. `phone` và `email` chỉ có trong body khi người gọi là Admin
+         *     hoặc chính chủ hồ sơ (`user.member_id`); với người khác hai trường này **không xuất hiện**.
+         */
+        get: operations["getMember"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -312,54 +415,167 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        CreateFamilyRequest: {
-            name: string;
-            originPlace?: string;
-            description?: string;
-            acceptPolicy: boolean;
+        /** @description Lỗi theo RFC 9457; `detail` là thông báo tiếng Việt hiển thị được cho người dùng. */
+        ProblemDetail: {
+            type?: string;
+            title?: string;
+            /** Format: int32 */
+            status?: number;
+            detail?: string;
+            instance?: string;
+            /** @description Mã lỗi máy đọc được, ví dụ `ACCOUNT_NOT_APPROVED`, `MEMBER_NOT_FOUND`. */
+            code?: string;
+            /** @description Lỗi theo từng trường (chỉ có khi `code = VALIDATION_ERROR` hoặc lỗi lịch âm). */
+            errors?: components["schemas"]["FieldError"][];
         };
-        FamilyAccountResponse: {
+        FieldError: {
+            field: string;
+            message: string;
+        };
+        /** @description Ngày dương đầy đủ. */
+        SolarDate: {
+            /** Format: int32 */
+            year: number;
+            /** Format: int32 */
+            month: number;
+            /** Format: int32 */
+            day: number;
+        };
+        /** @description Ngày âm; `year` bỏ trống nghĩa là chỉ biết ngày/tháng (không tính "giỗ lần thứ N"). */
+        MemberLunarDate: {
+            /** Format: int32 */
+            day: number;
+            /** Format: int32 */
+            month: number;
+            /** @description Ngày thuộc tháng nhuận */
+            leap: boolean;
+            /** Format: int32 */
+            year?: number | null;
+        };
+        /** @description Ngày sinh; được phép chỉ có năm. `calendar` là lịch dùng để tính sinh nhật hằng năm của người này. */
+        MemberBirth: {
+            /** Format: int32 */
+            year?: number | null;
+            /** Format: int32 */
+            month?: number | null;
+            /** Format: int32 */
+            day?: number | null;
+            /**
+             * @default SOLAR
+             * @enum {string}
+             */
+            calendar: "SOLAR" | "LUNAR";
+            /** @description Chỉ có nghĩa khi `calendar = LUNAR` */
+            leap: boolean;
+        };
+        /** @description Ngày giỗ ghi đè (âm lịch, không nhuận), dùng thay cho ngày mất khi gia đình cúng ngày khác. */
+        MemorialOverride: {
+            /** Format: int32 */
+            day: number;
+            /** Format: int32 */
+            month: number;
+        };
+        /** @description Dòng trong danh sách thành viên. Họ tên ghi nguyên văn, kể cả "Cụ", "Ông", "Bà", "(Tức ...)". */
+        MemberSummary: {
+            /** Format: int64 */
+            id: number;
+            fullName: string;
+            /**
+             * @description Được để trống
+             * @enum {string|null}
+             */
+            gender: "M" | "F" | null;
+            avatarUrl: string | null;
+            /** @description Nhãn đặc biệt, ví dụ "Liệt sỹ" */
+            labels: string[];
+            /** Format: int32 */
+            birthYear: number | null;
+            isDeceased: boolean;
+            /**
+             * Format: int32
+             * @description Năm mất theo dương lịch (nếu biết)
+             */
+            deathYear: number | null;
+            /**
+             * Format: int32
+             * @description Đời = độ sâu trên cây; `null` khi chưa có trên cây
+             */
+            generation: number | null;
+            onTree: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @description Hồ sơ đầy đủ của một thành viên. */
+        MemberDetail: components["schemas"]["MemberSummary"] & {
+            /** @description Tên húy */
+            tabooName: string | null;
+            /** @description Chỉ có khi người gọi là Admin hoặc chính chủ; người khác không nhận trường này. */
+            phone?: string | null;
+            /** @description Chỉ có khi người gọi là Admin hoặc chính chủ; người khác không nhận trường này. */
+            email?: string | null;
+            biography: string | null;
+            /** @description `null` khi chưa biết gì về ngày sinh */
+            birth: components["schemas"]["MemberBirth"] | null;
+            /** @description Ngày mất theo dương; tự tính từ ngày mất âm khi có năm, `null` khi chưa có. */
+            deathSolar: components["schemas"]["SolarDate"] | null;
+            /** @description Ngày mất theo âm (nguồn nhập của dữ liệu ban đầu); `null` khi chưa có. */
+            deathLunar: components["schemas"]["MemberLunarDate"] | null;
+            memorialOverride: components["schemas"]["MemorialOverride"] | null;
+            burialPlace: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        MemberPage: {
+            items: components["schemas"]["MemberSummary"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            totalElements: number;
+            /** Format: int32 */
+            totalPages: number;
+        };
+        ConsentRequest: {
+            acceptTerms: boolean;
+        };
+        MeResponse: {
             /** Format: int64 */
             id?: number;
+            email?: string;
             fullName?: string;
             avatarUrl?: string;
-            familyRole?: string;
-            /** Format: int64 */
-            memberId?: number;
-            email?: string;
-        };
-        FamilyResponse: {
-            /** Format: int64 */
-            id?: number;
-            name?: string;
-            originPlace?: string;
-            description?: string;
-            coverUrl?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            accounts?: components["schemas"]["FamilyAccountResponse"][];
-        };
-        TransferManagerRequest: {
-            /** Format: int64 */
-            userId: number;
-        };
-        JoinFamilyRequest: {
-            code: string;
-            acceptPolicy: boolean;
-        };
-        InvitationResponse: {
-            /** Format: int64 */
-            id?: number;
-            code?: string;
-            link?: string;
-            /** Format: date-time */
-            expiresAt?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            revokedAt?: string;
             /** @enum {string} */
-            status?: "ACTIVE" | "EXPIRED" | "REVOKED";
+            systemRole?: "ADMIN" | "USER";
+            /** @enum {string} */
+            status?: "PENDING" | "ACTIVE" | "LOCKED";
+            /** @enum {string} */
+            approvalStatus?: "WAITING" | "APPROVED" | "REJECTED";
+            consentRequired?: boolean;
+            /**
+             * Format: int64
+             * @deprecated
+             * @description Còn do backend Đợt 8 trả về. Frontend đọc lần cuối ở Đợt 10, backend bỏ ở Đợt 26.
+             */
+            familyId?: number;
+            /**
+             * @deprecated
+             * @description Như `familyId`.
+             * @enum {string}
+             */
+            familyRole?: "MANAGER" | "MEMBER";
+            /**
+             * Format: int64
+             * @description Thành viên mà tài khoản đã liên kết ("Tôi là ai"); không có nghĩa là chưa liên kết.
+             */
+            memberId?: number;
+            /**
+             * @deprecated
+             * @description Như `familyId`.
+             */
+            hideMaternalLine?: boolean;
+            /** Format: date-time */
+            createdAt?: string;
         };
         VerifyOtpRequest: {
             /** Format: email */
@@ -372,26 +588,6 @@ export interface components {
             /** Format: int64 */
             expiresIn?: number;
             user?: components["schemas"]["MeResponse"];
-        };
-        MeResponse: {
-            /** Format: int64 */
-            id?: number;
-            email?: string;
-            fullName?: string;
-            avatarUrl?: string;
-            /** @enum {string} */
-            systemRole?: "ADMIN" | "USER";
-            /** @enum {string} */
-            status?: "PENDING" | "ACTIVE" | "LOCKED";
-            /** Format: int64 */
-            familyId?: number;
-            /** @enum {string} */
-            familyRole?: "MANAGER" | "MEMBER";
-            /** Format: int64 */
-            memberId?: number;
-            hideMaternalLine?: boolean;
-            /** Format: date-time */
-            createdAt?: string;
         };
         ResetPasswordRequest: {
             /** Format: email */
@@ -426,8 +622,126 @@ export interface components {
         GoogleLoginRequest: {
             idToken: string;
         };
+        AccountAdminResponse: {
+            /** Format: int64 */
+            id?: number;
+            email?: string;
+            fullName?: string;
+            avatarUrl?: string;
+            /** @enum {string} */
+            systemRole?: "ADMIN" | "USER";
+            /** @enum {string} */
+            status?: "PENDING" | "ACTIVE" | "LOCKED";
+            /** @enum {string} */
+            lockReason?: "MANUAL" | "MEMBER_LOCKED";
+            /** @enum {string} */
+            approvalStatus?: "WAITING" | "APPROVED" | "REJECTED";
+            /** Format: int64 */
+            approvedBy?: number;
+            /** Format: date-time */
+            approvedAt?: string;
+            /** Format: int64 */
+            memberId?: number;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        LunarMonthInfoResponse: {
+            /** Format: int32 */
+            year?: number;
+            /** Format: int32 */
+            month?: number;
+            leap?: boolean;
+            /** Format: int32 */
+            days?: number;
+            /** Format: date */
+            firstDay?: string;
+            /** Format: date */
+            lastDay?: string;
+            /** Format: int32 */
+            yearLeapMonth?: number;
+        };
+        ConvertResponse: {
+            /** Format: date */
+            solar?: string;
+            lunar?: components["schemas"]["LunarDateResponse"];
+        };
+        LunarDateResponse: {
+            /** Format: int32 */
+            year?: number;
+            /** Format: int32 */
+            month?: number;
+            /** Format: int32 */
+            day?: number;
+            leap?: boolean;
+        };
+        PageResponseAccountAdminResponse: {
+            items?: components["schemas"]["AccountAdminResponse"][];
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            /** Format: int32 */
+            totalPages?: number;
+        };
     };
-    responses: never;
+    responses: {
+        /** @description Dữ liệu không hợp lệ (`VALIDATION_ERROR`, `MALFORMED_REQUEST`, lỗi lịch âm...) */
+        ValidationError: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetail"];
+            };
+        };
+        /** @description Chưa đăng nhập, phiên hết hạn hoặc sai thông tin đăng nhập (`UNAUTHENTICATED`, `INVALID_CREDENTIALS`...) */
+        Unauthorized: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetail"];
+            };
+        };
+        /** @description Không có quyền (`FORBIDDEN`), tài khoản chưa được duyệt (`ACCOUNT_NOT_APPROVED`) hoặc bị khóa (`ACCOUNT_LOCKED`) */
+        Forbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetail"];
+            };
+        };
+        /** @description Không tìm thấy (`ACCOUNT_NOT_FOUND`, `MEMBER_NOT_FOUND`) */
+        NotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetail"];
+            };
+        };
+        /** @description Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `INVALID_ACCOUNT_STATE`) */
+        Conflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetail"];
+            };
+        };
+        /** @description Vượt giới hạn tần suất hoặc tài khoản bị khóa đăng nhập tạm (`LOGIN_LOCKED`, `RATE_LIMITED`, `OTP_RATE_LIMITED`) */
+        TooManyRequests: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["ProblemDetail"];
+            };
+        };
+    };
     parameters: never;
     requestBodies: never;
     headers: never;
@@ -435,27 +749,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["FamilyResponse"];
-                };
-            };
-        };
-    };
-    create: {
+    consent: {
         parameters: {
             query?: never;
             header?: never;
@@ -464,123 +758,22 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateFamilyRequest"];
+                "application/json": components["schemas"]["ConsentRequest"];
             };
         };
         responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["FamilyResponse"];
-                };
-            };
-        };
-    };
-    transferManager: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TransferManagerRequest"];
-            };
-        };
-        responses: {
-            /** @description No Content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    leave: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No Content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    join: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["JoinFamilyRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["FamilyResponse"];
+                    "application/json": components["schemas"]["MeResponse"];
                 };
             };
-        };
-    };
-    listInvitations: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["InvitationResponse"][];
-                };
-            };
-        };
-    };
-    createInvitation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["InvitationResponse"];
-                };
-            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     verifyResetOtp: {
@@ -596,13 +789,15 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            400: components["responses"]["ValidationError"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     verifyOtp: {
@@ -618,15 +813,17 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["AuthResponse"];
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
+            400: components["responses"]["ValidationError"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     resetPassword: {
@@ -642,13 +839,15 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
             };
+            400: components["responses"]["ValidationError"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     resendOtp: {
@@ -664,15 +863,17 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["OtpSentResponse"];
+                    "application/json": components["schemas"]["OtpSentResponse"];
                 };
             };
+            400: components["responses"]["ValidationError"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     register: {
@@ -688,15 +889,17 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["OtpSentResponse"];
+                    "application/json": components["schemas"]["OtpSentResponse"];
                 };
             };
+            400: components["responses"]["ValidationError"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     refresh: {
@@ -710,15 +913,17 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["AuthResponse"];
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     logout: {
@@ -732,7 +937,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -754,15 +959,18 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["AuthResponse"];
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     google: {
@@ -778,15 +986,18 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["AuthResponse"];
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            429: components["responses"]["TooManyRequests"];
         };
     };
     forgotPassword: {
@@ -802,15 +1013,173 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["OtpSentResponse"];
+                    "application/json": components["schemas"]["OtpSentResponse"];
                 };
             };
+            400: components["responses"]["ValidationError"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    unlock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    revokeAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    lock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    grantAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    approve: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
         };
     };
     me: {
@@ -822,18 +1191,153 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["MeResponse"];
+                    "application/json": components["schemas"]["MeResponse"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
-    getById: {
+    lunarMonthInfo: {
+        parameters: {
+            query: {
+                year: number;
+                month: number;
+                leap?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LunarMonthInfoResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    convert: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Ngày dương, dạng yyyy-MM-dd
+                 * @example 2026-02-17
+                 */
+                solar?: string;
+                lunarYear?: number;
+                lunarMonth?: number;
+                lunarDay?: number;
+                /** @description Ngày thuộc tháng nhuận */
+                leap?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConvertResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    list: {
+        parameters: {
+            query?: {
+                approval?: "WAITING" | "APPROVED" | "REJECTED";
+                status?: "PENDING" | "ACTIVE" | "LOCKED";
+                role?: "ADMIN" | "USER";
+                /** @description Tìm theo họ tên (không phân biệt hoa thường, dấu) hoặc email */
+                q?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResponseAccountAdminResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    listMembers: {
+        parameters: {
+            query?: {
+                /** @description Tìm theo họ tên, không phân biệt hoa thường và dấu */
+                q?: string;
+                /**
+                 * @description `name` tên A-Z (theo cả chuỗi họ tên); `age` lớn tuổi trước, người chưa rõ năm sinh xếp cuối;
+                 *     `created` mới thêm trước; `generation` đời nhỏ trước, người chưa lên cây xếp cuối.
+                 */
+                sort?: "name" | "age" | "created" | "generation";
+                ageMin?: number;
+                ageMax?: number;
+                /** @description Đời (độ sâu trên cây, đời 1 là gốc) */
+                generation?: number;
+                /** @description `true` chỉ người đã mất, `false` chỉ người còn sống */
+                deceased?: boolean;
+                /** @description `true` chỉ người đã có trên cây, `false` chỉ người chưa có */
+                onTree?: boolean;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberPage"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    getMember: {
         parameters: {
             query?: never;
             header?: never;
@@ -844,55 +1348,18 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description Thành công */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["FamilyResponse"];
+                    "application/json": components["schemas"]["MemberDetail"];
                 };
             };
-        };
-    };
-    revokeInvitation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No Content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    removeAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No Content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
 }

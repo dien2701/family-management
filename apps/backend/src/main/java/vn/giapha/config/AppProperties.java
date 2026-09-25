@@ -13,7 +13,9 @@ public record AppProperties(
         @DefaultValue Google google,
         @DefaultValue Mail mail,
         @DefaultValue Policy policy,
-        @DefaultValue Family family) {
+        @DefaultValue Family family,
+        // Email của Admin gốc (DECISIONS #55); rỗng nghĩa là không có Admin gốc
+        @DefaultValue("") String rootAdminEmail) {
 
     /** Phiên bản chính sách bảo mật; đổi khi nội dung chính sách đổi để biết ai đã đồng ý bản nào. */
     public record Policy(@DefaultValue("1.0") String version) {

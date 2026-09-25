@@ -187,6 +187,7 @@ class CalendarApiTest {
     }
 
     private ResultActions call(MockHttpServletRequestBuilder request) throws Exception {
-        return mvc.perform(request.with(jwt()));
+        // Request đọc chỉ tin claim approval; người gọi phải là tài khoản đã duyệt (DECISIONS #56)
+        return mvc.perform(request.with(jwt().jwt(j -> j.subject("1").claim("approval", "APPROVED"))));
     }
 }

@@ -96,7 +96,7 @@ class FamilyApiTest {
         postJson("/api/family", a, "{\"name\":\"Họ Trần\",\"acceptPolicy\":false}")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[?(@.field=='acceptPolicy')]").exists());
-        assertThat(count("SELECT COUNT(*) FROM user_consent WHERE user_id = ?", a.id())).isZero();
+        assertThat(count("SELECT COUNT(*) FROM user_consent WHERE user_id = ? AND family_id IS NOT NULL", a.id())).isZero();
         assertThat(familyIdInDb(a)).isNull();
     }
 
@@ -115,13 +115,13 @@ class FamilyApiTest {
         createFamily(b, "Họ B").andExpect(status().isCreated());
         String codeOfA = inviteCode(a);
 
-        long consentsBefore = count("SELECT COUNT(*) FROM user_consent WHERE user_id = ?", b.id());
+        long consentsBefore = count("SELECT COUNT(*) FROM user_consent WHERE user_id = ? AND family_id IS NOT NULL", b.id());
         createFamily(b, "Họ B2").andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("ALREADY_IN_FAMILY"));
         join(b, codeOfA).andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("ALREADY_IN_FAMILY"));
 
-        assertThat(count("SELECT COUNT(*) FROM user_consent WHERE user_id = ?", b.id())).isEqualTo(consentsBefore);
+        assertThat(count("SELECT COUNT(*) FROM user_consent WHERE user_id = ? AND family_id IS NOT NULL", b.id())).isEqualTo(consentsBefore);
         assertThat(count("SELECT COUNT(*) FROM family WHERE created_by = ?", b.id())).isEqualTo(1);
         assertThat(count("SELECT COUNT(*) FROM user_account WHERE family_id = ?", familyIdInDb(a))).isEqualTo(1);
     }
@@ -203,7 +203,7 @@ class FamilyApiTest {
         join(c, expiredCode).andExpect(status().isGone()).andExpect(jsonPath("$.code").value("INVITE_EXPIRED"));
         join(c, "ZZZZZZZZ").andExpect(status().isNotFound()).andExpect(jsonPath("$.code").value("INVITE_NOT_FOUND"));
         assertThat(familyIdInDb(c)).isNull();
-        assertThat(count("SELECT COUNT(*) FROM user_consent WHERE user_id = ?", c.id())).isZero();
+        assertThat(count("SELECT COUNT(*) FROM user_consent WHERE user_id = ? AND family_id IS NOT NULL", c.id())).isZero();
 
         mvc.perform(get("/api/family/invitations").header(HttpHeaders.AUTHORIZATION, bearer(a)))
                 .andExpect(jsonPath("$[?(@.id==" + revokeId + ")].status").value("REVOKED"))
@@ -303,7 +303,7 @@ class FamilyApiTest {
         assertThat(count("SELECT COUNT(*) FROM user_account WHERE family_id = ? AND family_role = 'MANAGER'",
                 f.familyId)).isEqualTo(1);
         // Bản ghi đồng ý không mất khi rời
-        assertThat(count("SELECT COUNT(*) FROM user_consent WHERE user_id = ?", f.manager.id())).isEqualTo(1);
+        assertThat(count("SELECT COUNT(*) FROM user_consent WHERE user_id = ? AND family_id IS NOT NULL", f.manager.id())).isEqualTo(1);
     }
 
     @Test
@@ -350,7 +350,7 @@ class FamilyApiTest {
         String code = inviteCode(f.manager);
         TestUser again = login(f.member);
         join(again, code).andExpect(status().isOk());
-        assertThat(count("SELECT COUNT(*) FROM user_consent WHERE user_id = ?", f.member.id())).isEqualTo(2);
+        assertThat(count("SELECT COUNT(*) FROM user_consent WHERE user_id = ? AND family_id IS NOT NULL", f.member.id())).isEqualTo(2);
     }
 
     @Test
@@ -476,7 +476,9 @@ class FamilyApiTest {
         MvcResult verified = postRaw("/api/auth/verify-otp",
                 "{\"email\":\"" + email + "\",\"otp\":\"" + mail.lastOtp(email) + "\"}")
                 .andExpect(status().isOk()).andReturn();
-        return fromAuth(email, verified);
+        // Tài khoản mới ở WAITING; Admin duyệt rồi đăng nhập lại để claim approval=APPROVED (DECISIONS #56)
+        jdbc.update("UPDATE user_account SET approval_status = 'APPROVED' WHERE email = ?", email);
+        return login(fromAuth(email, verified));
     }
 
     private TestUser login(TestUser user) throws Exception {

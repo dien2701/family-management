@@ -28,4 +28,18 @@ public class ConsentService {
     public void record(Long userId, Long familyId, String ip) {
         repository.save(new UserConsent(userId, familyId, props.policy().version(), Instant.now(clock), ip));
     }
+
+    /** Consent không gắn dòng họ (DECISIONS #57). Đã đồng ý phiên bản hiện hành rồi thì không ghi thêm. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void recordIfMissing(Long userId, String ip) {
+        if (!hasAcceptedCurrentPolicy(userId)) {
+            record(userId, null, ip);
+        }
+    }
+
+    /** False khi chưa từng đồng ý hoặc chỉ đồng ý phiên bản chính sách cũ. */
+    @Transactional(readOnly = true)
+    public boolean hasAcceptedCurrentPolicy(Long userId) {
+        return repository.existsByUserIdAndPolicyVersion(userId, props.policy().version());
+    }
 }

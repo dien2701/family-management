@@ -2,22 +2,15 @@
 // Access token chỉ nằm trong biến của module này (bộ nhớ), không ghi vào localStorage/sessionStorage.
 // Gặp 401 thì refresh một lần (dùng chung một request cho mọi lời gọi song song) rồi thử lại.
 
-import type { AuthResponse } from '@/types/api'
+import type { AuthResponse, Schemas } from '@/types/api'
+import type { RealApi } from './mock/context'
 
 const BASE_URL = '/api'
 
-/** Lỗi gắn với một trường, khớp `errors[]` của ProblemDetail (backend: common/exception/FieldError). */
-export type FieldError = { field: string; message: string }
+/** Lỗi gắn với một trường, khớp `errors[]` của ProblemDetail (kiểu lấy từ openapi.yaml). */
+export type FieldError = Schemas['FieldError']
 
-export type ProblemDetail = {
-  type?: string
-  title?: string
-  status?: number
-  detail?: string
-  instance?: string
-  code?: string
-  errors?: FieldError[]
-}
+export type ProblemDetail = Schemas['ProblemDetail']
 
 export class ApiError extends Error {
   readonly status: number
@@ -119,13 +112,21 @@ async function parseProblem(response: Response): Promise<ProblemDetail> {
   }
 }
 
-type InternalOptions = RequestOptions & { retryOn401?: boolean }
+type InternalOptions = RequestOptions & { retryOn401?: boolean; skipMock?: boolean }
 
 async function request<T>(
   method: string,
   path: string,
-  { retryOn401 = true, ...options }: InternalOptions = {},
+  { retryOn401 = true, skipMock = false, ...options }: InternalOptions = {},
 ): Promise<T> {
+  // Chế độ giả lập (DECISIONS #71): endpoint có handler thì chạy handler, còn lại rơi xuống backend thật.
+  // Điều kiện viết trực tiếp với `import.meta.env.DEV` để Vite cắt cả nhánh và import động khỏi bản build prod.
+  if (!skipMock && import.meta.env.DEV && import.meta.env.VITE_API_MODE === 'mock') {
+    const { handleMock } = await import('./mock')
+    const result = await handleMock(method, path, options, realRequest)
+    if (result.handled) return result.data as T
+  }
+
   // `/auth/*` trả 401 khi sai mật khẩu hoặc hết phiên: đó là kết quả, không phải token hết hạn
   const canRetry = retryOn401 && !path.startsWith('/auth/')
   const sentToken = accessToken
@@ -154,7 +155,7 @@ async function request<T>(
       accessToken !== sentToken && accessToken !== null ? true : (await refreshSession()) !== null
     if (refreshed) {
       try {
-        return await request<T>(method, path, { ...options, retryOn401: false })
+        return await request<T>(method, path, { ...options, retryOn401: false, skipMock })
       } catch (error) {
         // Vừa refresh xong mà vẫn 401: token không dùng được nữa nên coi như hết phiên
         if (error instanceof ApiError && error.status === 401) expireSession()
@@ -168,6 +169,10 @@ async function request<T>(
   if (response.status === 204) return undefined as T
   return (await response.json()) as T
 }
+
+/** Cho lớp giả lập gọi backend thật (ví dụ `/me` để biết vai trò), không qua handler giả lập. */
+const realRequest: RealApi = (method, path, options) =>
+  request(method, path, { ...(options as RequestOptions), skipMock: true })
 
 export const api = {
   get: <T>(path: string, options?: Omit<RequestOptions, 'body'>) =>

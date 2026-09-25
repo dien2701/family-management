@@ -1,7 +1,15 @@
 import { ArrowLeftRight, ChevronRight, ShieldCheck, TreeDeciduous } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
 import { AccountCard } from '@/features/auth/components/AccountCard'
+
+// Mục "Dữ liệu tạm" chỉ có ở chế độ giả lập. Điều kiện viết trực tiếp (không qua hằng số khác) để Vite
+// cắt luôn import động khỏi bản build prod.
+const MockDataSection =
+  import.meta.env.DEV && import.meta.env.VITE_API_MODE === 'mock'
+    ? lazy(() => import('@/features/mockdata/components/MockDataSection'))
+    : null
 
 const ITEMS: { to: string; label: string; description: string; icon: LucideIcon }[] = [
   {
@@ -50,6 +58,11 @@ export function MorePage() {
           ))}
         </ul>
       </nav>
+      {MockDataSection && (
+        <Suspense fallback={null}>
+          <MockDataSection />
+        </Suspense>
+      )}
     </div>
   )
 }

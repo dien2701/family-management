@@ -61,9 +61,9 @@
 | 6 | Lịch âm BE | calendar | **Opus · high** | ✅ 2026-09-25 |
 | 7 | Lịch âm FE | calendar | Sonnet · high | ✅ 2026-09-25 |
 | **Chuẩn bị** | | | | |
-| 8 | Tài khoản BE: Admin gốc, duyệt, consent | auth | Sonnet · high | ⬜ |
+| 8 | Tài khoản BE: Admin gốc, duyệt, consent | auth | Sonnet · high | ✅ 2026-09-25 |
 | **GĐ A** | **Frontend (chế độ giả lập)** | | | |
-| 9 | Hợp đồng API, dữ liệu 28 người, lớp giả lập | contract | **Opus · high** | ⬜ |
+| 9 | Hợp đồng API, dữ liệu 28 người, lớp giả lập | contract | **Opus · high** | ✅ 2026-09-25 |
 | 10 | FE tài khoản: gỡ dòng họ, chờ duyệt, quản lý tài khoản | auth/admin | Sonnet · high | ⬜ |
 | 11 | Thành viên FE: danh sách, chi tiết | member | Sonnet · high | ⬜ |
 | 12 | Thành viên FE: form, xóa, ảnh đại diện | member | Sonnet · high | ⬜ |
@@ -99,8 +99,8 @@
 | 40 | E2E Playwright | test | Sonnet · medium | ⬜ |
 | 41 | Deploy production | infra | Sonnet · high | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 8 — Tài khoản BE: Admin gốc, duyệt, consent
-Model **Sonnet** · Effort **high** · Skill: `security-review`, `code-review`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 7 (bên dưới).
+## ▶️ Đợt đang chờ: Đợt 10 — FE tài khoản: gỡ dòng họ, chờ duyệt, quản lý tài khoản
+Model **Sonnet** · Effort **high** · Skill: `ui-ux-pro-max`, `run`, `security-review`. Prompt nằm ở mục **➡️ Đợt tiếp** cuối Đợt 9 (bên dưới).
 
 ---
 
@@ -381,20 +381,20 @@ BẮT BUỘC gọi qua công cụ Skill các skill: security-review, code-review
 
 # CHUẨN BỊ
 
-### Đợt 8 — Tài khoản BE: Admin gốc, duyệt, consent ⬜
+### Đợt 8 — Tài khoản BE: Admin gốc, duyệt, consent ✅ 2026-09-25
 IDEA §3, §5 · DECISIONS #55–57, #74
-- [ ] `V4__account_approval.sql`: thêm `approval_status` (NOT NULL, mặc định `WAITING`), `approved_by`, `approved_at` vào `user_account`. Cho phép `user_consent.family_id` NULL. Tài khoản đã có trong DB giữ `WAITING`.
-- [ ] `ROOT_ADMIN_EMAIL` (`AppProperties`, `.env.example`): khi email này xác thực OTP, đăng nhập hoặc đăng nhập Google **mà hệ thống chưa có ADMIN nào** thì nâng thành `ADMIN` + `APPROVED`. Chống hai request song song cùng nâng (khóa hoặc UPDATE có điều kiện).
-- [ ] JWT có thêm claim `approval`. Chặn mọi API nghiệp vụ với tài khoản chưa `APPROVED`, trả 403 ProblemDetail `ACCOUNT_NOT_APPROVED`. Ngoại lệ: `/api/auth/**`, `GET /api/me`, `POST /api/me/consent`. Thao tác ghi kiểm tra trạng thái từ DB, không chỉ tin claim.
-- [ ] Consent: đăng ký bằng email lưu `user_consent` (family_id NULL, `app.policy.version`, IP). `GET /api/me` trả thêm `approvalStatus` và `consentRequired`. `POST /api/me/consent` lưu consent (dùng cho người đăng nhập Google lần đầu, hoặc khi đổi phiên bản chính sách).
-- [ ] `/api/admin/accounts` (chỉ ADMIN):
+- [x] `V4__account_approval.sql`: thêm `approval_status` (NOT NULL, mặc định `WAITING`), `approved_by`, `approved_at` vào `user_account`. Cho phép `user_consent.family_id` NULL. Tài khoản đã có trong DB giữ `WAITING`. ✅ 2026-09-25
+- [x] `ROOT_ADMIN_EMAIL` (`AppProperties`, `.env.example`): khi email này xác thực OTP, đăng nhập hoặc đăng nhập Google **mà hệ thống chưa có ADMIN nào** thì nâng thành `ADMIN` + `APPROVED`. Chống hai request song song cùng nâng (khóa hoặc UPDATE có điều kiện). ✅ 2026-09-25
+- [x] JWT có thêm claim `approval`. Chặn mọi API nghiệp vụ với tài khoản chưa `APPROVED`, trả 403 ProblemDetail `ACCOUNT_NOT_APPROVED`. Ngoại lệ: `/api/auth/**`, `GET /api/me`, `POST /api/me/consent`. Thao tác ghi kiểm tra trạng thái từ DB, không chỉ tin claim. ✅ 2026-09-25
+- [x] Consent: đăng ký bằng email lưu `user_consent` (family_id NULL, `app.policy.version`, IP). `GET /api/me` trả thêm `approvalStatus` và `consentRequired`. `POST /api/me/consent` lưu consent (dùng cho người đăng nhập Google lần đầu, hoặc khi đổi phiên bản chính sách). ✅ 2026-09-25
+- [x] `/api/admin/accounts` (chỉ ADMIN) ✅ 2026-09-25:
   - `GET`: lọc theo trạng thái duyệt, trạng thái, vai trò; tìm theo tên hoặc email; phân trang.
   - `POST /{id}/approve`, `/reject`, `/lock`, `/unlock`, `/grant-admin`, `/revoke-admin`.
   - Admin không tự gỡ quyền và không tự khóa mình (`SELF_ACTION_FORBIDDEN`). Chặn gỡ quyền hoặc khóa Admin cuối cùng (`LAST_ADMIN`).
   - Từ chối, khóa và đổi vai trò đều thu hồi refresh token của người bị ảnh hưởng.
   - Ghi audit log (family_id NULL).
-- [ ] Module `family` giữ nguyên, sẽ gỡ ở Đợt 26. Endpoint family cũng yêu cầu tài khoản đã duyệt.
-- [ ] Test:
+- [x] Module `family` giữ nguyên, sẽ gỡ ở Đợt 26. Endpoint family cũng yêu cầu tài khoản đã duyệt. ✅ 2026-09-25
+- [x] Test ✅ 2026-09-25:
   - Admin gốc tự nâng quyền, nhưng chỉ khi chưa có Admin nào.
   - Tài khoản WAITING gọi API nghiệp vụ nhận 403, còn gọi `/api/me` thì được.
   - Consent của người dùng Google.
@@ -403,9 +403,19 @@ IDEA §3, §5 · DECISIONS #55–57, #74
   - User gọi `/api/admin/accounts` nhận 403.
   - Refresh token bị thu hồi sau khi từ chối, khóa hoặc đổi vai trò.
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** (2026-09-25, `.\mvnw.cmd verify` pass: 167 test)
+- `V4__account_approval.sql`: `user_account` thêm `approval_status` (mặc định `WAITING`), `approved_by`, `approved_at`, index `idx_user_approval` và `idx_user_role`. `user_consent.family_id` cho phép NULL. FK `fk_consent_user` đổi sang `ON DELETE CASCADE` (đăng ký email lưu consent khi tài khoản còn PENDING, job dọn PENDING xóa user thì consent phải đi theo).
+- `ROOT_ADMIN_EMAIL` (`app.root-admin-email`, `.env.example`): `RootAdminService.promoteIfRoot` chạy ở xác thực OTP, đăng nhập mật khẩu và đăng nhập Google. Chỉ nâng khi tài khoản ACTIVE và chưa có Admin **dùng được** nào (ACTIVE + APPROVED; Admin bị khóa/từ chối không tính). Khóa dòng tài khoản, đọc lại bằng đọc-khóa nên request song song chỉ nâng một lần; ghi audit `ROOT_ADMIN_PROMOTE`.
+- JWT có claim `approval`. `ApprovalGateFilter` (sau `BearerTokenAuthenticationFilter`, khai báo trong `SecurityConfig`) chặn mọi API của tài khoản chưa APPROVED bằng 403 `ACCOUNT_NOT_APPROVED`, mặc định chặn (chỉ miễn `/api/auth/**`, `GET /api/me`, `POST /api/me/consent`). Request đọc tin claim, request ghi (POST/PUT/PATCH/DELETE) kiểm lại từ DB qua `AccountAccessLookup` (`AuthFacade` cài đặt): thêm `ACCOUNT_LOCKED` (403) và tài khoản đã xóa (401). Token cũ thiếu claim coi như chưa duyệt. Endpoint family cũng bị chặn.
+- Consent: đăng ký email lưu `user_consent` (family_id NULL, phiên bản chính sách, IP), không nhân đôi khi đăng ký lại. `GET /api/me` (và `AuthResponse.user`) trả thêm `approvalStatus`, `consentRequired`. `POST /api/me/consent` body `{"acceptTerms": true}` lưu consent phiên bản hiện hành, gọi lại không ghi thêm.
+- `/api/admin/accounts` (module `auth`, `@PreAuthorize("hasRole('ADMIN')")` + kiểm lại vai trò từ DB): `GET` lọc `approval`, `status`, `role`, `q` (họ tên không phân biệt hoa thường/dấu, hoặc email), phân trang `page`/`size` (tối đa 100), mới nhất trước, không hiện tài khoản PENDING; `POST /{id}/approve|reject|lock|unlock|grant-admin|revoke-admin`. Mọi thao tác khóa toàn bộ dòng Admin theo thứ tự id rồi mới khóa người bị tác động (không deadlock, hai Admin gỡ nhau song song chỉ một cái thành công). Lỗi: `SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `INVALID_ACCOUNT_STATE` (đều 409), `ACCOUNT_NOT_FOUND` (404). Reject/lock/grant/revoke thu hồi refresh token. Audit log `family_id` NULL, before/after chỉ có vai trò và trạng thái (không email).
+- Ma trận trạng thái (đã hỏi và chốt): approve từ WAITING/REJECTED; reject từ WAITING/APPROVED; lock chỉ ACTIVE, unlock chỉ LOCKED; grant-admin chỉ tài khoản ACTIVE+APPROVED đang là USER; revoke-admin chỉ khi đang là Admin. Reject/lock Admin được phép (trừ chính mình và Admin cuối cùng), vai trò giữ nguyên.
+- Module `family` giữ nguyên (gỡ ở Đợt 26). Test cũ (`AuthApiTest`, `FamilyApiTest`, `CalendarApiTest`) sửa cho khớp cổng duyệt.
+- Test mới: `AccountApprovalApiTest` (19), `AdminAccountApiTest` (15), `LastAdminGuardTest` (4), helper `support/AccountFixtures`. `application-test.yml` đặt `root-admin-email: root.admin@giapha.test`.
+- Skill: `security-review` không có lỗ hổng nào đạt ngưỡng báo. `code-review` có 4 ghi chú: sửa 2 (Admin gốc chỉ tính Admin dùng được; bỏ tham số thừa ở `acceptConsent`), 2 giữ nguyên theo thiết kế (request đọc tin claim ≤15 phút theo DECISIONS #56; khóa cả dòng Admin cho mọi thao tác để tránh deadlock).
+- Ghi chú cho đợt sau: (1) `LAST_ADMIN` qua API gần như không chạm tới vì người gọi luôn là Admin còn lại, nên luật được kiểm bằng unit test và test hai Admin gỡ nhau song song; (2) request đọc của tài khoản vừa bị khóa/từ chối còn dùng được tới khi access token hết hạn (tối đa 15 phút), muốn cắt ngay thì cho `accessOf()` chạy cả request đọc; (3) Đợt 9 cần đưa `MeResponse` (thêm `approvalStatus`, `consentRequired`), `PageResponse`, `AccountAdminResponse` và các mã lỗi mới vào `openapi.yaml`.
 
-**🔧 Setup thủ công cần làm:** Điền `ROOT_ADMIN_EMAIL=<email của bạn>` vào `apps/backend/.env`.
+**🔧 Setup thủ công cần làm:** Điền `ROOT_ADMIN_EMAIL=<email của bạn>` vào `apps/backend/.env` (đã thêm mẫu vào `.env.example`, chưa sửa `.env` thật). Chạy lại backend để Flyway áp dụng V4: các tài khoản đã có trong DB dev sẽ ở `WAITING`. Nếu chính email của bạn đã có tài khoản và trong DB chưa có Admin, chỉ cần đăng nhập lại là được nâng.
 
 **🧪 Test thủ công (từng bước):**
 1. Đăng ký bằng đúng `ROOT_ADMIN_EMAIL` và nhập OTP. Gọi `GET /api/me`: phải thấy `systemRole=ADMIN`, `approvalStatus=APPROVED`.
@@ -428,49 +438,58 @@ BẮT BUỘC gọi qua công cụ Skill các skill: ui-ux-pro-max, run, code-rev
 > Mỗi đợt làm theo thứ tự: (1) viết hợp đồng của module trong `shared/api/openapi.yaml` → (2) `npm run gen:api` → (3) handler giả lập → (4) UI → (5) test.
 > Phần cần máy chủ (AI, push, upload, file Excel/PDF từ backend) hiện "Cần kết nối máy chủ" (#72).
 
-### Đợt 9 — Hợp đồng API, dữ liệu 28 người, lớp giả lập ⬜
+### Đợt 9 — Hợp đồng API, dữ liệu 28 người, lớp giả lập ✅ 2026-09-25
 IDEA §4, §11, Phụ lục A · DECISIONS #68, #70–72
-- [ ] `shared/api/openapi.yaml` (OpenAPI 3.1):
+- [x] `shared/api/openapi.yaml` (OpenAPI 3.1): ✅ 2026-09-25
   - Khởi tạo từ `/v3/api-docs` hiện tại (auth, me, calendar, admin/accounts của Đợt 8). **Bỏ** `/api/family/**`.
   - Có schema `ProblemDetail` dùng chung, và `MemberSummary`, `MemberDetail`, `MemberPage`.
   - Thêm `GET /api/members` (tham số `q`, `sort`, `ageMin`, `ageMax`, `generation`, `deceased`, `onTree`, `page`, `size`) và `GET /api/members/{id}`.
   - Chạy `@redocly/cli lint` pass (script `npm run lint:api`).
-- [ ] `gen:api` đọc `../../shared/api/openapi.yaml` (không cần backend chạy). Chạy lại để sinh `schema.d.ts`. Sửa những chỗ đang dùng kiểu family trong `schema.d.ts` (nếu build vỡ thì chỉ gỡ phần import, còn phần UI dòng họ để Đợt 10 gỡ).
-- [ ] `shared/fixtures/seed/members.json`:
+- [x] `gen:api` đọc `../../shared/api/openapi.yaml` (không cần backend chạy). Chạy lại để sinh `schema.d.ts`. Sửa những chỗ đang dùng kiểu family trong `schema.d.ts` (nếu build vỡ thì chỉ gỡ phần import, còn phần UI dòng họ để Đợt 10 gỡ). ✅ 2026-09-25
+- [x] `shared/fixtures/seed/members.json`: ✅ 2026-09-25
   - Đúng 28 người theo IDEA Phụ lục A, giữ họ tên nguyên văn.
   - Có `deathLunar{day,month,leap:false,year?}`, và `deathSolar` được tính bằng `utils/lunar` khi có năm.
   - Mọi người có `isDeceased: true` và cùng nơi an táng. Các trường khác để trống.
   - Kèm `README.md` ghi nguồn và quy ước.
   - Có Vitest kiểm tra: đủ 28 người, khớp Phụ lục A, và `deathSolar` khớp lịch âm.
-- [ ] `src/services/mock/`:
+- [x] `src/services/mock/`: ✅ 2026-09-25
   - `router` (method + mẫu path → handler).
   - `store` trong localStorage (key `giapha.mock.v1`), lần đầu khởi tạo từ `members.json`.
   - Helper tạo `ProblemDetail`, phân trang, tìm không dấu (dùng chung `utils/text`), và vai trò người dùng lấy từ `/api/me` thật.
   - Handler được phép **bọc** endpoint thật: gọi backend rồi bổ sung dữ liệu từ store.
-- [ ] `client.ts`: ở chế độ giả lập, request có handler thì chạy handler (có trễ nhỏ để thấy trạng thái đang tải), không có handler thì gọi backend thật. Module mock được import động theo `import.meta.env.VITE_API_MODE`. Có test đảm bảo bản build prod không chứa mã mock.
-- [ ] Handler `GET /api/members` và `GET /api/members/{id}`:
+- [x] `client.ts`: ở chế độ giả lập, request có handler thì chạy handler (có trễ nhỏ để thấy trạng thái đang tải), không có handler thì gọi backend thật. Module mock được import động theo `import.meta.env.VITE_API_MODE`. Có test đảm bảo bản build prod không chứa mã mock. ✅ 2026-09-25
+- [x] Handler `GET /api/members` và `GET /api/members/{id}`: ✅ 2026-09-25
   - tìm không dấu, lọc, sắp xếp, phân trang;
   - `generation` và `onTree` lấy từ store cây (lúc này còn trống);
   - SĐT và email chỉ trả cho Admin và chính chủ.
-- [ ] Trang Thêm có mục "Dữ liệu tạm" (chỉ hiện ở chế độ giả lập), gồm:
+- [x] Trang Thêm có mục "Dữ liệu tạm" (chỉ hiện ở chế độ giả lập), gồm: ✅ 2026-09-25
   - banner "Dữ liệu đang lưu tạm trên trình duyệt này";
   - nút **"Tải dữ liệu tạm (JSON)"** để giữ lại dữ liệu đã nhập cho Đợt 39;
   - nút **"Khôi phục dữ liệu gốc"** (có hộp xác nhận).
-- [ ] `apps/frontend/.env.example` thêm `VITE_API_MODE`. Thêm script `dev:mock`.
-- [ ] Test Vitest:
+- [x] `apps/frontend/.env.example` thêm `VITE_API_MODE`. Thêm script `dev:mock`. ✅ 2026-09-25
+- [x] Test Vitest: ✅ 2026-09-25
   - router;
   - tìm "nguyen van tham" ra "Cụ Nguyễn Văn Tham (Tức Cụ Kai)";
   - ẩn SĐT/email với User;
   - id không tồn tại trả ProblemDetail 404;
   - khôi phục dữ liệu gốc.
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** 2026-09-25. `npm run lint`, `npm run build`, `npm test` (147 test, gồm 40 test mới) và `npm run lint:api` đều pass. Theo yêu cầu của người dùng, **không chạy thử giao diện ở 375px và 1280px** (chưa xem mục "Dữ liệu tạm" bằng mắt); chỉ kiểm bằng test và bản build prod thật.
+- `shared/api/openapi.yaml` (OpenAPI 3.1, `shared/api/redocly.yaml` cho `lint:api`): khởi tạo từ `/v3/api-docs` của backend Đợt 8, bỏ `/api/family/**`, thêm `ProblemDetail`/`FieldError`, các response dùng chung (`application/problem+json`), `GET /api/members`, `GET /api/members/{id}`, `MemberSummary`, `MemberDetail`, `MemberPage`. `gen:api` đọc file này (không cần backend chạy). `@redocly/cli` 2.54.3 thêm vào devDependencies.
+- `shared/fixtures/seed/members.json` (+ `README.md`): đúng 28 người, thứ tự Phụ lục A, họ tên nguyên văn, chỉ có `fullName`, `isDeceased`, `deathLunar`, `deathSolar` (21 người có năm), `burialPlace`. Test `seed.test.ts` đọc lại bảng Phụ lục A trong `roadmap/IDEA.md` để so, và kiểm `deathSolar` bằng `utils/lunar`.
+- `src/services/mock/`: `router`, `store` (localStorage `giapha.mock.v1`, khởi tạo từ seed, có `resetStore`/`exportStoreJson`), `problem`, `paging`, `context`, `handlers/members.ts`. `client.ts` chạy handler nếu có, không thì gọi backend thật; vai trò lấy từ `/api/me` thật. Điều kiện `import.meta.env.DEV && VITE_API_MODE === 'mock'` nên bản build prod không chứa mã mock (test `prodBuild.test.ts` build thật với `VITE_API_MODE=mock` rồi tìm chuỗi; đã tự kiểm bằng `npm run build` thật).
+- `GET /api/members` (tìm không dấu, lọc tuổi/đời/đã mất/trên cây, sắp xếp, phân trang, 400 khi tham số sai) và `GET /api/members/{id}` (404 `MEMBER_NOT_FOUND`, SĐT/email chỉ cho Admin và chính chủ, tài khoản chưa duyệt 403 `ACCOUNT_NOT_APPROVED`).
+- Trang Thêm có mục "Dữ liệu tạm" (`features/mockdata`, chỉ ở chế độ giả lập): banner, "Tải dữ liệu tạm (JSON)", "Khôi phục dữ liệu gốc" (có hộp xác nhận).
+- `.env.example` thêm `VITE_API_MODE`; script `dev:mock` (`scripts/dev-mock.mjs`, chạy được cả PowerShell lẫn bash); `utils/text.ts` (bỏ dấu); `types/env.d.ts`.
+- Skill: `code-review` (medium) báo 4 điểm, đã sửa 3 (hợp đồng ghi nhầm 401 cho `verify-otp`, mô tả lọc tuổi mơ hồ, kho giả lập giữ bản cũ trong bộ nhớ sau khi xóa localStorage), 1 giữ nguyên có chủ đích (`legacyTypes.ts`).
+- Khác dự kiến / quyết định đã tự chọn (chưa có trong đặc tả): (1) `MeResponse` còn `familyId`, `familyRole`, `hideMaternalLine` ở dạng `deprecated` vì backend Đợt 8 còn trả và UI dòng họ còn dùng tới Đợt 10; backend bỏ ở Đợt 26. (2) `features/family/legacyTypes.ts` là kiểu viết tay tạm để build không vỡ, Đợt 10 gỡ cùng cả feature. (3) Fixture không có `id`: id là số thứ tự 1–28 theo Phụ lục A, cả FE và BE (Đợt 27) gán theo thứ tự này. (4) `sort` nhận `name`, `age` (lớn tuổi trước), `created` (mới thêm trước), `generation`; sắp tên theo cả chuỗi họ tên (`localeCompare('vi')`). (5) Tuổi tính theo năm sinh, người đã mất tính đến năm mất dương; thiếu năm sinh hoặc năm mất thì bị loại khi lọc tuổi. (6) `deathSolar` luôn có `year`; `deathLunar.year` có thể `null`. (7) `dev:mock` dùng script Node vì `.env.mock` bị `.gitignore` (`.env.*`). (8) `vite.config.ts` thêm `server.fs.allow: ['../..']` (đọc fixture ngoài `apps/frontend`) và `test.env.VITE_API_MODE = ''`. (9) `ProblemDetail`/`FieldError` trong `client.ts` nay lấy từ `schema.d.ts`.
+- Việc nên làm thêm (chưa làm, ngoài phạm vi): mỗi lần gọi handler mock lại gọi thêm `/api/me` thật (chưa cache); kho giả lập không đồng bộ giữa nhiều tab; test `seed.test.ts` đọc `roadmap/IDEA.md` nên cần chạy trong bản checkout đầy đủ của repo.
 
-**🔧 Setup thủ công cần làm:** `npm install` (có thêm `@redocly/cli`). Chạy backend dev như cũ.
+**🔧 Setup thủ công cần làm:** `npm install` (có thêm `@redocly/cli`). Chạy backend dev như cũ (cần một tài khoản đã duyệt để đăng nhập; nhớ đặt `ROOT_ADMIN_EMAIL` trong `apps/backend/.env`). Chế độ giả lập chạy bằng `npm run dev:mock`.
 
 **🧪 Test thủ công (từng bước):**
 1. `npm run gen:api` khi **tắt** backend: vẫn sinh được `schema.d.ts`.
-2. `npm run dev:mock`, đăng nhập bằng tài khoản đã duyệt. Trong DevTools Console gọi `GET /api/members?q=nguyen van` qua app (hoặc xem tab Network): có các "Nguyễn Văn…".
+2. `npm run dev:mock` (ở `apps/frontend`), đăng nhập bằng tài khoản đã duyệt. Trong DevTools Console gọi `GET /api/members?q=nguyen van` qua app (hoặc xem tab Network): có các "Nguyễn Văn…".
 3. Thêm > Dữ liệu tạm: bấm "Khôi phục dữ liệu gốc": localStorage `giapha.mock.v1` được tạo lại với 28 người.
 4. `npm run build`, rồi tìm chuỗi `giapha.mock` trong `dist`: không có.
 

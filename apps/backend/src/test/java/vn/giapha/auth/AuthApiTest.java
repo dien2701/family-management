@@ -97,9 +97,15 @@ class AuthApiTest {
                 .andExpect(jsonPath("$.email").value(email))
                 .andExpect(jsonPath("$.fullName").value("Nguyễn Văn A"))
                 .andExpect(jsonPath("$.systemRole").value("USER"))
+                .andExpect(jsonPath("$.approvalStatus").value("WAITING"))
+                .andExpect(jsonPath("$.consentRequired").value(false))
                 .andExpect(jsonPath("$.familyId").doesNotExist())
                 .andReturn();
         assertNoSecrets(me);
+        // Đăng ký email lưu consent ngay, không gắn dòng họ (DECISIONS #57)
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM user_consent WHERE user_id = ? AND family_id IS NULL "
+                + "AND policy_version = ? AND ip IS NOT NULL", Integer.class, userId(email),
+                props.policy().version())).isEqualTo(1);
     }
 
     @Test
@@ -110,6 +116,7 @@ class AuthApiTest {
         Jwt jwt = jwtDecoder.decode(token(login));
         assertThat(jwt.getSubject()).isEqualTo(String.valueOf(userId(email)));
         assertThat(jwt.getClaimAsString("sysRole")).isEqualTo("USER");
+        assertThat(jwt.getClaimAsString("approval")).isEqualTo("WAITING");
         assertThat(jwt.getClaims()).doesNotContainKeys("familyId", "familyRole", "memberId");
         assertThat(Duration.between(jwt.getIssuedAt(), jwt.getExpiresAt())).isEqualTo(Duration.ofMinutes(15));
         assertThat(jwt.getHeaders().get("alg")).isEqualTo("HS256");

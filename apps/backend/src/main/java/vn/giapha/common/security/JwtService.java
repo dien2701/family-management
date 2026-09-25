@@ -32,7 +32,8 @@ public class JwtService {
                 .subject(String.valueOf(user.userId()))
                 .issuedAt(now)
                 .expiresAt(now.plus(props.jwt().accessTtl()))
-                .claim(CurrentUser.CLAIM_SYSTEM_ROLE, user.systemRole());
+                .claim(CurrentUser.CLAIM_SYSTEM_ROLE, user.systemRole())
+                .claim(CurrentUser.CLAIM_APPROVAL, user.approval());
         if (user.familyId() != null) {
             claims.claim(CurrentUser.CLAIM_FAMILY_ID, user.familyId());
         }

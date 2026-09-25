@@ -3,13 +3,13 @@ import { useState } from 'react'
 import { Alert } from '@/components/shared/Alert'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Button } from '@/components/ui/button'
-import type { Schemas } from '@/types/api'
 import { cn } from '@/utils/cn'
 import { formatDate } from '@/utils/date'
 import { useCreateInvitation, useInvitations, useRevokeInvitation } from '../hooks'
+import type { InvitationResponse } from '../legacyTypes'
 import { familyStrings as s } from '../strings'
 
-type Invitation = Schemas['InvitationResponse']
+type Invitation = InvitationResponse
 
 const STATUS: Record<NonNullable<Invitation['status']>, { label: string; className: string }> = {
   ACTIVE: { label: s.invitations.active, className: 'bg-success-bg text-success' },

@@ -2,12 +2,12 @@ import { Crown, UserMinus } from 'lucide-react'
 import { useState } from 'react'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { Button } from '@/components/ui/button'
-import type { Schemas } from '@/types/api'
 import { cn } from '@/utils/cn'
 import { useRemoveAccount, useTransferManager } from '../hooks'
+import type { FamilyAccountResponse } from '../legacyTypes'
 import { familyStrings as s } from '../strings'
 
-type Account = Schemas['FamilyAccountResponse']
+type Account = FamilyAccountResponse
 type Action = { kind: 'remove' | 'transfer'; account: Account }
 
 // Tên người Việt thì tên gọi đứng cuối nên lấy chữ cái đầu của từ cuối làm avatar

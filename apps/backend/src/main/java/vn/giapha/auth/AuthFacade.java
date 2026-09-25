@@ -12,13 +12,14 @@ import vn.giapha.auth.entity.SystemRole;
 import vn.giapha.auth.entity.UserAccount;
 import vn.giapha.auth.repository.UserAccountRepository;
 import vn.giapha.auth.service.RefreshTokenService;
+import vn.giapha.common.security.AccountAccessLookup;
 
 /**
  * API công khai của module auth cho module khác (chủ yếu {@code family}). Chỉ trả bản sao chỉ-đọc, không lộ
  * entity hay trường bí mật; vai trò trao đổi dạng chuỗi ({@code MANAGER} / {@code MEMBER}).
  */
 @Component
-public class AuthFacade {
+public class AuthFacade implements AccountAccessLookup {
 
     /** Ảnh chụp tài khoản; {@code email} chỉ để module gọi quyết định có trả ra hay không. */
     public record Account(Long id, String email, String fullName, String avatarUrl, boolean admin,
@@ -71,6 +72,18 @@ public class AuthFacade {
     @Transactional
     public boolean changeFamilyRole(Long userId, Long familyId, String role) {
         return users.updateFamilyRole(userId, familyId, FamilyRole.valueOf(role)) == 1;
+    }
+
+    /** Đọc thẳng DB cho {@code ApprovalGateFilter}: khóa và từ chối có hiệu lực ngay với thao tác ghi. */
+    @Override
+    @Transactional(readOnly = true)
+    public Access accessOf(Long userId) {
+        return users.findById(userId).map(u -> {
+            if (u.getStatus() == AccountStatus.LOCKED) {
+                return Access.LOCKED;
+            }
+            return u.isActiveAndApproved() ? Access.OK : Access.NOT_APPROVED;
+        }).orElse(Access.GONE);
     }
 
     /** Thu hồi mọi refresh token: buộc đăng nhập lại để claim trong token khớp với thay đổi vừa xảy ra. */
