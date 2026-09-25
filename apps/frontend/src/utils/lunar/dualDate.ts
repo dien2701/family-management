@@ -1,6 +1,6 @@
 // Logic thuần của ô nhập ngày Âm/Dương (component DualDateInput): giải mã chuỗi người dùng gõ thành kết quả
 // đã kiểm tra, kèm ngày tương ứng ở lịch còn lại. Không đụng React nên test được trực tiếp.
-import { lunarOccurrence } from './anniversaryRules'
+import { lunarOccurrence, solarOccurrence } from './anniversaryRules'
 import {
   MAX_YEAR,
   MIN_LUNAR_YEAR,
@@ -30,6 +30,8 @@ export type DualDateOptions = {
   allowYearOnly?: boolean
   /** Cho phép chỉ nhập ngày/tháng âm, không có năm (giỗ, sinh nhật âm lặp hằng năm). */
   allowNoYear?: boolean
+  /** Cho phép chỉ nhập ngày/tháng dương, không có năm (sự kiện dương lặp hằng năm). */
+  allowNoYearSolar?: boolean
   /** Năm âm dùng để minh họa ngày lặp hằng năm; mặc định do người gọi truyền (thường là năm âm hiện tại). */
   referenceLunarYear?: number
 }
@@ -50,6 +52,16 @@ export type DualDateResult =
       yearLeapMonth: number
     }
   | { status: 'yearOnly'; calendar: CalendarKind; year: number }
+  /** Ngày/tháng dương không năm: `occurrence` là ngày rơi vào năm dương `year` (29/2 năm không nhuận dời sang 28/2). */
+  | {
+      status: 'solarMonthDay'
+      month: number
+      day: number
+      year: number
+      occurrence: SolarDate
+      occurrenceLunar: LunarDate
+      movedFromFeb29: boolean
+    }
   /** Ngày/tháng âm không năm: `occurrence` là ngày cúng trong năm âm `year` (đã áp quy tắc nhuận và ngày 30). */
   | {
       status: 'lunarMonthDay'
@@ -123,6 +135,9 @@ function resolveSolar(
       ? { status: 'yearOnly', calendar: 'solar', year: Number(year) }
       : incomplete()
   }
+  if (!year && month && day && options.allowNoYearSolar) {
+    return resolveSolarMonthDay(Number(month), Number(day))
+  }
   if (!day || !month || !year) return incomplete()
   const [d, m, y] = [Number(day), Number(month), Number(year)] as const
   if (y < MIN_YEAR || y > MAX_YEAR) {
@@ -142,6 +157,26 @@ function resolveSolar(
     lunar,
     monthDays: daysInMonth(lunar.year, lunar.month, lunar.leap),
     yearLeapMonth: leapMonth(lunar.year),
+  }
+}
+
+function resolveSolarMonthDay(month: number, day: number): DualDateResult {
+  if (month < 1 || month > 12) return invalid('month', 'Tháng dương phải từ 1 đến 12.')
+  // 29/2 hợp lệ vì có năm nhuận; kiểm bằng một năm nhuận
+  const max = daysInSolarMonth(2000, month)
+  if (day < 1 || day > max) {
+    return invalid('day', `Tháng ${month} dương lịch không có ngày ${day}.`)
+  }
+  const year = todayInVietnam().year
+  const occurrence = solarOccurrence(year, month, day)
+  return {
+    status: 'solarMonthDay',
+    month,
+    day,
+    year,
+    occurrence,
+    occurrenceLunar: toLunar(occurrence),
+    movedFromFeb29: occurrence.day !== day,
   }
 }
 

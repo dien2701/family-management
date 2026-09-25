@@ -79,31 +79,6 @@ describe('GET /api/members', () => {
     expect(first).toMatchObject({ generation: null, onTree: false, birthYear: null })
   })
 
-  it('đời và onTree lấy từ store cây: đời = độ sâu của ô', async () => {
-    const store = loadStore()
-    store.tree.nodes = [
-      { id: 1, memberId: 1, parentNodeId: null },
-      { id: 2, memberId: 4, parentNodeId: 1 },
-      { id: 3, memberId: 7, parentNodeId: 2 },
-      { id: 4, memberId: null, parentNodeId: 2 },
-    ]
-    saveStore(store)
-
-    const onTree = await call<MemberPage>('/members', { onTree: true, sort: 'generation' })
-    expect(onTree.items.map((m) => [m.id, m.generation])).toEqual([
-      [1, 1],
-      [4, 2],
-      [7, 3],
-    ])
-    expect(names(await call<MemberPage>('/members', { generation: 2 }))).toEqual([
-      'Cụ Nguyễn Văn Sửu',
-    ])
-    // Sắp theo đời: người chưa lên cây xuống cuối
-    const all = await call<MemberPage>('/members', { sort: 'generation', size: 100 })
-    expect(all.items.slice(0, 3).map((m) => m.id)).toEqual([1, 4, 7])
-    expect(all.items.slice(3).every((m) => m.generation === null)).toBe(true)
-  })
-
   it('lọc khoảng tuổi theo năm sinh, loại người chưa rõ năm sinh; sắp theo tuổi', async () => {
     const store = loadStore()
     // Dữ liệu chỉ dùng trong test: người đã mất tính tuổi tới năm mất

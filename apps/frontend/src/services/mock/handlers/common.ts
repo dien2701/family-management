@@ -3,6 +3,7 @@ import type { Me, MemberSummary } from '@/types/api'
 import type { HandlerContext } from '../context'
 import { mockProblem } from '../problem'
 import type { MockStore, StoredMember } from '../store'
+import { generationsByMember } from '../treeGraph'
 
 export type FieldErrors = { field: string; message: string }[]
 
@@ -16,25 +17,7 @@ export function positiveInt(raw: unknown): number | null {
 }
 
 /** Đời = độ sâu của ô chứa người đó trên cây (gốc là đời 1). Chưa có trên cây thì không có trong map. */
-export function generationIndex(store: MockStore): Map<number, number> {
-  const byId = new Map(store.tree.nodes.map((n) => [n.id, n]))
-  const result = new Map<number, number>()
-  for (const node of store.tree.nodes) {
-    if (node.memberId === null) continue
-    let depth = 1
-    let cursor = node
-    const seen = new Set<number>([cursor.id])
-    while (cursor.parentNodeId !== null) {
-      const parent = byId.get(cursor.parentNodeId)
-      if (!parent || seen.has(parent.id)) break
-      seen.add(parent.id)
-      cursor = parent
-      depth++
-    }
-    result.set(node.memberId, depth)
-  }
-  return result
-}
+export const generationIndex = generationsByMember
 
 export function toSummary(m: StoredMember, generations: Map<number, number>): MemberSummary {
   const generation = generations.get(m.id) ?? null

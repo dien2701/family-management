@@ -40,7 +40,8 @@ const digits = (e: ChangeEvent<HTMLInputElement>, max: number) =>
 
 /**
  * Ô nhập ngày theo Dương hoặc Âm, hiện ngay ngày tương ứng ở lịch còn lại (IDEA §7). Có cờ tháng nhuận cho lịch âm.
- * `allowYearOnly` cho phép chỉ nhập năm, `allowNoYear` cho phép chỉ nhập ngày/tháng âm (lặp hằng năm).
+ * `allowYearOnly` cho phép chỉ nhập năm, `allowNoYear` / `allowNoYearSolar` cho phép chỉ nhập ngày/tháng âm / dương
+ * (lặp hằng năm).
  * Component chỉ nhận props; cần giá trị đã kiểm tra thì gọi `resolveDualDate(value, options)` ở nơi dùng.
  */
 export function DualDateInput({
@@ -52,12 +53,13 @@ export function DualDateInput({
   disabled,
   allowYearOnly,
   allowNoYear,
+  allowNoYearSolar,
   referenceLunarYear,
 }: DualDateInputProps) {
   const id = useId()
   const options = useMemo<DualDateOptions>(
-    () => ({ allowYearOnly, allowNoYear, referenceLunarYear }),
-    [allowYearOnly, allowNoYear, referenceLunarYear],
+    () => ({ allowYearOnly, allowNoYear, allowNoYearSolar, referenceLunarYear }),
+    [allowYearOnly, allowNoYear, allowNoYearSolar, referenceLunarYear],
   )
   const result = useMemo(() => resolveDualDate(value, options), [value, options])
   const isLunar = value.calendar === 'lunar'
@@ -239,6 +241,21 @@ function OutcomeBody({ result }: { result: Exclude<DualDateResult, { status: 'in
         </Result>
       )
     }
+    case 'solarMonthDay':
+      return (
+        <Result
+          caption="Lặp lại hằng năm"
+          main={`Ngày ${String(result.day).padStart(2, '0')}/${String(result.month).padStart(2, '0')} dương lịch`}
+        >
+          <p>
+            Năm {result.year} rơi vào {formatSolarWithWeekday(result.occurrence)}, tức{' '}
+            {formatLunarDayMonth(result.occurrenceLunar)}.
+          </p>
+          {result.movedFromFeb29 && (
+            <p>Năm không nhuận không có 29/2 nên tính vào 28/2.</p>
+          )}
+        </Result>
+      )
     case 'lunarMonthDay':
       return (
         <Result

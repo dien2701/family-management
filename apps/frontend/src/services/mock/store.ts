@@ -12,8 +12,20 @@ export type StoredMember = Omit<
   'generation' | 'onTree' | 'birthYear' | 'deathYear'
 >
 
-/** Ô trên cây. Mô hình đầy đủ do Đợt 14 định nghĩa; hiện chỉ cần đủ để tính "đời" và "có trên cây". */
-export type StoredTreeNode = { id: number; memberId: number | null; parentNodeId: number | null }
+/** Sự kiện chung như lưu trong kho: đúng DTO. */
+export type StoredEvent = Schemas['CustomEvent']
+
+/** Ô trên cây (`memberId = null` là ô trống). Đời không lưu, tính khi đọc (DECISIONS #60). */
+export type StoredTreeNode = {
+  id: number
+  memberId: number | null
+  parentNodeId: number | null
+  coParentNodeId: number | null
+  sortOrder: number
+}
+
+/** Ô vợ/chồng `spouseNodeId` thuộc ô thuộc dòng `nodeId`, thứ tự `order` (1 = Cả). */
+export type StoredTreeSpouse = { nodeId: number; spouseNodeId: number; order: number }
 
 /** Một dòng người thân: trong hồ sơ `memberId`, `relativeMemberId` là "`label`" (một chiều, DECISIONS #75). */
 export type StoredRelative = {
@@ -52,12 +64,13 @@ export type DeletedMemberSnapshot = {
 export type MockStore = {
   version: typeof STORE_VERSION
   members: StoredMember[]
-  tree: { nodes: StoredTreeNode[] }
+  tree: { nodes: StoredTreeNode[]; spouses?: StoredTreeSpouse[] }
   /** Các trường dưới đây thiếu ở kho tạo trước khi có tính năng tương ứng: coi như rỗng. */
   deleted?: DeletedMemberSnapshot[]
   relatives?: StoredRelative[]
   links?: StoredAccountLink[]
   linkRequests?: StoredLinkRequest[]
+  events?: StoredEvent[]
 }
 
 type SeedMember = {
@@ -93,7 +106,7 @@ export function buildSeedStore(now: Date = new Date()): MockStore {
   return {
     version: STORE_VERSION,
     members,
-    tree: { nodes: [] },
+    tree: { nodes: [], spouses: [] },
     relatives: [],
     links: [],
     linkRequests: [],

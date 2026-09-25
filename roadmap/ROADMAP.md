@@ -51,8 +51,8 @@
 | 12 | Thành viên FE: form, xóa, ảnh đại diện | Claude Code | Sonnet · medium | ✅ 2026-09-25 |
 | 13 | Người thân, "Tôi là ai" và tự sửa hồ sơ FE | Claude Code | Sonnet · high | ✅ 2026-09-25 |
 | 14 | Cây FE: mô hình và thuật toán layout | Claude Code | **Opus** · high | ✅ 2026-09-25 |
-| 15–16 | Cây FE: hiển thị, thêm người, chỉnh sửa và điều hướng | Claude Code | Sonnet · high | ⬜ |
-| 17 | Lịch và sự kiện FE | Claude Code | Sonnet · medium | ⬜ |
+| 15–16 | Cây FE: hiển thị, thêm người, chỉnh sửa và điều hướng | Claude Code | Sonnet · high | ✅ 2026-09-25 |
+| 17 | Lịch và sự kiện FE | Claude Code | Sonnet · medium | ✅ 2026-09-25 |
 | 18–19 | Dashboard FE và PWA | **Antigravity** | Gemini 3.8 Flash · Planning | ⬜ |
 | 20–21 | Đề xuất sự kiện và Thông báo FE | **Antigravity** | Gemini 3.1 Pro · Planning | ⬜ |
 | 22 | Đính kèm và trang Xuất dữ liệu FE | **Antigravity** | Gemini 3.8 Flash · Planning | ⬜ |
@@ -75,8 +75,8 @@
 | ~~40~~ | ~~E2E Playwright~~ (bỏ theo #84) | | | ❌ |
 | 41 | Deploy production | Claude Code | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 15–16 — Cây FE: hiển thị, thêm người, chỉnh sửa và điều hướng
-Công cụ **Claude Code** · Model **Sonnet** · Chế độ **high** · Prompt: dùng **Prompt mẫu Claude Code** ở trên với N = 15–16.
+## ▶️ Đợt đang chờ: Đợt 18–19 — Dashboard FE và PWA
+Công cụ **Antigravity** · Model **Gemini 3.8 Flash** · Chế độ **Planning** · Prompt: dùng **Prompt mẫu Antigravity** ở trên với N = 18–19.
 
 ---
 
@@ -237,26 +237,26 @@ IDEA §8 · DECISIONS #34, #60, #61
 
 ---
 
-### Đợt 15–16 — Cây FE: hiển thị, thêm người, chỉnh sửa và điều hướng ⬜
+### Đợt 15–16 — Cây FE: hiển thị, thêm người, chỉnh sửa và điều hướng ✅ 2026-09-25
 IDEA §6.1, §8 · DECISIONS #60–62, #71
 **Phần 15 — Cây FE: hiển thị và thêm người**
-- [ ] Hợp đồng: `POST /api/tree/roots`, `POST /api/tree/nodes/{id}/children` (có `coParentNodeId`), `POST /api/tree/nodes/{id}/spouses`, `POST /api/tree/nodes/{id}/parent`. Body chứa `memberId`. Lỗi trả ProblemDetail với mã như `TREE_NEEDS_CO_PARENT`, `TREE_PARENT_ONLY_AT_TOP`, `MEMBER_ALREADY_ON_TREE`.
-- [ ] Handler giả lập cho `GET /api/tree` và các thao tác thêm. Store cây nằm trong localStorage và **lúc đầu trống**. Kiểm tra hợp lệ bằng `utils/tree`.
-- [ ] Trang Cây:
+- [x] Hợp đồng: `POST /api/tree/roots`, `POST /api/tree/nodes/{id}/children` (có `coParentNodeId`), `POST /api/tree/nodes/{id}/spouses`, `POST /api/tree/nodes/{id}/parent`. Body chứa `memberId`. Lỗi trả ProblemDetail với mã như `TREE_NEEDS_CO_PARENT`, `TREE_PARENT_ONLY_AT_TOP`, `MEMBER_ALREADY_ON_TREE`. ✅ 2026-09-25
+- [x] Handler giả lập cho `GET /api/tree` và các thao tác thêm. Store cây nằm trong localStorage và **lúc đầu trống**. Kiểm tra hợp lệ bằng `utils/tree`. ✅ 2026-09-25
+- [x] Trang Cây: ✅ 2026-09-25
   - React Flow chỉ hiển thị kết quả của `layoutTree`.
   - `MemberNode` theo DESIGN §5: họ tên nguyên văn, ảnh hoặc chữ cái đầu, người đã mất có viền xám và ✝ kèm năm mất, có nhãn.
   - Ô trống viền đứt. Ô của người chưa rõ giới tính vẽ trung tính.
   - Đường nối hôn nhân (kèm thứ tự) và đường cha mẹ–con.
-- [ ] Cột trái cố định "Đời 01…N", đồng bộ trục y với viewport. Zoom, kéo, pinch. Bật `onlyRenderVisibleElements`.
-- [ ] Cây trống:
+- [x] Cột trái cố định "Đời 01…N", đồng bộ trục y với viewport. Zoom, kéo, pinch. Bật `onlyRenderVisibleElements`. ✅ 2026-09-25
+- [x] Cây trống: ✅ 2026-09-25
   - User thấy trạng thái rỗng "Cây chưa được dựng".
   - Admin thấy nút **"+ Thêm người gốc"**, và thêm được nhiều gốc.
-- [ ] Admin thấy ba nút "+" trên ô (dưới: Con, cạnh: Vợ/Chồng, trên: Cha/Mẹ), chỉ hiện ở chỗ được phép theo `utils/tree`.
+- [x] Admin thấy ba nút "+" trên ô (dưới: Con, cạnh: Vợ/Chồng, trên: Cha/Mẹ), chỉ hiện ở chỗ được phép theo `utils/tree`. ✅ 2026-09-25
   - Mỗi nút mở hộp chọn **thành viên chưa có trên cây**, có tìm không dấu. Hộp này là bottom sheet trên điện thoại.
   - "+ Con" trên người có ≥ 2 vợ/chồng thì hỏi thêm "Con với ai".
 
 **Phần 16 — Cây FE: chỉnh sửa và điều hướng**
-- [ ] Hợp đồng:
+- [x] Hợp đồng: ✅ 2026-09-25
   - `DELETE /api/tree/nodes/{id}/member` (gỡ khỏi cây, ô thành ô trống);
   - `PUT /api/tree/nodes/{id}/member` (điền ô trống);
   - `DELETE /api/tree/nodes/{id}` (xóa ô trống, lỗi `TREE_SLOT_NOT_EMPTY` hoặc `TREE_SLOT_HAS_LINKS`);
@@ -265,26 +265,37 @@ IDEA §6.1, §8 · DECISIONS #60–62, #71
   - `PUT /api/tree/nodes/{id}/co-parent`.
 
   Kèm handler giả lập.
-- [ ] Menu khi bấm vào ô:
+- [x] Menu khi bấm vào ô: ✅ 2026-09-25
   - Mọi người thấy "Xem hồ sơ" và "Xem cây từ người này".
   - Admin thấy thêm "Gỡ khỏi cây", "Di chuyển nhánh", "Đổi thứ tự", "Đổi cặp cha–mẹ", và "Xóa ô" (với ô trống).
   - Bấm vào ô trống thì mở hộp chọn người để điền.
-- [ ] Di chuyển nhánh:
+- [x] Di chuyển nhánh: ✅ 2026-09-25
   - Máy tính (≥ 1024px): kéo thả, hiện vùng thả hợp lệ, thả sai chỗ thì báo lý do.
   - Điện thoại: dùng menu "Di chuyển nhánh" rồi chọn ô đích hoặc "Thành gốc mới".
   - Luôn có hộp xác nhận ghi số người trong nhánh.
-- [ ] Điều hướng:
+- [x] Điều hướng: ✅ 2026-09-25
   - thu gọn hoặc mở rộng từng nhánh;
   - ô tìm kiếm nhảy tới người cần tìm và làm nổi bật;
   - "Xem cây từ người này";
   - **"Xem tổ tiên của tôi"** (cần đã liên kết và có trên cây, nếu không thì giải thích lý do);
   - trên điện thoại mặc định hiện 3 đời quanh người được chọn (hoặc chính mình), chạm để mở rộng.
-- [ ] Hồ sơ thành viên: khối **"Trên cây"** gồm đời, cha/mẹ, vợ/chồng, con theo cây, và nút "Xem trên cây". Người chưa có trên cây thì ghi rõ. Handler danh sách thành viên lọc được theo đời và theo có trên cây.
-- [ ] Xóa thành viên đang có trên cây (Đợt 12) nay bị chặn thật.
+- [x] Hồ sơ thành viên: khối **"Trên cây"** gồm đời, cha/mẹ, vợ/chồng, con theo cây, và nút "Xem trên cây". Người chưa có trên cây thì ghi rõ. Handler danh sách thành viên lọc được theo đời và theo có trên cây. ✅ 2026-09-25
+- [x] Xóa thành viên đang có trên cây (Đợt 12) nay bị chặn thật. ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- Hợp đồng: 9 endpoint thao tác cây trong `shared/api/openapi.yaml` (`POST /api/tree/roots`, `.../nodes/{id}/children|spouses|parent|move`, `PUT|DELETE .../nodes/{id}/member`, `DELETE .../nodes/{id}`, `PUT .../nodes/{id}/order|co-parent`), đã `gen:api`. Handler giả lập `services/mock/handlers/tree.ts` (+ `treeGraph.ts`) áp `utils/tree`, store cây trong localStorage lúc đầu trống; đời của danh sách thành viên nay tính bằng `computeGenerations`.
+- Trang Cây `features/tree/pages/TreePage.tsx`: React Flow hiển thị đúng kết quả `layoutTree` (`components/TreeCanvas.tsx`, `MemberNode.tsx`, `TreeEdge.tsx`, cột "Đời" `GenerationGutter.tsx`), `onlyRenderVisibleElements`, zoom/kéo/pinch, nút zoom 44px. Cây trống, nút "+ Thêm người gốc", ba nút "+" nhanh trên ô (máy tính), hộp chọn thành viên chưa lên cây (`AddMemberDialog`, bottom sheet trên điện thoại, hỏi "Con với ai" khi ≥ 2 vợ/chồng).
+- Chỉnh sửa và điều hướng: menu khi bấm ô (`NodeMenuDialog`), gỡ khỏi cây, điền ô trống, xóa ô, di chuyển nhánh (kéo thả ≥ 1024px có vùng thả hợp lệ và báo lý do; điện thoại qua menu, `MoveDialog` luôn xác nhận kèm số người), đổi thứ tự, đổi cặp cha–mẹ; thu gọn/mở nhánh, tìm và nhảy tới người, "Xem cây từ người này", "Xem tổ tiên của tôi", điện thoại mặc định 3 đời quanh người được chọn. Khối "Trên cây" ở hồ sơ (`features/member/components/TreeSection.tsx`) kèm nút "Xem trên cây" (`/cay?o=<id ô>`).
+- **Cần `npm install`:** đã thêm `@xyflow/react` 12.12.0 vào `package.json` (chưa cài, chưa có trong `package-lock.json`).
+- **Quy ước tự chốt (sửa ở một chỗ nếu bạn muốn khác):**
+  - Mọi API thao tác trả `TreeNode` của ô vừa đổi (xóa ô trả 204), frontend tải lại `GET /api/tree` và `/api/members` sau mỗi thao tác.
+  - `PUT .../order` nhận `{direction: LEFT|RIGHT}` (đổi chỗ với anh em kề bên); mã lỗi mới `TREE_ORDER_EDGE` (409) khi đã ở đầu/cuối hàng. `PUT .../co-parent` với `null` chỉ hợp lệ khi cha/mẹ có đúng 1 vợ/chồng (tự nhận) hoặc không có.
+  - Nút "+" nhanh chỉ có ở máy tính (≥ 1024px); điện thoại thêm qua menu của ô vì sơ đồ thu nhỏ làm nút quá bé. Bấm ô trống (Admin) mở thẳng hộp chọn người, các thao tác khác của ô trống ở nút "⋯" trong ô.
+  - Nút "+ Vợ/Chồng" nằm ở mép ngoài cùng của cả đơn vị về phía người vợ/chồng tiếp theo sẽ đứng (1 bên trái, 2 bên phải...). Đang xem "Tổ tiên của tôi" thì không chỉnh sửa. Chữ năm sinh–mất dùng `text-muted` thay vì `--color-deceased` (không đủ tương phản), ghi thêm vào DESIGN §6.
+  - Bỏ test cũ "đời và onTree lấy từ store cây" ở `members.test.ts` vì mô hình ô cây đổi (#84).
+- **Việc nên làm thêm:** cập nhật `LayoutSvg` (dev) nếu muốn bỏ hẳn; `shared/fixtures/tree/` vẫn chưa tạo (#84); GĐ B (Đợt 29) phải trả đúng `TreeNode` cho các API thao tác như đã ghi trong hợp đồng.
 
-**🔧 Setup thủ công cần làm:** Không có.
+**🔧 Setup thủ công cần làm:** Chạy `npm install` trong `apps/frontend` (thêm `@xyflow/react`).
 
 **🧪 Test thủ công (từng bước):**
 _Phần 15:_
@@ -305,30 +316,35 @@ _Phần 16:_
 
 ---
 
-### Đợt 17 — Lịch và sự kiện FE ⬜
+### Đợt 17 — Lịch và sự kiện FE ✅ 2026-09-25
 IDEA §6.5, §7 · DESIGN §1 (màu sự kiện) · DECISIONS #31, #65, #72
-- [ ] Hợp đồng:
+- [x] Hợp đồng: ✅ 2026-09-25
   - CRUD `/api/events` (Admin ghi, mọi người đọc; `year = null` nghĩa là lặp hằng năm);
   - `GET /api/calendar/upcoming?days=7|15|30|90|365&type=&sort=asc|desc`;
   - `GET /api/calendar/month?year=&month=&mode=solar|lunar`;
   - `GET /api/calendar/recent?limit=10`.
-- [ ] `src/utils/occurrences/` (hàm thuần): sinh các lần xảy ra trong một khoảng ngày.
+- [x] `src/utils/occurrences/` (hàm thuần): sinh các lần xảy ra trong một khoảng ngày. ✅ 2026-09-25
   - **Giỗ:** người đã mất có ngày mất âm hoặc ngày ghi đè, theo `AnniversaryRules`. Ghi "giỗ lần thứ N" nếu biết năm mất.
   - **Sinh nhật:** người còn sống có ngày/tháng sinh. Ghi "tròn N tuổi" nếu biết năm sinh.
   - **Sự kiện chung.**
   - Mỗi lần xảy ra có một `eventKey` ổn định.
-- [ ] Handler giả lập cho sự kiện và lịch, dùng `utils/occurrences` trên store.
-- [ ] Tab **"Sắp tới"**:
+- [x] Handler giả lập cho sự kiện và lịch, dùng `utils/occurrences` trên store. ✅ 2026-09-25
+- [x] Tab **"Sắp tới"**: ✅ 2026-09-25
   - chọn khoảng thời gian, lọc theo loại, sắp xếp;
   - mỗi dòng có icon và màu theo loại, kèm "còn N ngày", "giỗ lần thứ N", "tròn N tuổi".
-- [ ] Tab **"Lịch tháng"**:
+- [x] Tab **"Lịch tháng"**: ✅ 2026-09-25
   - mỗi ô có ngày dương lớn, ngày âm nhỏ và chấm màu;
   - nút gạt "Xem theo âm";
   - bấm vào ngày thì mở sheet danh sách sự kiện;
   - dưới 768px hiện danh sách theo tuần.
-- [ ] Form sự kiện chung (chỉ Admin): dùng `DualDateInput`, chọn lặp hằng năm hoặc một lần, có sửa và xóa. Chú giải màu có kèm chữ.
+- [x] Form sự kiện chung (chỉ Admin): dùng `DualDateInput`, chọn lặp hằng năm hoặc một lần, có sửa và xóa. Chú giải màu có kèm chữ. ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- Hợp đồng (`openapi.yaml`, đã `gen:api`): CRUD `/api/events`, `GET /api/calendar/{upcoming,month,recent}`, kiểu `CustomEvent`, `CalendarOccurrence`, `CalendarMonth`; thẻ `events`, mã lỗi `EVENT_NOT_FOUND`.
+- `utils/occurrences/` (`generate.ts`: `generateOccurrences`, `monthDates`, `daysBetween`): giỗ (ngày ghi đè, tháng nhuận, ngày 30, "giỗ lần thứ N"), sinh nhật (dương/âm, "tròn N tuổi"), sự kiện chung (lặp hằng năm hoặc một lần), `eventKey` dạng `TYPE:id:yyyy-MM-dd`. Handler giả lập `services/mock/handlers/calendar.ts` (store thêm `events`).
+- `features/calendar/`: trang Lịch có hai tab **Sắp tới** (khoảng, loại, sắp xếp) và **Lịch tháng** (lưới từ 768px, danh sách theo tuần dưới 768px, nút "Xem theo âm", điều hướng tháng, sheet chi tiết ngày), form sự kiện chung của Admin (thêm, sửa, xóa), chú giải màu kèm icon và chữ.
+- `DualDateInput` thêm tùy chọn `allowNoYearSolar` (ngày/tháng dương không năm, cho sự kiện dương lặp hằng năm).
+- **Việc nên làm thêm:** Dashboard (Đợt 18) dùng lại `/api/calendar/upcoming` và `/recent`; gộp `/api/calendar/*` vào test hợp đồng BE (Đợt 31); `todayInVietnam` ở FE chỉ dùng để tô "hôm nay", ngày "hôm nay" của danh sách do handler quyết định.
 
 **🔧 Setup thủ công cần làm:** Không có.
 

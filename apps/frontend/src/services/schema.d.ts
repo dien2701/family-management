@@ -689,6 +689,322 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/tree/roots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Thêm người gốc
+         * @description Chỉ Admin. Đưa một thành viên chưa có trên cây vào làm gốc mới (Đời 01). Có thể có nhiều gốc; gốc mới xếp cuối.
+         *     Lỗi: 409 `MEMBER_ALREADY_ON_TREE`.
+         */
+        post: operations["addTreeRoot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tree/nodes/{id}/children": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Thêm con vào một ô
+         * @description Chỉ Admin. Con mới xếp cuối các anh em. Cặp cha–mẹ được xác định như sau:
+         *     - bấm trên **ô vợ/chồng** thì cặp là ô đó cùng người thuộc dòng của nó (`coParentNodeId`, nếu gửi, phải là chính ô đó);
+         *     - bấm trên ô thuộc dòng có **≥ 2 vợ/chồng** thì bắt buộc gửi `coParentNodeId`, thiếu thì 409 `TREE_NEEDS_CO_PARENT`;
+         *     - có đúng 1 vợ/chồng thì tự nhận cặp đó; không có thì con chỉ thuộc một mình cha/mẹ.
+         *
+         *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `MEMBER_ALREADY_ON_TREE`, `TREE_INVALID_CO_PARENT`, `TREE_NEEDS_CO_PARENT`.
+         */
+        post: operations["addTreeChild"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tree/nodes/{id}/spouses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Thêm vợ/chồng cho một ô
+         * @description Chỉ Admin. Chỉ có trên ô **thuộc dòng** (ô vợ/chồng không có vợ/chồng riêng). Người mới xếp sau vợ/chồng cuối.
+         *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SPOUSE_NOT_ALLOWED`, `MEMBER_ALREADY_ON_TREE`.
+         */
+        post: operations["addTreeSpouse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tree/nodes/{id}/parent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Thêm cha/mẹ cho người gốc
+         * @description Chỉ Admin. Chỉ có trên ô **thuộc dòng ở Đời 01** (gốc). Người mới trở thành gốc, thế vào chỗ của ô này
+         *     trong danh sách gốc; ô này thành con của người mới nên cả cây rời đó dịch xuống một đời. Không tự đặt giới tính.
+         *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_PARENT_ONLY_AT_TOP`, `MEMBER_ALREADY_ON_TREE`.
+         */
+        post: operations["addTreeParent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tree/nodes/{id}/member": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Điền người vào ô trống
+         * @description Chỉ Admin. Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người), `MEMBER_ALREADY_ON_TREE`.
+         */
+        put: operations["fillTreeSlot"];
+        post?: never;
+        /**
+         * Gỡ người khỏi cây (ô thành ô trống)
+         * @description Chỉ Admin. Ô thành **ô trống** nằm đúng chỗ cũ, con cháu và vợ/chồng không bị ảnh hưởng; thành viên vẫn còn nguyên.
+         *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_EMPTY` (ô đã trống).
+         */
+        delete: operations["removeTreeMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tree/nodes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Xóa ô trống
+         * @description Chỉ Admin. Chỉ xóa được **ô trống** không còn con (theo cả `parentNodeId` và `coParentNodeId`) và không còn vợ/chồng.
+         *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người), `TREE_SLOT_HAS_LINKS`.
+         */
+        delete: operations["deleteTreeNode"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tree/nodes/{id}/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Di chuyển nhánh
+         * @description Chỉ Admin. Một ô **thuộc dòng** đi kèm vợ/chồng và toàn bộ con cháu, tới làm con của `newParentNodeId`
+         *     (ô thuộc dòng hoặc ô vợ/chồng; cặp cha–mẹ xác định như `POST /api/tree/nodes/{id}/children`) hoặc thành gốc mới
+         *     khi `newParentNodeId` là `null`. Ô được chuyển xếp cuối các anh em ở nơi đến.
+         *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_MOVE_LINEAGE_ONLY` (ô vợ/chồng), `TREE_CYCLE` (nơi đến nằm trong chính nhánh),
+         *     `TREE_NEEDS_CO_PARENT`, `TREE_INVALID_CO_PARENT`.
+         */
+        post: operations["moveTreeNode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tree/nodes/{id}/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Đổi thứ tự anh em
+         * @description Chỉ Admin. Đổi chỗ ô thuộc dòng với người anh em kề bên (cùng cha/mẹ, hoặc cùng là gốc).
+         *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_MOVE_LINEAGE_ONLY` (ô vợ/chồng), `TREE_ORDER_EDGE` (đã ở đầu hoặc cuối hàng).
+         */
+        put: operations["reorderTreeNode"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tree/nodes/{id}/co-parent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Đổi cặp cha–mẹ của một người con
+         * @description Chỉ Admin. `coParentNodeId` phải là vợ/chồng của cha/mẹ hiện tại (`parentNodeId`). Cha/mẹ có đúng 1 vợ/chồng thì `null` tự nhận người đó;
+         *     có ≥ 2 vợ/chồng thì bắt buộc chọn (409 `TREE_NEEDS_CO_PARENT`).
+         *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_NOT_A_CHILD` (ô không có cha/mẹ), `TREE_INVALID_CO_PARENT`, `TREE_NEEDS_CO_PARENT`.
+         */
+        put: operations["setTreeCoParent"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Danh sách sự kiện chung
+         * @description Mọi tài khoản đã duyệt xem được. Xếp theo `id` tăng dần. Chỉ gồm **sự kiện chung**; giỗ và sinh nhật do `/api/calendar/*` tự sinh từ hồ sơ thành viên.
+         */
+        get: operations["listEvents"];
+        put?: never;
+        /**
+         * Thêm sự kiện chung
+         * @description Chỉ Admin (User gửi đề xuất, Đợt 20–21). `year = null` nghĩa là lặp hằng năm theo `calendar`; có `year` thì chỉ diễn ra một lần vào đúng ngày đó.
+         */
+        post: operations["createEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/events/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chi tiết một sự kiện chung
+         * @description Lỗi: 404 `EVENT_NOT_FOUND`.
+         */
+        get: operations["getEvent"];
+        /**
+         * Sửa sự kiện chung
+         * @description Chỉ Admin. Thay toàn bộ nội dung. Lỗi: 404 `EVENT_NOT_FOUND`.
+         */
+        put: operations["updateEvent"];
+        post?: never;
+        /**
+         * Xóa sự kiện chung
+         * @description Chỉ Admin. Lỗi: 404 `EVENT_NOT_FOUND`.
+         */
+        delete: operations["deleteEvent"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/upcoming": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Các sự kiện sắp diễn ra
+         * @description Giỗ, sinh nhật và sự kiện chung có ngày dương từ **hôm nay** (giờ +7, `daysUntil = 0`) đến hôm nay + `days` ngày.
+         *     Ngày cúng theo quy tắc IDEA §7 (ngày ghi đè, tháng nhuận, tháng thiếu). Xếp theo ngày dương, cùng ngày thì Giỗ, Sinh nhật, Sự kiện chung rồi theo tên.
+         */
+        get: operations["upcomingOccurrences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/month": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lịch một tháng
+         * @description Từng ngày của một tháng kèm sự kiện của ngày đó. `mode = solar`: `year`/`month` là tháng dương. `mode = lunar`:
+         *     là tháng âm (`leap = true` cho tháng nhuận), các ngày đi từ mùng 1 đến hết tháng âm đó, mỗi ngày kèm ngày dương.
+         */
+        get: operations["calendarMonth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/calendar/recent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Các sự kiện vừa diễn ra
+         * @description Các sự kiện có ngày dương **trước hôm nay** (trong vòng một năm), gần nhất trước (`daysUntil` âm). Dùng cho dashboard.
+         */
+        get: operations["recentOccurrences"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1140,6 +1456,155 @@ export interface components {
             nodes: components["schemas"]["TreeNode"][];
             spouses: components["schemas"]["TreeSpouse"][];
         };
+        TreeMemberInput: {
+            /**
+             * Format: int64
+             * @description Thành viên chưa có trên cây (mỗi thành viên chỉ có một ô)
+             */
+            memberId: number;
+        };
+        TreeChildInput: {
+            /** Format: int64 */
+            memberId: number;
+            /**
+             * Format: int64
+             * @description Ô vợ/chồng là mẹ/cha còn lại của con; bắt buộc khi người này có từ 2 vợ/chồng trở lên
+             */
+            coParentNodeId?: number | null;
+        };
+        TreeMoveInput: {
+            /**
+             * Format: int64
+             * @description Ô đến làm cha/mẹ; `null` là thành gốc mới
+             */
+            newParentNodeId: number | null;
+            /**
+             * Format: int64
+             * @description Ô vợ/chồng là mẹ/cha còn lại; bắt buộc khi ô đến có từ 2 vợ/chồng trở lên
+             */
+            coParentNodeId?: number | null;
+        };
+        TreeOrderInput: {
+            /**
+             * @description Đổi chỗ với người anh em bên trái hoặc bên phải
+             * @enum {string}
+             */
+            direction: "LEFT" | "RIGHT";
+        };
+        TreeCoParentInput: {
+            /** Format: int64 */
+            coParentNodeId: number | null;
+        };
+        /**
+         * @description Loại sự kiện trên lịch. Giỗ và sinh nhật tự sinh từ hồ sơ thành viên; sự kiện chung do Admin nhập.
+         * @enum {string}
+         */
+        EventType: "MEMORIAL" | "BIRTHDAY" | "CUSTOM";
+        /** @description Một ngày âm đầy đủ. */
+        LunarDate: {
+            /** Format: int32 */
+            year: number;
+            /** Format: int32 */
+            month: number;
+            /** Format: int32 */
+            day: number;
+            leap: boolean;
+        };
+        /**
+         * @description Sự kiện chung. `calendar` là lịch người nhập dùng để tính ngày. `year = null` nghĩa là lặp hằng năm
+         *     (âm lịch theo quy tắc IDEA §7); có `year` thì chỉ diễn ra một lần vào đúng ngày đó.
+         */
+        CustomEvent: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            description: string | null;
+            /** @enum {string} */
+            calendar: "SOLAR" | "LUNAR";
+            /** Format: int32 */
+            day: number;
+            /** Format: int32 */
+            month: number;
+            /** Format: int32 */
+            year: number | null;
+            /** @description Chỉ có nghĩa khi `calendar = LUNAR` */
+            leap: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @description Nội dung sự kiện chung khi thêm hoặc sửa (PUT thay toàn bộ). */
+        CustomEventInput: {
+            title: string;
+            description?: string | null;
+            /** @enum {string} */
+            calendar: "SOLAR" | "LUNAR";
+            /** Format: int32 */
+            day: number;
+            /** Format: int32 */
+            month: number;
+            /**
+             * Format: int32
+             * @description Bỏ trống = lặp hằng năm
+             */
+            year?: number | null;
+            /**
+             * @description Chỉ có nghĩa khi `calendar = LUNAR`
+             * @default false
+             */
+            leap: boolean;
+        };
+        /**
+         * @description Một lần xảy ra của giỗ, sinh nhật hoặc sự kiện chung. `title` do máy chủ dựng, ví dụ "Giỗ Cụ Nguyễn Văn Sửu"
+         *     (họ tên nguyên văn). `eventKey` ổn định giữa các lần gọi: `MEMORIAL:{memberId}:{yyyy-MM-dd}`,
+         *     `BIRTHDAY:{memberId}:{yyyy-MM-dd}`, `CUSTOM:{eventId}:{yyyy-MM-dd}` (ngày dương của lần xảy ra).
+         */
+        CalendarOccurrence: {
+            eventKey: string;
+            type: components["schemas"]["EventType"];
+            title: string;
+            /** @description Ghi chú của sự kiện chung; `null` với giỗ và sinh nhật */
+            description: string | null;
+            /**
+             * Format: int64
+             * @description Người được giỗ hoặc mừng sinh nhật; `null` với sự kiện chung
+             */
+            memberId: number | null;
+            /**
+             * Format: int64
+             * @description Chỉ có với sự kiện chung
+             */
+            eventId: number | null;
+            solar: components["schemas"]["SolarDate"];
+            lunar: components["schemas"]["LunarDate"];
+            /**
+             * Format: int32
+             * @description Số ngày tính từ hôm nay (giờ +7); 0 là hôm nay, âm là đã qua
+             */
+            daysUntil: number;
+            /**
+             * Format: int32
+             * @description "Giỗ lần thứ N" (MEMORIAL) hoặc "tròn N tuổi" (BIRTHDAY); `null` khi không biết năm mất/năm sinh hoặc với sự kiện chung
+             */
+            ordinal: number | null;
+        };
+        CalendarDay: {
+            solar: components["schemas"]["SolarDate"];
+            lunar: components["schemas"]["LunarDate"];
+            occurrences: components["schemas"]["CalendarOccurrence"][];
+        };
+        CalendarMonth: {
+            /** @enum {string} */
+            mode: "solar" | "lunar";
+            /** Format: int32 */
+            year: number;
+            /** Format: int32 */
+            month: number;
+            leap: boolean;
+            /** @description Theo thứ tự ngày, đủ mọi ngày của tháng */
+            days: components["schemas"]["CalendarDay"][];
+        };
         PageResponseAccountAdminResponse: {
             items?: components["schemas"]["AccountAdminResponse"][];
             /** Format: int32 */
@@ -1180,7 +1645,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetail"];
             };
         };
-        /** @description Không tìm thấy (`ACCOUNT_NOT_FOUND`, `MEMBER_NOT_FOUND`, `RELATIVE_NOT_FOUND`, `LINK_REQUEST_NOT_FOUND`) */
+        /** @description Không tìm thấy (`ACCOUNT_NOT_FOUND`, `MEMBER_NOT_FOUND`, `EVENT_NOT_FOUND`, `TREE_NODE_NOT_FOUND`, `RELATIVE_NOT_FOUND`, `LINK_REQUEST_NOT_FOUND`) */
         NotFound: {
             headers: {
                 [name: string]: unknown;
@@ -1189,7 +1654,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetail"];
             };
         };
-        /** @description Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `INVALID_ACCOUNT_STATE`, `MEMBER_ON_TREE`, `RELATIVE_EXISTS`, `MEMBER_ALREADY_LINKED`, `ACCOUNT_ALREADY_LINKED`, `LINK_REQUEST_EXISTS`, `LINK_REQUEST_NOT_PENDING`, `NOT_LINKED`) */
+        /** @description Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `INVALID_ACCOUNT_STATE`, `MEMBER_ON_TREE`, `RELATIVE_EXISTS`, `MEMBER_ALREADY_LINKED`, `ACCOUNT_ALREADY_LINKED`, `LINK_REQUEST_EXISTS`, `LINK_REQUEST_NOT_PENDING`, `NOT_LINKED`, các mã cây `MEMBER_ALREADY_ON_TREE`, `TREE_*`) */
         Conflict: {
             headers: {
                 [name: string]: unknown;
@@ -1209,6 +1674,10 @@ export interface components {
         };
     };
     parameters: {
+        /** @description `id` của sự kiện chung */
+        EventId: number;
+        /** @description `id` của ô trên cây (không phải id thành viên) */
+        TreeNodeId: number;
         MemberId: number;
         /** @description `id` của dòng người thân (không phải id của thành viên được nhắc tới) */
         RelativeId: number;
@@ -2306,6 +2775,524 @@ export interface operations {
                     "application/json": components["schemas"]["TreeResponse"];
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    addTreeRoot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TreeMemberInput"];
+            };
+        };
+        responses: {
+            /** @description Đã thêm, trả ô mới */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreeNode"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    addTreeChild: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của ô trên cây (không phải id thành viên) */
+                id: components["parameters"]["TreeNodeId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TreeChildInput"];
+            };
+        };
+        responses: {
+            /** @description Đã thêm, trả ô mới */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreeNode"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    addTreeSpouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của ô trên cây (không phải id thành viên) */
+                id: components["parameters"]["TreeNodeId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TreeMemberInput"];
+            };
+        };
+        responses: {
+            /** @description Đã thêm, trả ô vợ/chồng mới */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreeNode"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    addTreeParent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của ô trên cây (không phải id thành viên) */
+                id: components["parameters"]["TreeNodeId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TreeMemberInput"];
+            };
+        };
+        responses: {
+            /** @description Đã thêm, trả ô cha/mẹ mới */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreeNode"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    fillTreeSlot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của ô trên cây (không phải id thành viên) */
+                id: components["parameters"]["TreeNodeId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TreeMemberInput"];
+            };
+        };
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreeNode"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    removeTreeMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của ô trên cây (không phải id thành viên) */
+                id: components["parameters"]["TreeNodeId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công, trả ô đã trống */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreeNode"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    deleteTreeNode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của ô trên cây (không phải id thành viên) */
+                id: components["parameters"]["TreeNodeId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã xóa */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    moveTreeNode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của ô trên cây (không phải id thành viên) */
+                id: components["parameters"]["TreeNodeId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TreeMoveInput"];
+            };
+        };
+        responses: {
+            /** @description Thành công, trả ô đã chuyển */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreeNode"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    reorderTreeNode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của ô trên cây (không phải id thành viên) */
+                id: components["parameters"]["TreeNodeId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TreeOrderInput"];
+            };
+        };
+        responses: {
+            /** @description Thành công, trả ô đã đổi chỗ */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreeNode"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    setTreeCoParent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của ô trên cây (không phải id thành viên) */
+                id: components["parameters"]["TreeNodeId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TreeCoParentInput"];
+            };
+        };
+        responses: {
+            /** @description Thành công, trả ô đã đổi cặp */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreeNode"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    listEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomEvent"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    createEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomEventInput"];
+            };
+        };
+        responses: {
+            /** @description Đã thêm */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomEvent"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    getEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của sự kiện chung */
+                id: components["parameters"]["EventId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomEvent"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của sự kiện chung */
+                id: components["parameters"]["EventId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CustomEventInput"];
+            };
+        };
+        responses: {
+            /** @description Đã sửa */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CustomEvent"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của sự kiện chung */
+                id: components["parameters"]["EventId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã xóa */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    upcomingOccurrences: {
+        parameters: {
+            query?: {
+                days?: 7 | 15 | 30 | 90 | 365;
+                /** @description Chỉ lấy một loại; bỏ trống là cả ba loại */
+                type?: components["schemas"]["EventType"];
+                /** @description `asc` gần nhất trước (mặc định), `desc` xa nhất trước */
+                sort?: "asc" | "desc";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarOccurrence"][];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    calendarMonth: {
+        parameters: {
+            query: {
+                year: number;
+                month: number;
+                mode?: "solar" | "lunar";
+                /** @description Chỉ có nghĩa khi `mode = lunar` */
+                leap?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarMonth"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    recentOccurrences: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarOccurrence"][];
+                };
+            };
+            400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
         };

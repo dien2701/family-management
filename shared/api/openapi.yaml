@@ -27,7 +27,9 @@ tags:
   - name: admin-accounts
     description: Duyệt và quản lý tài khoản (chỉ Admin)
   - name: calendar
-    description: Đổi lịch âm - dương
+    description: Đổi lịch âm - dương, các sự kiện sắp tới và lịch tháng
+  - name: events
+    description: Sự kiện chung (giỗ và sinh nhật tự sinh từ hồ sơ thành viên)
   - name: members
     description: Thành viên gia phả
   - name: files
@@ -1265,6 +1267,583 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/tree/roots:
+    post:
+      tags:
+        - tree
+      summary: Thêm người gốc
+      description: |
+        Chỉ Admin. Đưa một thành viên chưa có trên cây vào làm gốc mới (Đời 01). Có thể có nhiều gốc; gốc mới xếp cuối.
+        Lỗi: 409 `MEMBER_ALREADY_ON_TREE`.
+      operationId: addTreeRoot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeMemberInput'
+      responses:
+        '201':
+          description: Đã thêm, trả ô mới
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/children:
+    post:
+      tags:
+        - tree
+      summary: Thêm con vào một ô
+      description: |
+        Chỉ Admin. Con mới xếp cuối các anh em. Cặp cha–mẹ được xác định như sau:
+        - bấm trên **ô vợ/chồng** thì cặp là ô đó cùng người thuộc dòng của nó (`coParentNodeId`, nếu gửi, phải là chính ô đó);
+        - bấm trên ô thuộc dòng có **≥ 2 vợ/chồng** thì bắt buộc gửi `coParentNodeId`, thiếu thì 409 `TREE_NEEDS_CO_PARENT`;
+        - có đúng 1 vợ/chồng thì tự nhận cặp đó; không có thì con chỉ thuộc một mình cha/mẹ.
+
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `MEMBER_ALREADY_ON_TREE`, `TREE_INVALID_CO_PARENT`, `TREE_NEEDS_CO_PARENT`.
+      operationId: addTreeChild
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeChildInput'
+      responses:
+        '201':
+          description: Đã thêm, trả ô mới
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/spouses:
+    post:
+      tags:
+        - tree
+      summary: Thêm vợ/chồng cho một ô
+      description: |
+        Chỉ Admin. Chỉ có trên ô **thuộc dòng** (ô vợ/chồng không có vợ/chồng riêng). Người mới xếp sau vợ/chồng cuối.
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SPOUSE_NOT_ALLOWED`, `MEMBER_ALREADY_ON_TREE`.
+      operationId: addTreeSpouse
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeMemberInput'
+      responses:
+        '201':
+          description: Đã thêm, trả ô vợ/chồng mới
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/parent:
+    post:
+      tags:
+        - tree
+      summary: Thêm cha/mẹ cho người gốc
+      description: |
+        Chỉ Admin. Chỉ có trên ô **thuộc dòng ở Đời 01** (gốc). Người mới trở thành gốc, thế vào chỗ của ô này
+        trong danh sách gốc; ô này thành con của người mới nên cả cây rời đó dịch xuống một đời. Không tự đặt giới tính.
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_PARENT_ONLY_AT_TOP`, `MEMBER_ALREADY_ON_TREE`.
+      operationId: addTreeParent
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeMemberInput'
+      responses:
+        '201':
+          description: Đã thêm, trả ô cha/mẹ mới
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/member:
+    put:
+      tags:
+        - tree
+      summary: Điền người vào ô trống
+      description: |
+        Chỉ Admin. Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người), `MEMBER_ALREADY_ON_TREE`.
+      operationId: fillTreeSlot
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeMemberInput'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+        - tree
+      summary: Gỡ người khỏi cây (ô thành ô trống)
+      description: |
+        Chỉ Admin. Ô thành **ô trống** nằm đúng chỗ cũ, con cháu và vợ/chồng không bị ảnh hưởng; thành viên vẫn còn nguyên.
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_EMPTY` (ô đã trống).
+      operationId: removeTreeMember
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      responses:
+        '200':
+          description: Thành công, trả ô đã trống
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}:
+    delete:
+      tags:
+        - tree
+      summary: Xóa ô trống
+      description: |
+        Chỉ Admin. Chỉ xóa được **ô trống** không còn con (theo cả `parentNodeId` và `coParentNodeId`) và không còn vợ/chồng.
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người), `TREE_SLOT_HAS_LINKS`.
+      operationId: deleteTreeNode
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      responses:
+        '204':
+          description: Đã xóa
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/move:
+    post:
+      tags:
+        - tree
+      summary: Di chuyển nhánh
+      description: |
+        Chỉ Admin. Một ô **thuộc dòng** đi kèm vợ/chồng và toàn bộ con cháu, tới làm con của `newParentNodeId`
+        (ô thuộc dòng hoặc ô vợ/chồng; cặp cha–mẹ xác định như `POST /api/tree/nodes/{id}/children`) hoặc thành gốc mới
+        khi `newParentNodeId` là `null`. Ô được chuyển xếp cuối các anh em ở nơi đến.
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_MOVE_LINEAGE_ONLY` (ô vợ/chồng), `TREE_CYCLE` (nơi đến nằm trong chính nhánh),
+        `TREE_NEEDS_CO_PARENT`, `TREE_INVALID_CO_PARENT`.
+      operationId: moveTreeNode
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeMoveInput'
+      responses:
+        '200':
+          description: Thành công, trả ô đã chuyển
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/order:
+    put:
+      tags:
+        - tree
+      summary: Đổi thứ tự anh em
+      description: |
+        Chỉ Admin. Đổi chỗ ô thuộc dòng với người anh em kề bên (cùng cha/mẹ, hoặc cùng là gốc).
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_MOVE_LINEAGE_ONLY` (ô vợ/chồng), `TREE_ORDER_EDGE` (đã ở đầu hoặc cuối hàng).
+      operationId: reorderTreeNode
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeOrderInput'
+      responses:
+        '200':
+          description: Thành công, trả ô đã đổi chỗ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/co-parent:
+    put:
+      tags:
+        - tree
+      summary: Đổi cặp cha–mẹ của một người con
+      description: |
+        Chỉ Admin. `coParentNodeId` phải là vợ/chồng của cha/mẹ hiện tại (`parentNodeId`). Cha/mẹ có đúng 1 vợ/chồng thì `null` tự nhận người đó;
+        có ≥ 2 vợ/chồng thì bắt buộc chọn (409 `TREE_NEEDS_CO_PARENT`).
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_NOT_A_CHILD` (ô không có cha/mẹ), `TREE_INVALID_CO_PARENT`, `TREE_NEEDS_CO_PARENT`.
+      operationId: setTreeCoParent
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeCoParentInput'
+      responses:
+        '200':
+          description: Thành công, trả ô đã đổi cặp
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/events:
+    get:
+      tags:
+        - events
+      summary: Danh sách sự kiện chung
+      description: Mọi tài khoản đã duyệt xem được. Xếp theo `id` tăng dần. Chỉ gồm **sự kiện chung**; giỗ và sinh nhật do `/api/calendar/*` tự sinh từ hồ sơ thành viên.
+      operationId: listEvents
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomEvent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - events
+      summary: Thêm sự kiện chung
+      description: 'Chỉ Admin (User gửi đề xuất, Đợt 20–21). `year = null` nghĩa là lặp hằng năm theo `calendar`; có `year` thì chỉ diễn ra một lần vào đúng ngày đó.'
+      operationId: createEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomEventInput'
+      responses:
+        '201':
+          description: Đã thêm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/events/{id}:
+    get:
+      tags:
+        - events
+      summary: Chi tiết một sự kiện chung
+      description: 'Lỗi: 404 `EVENT_NOT_FOUND`.'
+      operationId: getEvent
+      parameters:
+        - $ref: '#/components/parameters/EventId'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomEvent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - events
+      summary: Sửa sự kiện chung
+      description: 'Chỉ Admin. Thay toàn bộ nội dung. Lỗi: 404 `EVENT_NOT_FOUND`.'
+      operationId: updateEvent
+      parameters:
+        - $ref: '#/components/parameters/EventId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomEventInput'
+      responses:
+        '200':
+          description: Đã sửa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - events
+      summary: Xóa sự kiện chung
+      description: 'Chỉ Admin. Lỗi: 404 `EVENT_NOT_FOUND`.'
+      operationId: deleteEvent
+      parameters:
+        - $ref: '#/components/parameters/EventId'
+      responses:
+        '204':
+          description: Đã xóa
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/calendar/upcoming:
+    get:
+      tags:
+        - calendar
+      summary: Các sự kiện sắp diễn ra
+      description: |
+        Giỗ, sinh nhật và sự kiện chung có ngày dương từ **hôm nay** (giờ +7, `daysUntil = 0`) đến hôm nay + `days` ngày.
+        Ngày cúng theo quy tắc IDEA §7 (ngày ghi đè, tháng nhuận, tháng thiếu). Xếp theo ngày dương, cùng ngày thì Giỗ, Sinh nhật, Sự kiện chung rồi theo tên.
+      operationId: upcomingOccurrences
+      parameters:
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            enum:
+              - 7
+              - 15
+              - 30
+              - 90
+              - 365
+            default: 30
+        - name: type
+          in: query
+          description: Chỉ lấy một loại; bỏ trống là cả ba loại
+          required: false
+          schema:
+            $ref: '#/components/schemas/EventType'
+        - name: sort
+          in: query
+          description: '`asc` gần nhất trước (mặc định), `desc` xa nhất trước'
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarOccurrence'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/calendar/month:
+    get:
+      tags:
+        - calendar
+      summary: Lịch một tháng
+      description: |
+        Từng ngày của một tháng kèm sự kiện của ngày đó. `mode = solar`: `year`/`month` là tháng dương. `mode = lunar`:
+        là tháng âm (`leap = true` cho tháng nhuận), các ngày đi từ mùng 1 đến hết tháng âm đó, mỗi ngày kèm ngày dương.
+      operationId: calendarMonth
+      parameters:
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 12
+        - name: mode
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - solar
+              - lunar
+            default: solar
+        - name: leap
+          in: query
+          description: Chỉ có nghĩa khi `mode = lunar`
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarMonth'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/calendar/recent:
+    get:
+      tags:
+        - calendar
+      summary: Các sự kiện vừa diễn ra
+      description: Các sự kiện có ngày dương **trước hôm nay** (trong vòng một năm), gần nhất trước (`daysUntil` âm). Dùng cho dashboard.
+      operationId: recentOccurrences
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarOccurrence'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 components:
   securitySchemes:
     bearerAuth:
@@ -1272,6 +1851,24 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
+    EventId:
+      name: id
+      in: path
+      required: true
+      description: '`id` của sự kiện chung'
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    TreeNodeId:
+      name: id
+      in: path
+      required: true
+      description: '`id` của ô trên cây (không phải id thành viên)'
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
     MemberId:
       name: id
       in: path
@@ -1325,13 +1922,13 @@ components:
           schema:
             $ref: '#/components/schemas/ProblemDetail'
     NotFound:
-      description: Không tìm thấy (`ACCOUNT_NOT_FOUND`, `MEMBER_NOT_FOUND`, `RELATIVE_NOT_FOUND`, `LINK_REQUEST_NOT_FOUND`)
+      description: Không tìm thấy (`ACCOUNT_NOT_FOUND`, `MEMBER_NOT_FOUND`, `EVENT_NOT_FOUND`, `TREE_NODE_NOT_FOUND`, `RELATIVE_NOT_FOUND`, `LINK_REQUEST_NOT_FOUND`)
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/ProblemDetail'
     Conflict:
-      description: 'Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `INVALID_ACCOUNT_STATE`, `MEMBER_ON_TREE`, `RELATIVE_EXISTS`, `MEMBER_ALREADY_LINKED`, `ACCOUNT_ALREADY_LINKED`, `LINK_REQUEST_EXISTS`, `LINK_REQUEST_NOT_PENDING`, `NOT_LINKED`)'
+      description: 'Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `INVALID_ACCOUNT_STATE`, `MEMBER_ON_TREE`, `RELATIVE_EXISTS`, `MEMBER_ALREADY_LINKED`, `ACCOUNT_ALREADY_LINKED`, `LINK_REQUEST_EXISTS`, `LINK_REQUEST_NOT_PENDING`, `NOT_LINKED`, các mã cây `MEMBER_ALREADY_ON_TREE`, `TREE_*`)'
       content:
         application/problem+json:
           schema:
@@ -2313,6 +2910,295 @@ components:
       required:
         - nodes
         - spouses
+    TreeMemberInput:
+      type: object
+      properties:
+        memberId:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Thành viên chưa có trên cây (mỗi thành viên chỉ có một ô)
+      required:
+        - memberId
+    TreeChildInput:
+      type: object
+      properties:
+        memberId:
+          type: integer
+          format: int64
+          minimum: 1
+        coParentNodeId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Ô vợ/chồng là mẹ/cha còn lại của con; bắt buộc khi người này có từ 2 vợ/chồng trở lên
+      required:
+        - memberId
+    TreeMoveInput:
+      type: object
+      properties:
+        newParentNodeId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Ô đến làm cha/mẹ; `null` là thành gốc mới
+        coParentNodeId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Ô vợ/chồng là mẹ/cha còn lại; bắt buộc khi ô đến có từ 2 vợ/chồng trở lên
+      required:
+        - newParentNodeId
+    TreeOrderInput:
+      type: object
+      properties:
+        direction:
+          type: string
+          enum:
+            - LEFT
+            - RIGHT
+          description: Đổi chỗ với người anh em bên trái hoặc bên phải
+      required:
+        - direction
+    TreeCoParentInput:
+      type: object
+      properties:
+        coParentNodeId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+      required:
+        - coParentNodeId
+    EventType:
+      type: string
+      description: Loại sự kiện trên lịch. Giỗ và sinh nhật tự sinh từ hồ sơ thành viên; sự kiện chung do Admin nhập.
+      enum:
+        - MEMORIAL
+        - BIRTHDAY
+        - CUSTOM
+    LunarDate:
+      type: object
+      description: Một ngày âm đầy đủ.
+      properties:
+        year:
+          type: integer
+          format: int32
+        month:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        day:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 30
+        leap:
+          type: boolean
+      required:
+        - year
+        - month
+        - day
+        - leap
+    CustomEvent:
+      type: object
+      description: |
+        Sự kiện chung. `calendar` là lịch người nhập dùng để tính ngày. `year = null` nghĩa là lặp hằng năm
+        (âm lịch theo quy tắc IDEA §7); có `year` thì chỉ diễn ra một lần vào đúng ngày đó.
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type:
+            - string
+            - 'null'
+        calendar:
+          type: string
+          enum:
+            - SOLAR
+            - LUNAR
+        day:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 31
+        month:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        year:
+          type:
+            - integer
+            - 'null'
+          format: int32
+        leap:
+          type: boolean
+          description: Chỉ có nghĩa khi `calendar = LUNAR`
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - calendar
+        - day
+        - month
+        - year
+        - leap
+        - createdAt
+        - updatedAt
+    CustomEventInput:
+      type: object
+      description: Nội dung sự kiện chung khi thêm hoặc sửa (PUT thay toàn bộ).
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 2000
+        calendar:
+          type: string
+          enum:
+            - SOLAR
+            - LUNAR
+        day:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 31
+        month:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        year:
+          type:
+            - integer
+            - 'null'
+          format: int32
+          description: Bỏ trống = lặp hằng năm
+        leap:
+          type: boolean
+          default: false
+          description: Chỉ có nghĩa khi `calendar = LUNAR`
+      required:
+        - title
+        - calendar
+        - day
+        - month
+    CalendarOccurrence:
+      type: object
+      description: |
+        Một lần xảy ra của giỗ, sinh nhật hoặc sự kiện chung. `title` do máy chủ dựng, ví dụ "Giỗ Cụ Nguyễn Văn Sửu"
+        (họ tên nguyên văn). `eventKey` ổn định giữa các lần gọi: `MEMORIAL:{memberId}:{yyyy-MM-dd}`,
+        `BIRTHDAY:{memberId}:{yyyy-MM-dd}`, `CUSTOM:{eventId}:{yyyy-MM-dd}` (ngày dương của lần xảy ra).
+      properties:
+        eventKey:
+          type: string
+        type:
+          $ref: '#/components/schemas/EventType'
+        title:
+          type: string
+        description:
+          type:
+            - string
+            - 'null'
+          description: Ghi chú của sự kiện chung; `null` với giỗ và sinh nhật
+        memberId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Người được giỗ hoặc mừng sinh nhật; `null` với sự kiện chung
+        eventId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Chỉ có với sự kiện chung
+        solar:
+          $ref: '#/components/schemas/SolarDate'
+        lunar:
+          $ref: '#/components/schemas/LunarDate'
+        daysUntil:
+          type: integer
+          format: int32
+          description: Số ngày tính từ hôm nay (giờ +7); 0 là hôm nay, âm là đã qua
+        ordinal:
+          type:
+            - integer
+            - 'null'
+          format: int32
+          description: '"Giỗ lần thứ N" (MEMORIAL) hoặc "tròn N tuổi" (BIRTHDAY); `null` khi không biết năm mất/năm sinh hoặc với sự kiện chung'
+      required:
+        - eventKey
+        - type
+        - title
+        - description
+        - memberId
+        - eventId
+        - solar
+        - lunar
+        - daysUntil
+        - ordinal
+    CalendarDay:
+      type: object
+      properties:
+        solar:
+          $ref: '#/components/schemas/SolarDate'
+        lunar:
+          $ref: '#/components/schemas/LunarDate'
+        occurrences:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarOccurrence'
+      required:
+        - solar
+        - lunar
+        - occurrences
+    CalendarMonth:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum:
+            - solar
+            - lunar
+        year:
+          type: integer
+          format: int32
+        month:
+          type: integer
+          format: int32
+        leap:
+          type: boolean
+        days:
+          type: array
+          description: Theo thứ tự ngày, đủ mọi ngày của tháng
+          items:
+            $ref: '#/components/schemas/CalendarDay'
+      required:
+        - mode
+        - year
+        - month
+        - leap
+        - days
     PageResponseAccountAdminResponse:
       type: object
       properties:

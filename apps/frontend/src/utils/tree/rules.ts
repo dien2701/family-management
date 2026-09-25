@@ -1,6 +1,6 @@
 // Kiểm tra hợp lệ mọi thao tác dựng cây theo DECISIONS #60 và #61.
 // Lớp giả lập dùng để trả ProblemDetail (mã lỗi + HTTP status), giao diện dùng để chỉ hiện nút "+" ở chỗ được phép.
-import { getBranch } from './graph'
+import { getBranch, getSiblings } from './graph'
 import type { TreeIndex, TreeNode } from './types'
 
 export type TreeErrorCode =
@@ -16,6 +16,7 @@ export type TreeErrorCode =
   | 'TREE_CYCLE'
   | 'TREE_MOVE_LINEAGE_ONLY'
   | 'TREE_NOT_A_CHILD'
+  | 'TREE_ORDER_EDGE'
 
 const MESSAGES: Record<TreeErrorCode, string> = {
   TREE_NODE_NOT_FOUND: 'Không tìm thấy ô này trên cây.',
@@ -30,6 +31,7 @@ const MESSAGES: Record<TreeErrorCode, string> = {
   TREE_CYCLE: 'Không thể chuyển nhánh vào chính con cháu của nó.',
   TREE_MOVE_LINEAGE_ONLY: 'Chỉ chuyển được ô thuộc dòng; vợ/chồng đi theo người trong dòng.',
   TREE_NOT_A_CHILD: 'Ô này không có cha/mẹ nên không có cặp cha–mẹ.',
+  TREE_ORDER_EDGE: 'Đã ở đầu hoặc cuối hàng anh em, không đổi chỗ thêm được.',
 }
 
 /** HTTP status của lỗi trả về từ API cây (không thấy ô: 404, còn lại: 409). */
@@ -46,6 +48,7 @@ export const TREE_ERROR_STATUS: Record<TreeErrorCode, number> = {
   TREE_CYCLE: 409,
   TREE_MOVE_LINEAGE_ONLY: 409,
   TREE_NOT_A_CHILD: 409,
+  TREE_ORDER_EDGE: 409,
 }
 
 export type TreeViolation = { ok: false; code: TreeErrorCode; message: string }
@@ -175,6 +178,26 @@ export function checkSetCoParent(
   if (!node) return fail('TREE_NODE_NOT_FOUND')
   if (node.parentNodeId === null || index.ownerOf.has(nodeId)) return fail('TREE_NOT_A_CHILD')
   return resolveChildPair(index, node.parentNodeId, coParentNodeId)
+}
+
+export type OrderDirection = 'LEFT' | 'RIGHT'
+
+/**
+ * Đổi thứ tự anh em: chỉ ô thuộc dòng, đổi chỗ với người kề bên. Trả `siblings` (đã xếp) và vị trí của ô
+ * để nơi gọi biết người bị đổi chỗ cùng.
+ */
+export function checkReorder(
+  index: TreeIndex,
+  nodeId: number,
+  direction: OrderDirection,
+): TreeCheck<{ siblings: TreeNode[]; from: number; to: number }> {
+  if (!index.nodes.has(nodeId)) return fail('TREE_NODE_NOT_FOUND')
+  if (index.ownerOf.has(nodeId)) return fail('TREE_MOVE_LINEAGE_ONLY')
+  const siblings = getSiblings(index, nodeId)
+  const from = siblings.findIndex((n) => n.id === nodeId)
+  const to = direction === 'LEFT' ? from - 1 : from + 1
+  if (from < 0 || to < 0 || to >= siblings.length) return fail('TREE_ORDER_EDGE')
+  return { ok: true, siblings, from, to }
 }
 
 export type AddOptions = {

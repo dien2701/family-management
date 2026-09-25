@@ -108,6 +108,22 @@ export function getBranch(index: TreeIndex, nodeId: number): TreeNode[] {
   return result
 }
 
+/** Anh em cùng cha/mẹ của một ô thuộc dòng (kể cả chính nó), xếp theo `sortOrder`; gốc thì là các gốc. Ô vợ/chồng: rỗng. */
+export function getSiblings(index: TreeIndex, nodeId: number): TreeNode[] {
+  const node = index.nodes.get(nodeId)
+  if (!node || index.ownerOf.has(nodeId)) return []
+  return node.parentNodeId !== null && index.nodes.has(node.parentNodeId)
+    ? (index.childrenOf.get(node.parentNodeId) ?? [])
+    : index.roots
+}
+
+/** Số người (ô có thành viên) và ô trống trong cả nhánh của một ô, để ghi vào hộp xác nhận. */
+export function countBranch(index: TreeIndex, nodeId: number): { people: number; empty: number } {
+  const branch = getBranch(index, nodeId)
+  const people = branch.filter((n) => n.memberId !== null).length
+  return { people, empty: branch.length - people }
+}
+
 /** Thành viên chưa có ô nào trên cây (nguồn cho hộp chọn khi thêm vào cây). */
 export function membersNotOnTree<T extends { id: number }>(members: readonly T[], index: TreeIndex): T[] {
   return members.filter((m) => !index.nodeOfMember.has(m.id))

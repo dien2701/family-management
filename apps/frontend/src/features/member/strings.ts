@@ -54,6 +54,21 @@ export const memberStrings = {
     comingSoon: 'Chức năng sẽ có ở các đợt tiếp theo.',
     you: 'Đây là bạn',
   },
+  // Khối "Trên cây" của trang chi tiết (IDEA §6.1)
+  onTree: {
+    loading: 'Đang tải thông tin trên cây...',
+    loadFailed: 'Không tải được thông tin trên cây.',
+    notOnTree: 'Người này chưa có trên cây gia phả.',
+    notOnTreeAdmin: 'Người này chưa có trên cây gia phả. Admin thêm người này từ trang Cây.',
+    generation: 'Đời',
+    parents: 'Cha/mẹ',
+    spouses: 'Vợ/chồng',
+    children: 'Con theo cây',
+    none: 'Chưa có',
+    emptySlot: 'Ô trống',
+    spouseOrder: (order: number) => `thứ ${order}`,
+    viewOnTree: 'Xem trên cây',
+  },
   actions: {
     add: 'Thêm thành viên',
     edit: 'Sửa hồ sơ',
