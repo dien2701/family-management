@@ -9,10 +9,11 @@ import { useAuth } from '@/hooks/useAuth'
 import { ApiError } from '@/services/client'
 import type { AccountAdmin } from '@/types/api'
 import { cn } from '@/utils/cn'
-import type { AccountAction } from '../api'
+import type { AccountAction, LinkAction } from '../api'
 import { AccountFilters } from '../components/AccountFilters'
 import { AccountList } from '../components/AccountList'
-import { useAccountAction, useAccounts, useWaitingCount } from '../hooks'
+import { AssignMemberDialog } from '../components/AssignMemberDialog'
+import { useAccountAction, useAccounts, useUnlinkMember, useWaitingCount } from '../hooks'
 import { accountActionText, accountErrorText, adminStrings as s } from '../strings'
 import { useAccountParams, type AccountTab } from '../useAccountParams'
 
@@ -35,6 +36,11 @@ export function AccountsPage() {
   const waitingCount = useWaitingCount()
   const action = useAccountAction()
   const [pending, setPending] = useState<Pending | null>(null)
+  // Liên kết "Tôi là ai": gán thành viên (hộp chọn, `key` mới mỗi lần mở) hoặc hủy liên kết (hộp xác nhận)
+  const unlink = useUnlinkMember()
+  const [assigning, setAssigning] = useState<AccountAdmin | null>(null)
+  const [assignSession, setAssignSession] = useState(0)
+  const [unlinking, setUnlinking] = useState<AccountAdmin | null>(null)
 
   // Ô tìm giữ chữ đang gõ riêng; chỉ ghi lên URL (và gọi API) sau khi ngừng gõ một lúc
   const [search, setSearch] = useState(q)
@@ -65,6 +71,27 @@ export function AccountsPage() {
       { id: pending.account.id, action: pending.action },
       { onSuccess: () => setPending(null) },
     )
+  }
+
+  function openLinkAction(account: AccountAdmin, next: LinkAction) {
+    if (next === 'link') {
+      setAssignSession((n) => n + 1)
+      setAssigning(account)
+    } else {
+      unlink.reset()
+      setUnlinking(account)
+    }
+  }
+
+  function closeUnlink() {
+    if (unlink.isPending) return
+    unlink.reset()
+    setUnlinking(null)
+  }
+
+  function confirmUnlink() {
+    if (!unlinking?.id) return
+    unlink.mutate(unlinking.id, { onSuccess: () => setUnlinking(null) })
   }
 
   const text = pending ? accountActionText[pending.action] : null
@@ -139,7 +166,12 @@ export function AccountsPage() {
           />
         ) : (
           <div className="flex flex-col gap-4">
-            <AccountList accounts={items} selfId={user?.id} onAction={openConfirm} />
+            <AccountList
+              accounts={items}
+              selfId={user?.id}
+              onAction={openConfirm}
+              onLinkAction={openLinkAction}
+            />
             <p className="text-center text-sm text-text-muted tabular-nums">
               {s.pagination.total(accounts.data?.totalElements ?? items.length)}
             </p>
@@ -169,6 +201,21 @@ export function AccountsPage() {
         error={action.isError ? errorMessage(action.error) : null}
         onConfirm={confirm}
         onCancel={closeConfirm}
+      />
+
+      <AssignMemberDialog key={assignSession} account={assigning} onClose={() => setAssigning(null)} />
+
+      <ConfirmDialog
+        open={unlinking !== null}
+        danger
+        title={s.link.unlinkTitle(unlinking?.fullName ?? '')}
+        description={s.link.unlinkDescription(unlinking?.fullName ?? '', unlinking?.member?.fullName ?? '')}
+        confirmLabel={s.link.unlinkConfirm}
+        cancelLabel={s.dialog.cancel}
+        loading={unlink.isPending}
+        error={unlink.isError ? errorMessage(unlink.error) : null}
+        onConfirm={confirmUnlink}
+        onCancel={closeUnlink}
       />
     </div>
   )

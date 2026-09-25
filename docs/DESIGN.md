@@ -27,6 +27,7 @@ Nguồn: skill ui-ux-pro-max + docs/theme.png
 | Neutral | `--color-text` | `#0F1B2D` | Chữ chính |
 | | `--color-text-muted` | `#5B6B7F` | Chữ phụ (≥ 4.5:1 trên nền trắng) |
 | | `--color-deceased` | `#9AA5B1` | Viền ô cây và chữ phụ của người đã mất |
+| | `--color-tree-line` | `#C9D3DF` | Đường nối trên cây (hôn nhân, cha mẹ–con), nét 1.5px |
 | Trạng thái | `--color-success` / `-bg` | `#1F7A45` / `#E6F6EC` | Badge "Còn sống", "Đã duyệt" |
 | | `--color-warning` / `-bg` | `#9A5B00` / `#FFF4DE` | Badge "Chờ duyệt", cảnh báo xung đột |
 | | `--color-danger` / `-bg` | `#C5221F` / `#FDECEA` | Lỗi, nút Xóa/Khóa |
@@ -97,7 +98,7 @@ Dùng shadcn/ui làm nền, chỉnh theo token ở trên.
 | **Badge** | Viên thuốc, chữ 14px/500, cặp màu `-bg` + màu chữ tương ứng của trạng thái. Luôn có chữ, không chỉ màu. |
 | **Thẻ hồ sơ (chi tiết member)** | Thẻ primary navy, avatar vuông bo 16px, badge trạng thái góc trên trái, tên chữ trắng đậm, dòng phụ: năm sinh – năm mất và đời. Bên dưới là các ô trắng lồng trong thẻ, mỗi ô một dòng liên hệ có icon tròn (SĐT, email, nơi chôn cất). |
 | **Thẻ số liệu (dashboard)** | Nền trắng, nhãn muted 14px, số 32px. Biểu đồ dùng Recharts theo skill dataviz, không dựa vào màu đơn thuần. |
-| **Nút thành viên trên cây** | Rộng 200px, cao 72px, bo 12px, nền trắng, viền `--color-border`. Gồm avatar 40px, tiền tố + tên (16px/600, tối đa 2 dòng) và năm sinh – năm mất (14px muted). Người đã mất: viền `--color-deceased` + dấu ✝. Nhãn đặc biệt hiện dạng badge. Đang chọn: viền `--color-accent` 2px. Đường nối `--color-border` đậm hơn (`#C9D3DF`), nét 1.5px. Toàn bộ nút là vùng bấm. |
+| **Nút thành viên trên cây** | Rộng 200px, cao 72px, bo 12px, nền trắng, viền `--color-border`. Gồm avatar 40px, tiền tố + tên (16px/600, tối đa 2 dòng) và năm sinh – năm mất (14px muted). Người đã mất: viền `--color-deceased` + dấu ✝. Nhãn đặc biệt hiện dạng badge. Đang chọn: viền `--color-accent` 2px. Đường nối `--color-tree-line`, nét 1.5px. Toàn bộ nút là vùng bấm. |
 | **Lịch tháng** | Ô ngày: số dương 16px, số âm 13px muted, chấm màu theo loại sự kiện (kèm icon ở chi tiết). Mobile: danh sách theo tuần. |
 | **Trạng thái rỗng** | Icon lucide lớn + một câu ngắn + một nút hành động gợi ý. |
 
@@ -133,6 +134,7 @@ Dùng shadcn/ui làm nền, chỉnh theo token ở trên.
   --color-text: #0F1B2D;
   --color-text-muted: #5B6B7F;
   --color-deceased: #9AA5B1;
+  --color-tree-line: #C9D3DF;
   --color-success: #1F7A45;
   --color-success-bg: #E6F6EC;
   --color-warning: #9A5B00;

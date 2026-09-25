@@ -1,5 +1,5 @@
 import type { AccountAdmin, AccountListQuery } from '@/types/api'
-import type { AccountAction } from './api'
+import type { AccountAction, LinkAction } from './api'
 
 /** Trạng thái hiển thị: khóa được ưu tiên vì tài khoản khóa vẫn giữ `approvalStatus` cũ. */
 export type AccountDisplayStatus = 'waiting' | 'approved' | 'rejected' | 'locked'
@@ -30,6 +30,17 @@ export function actionsFor(account: AccountAdmin, selfId: number | undefined): A
       return account.systemRole === 'ADMIN' ? ['revoke-admin', 'lock'] : ['grant-admin', 'lock']
     }
   }
+}
+
+/**
+ * Thao tác liên kết "Tôi là ai" trên một dòng tài khoản (DECISIONS #80, #82): đã liên kết thì hủy được ở mọi
+ * trạng thái (khóa hoặc từ chối không tự gỡ liên kết); chưa liên kết thì chỉ gán được cho tài khoản đã duyệt.
+ * Dòng của chính mình không có nút: Admin tự liên kết qua trang "Tôi là ai".
+ */
+export function linkActionFor(account: AccountAdmin, selfId: number | undefined): LinkAction | null {
+  if (account.id !== undefined && account.id === selfId) return null
+  if (account.member) return 'unlink'
+  return displayStatusOf(account) === 'approved' ? 'link' : null
 }
 
 /** Giá trị của ô lọc "Trạng thái" ở tab Tất cả. */

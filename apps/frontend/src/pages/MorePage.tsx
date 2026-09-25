@@ -1,10 +1,11 @@
-import { ArrowLeftRight, ChevronRight, ShieldCheck, UserCog } from 'lucide-react'
+import { ArrowLeftRight, ChevronRight, ShieldCheck, UserCheck, UserCog } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
 import { adminStrings } from '@/features/admin/strings'
 import { AccountCard } from '@/features/auth/components/AccountCard'
 import { isAdmin } from '@/features/auth/routing'
+import { linkStrings } from '@/features/link/strings'
 import { useAuth } from '@/hooks/useAuth'
 
 // Mục "Dữ liệu tạm" chỉ có ở chế độ giả lập. Điều kiện viết trực tiếp (không qua hằng số khác) để Vite
@@ -25,6 +26,12 @@ const ADMIN_ITEM: Item = {
 }
 
 const ITEMS: Item[] = [
+  {
+    to: '/them/toi-la-ai',
+    label: linkStrings.menu,
+    description: linkStrings.menuDescription,
+    icon: UserCheck,
+  },
   {
     to: '/them/doi-lich',
     label: 'Đổi lịch âm – dương',

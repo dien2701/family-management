@@ -4,6 +4,7 @@ import type { Me } from '@/types/api'
 import { todayInVietnam } from '@/utils/lunar'
 import type { HandlerContext, RealApi } from './context'
 import { buildRouter } from './handlers'
+import { withLinkedMember } from './links'
 import type { MockRouter, Query } from './router'
 import { loadStore, saveStore } from './store'
 
@@ -37,7 +38,8 @@ export async function handleMock(
     store,
     save: () => saveStore(store),
     real,
-    viewer: () => real<Me>('GET', '/me'),
+    // Liên kết "Tôi là ai" nằm trong kho giả lập nên gắn `memberId` vào `/me` của backend thật
+    viewer: async () => withLinkedMember(store, await real<Me>('GET', '/me')),
     today: todayInVietnam,
   }
   if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs))

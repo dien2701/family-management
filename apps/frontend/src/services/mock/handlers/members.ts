@@ -1,12 +1,23 @@
-// GET /api/members và GET /api/members/{id}. Luật theo shared/api/openapi.yaml, IDEA §6.1 và DECISIONS #66:
-// mọi tài khoản đã duyệt đều xem được, còn SĐT và email chỉ trả cho Admin và chính chủ.
-import type { Me, MemberDetail, MemberPage, MemberSummary } from '@/types/api'
+// /api/members: xem (GET), thêm (POST), sửa (PUT), xóa (DELETE). Luật theo shared/api/openapi.yaml, IDEA §6.1
+// và DECISIONS #58, #62, #66: mọi tài khoản đã duyệt đều xem được, còn SĐT và email chỉ trả cho Admin và chính chủ.
+import type { Me, MemberDetail, MemberPage, MemberSummary, Schemas } from '@/types/api'
+import { resolveDualDate, type CalendarKind, type DualDateValue } from '@/utils/lunar'
 import { toSearchName } from '@/utils/text'
 import type { HandlerContext } from '../context'
 import { paginate } from '../paging'
 import { mockProblem, validationProblem } from '../problem'
 import type { MockRequest, MockRouter, Query } from '../router'
-import type { MockStore, StoredMember } from '../store'
+import { removeMemberRelations } from '../links'
+import type { StoredMember } from '../store'
+import {
+  findMember,
+  generationIndex,
+  isObject,
+  requireAdmin,
+  requireApproved,
+  toSummary,
+  type FieldErrors,
+} from './common'
 
 const SORTS = ['name', 'age', 'created', 'generation'] as const
 type Sort = (typeof SORTS)[number]
@@ -22,8 +33,6 @@ type Filters = {
   page: number
   size: number
 }
-
-type FieldErrors = { field: string; message: string }[]
 
 const blank = (v: unknown) => v === undefined || v === null || v === ''
 
@@ -79,50 +88,12 @@ function parseFilters(query: Query): Filters {
   return filters
 }
 
-/** Đời = độ sâu của ô chứa người đó trên cây (gốc là đời 1). Chưa có trên cây thì không có trong map. */
-function generationIndex(store: MockStore): Map<number, number> {
-  const byId = new Map(store.tree.nodes.map((n) => [n.id, n]))
-  const result = new Map<number, number>()
-  for (const node of store.tree.nodes) {
-    if (node.memberId === null) continue
-    let depth = 1
-    let cursor = node
-    const seen = new Set<number>([cursor.id])
-    while (cursor.parentNodeId !== null) {
-      const parent = byId.get(cursor.parentNodeId)
-      if (!parent || seen.has(parent.id)) break
-      seen.add(parent.id)
-      cursor = parent
-      depth++
-    }
-    result.set(node.memberId, depth)
-  }
-  return result
-}
-
 /** Tuổi tính theo năm: người mất tính đến năm mất; chưa rõ năm sinh hoặc năm mất thì `null`. */
 function ageOf(m: StoredMember, currentYear: number): number | null {
   const birthYear = m.birth?.year ?? null
   if (birthYear === null) return null
   const endYear = m.isDeceased ? (m.deathSolar?.year ?? null) : currentYear
   return endYear === null ? null : endYear - birthYear
-}
-
-function toSummary(m: StoredMember, generations: Map<number, number>): MemberSummary {
-  const generation = generations.get(m.id) ?? null
-  return {
-    id: m.id,
-    fullName: m.fullName,
-    gender: m.gender,
-    avatarUrl: m.avatarUrl,
-    labels: m.labels,
-    birthYear: m.birth?.year ?? null,
-    isDeceased: m.isDeceased,
-    deathYear: m.deathSolar?.year ?? null,
-    generation,
-    onTree: generation !== null,
-    createdAt: m.createdAt,
-  }
 }
 
 /** SĐT và email chỉ trả cho Admin và chính chủ (DECISIONS #66). */
@@ -165,18 +136,6 @@ function sortMembers(list: MemberSummary[], sort: Sort): MemberSummary[] {
   }
 }
 
-async function requireApproved(context: HandlerContext): Promise<Me> {
-  const viewer = await context.viewer()
-  if (viewer.approvalStatus !== 'APPROVED') {
-    throw mockProblem(
-      403,
-      'ACCOUNT_NOT_APPROVED',
-      'Tài khoản của bạn đang chờ Admin duyệt nên chưa xem được dữ liệu gia phả.',
-    )
-  }
-  return viewer
-}
-
 async function listMembers({ query }: MockRequest, context: HandlerContext): Promise<MemberPage> {
   await requireApproved(context)
   const f = parseFilters(query)
@@ -205,13 +164,286 @@ async function listMembers({ query }: MockRequest, context: HandlerContext): Pro
 
 async function getMember({ params }: MockRequest, context: HandlerContext): Promise<MemberDetail> {
   const viewer = await requireApproved(context)
-  const id = /^\d+$/.test(params.id ?? '') ? Number(params.id) : null
-  const member = id === null ? undefined : context.store.members.find((m) => m.id === id)
-  if (!member) throw mockProblem(404, 'MEMBER_NOT_FOUND', 'Không tìm thấy thành viên này.')
+  const member = findMember(context.store, params.id)
   return toDetail(member, generationIndex(context.store), viewer)
+}
+
+// ---------- Thêm, sửa, xóa ----------
+
+type MemberInput = Schemas['MemberInput']
+type DeathGroup = Pick<
+  StoredMember,
+  'isDeceased' | 'deathSolar' | 'deathLunar' | 'memorialOverride' | 'burialPlace'
+>
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+/** Chuỗi tùy chọn: bỏ khoảng trắng thừa, rỗng thì `null`. */
+function optionalText(
+  raw: unknown,
+  field: string,
+  max: number,
+  label: string,
+  errors: FieldErrors,
+): string | null {
+  if (raw === undefined || raw === null) return null
+  if (typeof raw !== 'string') {
+    errors.push({ field, message: `${label} phải là chữ.` })
+    return null
+  }
+  const text = raw.trim()
+  if (text.length > max) errors.push({ field, message: `${label} tối đa ${max} ký tự.` })
+  return text || null
+}
+
+const dual = (
+  calendar: CalendarKind,
+  day: unknown,
+  month: unknown,
+  year: unknown,
+  leap: unknown,
+): DualDateValue => ({
+  calendar,
+  day: day == null ? '' : String(day),
+  month: month == null ? '' : String(month),
+  year: year == null ? '' : String(year),
+  leap: leap === true,
+})
+
+/** Ngày sinh: được phép chỉ có năm; `calendar` là lịch tính sinh nhật hằng năm của người này. */
+function normalizeBirth(raw: unknown, errors: FieldErrors): StoredMember['birth'] {
+  if (raw === undefined || raw === null) return null
+  if (!isObject(raw)) {
+    errors.push({ field: 'birth', message: 'Ngày sinh không hợp lệ.' })
+    return null
+  }
+  const calendar = raw.calendar === 'LUNAR' ? 'LUNAR' : 'SOLAR'
+  const leap = calendar === 'LUNAR' && raw.leap === true
+  const result = resolveDualDate(
+    dual(calendar === 'LUNAR' ? 'lunar' : 'solar', raw.day, raw.month, raw.year, leap),
+    { allowYearOnly: true },
+  )
+  switch (result.status) {
+    case 'empty':
+      return null
+    case 'yearOnly':
+      return { year: result.year, month: null, day: null, calendar, leap: false }
+    case 'full': {
+      const d = calendar === 'LUNAR' ? result.lunar : result.solar
+      return { year: d.year, month: d.month, day: d.day, calendar, leap }
+    }
+    case 'invalid':
+      errors.push({ field: 'birth', message: result.message })
+      return null
+    default:
+      errors.push({ field: 'birth', message: 'Ngày sinh cần đủ ngày, tháng, năm hoặc chỉ có năm.' })
+      return null
+  }
+}
+
+/**
+ * Nhóm "đã mất": chỉ hợp lệ khi đã mất. Ngày mất gửi một trong hai lịch (có cả hai thì dùng dương);
+ * có năm thì tự tính lịch còn lại, âm không năm thì không có ngày dương.
+ */
+function normalizeDeathGroup(input: Partial<MemberInput>, errors: FieldErrors): DeathGroup {
+  const isDeceased = input.isDeceased === true
+  const burialPlace = optionalText(input.burialPlace, 'burialPlace', 300, 'Nơi an táng', errors)
+  const group: DeathGroup = {
+    isDeceased,
+    deathSolar: null,
+    deathLunar: null,
+    memorialOverride: null,
+    burialPlace: null,
+  }
+  const { deathSolar, deathLunar, memorialOverride } = input
+  if (!isDeceased) {
+    if (deathSolar || deathLunar || memorialOverride || burialPlace) {
+      errors.push({
+        field: 'isDeceased',
+        message: 'Ngày mất, ngày giỗ và nơi an táng chỉ nhập được khi đã qua đời.',
+      })
+    }
+    return group
+  }
+  group.burialPlace = burialPlace
+
+  if (deathSolar) {
+    const r = resolveDualDate(dual('solar', deathSolar.day, deathSolar.month, deathSolar.year, false))
+    if (r.status === 'full') {
+      group.deathSolar = r.solar
+      group.deathLunar = { ...r.lunar }
+    } else {
+      errors.push({
+        field: 'deathSolar',
+        message: r.status === 'invalid' ? r.message : 'Ngày mất dương cần đủ ngày, tháng, năm.',
+      })
+    }
+  } else if (deathLunar) {
+    const r = resolveDualDate(
+      dual('lunar', deathLunar.day, deathLunar.month, deathLunar.year, deathLunar.leap),
+      { allowNoYear: true },
+    )
+    if (r.status === 'full') {
+      group.deathSolar = r.solar
+      group.deathLunar = { ...r.lunar }
+    } else if (r.status === 'lunarMonthDay') {
+      group.deathLunar = { ...r.monthDay, year: null }
+    } else {
+      errors.push({
+        field: 'deathLunar',
+        message:
+          r.status === 'invalid'
+            ? r.message
+            : 'Ngày mất âm cần đủ ngày, tháng, năm hoặc chỉ ngày/tháng.',
+      })
+    }
+  }
+
+  if (memorialOverride) {
+    const { day, month } = memorialOverride
+    const ok =
+      Number.isInteger(day) && Number.isInteger(month) && day >= 1 && day <= 30 && month >= 1 && month <= 12
+    if (ok) group.memorialOverride = { day, month }
+    else {
+      errors.push({
+        field: 'memorialOverride',
+        message: 'Ngày giỗ ghi đè cần ngày 1–30 và tháng 1–12 âm lịch.',
+      })
+    }
+  }
+  return group
+}
+
+/** Kiểm tra body, trả các trường hồ sơ đã chuẩn hóa (chưa gồm id, ảnh, mốc thời gian). */
+function parseMemberInput(body: unknown) {
+  const errors: FieldErrors = []
+  if (!isObject(body)) {
+    throw validationProblem([{ field: 'fullName', message: 'Thiếu nội dung hồ sơ.' }])
+  }
+  const input = body as Partial<MemberInput>
+
+  const fullName = typeof input.fullName === 'string' ? input.fullName.trim() : ''
+  if (!fullName) errors.push({ field: 'fullName', message: 'Vui lòng nhập họ tên.' })
+  else if (fullName.length > 200) {
+    errors.push({ field: 'fullName', message: 'Họ tên tối đa 200 ký tự.' })
+  }
+
+  let gender: StoredMember['gender'] = null
+  if (input.gender === 'M' || input.gender === 'F') gender = input.gender
+  else if (input.gender !== undefined && input.gender !== null) {
+    errors.push({ field: 'gender', message: 'Giới tính chỉ nhận Nam, Nữ hoặc để trống.' })
+  }
+
+  const email = optionalText(input.email, 'email', 254, 'Email', errors)
+  if (email && !EMAIL.test(email)) errors.push({ field: 'email', message: 'Email không hợp lệ.' })
+
+  let labels: string[] = []
+  if (input.labels !== undefined) {
+    if (!Array.isArray(input.labels) || input.labels.some((l) => typeof l !== 'string')) {
+      errors.push({ field: 'labels', message: 'Nhãn phải là danh sách chữ.' })
+    } else {
+      labels = [...new Set(input.labels.map((l) => l.trim()).filter(Boolean))]
+      if (labels.length > 20 || labels.some((l) => l.length > 50)) {
+        errors.push({ field: 'labels', message: 'Tối đa 20 nhãn, mỗi nhãn tối đa 50 ký tự.' })
+      }
+    }
+  }
+
+  const fields = {
+    fullName,
+    gender,
+    labels,
+    tabooName: optionalText(input.tabooName, 'tabooName', 200, 'Tên húy', errors),
+    biography: optionalText(input.biography, 'biography', 5000, 'Tiểu sử', errors),
+    phone: optionalText(input.phone, 'phone', 30, 'Số điện thoại', errors),
+    email,
+    birth: normalizeBirth(input.birth, errors),
+    ...normalizeDeathGroup(input, errors),
+  }
+  if (errors.length) throw validationProblem(errors)
+  return fields
+}
+
+const deathGroupOf = (m: StoredMember): DeathGroup => ({
+  isDeceased: m.isDeceased,
+  deathSolar: m.deathSolar ?? null,
+  deathLunar: m.deathLunar ?? null,
+  memorialOverride: m.memorialOverride ?? null,
+  burialPlace: m.burialPlace ?? null,
+})
+
+async function createMember({ body }: MockRequest, context: HandlerContext): Promise<MemberDetail> {
+  const viewer = await requireApproved(context)
+  requireAdmin(viewer)
+  const fields = parseMemberInput(body)
+  const { store } = context
+  const now = new Date().toISOString()
+  const member: StoredMember = {
+    id: store.members.reduce((max, m) => Math.max(max, m.id), 0) + 1,
+    ...fields,
+    avatarUrl: null,
+    createdAt: now,
+    updatedAt: now,
+  }
+  store.members.push(member)
+  context.save()
+  return toDetail(member, generationIndex(store), viewer)
+}
+
+async function updateMember(
+  { params, body }: MockRequest,
+  context: HandlerContext,
+): Promise<MemberDetail> {
+  const viewer = await requireApproved(context)
+  const member = findMember(context.store, params.id)
+  const isAdmin = viewer.systemRole === 'ADMIN'
+  if (!isAdmin && viewer.memberId !== member.id) {
+    throw mockProblem(403, 'FORBIDDEN', 'Bạn chỉ được sửa hồ sơ của chính mình.')
+  }
+  const fields = parseMemberInput(body)
+  // User tự sửa hồ sơ thì không được đổi nhóm "đã mất" (DECISIONS #76)
+  if (!isAdmin) {
+    const current = normalizeDeathGroup(deathGroupOf(member), [])
+    const next = deathGroupOf({ ...member, ...fields })
+    if (JSON.stringify(current) !== JSON.stringify(next)) {
+      throw mockProblem(
+        403,
+        'DEATH_FIELDS_ADMIN_ONLY',
+        'Các thông tin về việc đã mất chỉ Admin được sửa.',
+      )
+    }
+  }
+  Object.assign(member, fields, { updatedAt: new Date().toISOString() })
+  context.save()
+  return toDetail(member, generationIndex(context.store), viewer)
+}
+
+async function deleteMember({ params }: MockRequest, context: HandlerContext): Promise<void> {
+  const viewer = await requireApproved(context)
+  requireAdmin(viewer)
+  const { store } = context
+  const member = findMember(store, params.id)
+  if (store.tree.nodes.some((n) => n.memberId === member.id)) {
+    throw mockProblem(
+      409,
+      'MEMBER_ON_TREE',
+      'Người này đang có trên cây gia phả. Hãy gỡ người này khỏi cây trước khi xóa.',
+    )
+  }
+  // Dọn người thân ở cả hai phía, gỡ liên kết tài khoản (tài khoản vẫn còn); bản sao để Đợt 23 cho xem lại
+  const relations = removeMemberRelations(store, member.id)
+  store.deleted = [
+    ...(store.deleted ?? []),
+    { deletedAt: new Date().toISOString(), deletedBy: viewer.id ?? null, member, relations },
+  ]
+  store.members = store.members.filter((m) => m.id !== member.id)
+  context.save()
 }
 
 export function registerMemberHandlers(router: MockRouter): void {
   router.on('GET', '/members', listMembers)
   router.on('GET', '/members/:id', getMember)
+  router.on('POST', '/members', createMember)
+  router.on('PUT', '/members/:id', updateMember)
+  router.on('DELETE', '/members/:id', deleteMember)
 }

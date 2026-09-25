@@ -1,8 +1,9 @@
+import { Link } from 'react-router'
 import { Badge } from '@/components/shared/Badge'
 import type { AccountAdmin } from '@/types/api'
 import { formatDate } from '@/utils/date'
 import { initialOf } from '@/utils/text'
-import type { AccountAction } from '../api'
+import type { AccountAction, LinkAction } from '../api'
 import { adminStrings as s } from '../strings'
 import { AccountActions } from './AccountActions'
 import { AccountRoleBadge, AccountStatusBadge } from './AccountStatusBadges'
@@ -11,6 +12,7 @@ type AccountListProps = {
   accounts: AccountAdmin[]
   selfId: number | undefined
   onAction: (account: AccountAdmin, action: AccountAction) => void
+  onLinkAction: (account: AccountAdmin, action: LinkAction) => void
 }
 
 function Avatar({ name }: { name?: string }) {
@@ -40,9 +42,22 @@ function Identity({ account, isSelf }: { account: AccountAdmin; isSelf: boolean 
   )
 }
 
+/** Thành viên đang liên kết với tài khoản (link tới hồ sơ), hoặc "Chưa liên kết". */
+function LinkedMember({ account }: { account: AccountAdmin }) {
+  if (!account.member) return <span className="text-text-muted">{s.accounts.notLinked}</span>
+  return (
+    <Link
+      to={`/thanh-vien/${account.member.id}`}
+      className="font-medium text-accent-text underline-offset-2 [overflow-wrap:anywhere] hover:underline"
+    >
+      {account.member.fullName}
+    </Link>
+  )
+}
+
 // Điện thoại (<768px): danh sách thẻ. Máy tính: bảng (DESIGN §6, IDEA §6.3). Cả hai cùng một dữ liệu;
 // phần không hiện được ẩn bằng CSS nên trình đọc màn hình chỉ gặp một dạng.
-export function AccountList({ accounts, selfId, onAction }: AccountListProps) {
+export function AccountList({ accounts, selfId, onAction, onLinkAction }: AccountListProps) {
   return (
     <>
       <ul aria-label={s.accounts.listLabel} className="flex flex-col gap-4 md:hidden">
@@ -52,6 +67,10 @@ export function AccountList({ accounts, selfId, onAction }: AccountListProps) {
             className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4 shadow-card"
           >
             <Identity account={account} isSelf={account.id === selfId} />
+            <p className="text-sm">
+              <span className="text-text-muted">{s.accounts.memberLabel}: </span>
+              <LinkedMember account={account} />
+            </p>
             <div className="flex flex-wrap items-center gap-2">
               <AccountStatusBadge account={account} />
               <AccountRoleBadge account={account} />
@@ -59,7 +78,12 @@ export function AccountList({ accounts, selfId, onAction }: AccountListProps) {
                 {s.accounts.registeredAt(formatDate(account.createdAt))}
               </span>
             </div>
-            <AccountActions account={account} selfId={selfId} onAction={onAction} />
+            <AccountActions
+              account={account}
+              selfId={selfId}
+              onAction={onAction}
+              onLinkAction={onLinkAction}
+            />
           </li>
         ))}
       </ul>
@@ -77,6 +101,9 @@ export function AccountList({ accounts, selfId, onAction }: AccountListProps) {
               </th>
               <th scope="col" className="px-4 py-3">
                 {s.accounts.columns.status}
+              </th>
+              <th scope="col" className="px-4 py-3">
+                {s.accounts.columns.member}
               </th>
               <th scope="col" className="px-4 py-3">
                 {s.accounts.columns.createdAt}
@@ -98,11 +125,19 @@ export function AccountList({ accounts, selfId, onAction }: AccountListProps) {
                 <td className="px-4 py-3">
                   <AccountStatusBadge account={account} />
                 </td>
+                <td className="max-w-48 px-4 py-3">
+                  <LinkedMember account={account} />
+                </td>
                 <td className="px-4 py-3 whitespace-nowrap tabular-nums">
                   {formatDate(account.createdAt)}
                 </td>
                 <td className="px-4 py-3">
-                  <AccountActions account={account} selfId={selfId} onAction={onAction} />
+                  <AccountActions
+              account={account}
+              selfId={selfId}
+              onAction={onAction}
+              onLinkAction={onLinkAction}
+            />
                 </td>
               </tr>
             ))}

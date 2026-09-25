@@ -1,5 +1,7 @@
 import { Navigate, type RouteObject } from 'react-router'
+import { AdminLayout } from '@/features/admin/components/AdminLayout'
 import { AccountsPage } from '@/features/admin/pages/AccountsPage'
+import { LinkRequestsPage } from '@/features/admin/pages/LinkRequestsPage'
 import { adminStrings } from '@/features/admin/strings'
 import {
   ApprovalGuard,
@@ -15,6 +17,8 @@ import { RejectedPage } from '@/features/auth/pages/RejectedPage'
 import { VerifyOtpPage } from '@/features/auth/pages/VerifyOtpPage'
 import { WaitingApprovalPage } from '@/features/auth/pages/WaitingApprovalPage'
 import { LunarConverterPage } from '@/features/calendar/pages/LunarConverterPage'
+import { linkStrings } from '@/features/link/strings'
+import { MyIdentityPage } from '@/features/link/pages/MyIdentityPage'
 import { AppShell } from '@/layout/AppShell'
 import { PlainLayout } from '@/layout/PlainLayout'
 import type { RouteHandle } from '@/types/route'
@@ -22,6 +26,7 @@ import { CalendarPage } from './CalendarPage'
 import { DashboardPage } from './DashboardPage'
 import { MembersPage } from '@/features/member/pages/MembersPage'
 import { MemberDetailPage } from '@/features/member/pages/MemberDetailPage'
+import { MemberFormPage } from '@/features/member/pages/MemberFormPage'
 import { MorePage } from './MorePage'
 import { NotFoundPage } from './NotFoundPage'
 import { TreePage } from './TreePage'
@@ -29,6 +34,18 @@ import { TreePage } from './TreePage'
 const handle = (title: string): RouteHandle => ({ title })
 
 export const routes: RouteObject[] = [
+  // Trang kiểm layout cây (Đợt 14): chỉ có ở dev, nạp động để không lọt vào bản build prod
+  ...(import.meta.env.DEV
+    ? [
+        {
+          path: 'dev/cay',
+          lazy: async () => ({
+            Component: (await import('@/features/tree/pages/TreeLayoutDevPage')).TreeLayoutDevPage,
+          }),
+          handle: handle('Kiểm tra layout cây'),
+        } satisfies RouteObject,
+      ]
+    : []),
   // Công khai: người đã đăng nhập bị chuyển tới trang đích theo trạng thái duyệt
   {
     element: <GuestOnly />,
@@ -79,8 +96,22 @@ export const routes: RouteObject[] = [
               { path: 'cay', element: <TreePage />, handle: handle('Cây') },
               { path: 'thanh-vien', element: <MembersPage />, handle: handle('Thành viên') },
               { path: 'thanh-vien/:id', element: <MemberDetailPage />, handle: handle('Hồ sơ thành viên') },
+              // Thêm thành viên: chỉ Admin
+              {
+                element: <RequireAdmin />,
+                children: [
+                  { path: 'thanh-vien/them', element: <MemberFormPage />, handle: handle('Thêm thành viên') },
+                ],
+              },
+              // Sửa hồ sơ: Admin sửa mọi hồ sơ, User chỉ sửa hồ sơ của mình (trang tự kiểm; quyền thật do máy chủ)
+              { path: 'thanh-vien/:id/sua', element: <MemberFormPage />, handle: handle('Sửa hồ sơ') },
               { path: 'lich', element: <CalendarPage />, handle: handle('Lịch') },
               { path: 'them', element: <MorePage />, handle: handle('Thêm') },
+              {
+                path: 'them/toi-la-ai',
+                element: <MyIdentityPage />,
+                handle: handle(linkStrings.menu),
+              },
               {
                 path: 'them/doi-lich',
                 element: <LunarConverterPage />,
@@ -91,11 +122,21 @@ export const routes: RouteObject[] = [
                 path: 'quan-tri',
                 element: <RequireAdmin />,
                 children: [
-                  { index: true, element: <Navigate to="/quan-tri/tai-khoan" replace /> },
                   {
-                    path: 'tai-khoan',
-                    element: <AccountsPage />,
-                    handle: handle(adminStrings.accounts.title),
+                    element: <AdminLayout />,
+                    children: [
+                      { index: true, element: <Navigate to="/quan-tri/tai-khoan" replace /> },
+                      {
+                        path: 'tai-khoan',
+                        element: <AccountsPage />,
+                        handle: handle(adminStrings.accounts.title),
+                      },
+                      {
+                        path: 'yeu-cau-lien-ket',
+                        element: <LinkRequestsPage />,
+                        handle: handle(adminStrings.linkRequests.title),
+                      },
+                    ],
                   },
                 ],
               },

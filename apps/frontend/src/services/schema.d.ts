@@ -383,7 +383,14 @@ export interface paths {
          */
         get: operations["listMembers"];
         put?: never;
-        post?: never;
+        /**
+         * Thêm thành viên
+         * @description Chỉ Admin. Chỉ `fullName` là bắt buộc. Các trường về việc đã mất (`deathSolar`, `deathLunar`,
+         *     `memorialOverride`, `burialPlace`) chỉ hợp lệ khi `isDeceased = true`, nếu không thì 400 `VALIDATION_ERROR`.
+         *     Ngày mất gửi **một trong hai** (`deathSolar` hoặc `deathLunar`); có cả hai thì dùng `deathSolar`. Khi có năm, máy chủ
+         *     tự tính ngày ở lịch còn lại và trả cả hai; `deathLunar` không có năm thì `deathSolar` là `null`.
+         */
+        post: operations["createMember"];
         delete?: never;
         options?: never;
         head?: never;
@@ -403,6 +410,277 @@ export interface paths {
          *     hoặc chính chủ hồ sơ (`user.member_id`); với người khác hai trường này **không xuất hiện**.
          */
         get: operations["getMember"];
+        /**
+         * Sửa thành viên
+         * @description Admin sửa mọi hồ sơ. User đã liên kết "Tôi là ai" chỉ sửa hồ sơ của chính mình (`user.member_id`), có hiệu lực ngay,
+         *     và **không** được đổi nhóm "đã mất" (`isDeceased`, `deathSolar`, `deathLunar`, `memorialOverride`, `burialPlace`):
+         *     khác giá trị hiện có thì 403 `DEATH_FIELDS_ADMIN_ONLY`. Người khác thì 403 `FORBIDDEN`.
+         *     Ảnh đại diện không đổi qua API này mà qua `/api/files/confirm`. Quy tắc dữ liệu như `POST /api/members`.
+         */
+        put: operations["updateMember"];
+        post?: never;
+        /**
+         * Xóa thành viên
+         * @description Chỉ Admin. Bị chặn nếu người đó đang có trên cây (409 `MEMBER_ON_TREE`): phải gỡ khỏi cây trước.
+         *     Khi xóa: xóa các dòng người thân liên quan, gỡ liên kết tài khoản, xóa tệp đính kèm; audit log giữ bản sao đầy đủ.
+         */
+        delete: operations["deleteMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/files/sign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Xin chữ ký để tải tệp lên Cloudinary
+         * @description Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`).
+         *     Máy chủ kiểm MIME (jpg, png, webp, pdf, docx, xlsx; ảnh đại diện chỉ jpg/png/webp), tối đa 10 MB mỗi tệp và 1 GB toàn hệ thống.
+         *     Lỗi: 400 `VALIDATION_ERROR`, 403 `FORBIDDEN`. Ở chế độ giả lập trả 503 "Cần kết nối máy chủ" (DECISIONS #72).
+         */
+        post: operations["signUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/files/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Xác nhận tệp đã tải lên Cloudinary
+         * @description Máy chủ kiểm lại tệp trên Cloudinary rồi ghi nhận. Với `AVATAR`, ảnh cũ của hồ sơ bị thay và `avatarUrl` được cập nhật.
+         *     Quyền như `/api/files/sign`.
+         */
+        post: operations["confirmUpload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{id}/relatives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Danh sách người thân của một hồ sơ
+         * @description Mọi tài khoản đã duyệt xem được. Một chiều: chỉ có các dòng do chủ hồ sơ hoặc Admin khai trong hồ sơ này,
+         *     hồ sơ bên kia không tự có dòng ngược lại. Sắp theo thời điểm thêm.
+         */
+        get: operations["listRelatives"];
+        put?: never;
+        /**
+         * Thêm người thân vào hồ sơ
+         * @description Chủ hồ sơ (User đã liên kết, `user.member_id = id`) hoặc Admin; có hiệu lực ngay. `label` bắt buộc, cắt khoảng trắng hai đầu,
+         *     tối đa 50 ký tự. Người thân phải là thành viên đã có. Lỗi: 400 `VALIDATION_ERROR` (nhãn, hoặc tự thêm chính mình),
+         *     404 `MEMBER_NOT_FOUND`, 409 `RELATIVE_EXISTS` (người này đã có trong danh sách, muốn đổi nhãn thì sửa dòng cũ),
+         *     403 `FORBIDDEN` (không phải chủ hồ sơ hay Admin).
+         */
+        post: operations["addRelative"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/members/{id}/relatives/{relativeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Sửa nhãn của một người thân
+         * @description Chỉ đổi được `label` (quy tắc như khi thêm). Quyền như `POST`. 404 `RELATIVE_NOT_FOUND` khi dòng không thuộc hồ sơ này.
+         */
+        put: operations["updateRelative"];
+        post?: never;
+        /**
+         * Xóa một người thân khỏi hồ sơ
+         * @description Quyền như `POST`. Chỉ xóa dòng trong hồ sơ này, thành viên được nhắc tới vẫn giữ nguyên.
+         */
+        delete: operations["deleteRelative"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/link-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Danh sách yêu cầu liên kết (Admin)
+         * @description Hàng đợi duyệt của Admin. Cũ nhất trước.
+         */
+        get: operations["listLinkRequests"];
+        put?: never;
+        /**
+         * Gửi yêu cầu "Đây là tôi"
+         * @description Tài khoản đã duyệt yêu cầu liên kết với một thành viên; Admin duyệt thì mới có hiệu lực. Lỗi: 404 `MEMBER_NOT_FOUND`,
+         *     409 `ACCOUNT_ALREADY_LINKED` (phải hủy liên kết cũ trước), 409 `MEMBER_ALREADY_LINKED` (thành viên đã có tài khoản khác),
+         *     409 `LINK_REQUEST_EXISTS` (đang có yêu cầu chờ duyệt).
+         */
+        post: operations["createLinkRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/link-requests/mine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Các yêu cầu liên kết của tôi
+         * @description Mới nhất trước, gồm mọi trạng thái. Giao diện dùng dòng `PENDING` (nếu có) để hiện "đang chờ duyệt".
+         */
+        get: operations["myLinkRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/link-requests/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Duyệt yêu cầu liên kết (Admin)
+         * @description Gán `user.member_id`. Nếu hồ sơ chưa có email thì chép email tài khoản sang (một lần, DECISIONS #81).
+         *     Lỗi: 404 `LINK_REQUEST_NOT_FOUND`, 409 `LINK_REQUEST_NOT_PENDING`, 409 `MEMBER_ALREADY_LINKED`, 409 `ACCOUNT_ALREADY_LINKED`.
+         */
+        post: operations["approveLinkRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/link-requests/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Từ chối yêu cầu liên kết (Admin)
+         * @description Lỗi: 404 `LINK_REQUEST_NOT_FOUND`, 409 `LINK_REQUEST_NOT_PENDING`.
+         */
+        post: operations["rejectLinkRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/member-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Tự hủy liên kết của tôi
+         * @description Gỡ `user.member_id`. Không xóa email đã chép sang hồ sơ. 409 `NOT_LINKED` khi chưa liên kết.
+         */
+        delete: operations["unlinkMe"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/member-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Admin gán thành viên cho tài khoản
+         * @description Không cần yêu cầu. Chỉ tài khoản đã duyệt và đang hoạt động (409 `INVALID_ACCOUNT_STATE`). Lỗi khác: 404 `ACCOUNT_NOT_FOUND`
+         *     hoặc `MEMBER_NOT_FOUND`, 409 `MEMBER_ALREADY_LINKED` (thành viên đã có tài khoản khác), 409 `ACCOUNT_ALREADY_LINKED`
+         *     (tài khoản đã liên kết người khác, phải hủy trước). Yêu cầu "Đây là tôi" đang chờ của tài khoản đó tự chuyển sang hủy
+         *     (`CANCELLED`). Chép email như khi duyệt yêu cầu (DECISIONS #81).
+         */
+        put: operations["adminLinkMember"];
+        post?: never;
+        /**
+         * Admin hủy liên kết của một tài khoản
+         * @description Hủy được của bất kỳ ai. Không xóa email đã chép sang hồ sơ. 409 `NOT_LINKED` khi tài khoản chưa liên kết.
+         */
+        delete: operations["adminUnlinkMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Toàn bộ cây gia phả
+         * @description Mọi tài khoản đã duyệt xem được. Trả toàn bộ đồ thị (nút và cạnh); **đời không nằm trong response**,
+         *     frontend tự tính theo độ sâu (DECISIONS #34, #60). Cây trống thì cả hai mảng rỗng.
+         *
+         *     Quy ước của đồ thị:
+         *     - Ô **thuộc dòng** là ô không xuất hiện trong `spouses[].spouseNodeId`. Ô không có `parentNodeId` là **gốc**
+         *       (có thể có nhiều gốc, mỗi gốc là Đời 01 của cây rời của nó).
+         *     - Ô **vợ/chồng** là ô có trong `spouses[].spouseNodeId`. Ô này không có `parentNodeId` và không có vợ/chồng riêng.
+         *     - Con của một cặp: `parentNodeId` luôn là ô **thuộc dòng**, `coParentNodeId` là ô vợ/chồng của ô đó
+         *       (hoặc `null` khi con chỉ thuộc một mình cha/mẹ). Bấm "+ Con" trên ô vợ/chồng thì `parentNodeId` là ô thuộc dòng của ô đó.
+         *     - `memberId = null` là ô trống (đã gỡ người ra khỏi cây); ô trống vẫn có thể có con và vợ/chồng.
+         *     - Anh em (cùng `parentNodeId`, hoặc cùng là gốc) xếp theo `sortOrder` tăng dần, rồi theo `id`.
+         */
+        get: operations["getTree"];
         put?: never;
         post?: never;
         delete?: never;
@@ -525,6 +803,70 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        /**
+         * @description Nội dung hồ sơ khi thêm hoặc sửa (PUT thay toàn bộ, trường bỏ trống nghĩa là xóa giá trị).
+         *     Họ tên ghi nguyên văn. Không có `avatarUrl`: ảnh đại diện đổi qua `/api/files/confirm`.
+         */
+        MemberInput: {
+            fullName: string;
+            /** @enum {string|null} */
+            gender?: "M" | "F" | null;
+            tabooName?: string | null;
+            labels?: string[];
+            biography?: string | null;
+            phone?: string | null;
+            email?: string | null;
+            birth?: components["schemas"]["MemberBirth"] | null;
+            isDeceased: boolean;
+            deathSolar?: components["schemas"]["SolarDate"] | null;
+            deathLunar?: components["schemas"]["MemberLunarDate"] | null;
+            memorialOverride?: components["schemas"]["MemorialOverride"] | null;
+            burialPlace?: string | null;
+        };
+        /** @enum {string} */
+        FileKind: "AVATAR" | "DOCUMENT";
+        FileSignRequest: {
+            kind: components["schemas"]["FileKind"];
+            /**
+             * Format: int64
+             * @description Bắt buộc với AVATAR; `null` với DOCUMENT nghĩa là tài liệu chung
+             */
+            memberId?: number | null;
+            fileName: string;
+            mimeType: string;
+            /** Format: int64 */
+            sizeBytes: number;
+        };
+        FileSignResponse: {
+            /** @description Địa chỉ Cloudinary để gửi `multipart/form-data` */
+            uploadUrl: string;
+            /** @description Các trường đã ký (api_key, timestamp, signature, folder, public_id...), gửi kèm trường `file` */
+            fields: {
+                [key: string]: string;
+            };
+        };
+        FileConfirmRequest: {
+            kind: components["schemas"]["FileKind"];
+            /** Format: int64 */
+            memberId?: number | null;
+            /** @description `public_id` Cloudinary trả về sau khi tải lên */
+            publicId: string;
+            fileName: string;
+        };
+        Attachment: {
+            /** Format: int64 */
+            id: number;
+            kind: components["schemas"]["FileKind"];
+            /** Format: int64 */
+            memberId: number | null;
+            url: string;
+            fileName: string;
+            mimeType: string;
+            /** Format: int64 */
+            sizeBytes: number;
+            /** Format: date-time */
+            createdAt: string;
+        };
         MemberPage: {
             items: components["schemas"]["MemberSummary"][];
             /** Format: int32 */
@@ -642,6 +984,8 @@ export interface components {
             approvedAt?: string;
             /** Format: int64 */
             memberId?: number;
+            /** @description Thành viên đang liên kết ("Tôi là ai"); `null` khi chưa liên kết (DECISIONS */
+            member?: components["schemas"]["LinkedMember"] | null;
             /** Format: date-time */
             createdAt?: string;
         };
@@ -673,6 +1017,128 @@ export interface components {
             /** Format: int32 */
             day?: number;
             leap?: boolean;
+        };
+        /** @description Thành viên rút gọn (id và họ tên ghi nguyên văn), đủ để hiện link tới hồ sơ. */
+        LinkedMember: {
+            /** Format: int64 */
+            id: number;
+            fullName: string;
+        };
+        /** @description Một dòng trong danh sách người thân của hồ sơ: trong hồ sơ này, `relative` là "`label`". Ví dụ "Cụ Nguyễn Văn Uyên — cha". */
+        Relative: {
+            /** Format: int64 */
+            id: number;
+            relative: components["schemas"]["MemberSummary"];
+            label: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        RelativeInput: {
+            /** Format: int64 */
+            relativeMemberId: number;
+            /** @description Bắt buộc, cắt khoảng trắng hai đầu, tối đa 50 ký tự. */
+            label: string;
+        };
+        RelativeLabelInput: {
+            /** @description Bắt buộc, cắt khoảng trắng hai đầu, tối đa 50 ký tự. */
+            label: string;
+        };
+        /**
+         * @description `CANCELLED` khi Admin gán trực tiếp cho tài khoản đó, hoặc thành viên bị xóa.
+         * @enum {string}
+         */
+        LinkRequestStatus: "PENDING" | "APPROVED" | "REJECTED" | "CANCELLED";
+        /** @description Yêu cầu "Đây là tôi" của một tài khoản. */
+        LinkRequest: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            accountId: number;
+            accountFullName: string;
+            accountEmail: string;
+            member: components["schemas"]["LinkedMember"];
+            status: components["schemas"]["LinkRequestStatus"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            decidedAt: string | null;
+        };
+        LinkRequestInput: {
+            /** Format: int64 */
+            memberId: number;
+        };
+        AdminMemberLinkInput: {
+            /** Format: int64 */
+            memberId: number;
+        };
+        /** @description Tóm tắt thành viên hiển thị trong ô của cây. Họ tên ghi nguyên văn. */
+        TreeMember: {
+            fullName: string;
+            /**
+             * @description Được để trống; ô của người chưa rõ giới tính vẽ trung tính
+             * @enum {string|null}
+             */
+            gender: "M" | "F" | null;
+            avatarUrl: string | null;
+            /** @description Nhãn đặc biệt, ví dụ "Liệt sỹ" */
+            labels: string[];
+            /** Format: int32 */
+            birthYear: number | null;
+            isDeceased: boolean;
+            /**
+             * Format: int32
+             * @description Năm mất theo dương lịch (nếu biết)
+             */
+            deathYear: number | null;
+        };
+        /** @description Một ô trên cây. Đời không có trong DTO (tính theo độ sâu ở frontend). */
+        TreeNode: {
+            /** Format: int64 */
+            id: number;
+            /**
+             * Format: int64
+             * @description `null` là ô trống. Mỗi thành viên có tối đa một ô trên cây.
+             */
+            memberId: number | null;
+            /** @description Tóm tắt thành viên; `null` khi là ô trống (khớp với `memberId`) */
+            member: components["schemas"]["TreeMember"] | null;
+            /**
+             * Format: int64
+             * @description Ô cha/mẹ **thuộc dòng**; `null` với gốc và với ô vợ/chồng
+             */
+            parentNodeId: number | null;
+            /**
+             * Format: int64
+             * @description Ô vợ/chồng của `parentNodeId` cùng sinh ra ô này; `null` khi chỉ thuộc một mình cha/mẹ
+             */
+            coParentNodeId: number | null;
+            /**
+             * Format: int32
+             * @description Thứ tự anh em, nhỏ trước
+             */
+            sortOrder: number;
+        };
+        /** @description Quan hệ vợ/chồng của một ô thuộc dòng. Mỗi ô vợ/chồng thuộc đúng một ô thuộc dòng. */
+        TreeSpouse: {
+            /**
+             * Format: int64
+             * @description Ô thuộc dòng
+             */
+            nodeId: number;
+            /**
+             * Format: int64
+             * @description Ô vợ/chồng
+             */
+            spouseNodeId: number;
+            /**
+             * Format: int32
+             * @description Thứ tự vợ/chồng (1 = Cả, 2 = Hai...)
+             */
+            order: number;
+        };
+        TreeResponse: {
+            nodes: components["schemas"]["TreeNode"][];
+            spouses: components["schemas"]["TreeSpouse"][];
         };
         PageResponseAccountAdminResponse: {
             items?: components["schemas"]["AccountAdminResponse"][];
@@ -714,7 +1180,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetail"];
             };
         };
-        /** @description Không tìm thấy (`ACCOUNT_NOT_FOUND`, `MEMBER_NOT_FOUND`) */
+        /** @description Không tìm thấy (`ACCOUNT_NOT_FOUND`, `MEMBER_NOT_FOUND`, `RELATIVE_NOT_FOUND`, `LINK_REQUEST_NOT_FOUND`) */
         NotFound: {
             headers: {
                 [name: string]: unknown;
@@ -723,7 +1189,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetail"];
             };
         };
-        /** @description Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `INVALID_ACCOUNT_STATE`) */
+        /** @description Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `INVALID_ACCOUNT_STATE`, `MEMBER_ON_TREE`, `RELATIVE_EXISTS`, `MEMBER_ALREADY_LINKED`, `ACCOUNT_ALREADY_LINKED`, `LINK_REQUEST_EXISTS`, `LINK_REQUEST_NOT_PENDING`, `NOT_LINKED`) */
         Conflict: {
             headers: {
                 [name: string]: unknown;
@@ -742,7 +1208,13 @@ export interface components {
             };
         };
     };
-    parameters: never;
+    parameters: {
+        MemberId: number;
+        /** @description `id` của dòng người thân (không phải id của thành viên được nhắc tới) */
+        RelativeId: number;
+        LinkRequestId: number;
+        AccountId: number;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -1337,6 +1809,33 @@ export interface operations {
             403: components["responses"]["Forbidden"];
         };
     };
+    createMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberInput"];
+            };
+        };
+        responses: {
+            /** @description Đã tạo */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberDetail"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
     getMember: {
         parameters: {
             query?: never;
@@ -1360,6 +1859,455 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    updateMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberInput"];
+            };
+        };
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberDetail"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã xóa */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    signUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FileSignRequest"];
+            };
+        };
+        responses: {
+            /** @description Chữ ký có hiệu lực ngắn */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileSignResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    confirmUpload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FileConfirmRequest"];
+            };
+        };
+        responses: {
+            /** @description Đã ghi nhận */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Attachment"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    listRelatives: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["MemberId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Relative"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    addRelative: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["MemberId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelativeInput"];
+            };
+        };
+        responses: {
+            /** @description Đã thêm */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Relative"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    updateRelative: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["MemberId"];
+                /** @description `id` của dòng người thân (không phải id của thành viên được nhắc tới) */
+                relativeId: components["parameters"]["RelativeId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RelativeLabelInput"];
+            };
+        };
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Relative"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteRelative: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["MemberId"];
+                /** @description `id` của dòng người thân (không phải id của thành viên được nhắc tới) */
+                relativeId: components["parameters"]["RelativeId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã xóa */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listLinkRequests: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["LinkRequestStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkRequest"][];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    createLinkRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkRequestInput"];
+            };
+        };
+        responses: {
+            /** @description Đã gửi */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkRequest"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    myLinkRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkRequest"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    approveLinkRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["LinkRequestId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkRequest"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    rejectLinkRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["LinkRequestId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkRequest"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    unlinkMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã hủy liên kết */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    adminLinkMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AccountId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminMemberLinkInput"];
+            };
+        };
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    adminUnlinkMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AccountId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    getTree: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TreeResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
 }

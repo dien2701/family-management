@@ -15,10 +15,49 @@ export type StoredMember = Omit<
 /** Ô trên cây. Mô hình đầy đủ do Đợt 14 định nghĩa; hiện chỉ cần đủ để tính "đời" và "có trên cây". */
 export type StoredTreeNode = { id: number; memberId: number | null; parentNodeId: number | null }
 
+/** Một dòng người thân: trong hồ sơ `memberId`, `relativeMemberId` là "`label`" (một chiều, DECISIONS #75). */
+export type StoredRelative = {
+  id: number
+  memberId: number
+  relativeMemberId: number
+  label: string
+  createdAt: string
+  updatedAt: string
+}
+
+/** Liên kết 1–1 giữa tài khoản (id của backend thật) và thành viên (DECISIONS #80). */
+export type StoredAccountLink = { accountId: number; memberId: number }
+
+/** Yêu cầu "Đây là tôi". Họ tên và email tài khoản chụp lại lúc gửi vì tài khoản nằm ở backend thật. */
+export type StoredLinkRequest = {
+  id: number
+  accountId: number
+  accountFullName: string
+  accountEmail: string
+  memberId: number
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+  createdAt: string
+  decidedAt: string | null
+}
+
+/** Bản sao thành viên bị xóa (IDEA §6.1), để Admin xem lại ở trang "Thành viên đã xóa" (Đợt 23). */
+export type DeletedMemberSnapshot = {
+  deletedAt: string
+  deletedBy: number | null
+  member: StoredMember
+  /** Các dòng người thân liên quan: danh sách của người bị xóa và các dòng ở hồ sơ khác trỏ tới họ. */
+  relations: StoredRelative[]
+}
+
 export type MockStore = {
   version: typeof STORE_VERSION
   members: StoredMember[]
   tree: { nodes: StoredTreeNode[] }
+  /** Các trường dưới đây thiếu ở kho tạo trước khi có tính năng tương ứng: coi như rỗng. */
+  deleted?: DeletedMemberSnapshot[]
+  relatives?: StoredRelative[]
+  links?: StoredAccountLink[]
+  linkRequests?: StoredLinkRequest[]
 }
 
 type SeedMember = {
@@ -51,7 +90,14 @@ export function buildSeedStore(now: Date = new Date()): MockStore {
     createdAt: stamp,
     updatedAt: stamp,
   }))
-  return { version: STORE_VERSION, members, tree: { nodes: [] } }
+  return {
+    version: STORE_VERSION,
+    members,
+    tree: { nodes: [] },
+    relatives: [],
+    links: [],
+    linkRequests: [],
+  }
 }
 
 // localStorage có thể bị chặn (chế độ riêng tư, chính sách trình duyệt): khi đó giữ tạm trong bộ nhớ.

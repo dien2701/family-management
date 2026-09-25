@@ -48,9 +48,9 @@
 | 0–10 | Nền tảng, lịch âm, tài khoản, hợp đồng + giả lập (`roadmap/DONE.md`) | Claude Code | | ✅ 2026-09-25 |
 | **GĐ A** | **Frontend (chế độ giả lập)** | | | |
 | 11 | Thành viên FE: danh sách, chi tiết | **Antigravity** | Gemini 3.1 Pro · Planning | ✅ 2026-09-25 |
-| 12 | Thành viên FE: form, xóa, ảnh đại diện | Claude Code | Sonnet · medium | ⬜ |
-| 13 | Người thân, "Tôi là ai" và tự sửa hồ sơ FE | Claude Code | Sonnet · high | ⬜ |
-| 14 | Cây FE: mô hình và thuật toán layout | Claude Code | **Opus** · high | ⬜ |
+| 12 | Thành viên FE: form, xóa, ảnh đại diện | Claude Code | Sonnet · medium | ✅ 2026-09-25 |
+| 13 | Người thân, "Tôi là ai" và tự sửa hồ sơ FE | Claude Code | Sonnet · high | ✅ 2026-09-25 |
+| 14 | Cây FE: mô hình và thuật toán layout | Claude Code | **Opus** · high | ✅ 2026-09-25 |
 | 15–16 | Cây FE: hiển thị, thêm người, chỉnh sửa và điều hướng | Claude Code | Sonnet · high | ⬜ |
 | 17 | Lịch và sự kiện FE | Claude Code | Sonnet · medium | ⬜ |
 | 18–19 | Dashboard FE và PWA | **Antigravity** | Gemini 3.8 Flash · Planning | ⬜ |
@@ -75,8 +75,8 @@
 | ~~40~~ | ~~E2E Playwright~~ (bỏ theo #84) | | | ❌ |
 | 41 | Deploy production | Claude Code | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 12 — Thành viên FE: form, xóa, ảnh đại diện
-Công cụ **Claude Code** · Model **Sonnet** · Chế độ **medium** · Prompt: dùng **Prompt mẫu Claude Code** ở trên với N = 12.
+## ▶️ Đợt đang chờ: Đợt 15–16 — Cây FE: hiển thị, thêm người, chỉnh sửa và điều hướng
+Công cụ **Claude Code** · Model **Sonnet** · Chế độ **high** · Prompt: dùng **Prompt mẫu Claude Code** ở trên với N = 15–16.
 
 ---
 
@@ -118,24 +118,29 @@ IDEA §6.1 · DECISIONS #58, #66, #71
 
 ---
 
-### Đợt 12 — Thành viên FE: form, xóa, ảnh đại diện ⬜
+### Đợt 12 — Thành viên FE: form, xóa, ảnh đại diện ✅ 2026-09-25
 IDEA §6.1, §6.7 · DECISIONS #58, #62, #67, #72
-- [ ] Hợp đồng: `POST /api/members`, `PUT /api/members/{id}`, `DELETE /api/members/{id}` (409 `MEMBER_ON_TREE`), `POST /api/files/sign`, `POST /api/files/confirm` (kind AVATAR).
-- [ ] Handler giả lập:
+- [x] Hợp đồng: `POST /api/members`, `PUT /api/members/{id}`, `DELETE /api/members/{id}` (409 `MEMBER_ON_TREE`), `POST /api/files/sign`, `POST /api/files/confirm` (kind AVATAR). ✅ 2026-09-25
+- [x] Handler giả lập: ✅ 2026-09-25
   - Tạo và sửa: tính `search_name`. Ngày mất nhập âm mà có năm thì tự đổi sang dương, còn nhập dương thì tự đổi sang âm (bằng `utils/lunar`). Các trường về cái chết chỉ hợp lệ khi đã mất.
   - Xóa: chặn nếu có trên cây; xóa các dòng người thân liên quan (cả dòng trong hồ sơ người đó lẫn dòng người đó xuất hiện ở hồ sơ khác, sau khi Đợt 13 có store người thân) và ghi snapshot "đã xóa" vào store (dùng ở Đợt 23).
   - Upload: trả 503 "Cần kết nối máy chủ".
-- [ ] `MemberForm` (RHF + Zod):
+- [x] `MemberForm` (RHF + Zod): ✅ 2026-09-25
   - Chỉ họ tên bắt buộc. Giới tính có 3 lựa chọn Nam / Nữ / Chưa rõ.
   - Khối "Đã qua đời": ngày mất dùng `DualDateInput` (cho phép chỉ ngày/tháng âm), ngày giỗ ghi đè, nơi an táng.
   - Ngày sinh dùng `DualDateInput` (cho phép chỉ năm). Chọn sinh nhật Dương hoặc Âm.
   - Có tên húy, nhãn, tiểu sử, SĐT, email.
   - Tách nhóm "đã mất" (đã qua đời, ngày mất, ngày giỗ ghi đè, nơi an táng) thành một khối riêng trong form và trong schema, có prop `lockDeathFields` để Đợt 13 dùng cho User tự sửa hồ sơ (#76).
-- [ ] Nút Xóa (chỉ Admin) kèm xác nhận. Khi bị chặn thì giải thích "Hãy gỡ người này khỏi cây trước".
-- [ ] `AvatarUpload` (`components/shared`): chọn ảnh, kiểm tra định dạng và giới hạn 10 MB ngay ở máy, có preview. Ở chế độ giả lập thì báo "Cần kết nối máy chủ".
-- [ ] Ở đợt này chỉ Admin thấy các nút Thêm, Sửa, Xóa. Nút "Sửa hồ sơ của tôi" cho User làm ở Đợt 13 (cần liên kết "Tôi là ai").
+- [x] Nút Xóa (chỉ Admin) kèm xác nhận. Khi bị chặn thì giải thích "Hãy gỡ người này khỏi cây trước". ✅ 2026-09-25
+- [x] `AvatarUpload` (`components/shared`): chọn ảnh, kiểm tra định dạng và giới hạn 10 MB ngay ở máy, có preview. Ở chế độ giả lập thì báo "Cần kết nối máy chủ". ✅ 2026-09-25
+- [x] Ở đợt này chỉ Admin thấy các nút Thêm, Sửa, Xóa. Nút "Sửa hồ sơ của tôi" cho User làm ở Đợt 13 (cần liên kết "Tôi là ai"). ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- Hợp đồng: thêm `POST /api/members`, `PUT`/`DELETE /api/members/{id}` (409 `MEMBER_ON_TREE`), `POST /api/files/sign`, `POST /api/files/confirm` cùng `MemberInput`, `FileSign*`, `Attachment`; đã chạy `gen:api`. Handler giả lập `members.ts` (tạo/sửa/xóa, tự đổi ngày mất âm ⇄ dương, chặn xóa khi có trên cây, ghi snapshot vào `store.deleted`, User tự sửa bị chặn đổi nhóm "đã mất") và `files.ts` (503 "Cần kết nối máy chủ").
+- FE: `MemberForm` (RHF + Zod, `schemas.ts` tách nhóm "đã mất", prop `lockDeathFields`), `MemberFormPage` (`/thanh-vien/them`, `/thanh-vien/:id/sua`, chỉ Admin), nút Thêm/Sửa/Xóa chỉ Admin + `ConfirmDialog` xóa, `components/shared/AvatarUpload` (kiểm định dạng, 10 MB, preview).
+- File chính: `features/member/{schemas,api,hooks}.ts`, `components/MemberForm.tsx`, `pages/MemberFormPage.tsx`, `services/mock/handlers/{members,files}.ts`, `shared/api/openapi.yaml`.
+- Việc phát sinh: sửa lỗi Đợt 11 lệch hợp đồng (`MembersPage` đọc `content/page.*` thay vì `items/totalPages/page`; `MemberProfileCard` đọc `birthDay/deathLunarDay...` thay vì `birth/deathLunar/deathSolar`); thẻ hồ sơ thêm tên húy, nhãn; trang chi tiết thêm khối Tiểu sử.
+- Việc nên làm thêm: Đợt 13 xóa cả dòng người thân khi có store (đã để chỗ ở `deleteMember`, `relations: []`) và mở route sửa cho User tự sửa hồ sơ; Đợt 23 đọc `store.deleted`.
 
 **🔧 Setup thủ công cần làm:** Không có.
 
@@ -148,15 +153,15 @@ IDEA §6.1, §6.7 · DECISIONS #58, #62, #67, #72
 
 ---
 
-### Đợt 13 — Người thân, "Tôi là ai" và tự sửa hồ sơ FE ⬜
+### Đợt 13 — Người thân, "Tôi là ai" và tự sửa hồ sơ FE ✅ 2026-09-25
 IDEA §2, §6.1, §6.2, §6.3, §6.7, §6.10 · DECISIONS #71, #75, #76, #78, #79–#82
-- [ ] Hợp đồng:
+- [x] Hợp đồng: ✅ 2026-09-25
   - Người thân: `GET /api/members/{id}/relatives` (mỗi dòng có `id`, người thân dạng `MemberSummary`, `label`), `POST /api/members/{id}/relatives` (`relativeMemberId`, `label`), `PUT /api/members/{id}/relatives/{relativeId}` (`label`), `DELETE /api/members/{id}/relatives/{relativeId}`. Lỗi: 409 `RELATIVE_EXISTS`, 400 khi tự thêm chính mình, 403 khi không phải chủ hồ sơ hay Admin.
   - Liên kết: `POST /api/link-requests`, `GET /api/link-requests/mine`, `DELETE /api/me/member-link`, và cho Admin `GET /api/link-requests?status=PENDING`, `POST /api/link-requests/{id}/approve`, `POST /api/link-requests/{id}/reject`.
   - Admin gán/hủy liên kết trực tiếp (#80): `PUT /api/admin/accounts/{id}/member-link` (`memberId`) và `DELETE /api/admin/accounts/{id}/member-link`. Lỗi: 409 `MEMBER_ALREADY_LINKED` (thành viên đã có tài khoản khác), 409 `ACCOUNT_ALREADY_LINKED` (tài khoản đã liên kết người khác), 409 `INVALID_ACCOUNT_STATE` (tài khoản chưa duyệt), 404 khi không có tài khoản hoặc thành viên.
   - `AccountAdminResponse` (của `GET /api/admin/accounts`) thêm thành viên đang liên kết (id và họ tên, `null` nếu chưa có).
   - `PUT /api/members/{id}`: bổ sung quyền của chủ hồ sơ (#76) và lỗi 403 `DEATH_FIELDS_ADMIN_ONLY`. `POST /api/files/sign` và `/confirm` với `kind=AVATAR`: chủ hồ sơ được gọi cho hồ sơ của mình (#78).
-- [ ] Handler giả lập:
+- [x] Handler giả lập: ✅ 2026-09-25
   - Người thân: một chiều; một người chỉ xuất hiện một lần trong danh sách của một hồ sơ; không tự thêm chính mình; nhãn bắt buộc, cắt khoảng trắng, dài ≤ 50 ký tự; người thân phải là thành viên đã có. Chỉ chủ hồ sơ (theo `memberId` của `/api/me` đã bọc) hoặc Admin được ghi.
   - Sửa hồ sơ: User chỉ sửa được hồ sơ của mình. Đổi giá trị ở nhóm "đã mất" thì trả 403 `DEATH_FIELDS_ADMIN_ONLY`, giá trị giữ nguyên thì bỏ qua.
   - Liên kết 1–1 (#80): không liên kết được thành viên đã có tài khoản khác, tài khoản đã liên kết thì phải hủy trước. User tự hủy liên kết của mình, Admin hủy được của bất kỳ ai.
@@ -165,16 +170,23 @@ IDEA §2, §6.1, §6.2, §6.3, §6.7, §6.10 · DECISIONS #71, #75, #76, #78, #7
   - Khóa hoặc từ chối tài khoản không gỡ liên kết (#82).
   - **Bọc** `GET /api/me` để gắn `memberId` từ store. **Bọc** `GET /api/admin/accounts` (backend thật) để gắn thành viên đang liên kết từ store.
   - Handler xóa thành viên (Đợt 12): dọn các dòng người thân ở cả hai phía, gỡ liên kết của tài khoản (tài khoản vẫn còn).
-- [ ] Khối **Người thân** trên hồ sơ:
+- [x] Khối **Người thân** trên hồ sơ: ✅ 2026-09-25
   - danh sách "Tên — nhãn", mỗi tên là một link;
   - chủ hồ sơ và Admin có "Thêm người thân": chọn thành viên (tìm không dấu, loại chủ hồ sơ và những người đã có trong danh sách), nhập nhãn; sửa nhãn và xóa được;
   - người khác chỉ xem.
-- [ ] **Tự sửa hồ sơ:** trên hồ sơ của chính mình, User thấy nút "Sửa hồ sơ của tôi". Nút mở `MemberForm` với `lockDeathFields`: nhóm "đã mất" chỉ để xem, kèm ghi chú "Chỉ Admin sửa được phần này". `AvatarUpload` cũng mở cho chủ hồ sơ (ở chế độ giả lập vẫn báo "Cần kết nối máy chủ").
-- [ ] Trang **"Tôi là ai"** (menu Thêm): tìm thành viên, bấm "Đây là tôi", có trạng thái đang chờ, và hủy liên kết. Hồ sơ của chính mình có dấu "Đây là bạn".
-- [ ] Quản trị > **Yêu cầu liên kết**: danh sách chờ, Duyệt, Từ chối, badge số đang chờ.
-- [ ] Quản trị > **Tài khoản** (trang của Đợt 10): mỗi dòng hiện thành viên đang liên kết (link tới hồ sơ). Tài khoản đã duyệt mà chưa liên kết có "Gán thành viên" (hộp chọn thành viên chưa có tài khoản, tìm không dấu, bottom sheet trên điện thoại). Tài khoản đã liên kết có "Hủy liên kết" (qua `ConfirmDialog`). Lỗi 409 hiện đúng thông báo.
+- [x] **Tự sửa hồ sơ:** trên hồ sơ của chính mình, User thấy nút "Sửa hồ sơ của tôi". Nút mở `MemberForm` với `lockDeathFields`: nhóm "đã mất" chỉ để xem, kèm ghi chú "Chỉ Admin sửa được phần này". `AvatarUpload` cũng mở cho chủ hồ sơ (ở chế độ giả lập vẫn báo "Cần kết nối máy chủ"). ✅ 2026-09-25
+- [x] Trang **"Tôi là ai"** (menu Thêm): tìm thành viên, bấm "Đây là tôi", có trạng thái đang chờ, và hủy liên kết. Hồ sơ của chính mình có dấu "Đây là bạn". ✅ 2026-09-25
+- [x] Quản trị > **Yêu cầu liên kết**: danh sách chờ, Duyệt, Từ chối, badge số đang chờ. ✅ 2026-09-25
+- [x] Quản trị > **Tài khoản** (trang của Đợt 10): mỗi dòng hiện thành viên đang liên kết (link tới hồ sơ). Tài khoản đã duyệt mà chưa liên kết có "Gán thành viên" (hộp chọn thành viên chưa có tài khoản, tìm không dấu, bottom sheet trên điện thoại). Tài khoản đã liên kết có "Hủy liên kết" (qua `ConfirmDialog`). Lỗi 409 hiện đúng thông báo. ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- Hợp đồng: thêm tag `relatives`, `member-links`; `GET/POST /api/members/{id}/relatives`, `PUT/DELETE .../{relativeId}`; `POST/GET /api/link-requests`, `GET .../mine`, `POST .../{id}/approve|reject`; `DELETE /api/me/member-link`; `PUT/DELETE /api/admin/accounts/{id}/member-link`; schema `Relative`, `LinkRequest`, `LinkedMember`...; `AccountAdminResponse.member`. Đã chạy `gen:api`.
+- Handler giả lập: `handlers/relatives.ts` (một chiều, không trùng, không tự thêm mình, nhãn ≤ 50, chỉ chủ hồ sơ hoặc Admin ghi), `handlers/links.ts` (liên kết 1–1, yêu cầu, Admin gán/hủy, chép email một lần, bọc `GET /me` và `GET /admin/accounts`), `handlers/common.ts` (tách phần dùng chung khỏi `members.ts`), `mock/links.ts`; xóa thành viên dọn người thân hai phía, gỡ liên kết, hủy yêu cầu chờ. Store thêm `relatives`, `links`, `linkRequests` (kho cũ tự khởi tạo).
+- FE: khối **Người thân** (`RelativesSection`, `AddRelativeDialog`, `EditRelativeDialog`), nút "Sửa hồ sơ của tôi" + dấu "Đây là bạn", `MemberFormPage` mở cho chủ hồ sơ với `lockDeathFields`, trang **Tôi là ai** (`/them/toi-la-ai`), Quản trị > **Yêu cầu liên kết** (`/quan-tri/yeu-cau-lien-ket`, badge số đang chờ ở `AdminLayout`), Quản trị > **Tài khoản** có cột Thành viên, "Gán thành viên", "Hủy liên kết". Thành phần dùng chung mới: `ModalDialog`, `MemberPickerDialog`, `MemberIdentity`; hook `useMe`, `useMemberSearch`, `useDebouncedValue`.
+- File chính: `shared/api/openapi.yaml`, `services/mock/{links.ts,handlers/{links,relatives,common,members}.ts,store.ts}`, `features/member/components/{RelativesSection,AddRelativeDialog,EditRelativeDialog}.tsx`, `features/link/*`, `features/admin/{components/{AdminLayout,LinkRequestList,AssignMemberDialog,AccountList,AccountActions}.tsx,pages/LinkRequestsPage.tsx}`, `pages/routes.tsx`.
+- Quyết định đã hỏi và chốt với bạn: hộp "Gán thành viên" liệt kê mọi thành viên, người đã có tài khoản khác thì máy chủ báo 409 `MEMBER_ALREADY_LINKED`; không thêm endpoint hủy yêu cầu đang chờ (gửi thêm khi đang chờ thì 409 `LINK_REQUEST_EXISTS`).
+- Việc phát sinh: hộp thêm người thân vẫn hiện chủ hồ sơ và người đã có nhưng khóa, kèm lý do ("Chủ hồ sơ", "Đã có trong danh sách"), để bước 2 thấy được thông báo "đã có"; dòng tài khoản của chính Admin không có nút Gán/Hủy liên kết (Admin tự liên kết qua "Tôi là ai" rồi tự duyệt); lỗi 409 `NOT_LINKED`, `LINK_REQUEST_NOT_PENDING`, `LINK_REQUEST_EXISTS`, `RELATIVE_NOT_FOUND` là mã lỗi mới do đợt này đặt trong hợp đồng (Đợt 28 làm khớp).
+- Việc nên làm thêm: cho User tự hủy yêu cầu đang chờ (cần thêm endpoint, Đợt 28 làm theo); Đợt 28 cần tự tính `AccountAdminResponse.member` và `MeResponse.memberId`; Đợt 34 gửi thông báo "kết quả liên kết"; Đợt 23 đọc `store.deleted[].relations` (đã có dữ liệu).
 
 **🔧 Setup thủ công cần làm:** Không có.
 
@@ -190,26 +202,38 @@ IDEA §2, §6.1, §6.2, §6.3, §6.7, §6.10 · DECISIONS #71, #75, #76, #78, #7
 
 ---
 
-### Đợt 14 — Cây FE: mô hình và thuật toán layout ⬜
+### Đợt 14 — Cây FE: mô hình và thuật toán layout ✅ 2026-09-25
 IDEA §8 · DECISIONS #34, #60, #61
-- [ ] Hợp đồng `GET /api/tree`: trả `nodes` (`id`, `memberId|null`, `parentNodeId`, `coParentNodeId`, `sortOrder`, cùng tóm tắt thành viên gồm họ tên, giới tính, đã mất, năm sinh–mất, nhãn, avatar) và `spouses` (`nodeId`, `spouseNodeId`, `order`). Đời **không** nằm trong response, frontend tự tính.
-- [ ] `src/utils/tree/` (hàm thuần, lớp giả lập và UI dùng chung):
+- [x] Hợp đồng `GET /api/tree`: trả `nodes` (`id`, `memberId|null`, `parentNodeId`, `coParentNodeId`, `sortOrder`, cùng tóm tắt thành viên gồm họ tên, giới tính, đã mất, năm sinh–mất, nhãn, avatar) và `spouses` (`nodeId`, `spouseNodeId`, `order`). Đời **không** nằm trong response, frontend tự tính. ✅ 2026-09-25
+- [x] `src/utils/tree/` (hàm thuần, lớp giả lập và UI dùng chung): ✅ 2026-09-25
   - tính đời theo từng cây rời; lấy tổ tiên, con cháu, nhánh;
   - danh sách thành viên chưa có trên cây;
   - kiểm tra hợp lệ cho mọi thao tác theo #60 và #61: "+ Cha/Mẹ" chỉ ở Đời 01, bắt buộc chọn cặp khi có ≥ 2 vợ/chồng, ô vợ/chồng không có "+ Vợ/Chồng", xóa ô trống, di chuyển chặn vòng, mỗi thành viên chỉ có một ô.
-- [ ] `features/tree/layout/layoutTree.ts`: hàm thuần, kết quả xác định.
+- [x] `features/tree/layout/layoutTree.ts`: hàm thuần, kết quả xác định. ✅ 2026-09-25
   - Đầu vào: đồ thị cùng options (`collapsedIds`, `rootNodeId`, `maxDepth`, `focusNodeId`).
   - Đầu ra: toạ độ các ô, đường nối (hôn nhân, cặp đến con, một mình cha/mẹ đến con), và `y` của từng hàng đời.
   - Quy tắc: mỗi đời một hàng. Đơn vị xếp là ô thuộc dòng cùng các vợ/chồng xếp hai bên theo `order`. Con đi xuống từ trung điểm của đúng cặp. Anh em xếp theo `sortOrder`. Ô trống có cùng kích thước. Nén cây con để không chồng lấn. Các cây rời đặt cạnh nhau.
-- [ ] Trang `/dev/cay` (chỉ có ở chế độ dev): vẽ SVG thô từ vài đồ thị mẫu viết ngay trong trang (nhiều vợ + ô trống, 2 gốc không nối, ô trống có con cháu; tên "Ô 1, Ô 2…", không dùng người thật) để tự kiểm bằng mắt.
+- [x] Trang `/dev/cay` (chỉ có ở chế độ dev): vẽ SVG thô từ vài đồ thị mẫu viết ngay trong trang (nhiều vợ + ô trống, 2 gốc không nối, ô trống có con cháu; tên "Ô 1, Ô 2…", không dùng người thật) để tự kiểm bằng mắt. ✅ 2026-09-25
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- Hợp đồng `GET /api/tree` (`TreeResponse`, `TreeNode`, `TreeSpouse`, `TreeMember`) trong `shared/api/openapi.yaml`, đã `gen:api`; thêm token `--color-tree-line` (DESIGN §1, §6, §8.1 và `index.css`).
+- `utils/tree/` (`types`, `graph`, `rules`): chỉ mục đồ thị, đời theo cây rời, tổ tiên/con cháu/nhánh, đồ thị con và "tổ tiên của tôi", thành viên chưa lên cây; các hàm `check*` cho mọi thao tác #60/#61 trả mã lỗi + `TREE_ERROR_STATUS`, và `getAddOptions` cho ba nút "+".
+- `features/tree/layout/layoutTree.ts` (+ `types.ts`): hàm thuần, contour-packing từng đời, vợ/chồng xen kẽ hai bên, con từ trung điểm cặp, làn riêng cho từng cặp, cây rời đặt cạnh nhau; options `collapsedIds`, `rootNodeId`, `maxDepth`, `focusNodeId` (tự mở nhánh tới ô đó).
+- Trang `/dev/cay` (`features/tree/pages/TreeLayoutDevPage.tsx`, `dev/LayoutSvg.tsx`, `dev/samples.ts`; route nạp động chỉ khi `import.meta.env.DEV`) với 5 ca mẫu, chọn đời, thu gọn, xem từ ô đã chọn.
+- **Quy ước tự chốt (sửa ở một chỗ nếu bạn muốn khác):**
+  - `parentNodeId` của con luôn là ô thuộc dòng, `coParentNodeId` là ô vợ/chồng (ghi trong mô tả `GET /api/tree`).
+  - Vợ/chồng xếp xen kẽ theo thứ tự: 1 bên trái, 2 bên phải, 3 bên trái (xa hơn)... đúng hình minh họa IDEA §8. Cặp không kề nhau (từ vợ/chồng thứ 3) thì đường hôn nhân đi vòng dưới các ô.
+  - Anh em xếp đúng `sortOrder` kể cả khi khác cặp (không gom theo cặp), nên có thể có đường nối cắt nhau.
+  - Mã lỗi mới ngoài danh sách roadmap: `TREE_NODE_NOT_FOUND` (404), `TREE_INVALID_CO_PARENT`, `TREE_SPOUSE_NOT_ALLOWED`, `TREE_SLOT_EMPTY`, `TREE_MOVE_LINEAGE_ONLY`, `TREE_NOT_A_CHILD` (409). `TREE_SLOT_NOT_EMPTY` dùng cả khi xóa ô có người lẫn khi điền vào ô đã có người.
+- **Việc nên làm thêm (Đợt 15–16):** mở rộng `StoredTreeNode` của mock (thêm `coParentNodeId`, `sortOrder`, `spouses`) và thay `generationIndex` trong `mock/handlers/common.ts` bằng `computeGenerations` của `utils/tree`; ghi mã lỗi cây mới vào `Conflict` của openapi khi thêm API thao tác; `shared/fixtures/tree/` (STRUCTURE) chưa tạo vì không viết test (#84).
 
 **🔧 Setup thủ công cần làm:** Không có.
 
 **🧪 Test thủ công (từng bước):**
 1. Mở `/dev/cay`, chọn ca "nhiều vợ + ô trống": con nối đúng từ trung điểm của cặp, ô trống có viền đứt, không có ô nào chồng lên nhau.
 2. Chọn ca "2 gốc không nối": hai cây đứng cạnh nhau, cùng ở Đời 01.
+3. Ca "Ô trống có con cháu": con cháu của ô trống vẫn nối vào ô đó. Ca "Ba vợ/chồng": đường hôn nhân của người thứ 3 đi vòng dưới ô 2. Ca "Cây rộng": các cây con sát nhau, không chồng lấn.
+4. Chọn một ô có con rồi bấm "Thu gọn nhánh": con cháu ẩn, dưới ô hiện "+N con". Chọn "Số đời hiện" 2: chỉ còn 2 hàng. "Xem từ ô này" chỉ vẽ nhánh của ô đã chọn, cột Đời vẫn ghi đời thật.
 
 ---
 

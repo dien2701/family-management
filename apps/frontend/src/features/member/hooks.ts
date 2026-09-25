@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { MemberInput, RelativeInput } from '@/types/api'
 import { useSearchParams } from 'react-router'
 import { memberApi, type MemberListQuery } from './api'
 
@@ -43,9 +44,88 @@ export function useMembers(query: MemberListQuery) {
   })
 }
 
-export function useMemberDetail(id: number) {
+export function useMemberDetail(id: number, enabled = true) {
   return useQuery({
     queryKey: ['members', id],
     queryFn: () => memberApi.getMemberDetail(id),
+    enabled,
+  })
+}
+
+/** Sau khi ghi dữ liệu thì mọi danh sách và hồ sơ đang cache đều cũ. */
+function useInvalidateMembers() {
+  const queryClient = useQueryClient()
+  return () => queryClient.invalidateQueries({ queryKey: ['members'] })
+}
+
+export function useCreateMember() {
+  const invalidate = useInvalidateMembers()
+  return useMutation({
+    mutationFn: (input: MemberInput) => memberApi.createMember(input),
+    onSuccess: invalidate,
+  })
+}
+
+export function useUpdateMember() {
+  const invalidate = useInvalidateMembers()
+  return useMutation({
+    mutationFn: ({ id, input }: { id: number; input: MemberInput }) =>
+      memberApi.updateMember(id, input),
+    onSuccess: invalidate,
+  })
+}
+
+export function useUploadAvatar() {
+  const invalidate = useInvalidateMembers()
+  return useMutation({
+    mutationFn: ({ memberId, file }: { memberId: number; file: File }) =>
+      memberApi.uploadAvatar(memberId, file),
+    onSuccess: invalidate,
+  })
+}
+
+export function useDeleteMember() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => memberApi.deleteMember(id),
+    // Không refetch ngay: trang chi tiết đang mở sẽ gặp 404 trước khi kịp chuyển đi
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['members'], refetchType: 'none' }),
+  })
+}
+
+const relativesKey = (memberId: number) => ['members', memberId, 'relatives'] as const
+
+/** Danh sách người thân của một hồ sơ (mọi tài khoản đã duyệt đều xem được). */
+export function useRelatives(memberId: number) {
+  return useQuery({
+    queryKey: relativesKey(memberId),
+    queryFn: () => memberApi.getRelatives(memberId),
+  })
+}
+
+export function useAddRelative(memberId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: RelativeInput) => memberApi.addRelative(memberId, input),
+    // Lỗi 409 (người này đã có trong danh sách từ nơi khác) cũng nên tải lại danh sách cho khớp
+    onSettled: () => queryClient.invalidateQueries({ queryKey: relativesKey(memberId) }),
+  })
+}
+
+export function useUpdateRelative(memberId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ relativeId, label }: { relativeId: number; label: string }) =>
+      memberApi.updateRelative(memberId, relativeId, label),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: relativesKey(memberId) }),
+  })
+}
+
+export function useDeleteRelative(memberId: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (relativeId: number) => memberApi.deleteRelative(memberId, relativeId),
+    // Lỗi 404 (dòng đã bị xóa ở nơi khác) cũng nên tải lại danh sách cho khớp
+    onSettled: () => queryClient.invalidateQueries({ queryKey: relativesKey(memberId) }),
   })
 }
