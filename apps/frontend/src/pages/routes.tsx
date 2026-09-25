@@ -20,7 +20,8 @@ import { PlainLayout } from '@/layout/PlainLayout'
 import type { RouteHandle } from '@/types/route'
 import { CalendarPage } from './CalendarPage'
 import { DashboardPage } from './DashboardPage'
-import { MembersPage } from './MembersPage'
+import { MembersPage } from '@/features/member/pages/MembersPage'
+import { MemberDetailPage } from '@/features/member/pages/MemberDetailPage'
 import { MorePage } from './MorePage'
 import { NotFoundPage } from './NotFoundPage'
 import { TreePage } from './TreePage'
@@ -77,6 +78,7 @@ export const routes: RouteObject[] = [
               { index: true, element: <DashboardPage />, handle: handle('Tổng quan') },
               { path: 'cay', element: <TreePage />, handle: handle('Cây') },
               { path: 'thanh-vien', element: <MembersPage />, handle: handle('Thành viên') },
+              { path: 'thanh-vien/:id', element: <MemberDetailPage />, handle: handle('Hồ sơ thành viên') },
               { path: 'lich', element: <CalendarPage />, handle: handle('Lịch') },
               { path: 'them', element: <MorePage />, handle: handle('Thêm') },
               {

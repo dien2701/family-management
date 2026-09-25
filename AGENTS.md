@@ -3,10 +3,10 @@
 > File này cho agent của **Antigravity** (Gemini). Nguồn quy tắc chính là `CLAUDE.md`, **mọi quy tắc trong đó đều áp dụng**. File này chỉ thêm những điều Antigravity cần biết vì không có hook và skill của Claude Code (DECISIONS #83).
 
 ## Đầu mỗi phiên
-1. Đọc `CLAUDE.md` (tổng quan, thuật ngữ, quy ước) và `roadmap/ROADMAP.md` (mục Quy tắc, bảng Tiến độ, mục của đợt được giao).
-2. Chỉ nhận đợt có cột **Công cụ = Antigravity** trong bảng Tiến độ (hiện là Đợt 11, 18, 19, 20, 21, 22, 23). Đợt ghi Claude Code thì dừng và báo người dùng.
+1. Đọc `CLAUDE.md` (tổng quan, thuật ngữ, quy ước). Trong `roadmap/ROADMAP.md` **chỉ đọc** mục Quy tắc, bảng Tiến độ và mục của đợt được giao (không đọc cả file).
+2. Chỉ nhận đợt có cột **Công cụ = Antigravity** trong bảng Tiến độ (hiện là Đợt 11, 18–19, 20–21, 22, 23). Đợt ghi Claude Code thì dừng và báo người dùng.
 3. Đọc đúng các file mà prompt của đợt nêu, gồm:
-   - `.claude/rules/frontend.md`, `.claude/rules/security.md`, `.claude/rules/git.md`;
+   - `.claude/rules/frontend.md` (thêm `security.md` nếu đợt đụng quyền);
    - `docs/DESIGN.md` trước khi làm UI;
    - các mục IDEA và DECISIONS mà prompt nêu.
    `docs/DECISIONS.md` thắng `roadmap/IDEA.md` khi mâu thuẫn.
@@ -26,21 +26,13 @@
 - Không làm việc ngoài checklist của đợt. Thấy việc cần làm thêm thì ghi vào mục ghi chú của đợt.
 - Không chạy song song với phiên Claude Code trên cùng repo.
 
-## Skill và kiểm tra
-- **Bắt buộc dùng skill `ui-ux-pro-max`** (`.agents/skills/ui-ux-pro-max`) cho mọi phần UI. Không dùng được thì dừng và báo người dùng.
-- Không có `run`, `dataviz`, `code-review`, `security-review`, `dot-close` của Claude Code. Thay bằng:
-  - `npm run lint`, `npm run build`, `npm test` phải pass. Có sửa hợp đồng thì thêm `npm run lint:api` và `npm run gen:api`.
-  - Chạy `npm run dev:mock` (trong `apps/frontend`, backend dev thật phải chạy cho đăng nhập), rồi tự kiểm tra bằng trình duyệt của Antigravity ở khổ **375px** và **1280px**: không cuộn ngang, chữ nền ≥16px, vùng chạm ≥44px, focus nhìn rõ.
-  - Tự rà các điểm phân quyền của đợt: ẩn nút hoặc menu với User, và handler giả lập trả 403 hoặc `ProblemDetail` đúng như backend.
+## Skill và kiểm tra (DECISIONS #84)
+- Dùng skill `ui-ux-pro-max` (`.agents/skills/ui-ux-pro-max`) cho phần UI. Không dùng được thì dừng và báo người dùng.
+- **Không** viết test mới, **không** chạy `npm run lint`/`build`/`test`, **không** mở trình duyệt. Chỉ chạy `npm run gen:api` khi có sửa `openapi.yaml`. Người dùng tự chạy kiểm tra và báo lỗi.
+- Test cũ hỏng vì đổi code thì xóa test đó, không sửa.
 
 ## Có điểm chưa rõ
 Hỏi người dùng trước khi làm. Hỏi ngắn, nêu các phương án và khuyến nghị. Không tự giả định rồi viết luôn.
 
 ## Khi xong đợt
-Làm đúng mục "Khi xong một đợt" trong `roadmap/ROADMAP.md`:
-- tick `- [x]` kèm ngày;
-- đổi ⬜ ở tiêu đề và ở bảng Tiến độ thành `✅ YYYY-MM-DD`;
-- điền **✅ Đã làm** (có ghi rõ phần đã tự kiểm tra ở 375px và 1280px), cập nhật 🔧 và 🧪 nếu khác dự kiến;
-- in khối **"➡️ Đợt tiếp"** ra chat theo mẫu, kể cả khi đợt kế thuộc Claude Code;
-- in bảng `skill | đã dùng (có/không)`;
-- rồi **DỪNG**.
+Làm đúng mục "Khi code xong một đợt" trong `roadmap/ROADMAP.md`: tick ✅ kèm ngày (checkbox, tiêu đề, bảng Tiến độ), điền **✅ Đã làm**, in ra chat **khối hướng dẫn thủ công** theo mẫu (setup, lệnh kiểm tra, bước test tay kèm 375px/1280px, lệnh git gợi ý, "➡️ Đợt tiếp" kèm prompt mẫu đã điền, kể cả khi đợt kế thuộc Claude Code), rồi **DỪNG**.

@@ -45,17 +45,14 @@ Family-Management/
 │   │   └── SKILL.md                Đóng đợt: chạy lệnh kiểm tra, tick ROADMAP, in bảng skill
 │   ├── be-slice/
 │   │   ├── SKILL.md                Thêm một lát cắt BE vào module
-│   │   └── references/             Mẫu entity, service, controller, test
+│   │   └── references/             Mẫu entity, service, controller
 │   ├── fe-feature/
 │   │   ├── SKILL.md                Nối một module FE với API
 │   │   └── references/             Mẫu api.ts, hooks.ts, trang, strings.ts
 │   └── flyway-migration/
 │       ├── SKILL.md                Tạo file V{n+1} và sửa entity cho khớp
 │       └── scripts/next-version.ps1   In ra số V tiếp theo
-└── agents/                       Subagent chuyên biệt (Markdown + YAML frontmatter)
-    ├── code-reviewer.md            Rà soát diff theo rules
-    ├── test-writer.md              Viết test theo mẫu của dự án
-    └── security-reviewer.md        Rà soát auth, duyệt tài khoản, phân quyền Admin, upload, AI
+└── agents/                       (trống: agent test/review đã xóa theo DECISIONS #84)
 ```
 
 **Hook trong `settings.json`:**
@@ -65,13 +62,12 @@ Family-Management/
 | `PreToolUse` (Edit/Write) | Chặn ghi vào `.env*` (trừ `.env.example`) và vào file Flyway `V*.sql` đã có |
 | `PostToolUse` (Edit/Write) | Sửa file `apps/frontend/**` thì chạy `eslint --fix` trên file đó |
 | `SessionStart` | In nhắc "đọc CLAUDE.md và roadmap/ROADMAP.md, chỉ làm một đợt" |
-| `Stop` | Nhắc chạy lệnh kiểm tra xong của đợt nếu có sửa code |
 
 **`.mcp.json`:** kết nối bằng HTTP, ưu tiên cài ở phạm vi dự án.
 
 | Server | Dùng cho |
 |---|---|
-| `playwright` | Điều khiển trình duyệt khi kiểm tra UI và viết E2E (Đợt 40) |
+| `playwright` | Điều khiển trình duyệt (chỉ khi người dùng yêu cầu; E2E đã bỏ theo #84) |
 | `mysql-dev` | Chỉ đọc DB dev để kiểm tra dữ liệu, không trỏ tới prod |
 
 ## 3. Backend: `apps/backend/`
@@ -138,7 +134,7 @@ apps/backend/
         ├── java/vn/giapha/
         │   ├── ModularityTests.java       ApplicationModules.verify()
         │   ├── support/                   Base class Testcontainers, dữ liệu mẫu, helper JWT
-        │   └── <module>/                  Test theo module (controller, service, phân quyền, chưa duyệt), ContractTest
+        │   └── <module>/                  Test cũ theo module (không viết thêm, #84)
         └── resources/                   Fixture test
 ```
 
@@ -177,7 +173,6 @@ apps/frontend/
 ├── public/                       Phục vụ nguyên trạng
 │   ├── icons/                      Icon PWA 192, 512, maskable
 │   └── favicon.svg
-├── e2e/                          Test Playwright
 └── src/
     ├── main.tsx                  Điểm vào, gắn providers
     ├── App.tsx                   Router + khung ứng dụng

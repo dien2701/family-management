@@ -1,7 +1,7 @@
 # QUYẾT ĐỊNH KỸ THUẬT (chốt 2026-09-25, đổi hướng v2 cùng ngày)
 
 > Bổ sung cho `roadmap/IDEA.md` (bản chốt v2), không thay thế IDEA.md. Nếu có chỗ khác với IDEA.md thì **file này thắng**.
-> **Mục J (#54–#74) là đổi hướng v2** và thắng mọi mục trước nó. **Mục K (#75–#78) là điều chỉnh "hồ sơ tự quản"**, thắng mục J khi mâu thuẫn. **Mục L (#79–#83) là tài khoản ≠ thành viên, liên kết và chia việc Claude Code / Antigravity**, thắng mục K khi mâu thuẫn. Quyết định cũ không còn đúng được đánh dấu **❌ Hủy** hoặc **🔁 Thay bằng #N**, giữ lại để tra lịch sử.
+> **Mục J (#54–#74) là đổi hướng v2** và thắng mọi mục trước nó. **Mục K (#75–#78) là điều chỉnh "hồ sơ tự quản"**, thắng mục J khi mâu thuẫn. **Mục L (#79–#83) là tài khoản ≠ thành viên, liên kết và chia việc Claude Code / Antigravity**, thắng mục K khi mâu thuẫn. **Mục M (#84) là tiết kiệm token: bỏ test mới và review**, thắng mọi mục trước. Quyết định cũ không còn đúng được đánh dấu **❌ Hủy** hoặc **🔁 Thay bằng #N**, giữ lại để tra lịch sử.
 > Cách chốt: người dùng chọn **"lấy toàn bộ khuyến nghị (KN)"** cho 50 câu hỏi làm rõ.
 > Các câu mang nhãn **⏳ Chưa chốt** đang dùng giá trị tạm, đổi được mà không ảnh hưởng kiến trúc.
 
@@ -121,9 +121,9 @@
     → **Chốt:** chỉ có `dev` (máy cá nhân, MySQL chạy bằng Docker) và `prod`, không có staging.
 43. **Sao lưu**
     → **Chốt:** `mysqldump` chạy bằng cron hằng ngày, đẩy lên Oracle Object Storage, giữ 30 ngày.
-44. **Test backend**
+44. 🔁 **Thay bằng #84** (phần test bắt buộc). **Test backend**
     → **Chốt:** JUnit 5 + Testcontainers MySQL 8.4 (máy dev cần Docker), không dùng H2. Không đặt ngưỡng coverage cứng. **Bắt buộc có test cho:** lịch âm, xếp cây (FE), phân quyền. (Cách ly family và khóa nhánh ❌ bỏ, thay bằng #74.)
-45. **Test frontend**
+45. 🔁 **Thay bằng #84** (bỏ E2E). **Test frontend**
     → **Chốt:** Vitest + Testing Library. Playwright E2E cho vài luồng chính, chạy ở Đợt 40 sau khi nối BE thật (luồng cụ thể ở ROADMAP, thay cho "tạo family").
 
 ## G. Thư viện giai đoạn 2–3
@@ -265,7 +265,7 @@
     - Các tool: `searchMembers`, `getMember`, `getRelatives` (danh sách người thân của một hồ sơ, cộng với cha mẹ, vợ chồng, con theo cây), `getTreePath`, `upcomingEvents`, `lunarConvert`, `stats`, `draftProposal` (chỉ đề xuất sự kiện, #77).
     - Lượt hỏi: User 15, Admin 30.
     - DTO của AI không có SĐT và email. Tài khoản chưa duyệt không dùng được AI.
-74. **Test bắt buộc (thay phần family/khóa ở #44)**
+74. 🔁 **Thay bằng #84.** **Test bắt buộc (thay phần family/khóa ở #44)**
     → **Chốt:** mỗi endpoint backend phải có các test sau:
     - phân quyền (User gọi API của Admin nhận 403);
     - tài khoản chưa duyệt nhận 403 `ACCOUNT_NOT_APPROVED`;
@@ -333,6 +333,18 @@
     - `AGENTS.md` ở gốc repo là file ngữ cảnh cho Antigravity: dẫn tới `CLAUDE.md`, ROADMAP, `.claude/rules/*` và ghi rõ các điều cấm mà hook của `.claude/settings.json` không chặn được ở Antigravity (ghi `.env*`, sửa file Flyway cũ, sửa `apps/backend`).
     - Git như cũ: mỗi đợt một nhánh `dot-NN-…`, chỉ commit khi người dùng yêu cầu. Các đợt làm lần lượt, **không chạy song song** hai công cụ.
     - ROADMAP có cột "Công cụ", mẫu "➡️ Đợt tiếp" có thêm "Công cụ".
+
+## M. Tiết kiệm token (chốt 2026-09-25, hỏi đáp với người dùng)
+
+84. **Bỏ test mới, review và bước tự kiểm tra của AI (thay #44, #45, #74 và phần kiểm tra ở #83)**
+    → **Chốt:**
+    - Không viết test mới ở mọi đợt (kể cả phân quyền, layout cây, lịch âm). Bỏ Đợt 40 (E2E) và `ContractTest`. Test hiện có vẫn giữ và chạy trong CI; đổi code làm test cũ hỏng thì xóa test đó.
+    - Bỏ `code-review`, `security-review`, `run`, `dataviz`, `xlsx`/`pdf` và các agent `test-writer`, `code-reviewer`, `security-reviewer`. Skill duy nhất là `ui-ux-pro-max` cho đợt FE (cả Claude Code và Antigravity).
+    - AI (Claude Code và Antigravity) không chạy lint/build/test/verify, không mở app hay trình duyệt. AI chỉ chạy `npm run gen:api` khi sửa hợp đồng. Code xong thì tick ✅ ngay, in khối hướng dẫn thủ công (setup, lệnh kiểm tra, bước test tay, lệnh git gợi ý, đợt tiếp) rồi dừng; người dùng tự chạy và báo lỗi.
+    - Gộp đợt: 15–16, 18–19, 20–21, 26–27, 33–34, 36–37 (giữ số cũ để không phải sửa tham chiếu).
+    - Model: Opus chỉ ở Đợt 14; còn lại Sonnet, effort `high` cho đợt cây, quyền/tài khoản, AI; còn lại `medium`.
+    - ROADMAP chỉ giữ đợt chưa làm và một prompt mẫu chung; đợt 0–10 chuyển sang `roadmap/DONE.md`. Mỗi phiên chỉ đọc mục của đợt được giao.
+    - Phân quyền vẫn **bắt buộc chặn ở backend** như `.claude/rules/security.md`, chỉ là không có test tự động chứng minh; người dùng tự kiểm bằng bước 🧪.
 
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.

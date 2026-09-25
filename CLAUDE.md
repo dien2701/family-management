@@ -1,6 +1,7 @@
 # CLAUDE.md — Tộc Phả (Family Management)
 
-> **Đầu mỗi phiên đọc CLAUDE.md và ROADMAP.md** (`roadmap/ROADMAP.md`). Chỉ làm đúng đợt được giao, xong thì tick ✅ và DỪNG.
+> **Đầu mỗi phiên** chỉ đọc mục Quy tắc, bảng Tiến độ và mục của đợt được giao trong `roadmap/ROADMAP.md` (không đọc cả file). Chỉ làm đúng đợt đó, xong thì tick ✅, in hướng dẫn thủ công và DỪNG.
+> **Tiết kiệm token (DECISIONS #84):** không viết test mới, không review, không chạy lint/build/test/verify, không mở app. Người dùng tự chạy kiểm tra.
 
 ## Tổng quan
 PWA quản lý **một gia phả chung** (bản chốt v2, 2026-09-25): thành viên, danh sách người thân trong hồ sơ, cây gia phả do Admin dựng tay, ngày giỗ âm lịch, sinh nhật, sự kiện, nhắc lịch bằng Web Push, trợ lý AI (Gemini).
@@ -25,12 +26,13 @@ Giao diện gọi người đăng nhập là "tài khoản", người trong gia 
 | File | Nội dung | Khi nào đọc |
 |---|---|---|
 | `roadmap/IDEA.md` | Đặc tả nghiệp vụ **bản chốt v2** (nguồn sự thật), Phụ lục A là dữ liệu ban đầu | Khi làm module liên quan, đọc đúng mục § |
-| `docs/DECISIONS.md` | 83 quyết định kỹ thuật, **thắng IDEA.md khi có mâu thuẫn**. **Mục J (#54–#74) là đổi hướng v2**, thắng mọi mục trước; **mục K (#75–#78) là hồ sơ tự quản**, thắng mục J; **mục L (#79–#83) là tài khoản ≠ thành viên, liên kết, chia việc Claude Code / Antigravity**, thắng mục K; quyết định cũ bị hủy có đánh dấu ❌/🔁 | Khi phân vân về cách làm |
+| `docs/DECISIONS.md` | 84 quyết định kỹ thuật, **thắng IDEA.md khi có mâu thuẫn**. **Mục J (#54–#74) là đổi hướng v2**, thắng mọi mục trước; **mục K (#75–#78) là hồ sơ tự quản**, thắng mục J; **mục L (#79–#83) là tài khoản ≠ thành viên, liên kết, chia việc Claude Code / Antigravity**, thắng mục K; **mục M (#84) là tiết kiệm token: bỏ test mới, review**, thắng mọi mục trước; quyết định cũ bị hủy có đánh dấu ❌/🔁 | Khi phân vân về cách làm |
 | `AGENTS.md` | Ngữ cảnh cho Antigravity: dẫn về file này và ghi các điều cấm thay cho hook | Khi sửa quy tắc chung (giữ hai file khớp nhau) |
 | `docs/STRUCTURE.md` | Cây thư mục đích của `.claude/`, backend, frontend | Khi tạo file hoặc thư mục mới |
 | `shared/api/openapi.yaml` | **Hợp đồng API** (nguồn sự thật, có từ Đợt 9) | Trước khi làm hoặc đổi bất kỳ API nào |
 | `docs/DESIGN.md` | Token màu, font, bố cục, mẫu thành phần | **Bắt buộc** trước khi làm UI |
-| `roadmap/ROADMAP.md` | Các đợt, checklist, prompt của đợt tiếp | Đầu mỗi phiên |
+| `roadmap/ROADMAP.md` | Quy tắc, bảng Tiến độ, prompt mẫu, checklist các đợt còn lại | Đầu mỗi phiên (chỉ mục cần) |
+| `roadmap/DONE.md` | Chi tiết Đợt 0–10 đã xong | Chỉ khi cần tra cứu |
 | `.claude/rules/backend.md` | Quy tắc BE (tự nạp khi sửa `apps/backend/**`) | Khi làm BE |
 | `.claude/rules/frontend.md` | Quy tắc FE (tự nạp khi sửa `apps/frontend/**`) | Khi làm FE |
 | `.claude/rules/security.md` | Quy tắc bảo mật chung | Luôn áp dụng |
@@ -45,7 +47,7 @@ Nguồn sự thật về phiên bản là `apps/backend/pom.xml` và `apps/front
 | DB | **MySQL 8.4 LTS**, `utf8mb4_0900_ai_ci` |
 | Test BE | JUnit 5, Testcontainers (MySQL 8.4), Spring Modulith test |
 | Frontend | Node 24 LTS, npm, **React 19**, Vite, TypeScript (strict), Tailwind CSS 4, shadcn/ui, lucide, TanStack Query 5, React Router 7 (dạng thư viện), React Hook Form + Zod 4, `@xyflow/react` 12, vite-plugin-pwa, openapi-typescript |
-| Test FE | Vitest, Testing Library, Playwright (E2E, Đợt 40) |
+| Test FE | Vitest, Testing Library (chỉ test cũ, không viết mới — #84) |
 | Dịch vụ ngoài | Cloudinary (file), Google Identity Services (đăng nhập), Gemini `com.google.genai`, Web Push VAPID `nl.martijndwars:web-push` |
 | Báo cáo | Apache POI (Excel), OpenPDF (PDF, nhúng font Be Vietnam Pro) |
 | Hạ tầng | Docker Compose trên Oracle Cloud ARM (nginx + app + mysql + certbot), DuckDNS + Let's Encrypt, GHCR, GitHub Actions |
@@ -97,11 +99,11 @@ npm run build        # gồm tsc -b
 npm test             # Vitest
 ```
 
-## Định nghĩa "xong" của một đợt
-- **BE:** `.\mvnw.cmd verify` pass, bao gồm test Modulith, test phân quyền (User → 403 ở API của Admin) và tài khoản chưa duyệt (403 `ACCOUNT_NOT_APPROVED`). Từ Đợt 26 có thêm `ContractTest` khớp `openapi.yaml`.
-- **FE:** `npm run lint` và `npm run build` pass. `npm test` pass nếu có test. Đã chạy app (GĐ A: chế độ giả lập) và kiểm tra ở khổ 375px và 1280px.
-- Đã tick ✅ kèm ngày trong ROADMAP và điền đủ 4 mục cuối đợt.
-- **Cuối mỗi đợt in ra chat** khối "➡️ Đợt tiếp": tên đợt, công cụ · model gợi ý · effort (hoặc chế độ) · skill, và nguyên văn prompt của đợt kế (mẫu ở `roadmap/ROADMAP.md`, mục Quy tắc). Sau đó DỪNG, không tự làm đợt kế.
+## Định nghĩa "xong" của một đợt (DECISIONS #84)
+- Code xong checklist của đợt (AI không tự chạy kiểm tra). Có sửa hợp đồng thì đã chạy `npm run gen:api`.
+- Đã tick ✅ kèm ngày trong ROADMAP (checkbox, tiêu đề, bảng Tiến độ) và điền **✅ Đã làm**.
+- **In ra chat khối hướng dẫn thủ công** theo mẫu ở ROADMAP mục Quy tắc: setup, lệnh kiểm tra để người dùng tự chạy (FE: `npm run lint`, `npm run build`; BE: `.\mvnw.cmd compile`), các bước test tay (FE kèm 375px/1280px), lệnh git gợi ý, và "➡️ Đợt tiếp" kèm prompt mẫu đã điền. Sau đó DỪNG.
+- Người dùng báo lỗi thì sửa trong cùng phiên. Test cũ hỏng vì đổi code thì xóa test đó, không sửa.
 
 ## Quy ước chung
 - Tên biến, hàm và commit viết bằng tiếng Anh (Conventional Commits: `feat(member): ...`). Comment tiếng Việt, ngắn, chỉ viết khi cần giải thích "vì sao".
@@ -116,12 +118,6 @@ npm test             # Vitest
 - Bí mật chỉ đặt trong `.env`, không commit. Chi tiết bảo mật xem `.claude/rules/security.md`.
 
 ## Skill
-Mỗi đợt ghi rõ các skill phải gọi (xem ROADMAP, mục ➡️):
-- BE thường: `code-review`
-- Auth, tài khoản, quản trị, upload, AI: `security-review` + `code-review`
-- FE: `ui-ux-pro-max` + `run`
-- Có biểu đồ hoặc số liệu: thêm `dataviz`
-- Export: thêm `anthropic-skills:xlsx` và/hoặc `anthropic-skills:pdf`
-- Đợt giao **Antigravity**: chỉ `ui-ux-pro-max` (ở `.agents/skills/`), tự chạy lint/build/test và tự kiểm tra 375px, 1280px bằng trình duyệt của Antigravity (DECISIONS #83).
-
-Cuối phiên in bảng `skill | đã gọi (có/không)`. Khi in "➡️ Đợt tiếp", ghi cả **Công cụ** (Claude Code hoặc Antigravity) theo bảng Tiến độ.
+- Skill duy nhất: `ui-ux-pro-max` cho đợt FE (Claude Code gọi qua công cụ Skill; Antigravity dùng bản ở `.agents/skills/`).
+- Không dùng `code-review`, `security-review`, `run`, `dataviz`, `xlsx`/`pdf` và các agent test/review (DECISIONS #84).
+- Khi in "➡️ Đợt tiếp", ghi **Công cụ** và Model · Effort theo bảng Tiến độ.

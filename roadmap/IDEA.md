@@ -461,7 +461,7 @@ event · proposal · notification(push, inbox, scheduler) · file · ai · repor
 | **Chuẩn bị (Đợt 8)** | Backend nhỏ: Admin gốc, duyệt tài khoản, consent không gắn dòng họ |
 | **A. Frontend (Đợt 9–25)** | Hợp đồng API + lớp giả lập + dữ liệu 28 người, bỏ dòng họ ở FE, tài khoản và duyệt, thành viên (User tự sửa hồ sơ của mình), người thân, "Tôi là ai", cây (layout, hiển thị, dựng tay), lịch và sự kiện, dashboard, đề xuất sự kiện, thông báo, đính kèm, quản trị, AI, export và in cây, PWA |
 | **B. Backend (Đợt 26–38)** | Gỡ dòng họ + test hợp đồng, thành viên + seed, người thân + liên kết, cây, file, sự kiện + lịch nhắc, dashboard + quản trị, đề xuất sự kiện, thông báo, Web Push, AI, export |
-| **C. Nối và phát hành (Đợt 39–41)** | Nối FE với BE thật và gỡ lớp giả lập, E2E Playwright, deploy production |
+| **C. Nối và phát hành (Đợt 39–41)** | Nối FE với BE thật và gỡ lớp giả lập, deploy production (E2E đã bỏ, DECISIONS #84) |
 
 ## 14. Việc còn chờ
 

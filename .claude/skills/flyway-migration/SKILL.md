@@ -20,7 +20,7 @@ Hibernate chạy `ddl-auto: validate`, nên entity và SQL phải khớp từng 
    - Không lưu SĐT/email vào bảng log. Không dữ liệu bí mật trong seed.
    - Thêm cột NOT NULL vào bảng đã có dữ liệu thì cho `DEFAULT` hoặc làm 2 bước.
 4. **Sửa entity** (`entity/`) khớp tên cột, kiểu, nullability. Cập nhật DTO/mapper nếu lộ ra API; nếu API đổi thì sửa `shared/api/openapi.yaml` trước rồi `npm run gen:api` ở frontend.
-5. **Kiểm tra:** chạy `.\mvnw.cmd verify` (Testcontainers MySQL 8.4 chạy migration từ đầu, `validate` sẽ báo lệch entity). Có lỗi thì tạo file V **mới** để sửa nếu file trước đã chạy trên DB dùng chung; nếu file V vừa tạo chưa từng chạy ở đâu ngoài máy này thì được chỉnh lại.
+5. **Kiểm tra:** AI không chạy (DECISIONS #84); nhắc người dùng chạy backend (`spring-boot:run`) để Flyway áp dụng file V và `validate` báo lệch entity. Có lỗi thì tạo file V **mới** để sửa nếu file trước đã chạy trên DB dùng chung; nếu file V vừa tạo chưa từng chạy ở đâu ngoài máy này thì được chỉnh lại.
 6. Ghi việc đổi schema vào mục ✅ Đã làm của đợt.
 
 Hook trong `.claude/settings.json` sẽ chặn ghi vào file V đã có; nếu bị chặn, đó là dấu hiệu cần file V mới.
