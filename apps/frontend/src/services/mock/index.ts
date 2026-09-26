@@ -4,6 +4,7 @@ import type { Me } from '@/types/api'
 import { todayInVietnam } from '@/utils/lunar'
 import type { HandlerContext, RealApi } from './context'
 import { buildRouter } from './handlers'
+import { offlineReal } from './handlers/auth'
 import { withLinkedMember } from './links'
 import type { MockRouter, Query } from './router'
 import { loadStore, saveStore } from './store'
@@ -22,7 +23,7 @@ export type MockResult = { handled: false } | { handled: true; data: unknown }
 
 type MockOptions = { query?: Query; body?: unknown }
 
-/** Vai trò người gọi luôn lấy từ `/api/me` thật, nên đăng nhập và duyệt tài khoản vẫn do backend quyết định. */
+/** Đăng nhập và `/me` do `handlers/auth.ts` giả lập (không cần backend); `VITE_MOCK_AUTH=real` thì lấy từ backend thật. */
 export async function handleMock(
   method: string,
   path: string,
@@ -34,6 +35,7 @@ export async function handleMock(
   if (!matched) return { handled: false }
 
   const store = loadStore()
+  real = offlineReal(real)
   const context: HandlerContext = {
     store,
     save: () => saveStore(store),
