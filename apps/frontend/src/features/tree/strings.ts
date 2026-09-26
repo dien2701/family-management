@@ -29,6 +29,7 @@ export const treeStrings = {
     searchResults: 'Kết quả tìm trên cây',
     searchNoMatch: 'Không có ai tên này trên cây.',
     myAncestors: 'Xem tổ tiên của tôi',
+    print: 'In cây',
     showAll: 'Xem toàn cây',
     moreGenerations: 'Hiện thêm 1 đời',
     dragHint: 'Kéo một ô sang ô khác để chuyển nhánh.',
@@ -168,6 +169,50 @@ export const treeStrings = {
 
   errors: {
     generic: 'Có lỗi xảy ra, vui lòng thử lại.',
+  },
+
+  print: {
+    title: 'In cây khổ lớn',
+    root: 'Người gốc',
+    rootAll: 'Toàn bộ cây (mọi gốc)',
+    rootOption: (generation: number, name: string) => `Đời ${pad(generation)} · ${name}`,
+    rootHint: 'Chọn một người để chỉ in nhánh của người đó (cùng vợ/chồng và con cháu).',
+    paper: 'Khổ giấy',
+    orientation: 'Hướng giấy',
+    portrait: 'Dọc',
+    landscape: 'Ngang',
+    format: 'Định dạng',
+    withPhotos: 'In kèm ảnh đại diện',
+    photosHint: 'Bỏ chọn nếu muốn file nhẹ hơn.',
+    summary: (people: number, generations: number) => `Cây có ${people} người, ${generations} đời.`,
+    pdfPlan: (pages: number, paper: string, orientation: string) =>
+      pages === 1
+        ? `PDF: 1 trang ${paper} ${orientation}, chữ vector, phóng to không vỡ.`
+        : `PDF: ${pages} trang ${paper} ${orientation}. In ra rồi ghép theo dấu cắt ở bốn góc.`,
+    pngPlan: (width: number, height: number, dpi: number) => `PNG: ${width}×${height} điểm ảnh, khoảng ${dpi} dpi.`,
+    pngLowDpi: 'Cây quá lớn nên ảnh PNG sẽ không nét khi in. Hãy chọn PDF hoặc chọn một nhánh nhỏ hơn.',
+    cancel: 'Đóng',
+    stop: 'Dừng',
+    create: 'Tạo file',
+    stages: {
+      fonts: 'Đang tải font...',
+      photos: (done: number, total: number) => `Đang tải ảnh đại diện (${done}/${total})...`,
+      layout: (percent: number) => `Đang dựng sơ đồ (${percent}%)...`,
+      pages: (done: number, total: number) => `Đang tạo trang PDF (${done}/${total})...`,
+      image: 'Đang tạo ảnh PNG...',
+    },
+    done: 'Đã tạo xong, file đang được tải về.',
+    aborted: 'Đã dừng.',
+    failed: 'Không tạo được file. Cây có thể quá lớn cho máy này, hãy thử chọn nhánh nhỏ hơn hoặc bỏ ảnh đại diện.',
+    // In trên giấy
+    docTitle: 'Cây gia phả',
+    docTitleBranch: (name: string) => `Cây gia phả · nhánh ${name}`,
+    docSubtitle: (people: number, date: string) => `${people} người · in ngày ${date}`,
+    generationLabel: (n: number) => `Đời ${pad(n)}`,
+    pageLabel: (page: number, total: number, row: number, col: number) =>
+      `Trang ${page}/${total} · hàng ${row}, cột ${col}`,
+    fileName: (paper: string, orientation: string, ext: string) => `cay-gia-pha-${paper}-${orientation}.${ext}`,
+    orientationSlug: { portrait: 'doc', landscape: 'ngang' },
   },
 
   dev: {

@@ -4,17 +4,12 @@ import { WifiOff, RefreshCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export function PWABadge() {
-  const [offline, setOffline] = useState(false)
+  const [offline, setOffline] = useState(() => typeof navigator !== 'undefined' && !navigator.onLine)
 
   useEffect(() => {
     const handleOnline = () => setOffline(false)
     const handleOffline = () => setOffline(true)
     
-    // Initial check
-    if (typeof navigator !== 'undefined') {
-      setOffline(!navigator.onLine)
-    }
-
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
     return () => {
@@ -27,8 +22,8 @@ export function PWABadge() {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r) {
-      console.log('SW Registered: ', r)
+    onRegistered(registration) {
+      console.log('SW Registered: ', registration)
     },
     onRegisterError(error) {
       console.log('SW registration error', error)

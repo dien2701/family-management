@@ -1,15 +1,15 @@
-import type { LucideIcon } from 'lucide-react'
+import { Inbox, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 type EmptyStateProps = {
-  icon: LucideIcon
+  icon?: LucideIcon
   title: string
   description?: string
   action?: ReactNode
 }
 
 // Trạng thái rỗng: icon lớn + một câu ngắn + một nút gợi ý (DESIGN §6)
-export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon: Icon = Inbox, title, description, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-card border border-border bg-surface px-4 py-12 text-center shadow-card">
       <span className="flex size-16 items-center justify-center rounded-full bg-secondary text-secondary-fg">

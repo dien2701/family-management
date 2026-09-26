@@ -1,24 +1,25 @@
 import { Download, MonitorSmartphone, Share, PlusSquare, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
+type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
+
+const detectStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches ||
+  (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+
+const detectIOS = () =>
+  /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window)
+
 export function InstallAppItem() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
-  const [isIOS, setIsIOS] = useState(false)
+  const [deferredPrompt, setDeferredPrompt] = useState<InstallPromptEvent | null>(null)
+  const [isIOS] = useState(detectIOS)
   const [showIOSInstruction, setShowIOSInstruction] = useState(false)
-  const [isStandalone, setIsStandalone] = useState(false)
+  const [isStandalone] = useState(detectStandalone)
 
   useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
-      setIsStandalone(true)
-    }
-
-    const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
-    setIsIOS(isIosDevice)
-
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
-      setDeferredPrompt(e)
+      setDeferredPrompt(e as InstallPromptEvent)
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)

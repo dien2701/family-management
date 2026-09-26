@@ -22,7 +22,7 @@ try {
     denylist: [/^\/api\//],
   })
   registerRoute(navigationRoute)
-} catch (e) {
+} catch {
   // Catch errors in dev mode
 }
 

@@ -2,7 +2,7 @@ import type { Schemas } from '@/types/api'
 import type { HandlerContext } from '../context'
 import type { MockRequest, MockRouter } from '../router'
 import { requireAdmin, requireApproved } from './common'
-import { ApiError } from '../router'
+import { mockProblem } from '../problem'
 
 function getProposals(context: HandlerContext) {
   const store = context.store
@@ -18,7 +18,7 @@ async function createProposal(request: MockRequest, context: HandlerContext): Pr
   const body = request.body as Schemas['ProposalInput']
   
   if (!body.targetType || !body.action) {
-    throw new ApiError(400, 'ValidationError', 'Invalid input')
+    throw mockProblem(400, 'VALIDATIONERROR', 'Invalid input')
   }
 
   const proposals = getProposals(context)
@@ -34,8 +34,8 @@ async function createProposal(request: MockRequest, context: HandlerContext): Pr
 
   const newProposal: Schemas['Proposal'] = {
     id: newId,
-    accountId: user.id,
-    accountName: user.fullName,
+    accountId: user.id ?? 0,
+    accountName: user.fullName ?? '',
     targetType: body.targetType,
     action: body.action,
     targetId: body.targetId ?? null,
@@ -55,8 +55,8 @@ async function createProposal(request: MockRequest, context: HandlerContext): Pr
 
 async function getMyProposals(request: MockRequest, context: HandlerContext): Promise<Schemas['ProposalPage']> {
   const user = await requireApproved(context)
-  const page = parseInt(request.url.searchParams.get('page') || '1', 10)
-  const size = parseInt(request.url.searchParams.get('size') || '10', 10)
+  const page = parseInt(String(request.query['page'] ?? '1'), 10)
+  const size = parseInt(String(request.query['size'] ?? '10'), 10)
 
   const proposals = getProposals(context).filter(p => p.accountId === user.id)
   proposals.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -71,10 +71,10 @@ async function getMyProposals(request: MockRequest, context: HandlerContext): Pr
 }
 
 async function getAdminProposals(request: MockRequest, context: HandlerContext): Promise<Schemas['ProposalPage']> {
-  await requireAdmin(context)
-  const status = request.url.searchParams.get('status')
-  const page = parseInt(request.url.searchParams.get('page') || '1', 10)
-  const size = parseInt(request.url.searchParams.get('size') || '10', 10)
+  requireAdmin(await requireApproved(context))
+  const status = request.query['status']
+  const page = parseInt(String(request.query['page'] ?? '1'), 10)
+  const size = parseInt(String(request.query['size'] ?? '10'), 10)
 
   let proposals = getProposals(context)
   if (status) {
@@ -92,25 +92,25 @@ async function getAdminProposals(request: MockRequest, context: HandlerContext):
   }
 }
 
-async function countPendingProposals(request: MockRequest, context: HandlerContext): Promise<number> {
-  await requireAdmin(context)
+async function countPendingProposals(_request: MockRequest, context: HandlerContext): Promise<number> {
+  requireAdmin(await requireApproved(context))
   return getProposals(context).filter(p => p.status === 'PENDING').length
 }
 
 async function approveProposal(request: MockRequest, context: HandlerContext): Promise<void> {
-  await requireAdmin(context)
-  const id = parseInt(request.params.id, 10)
-  const body = request.body as { modifiedPayload?: Record<string, any> } | null
+  requireAdmin(await requireApproved(context))
+  const id = parseInt(request.params['id'] ?? '', 10)
+  const body = request.body as { modifiedPayload?: Record<string, unknown> } | null
 
   const proposals = getProposals(context)
   const p = proposals.find(x => x.id === id)
-  if (!p) throw new ApiError(404, 'NotFound', 'Proposal not found')
+  if (!p) throw mockProblem(404, 'NOTFOUND', 'Proposal not found')
 
   if (p.status !== 'PENDING') {
-    throw new ApiError(409, 'Conflict', 'Đề xuất không còn ở trạng thái chờ')
+    throw mockProblem(409, 'CONFLICT', 'Đề xuất không còn ở trạng thái chờ')
   }
   if (p.conflict) {
-    throw new ApiError(409, 'Conflict', 'Sự kiện đã bị sửa đổi, vui lòng tải lại')
+    throw mockProblem(409, 'CONFLICT', 'Sự kiện đã bị sửa đổi, vui lòng tải lại')
   }
 
   p.status = 'APPROVED'
@@ -135,16 +135,16 @@ async function approveProposal(request: MockRequest, context: HandlerContext): P
 }
 
 async function rejectProposal(request: MockRequest, context: HandlerContext): Promise<void> {
-  await requireAdmin(context)
-  const id = parseInt(request.params.id, 10)
+  requireAdmin(await requireApproved(context))
+  const id = parseInt(request.params['id'] ?? '', 10)
   const body = request.body as { note: string }
 
   const proposals = getProposals(context)
   const p = proposals.find(x => x.id === id)
-  if (!p) throw new ApiError(404, 'NotFound', 'Proposal not found')
+  if (!p) throw mockProblem(404, 'NOTFOUND', 'Proposal not found')
 
   if (p.status !== 'PENDING') {
-    throw new ApiError(409, 'Conflict', 'Đề xuất không còn ở trạng thái chờ')
+    throw mockProblem(409, 'CONFLICT', 'Đề xuất không còn ở trạng thái chờ')
   }
 
   p.status = 'REJECTED'

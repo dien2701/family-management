@@ -74,6 +74,8 @@ export type MockStore = {
   proposals?: Schemas['Proposal'][]
   notifications?: Schemas['Notification'][]
   notificationPrefs?: Record<number, Schemas['NotificationPref']>
+  attachments?: Schemas['Attachment'][]
+  settings?: Schemas['SystemSettings']
 }
 
 type SeedMember = {
@@ -113,6 +115,14 @@ export function buildSeedStore(now: Date = new Date()): MockStore {
     relatives: [],
     links: [],
     linkRequests: [],
+    attachments: [],
+    settings: {
+      policyVersion: 1,
+      aiQuotaUser: 15,
+      aiQuotaAdmin: 30,
+      uploadMaxMb: 10,
+      totalQuotaMb: 1024,
+    },
   }
 }
 

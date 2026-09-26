@@ -26,6 +26,12 @@ export function AdminLayout() {
           <li>
             <SectionLink to="/quan-tri/de-xuat" label="Duyệt đề xuất" count={pendingProposalsCount} />
           </li>
+          <li>
+            <SectionLink to="/quan-tri/da-xoa" label="Thành viên đã xóa" />
+          </li>
+          <li>
+            <SectionLink to="/quan-tri/cau-hinh" label="Cấu hình" />
+          </li>
         </ul>
       </nav>
       <Outlet />

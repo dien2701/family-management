@@ -16,6 +16,7 @@ export const calendarStrings = {
     upcoming: 'Sắp tới',
     month: 'Lịch tháng',
     addEvent: 'Thêm sự kiện',
+    proposeEvent: 'Đề xuất sự kiện',
   },
   types: {
     MEMORIAL: 'Giỗ',

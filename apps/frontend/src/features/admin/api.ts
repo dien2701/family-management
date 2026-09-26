@@ -1,3 +1,4 @@
+import type { Schemas } from '@/types/api'
 import { api } from '@/services/client'
 import type {
   AccountAdmin,
@@ -34,4 +35,14 @@ export const linkRequestsApi = {
     api.get<LinkRequest[]>('/link-requests', { query: { status } }),
   approve: (id: number) => api.post<LinkRequest>(`/link-requests/${id}/approve`),
   reject: (id: number) => api.post<LinkRequest>(`/link-requests/${id}/reject`),
+}
+
+export const adminSettingsApi = {
+  get: () => api.get<Schemas['SystemSettings']>('/admin/settings'),
+  update: (settings: Schemas['SystemSettings']) => api.put<Schemas['SystemSettings']>('/admin/settings', settings),
+}
+
+export const adminDeletedMembersApi = {
+  list: (query: { page?: number; size?: number }) => api.get<Schemas['PageResponseDeletedMemberSnapshotSummary']>('/admin/deleted-members', { query }),
+  get: (auditId: number) => api.get<Schemas['DeletedMemberSnapshot']>(`/admin/deleted-members/${auditId}`),
 }

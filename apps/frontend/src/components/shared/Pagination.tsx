@@ -6,11 +6,18 @@ type PaginationProps = {
   page: number
   totalPages: number
   onChange: (page: number) => void
-  labels: { nav: string; previous: string; next: string; position: (page: number, total: number) => string }
+  labels?: { nav: string; previous: string; next: string; position: (page: number, total: number) => string }
+}
+
+const defaultLabels = {
+  nav: 'Phân trang',
+  previous: 'Trang trước',
+  next: 'Trang sau',
+  position: (page: number, total: number) => `Trang ${page}/${total}`,
 }
 
 // Chỉ nhận props, không biết gì về dữ liệu; ẩn khi chỉ có một trang
-export function Pagination({ page, totalPages, onChange, labels }: PaginationProps) {
+export function Pagination({ page, totalPages, onChange, labels = defaultLabels }: PaginationProps) {
   if (totalPages <= 1) return null
   return (
     <nav aria-label={labels.nav} className="flex items-center justify-center gap-3">

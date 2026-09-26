@@ -1,28 +1,17 @@
-import { fetchApi } from '@/utils/api'
-import type { Schemas } from '@/types/api'
+import { api } from '@/services/client'
+import type { NotificationPage, NotificationPref, PushSubscription } from '@/types/api'
 
 export const notificationApi = {
   getAll: (page: number, size: number) =>
-    fetchApi(`/api/notifications?page=${page}&size=${size}`),
-  getUnreadCount: () => fetchApi('/api/notifications/unread-count'),
-  read: (id: number) => fetchApi(`/api/notifications/${id}/read`, { method: 'POST' }),
-  readAll: () => fetchApi('/api/notifications/read-all', { method: 'POST' }),
-  getPreferences: () => fetchApi('/api/notifications/preferences'),
-  updatePreferences: (data: Schemas['NotificationPref']) =>
-    fetchApi('/api/notifications/preferences', {
-      method: 'PUT',
-      body: JSON.stringify(data),
-    }),
-  getPublicKey: () => fetchApi('/api/push/public-key').then((res) => res.text()),
-  subscribePush: (data: Schemas['PushSubscription']) =>
-    fetchApi('/api/push/subscribe', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-  unsubscribePush: (endpoint: string) =>
-    fetchApi('/api/push/subscribe', {
-      method: 'DELETE',
-      body: JSON.stringify({ endpoint }),
-    }),
-  testPush: () => fetchApi('/api/push/test', { method: 'POST' }),
+    api.get<NotificationPage>('/notifications', { query: { page, size } }),
+  getUnreadCount: () => api.get<number>('/notifications/unread-count'),
+  read: (id: number) => api.post<void>(`/notifications/${id}/read`),
+  readAll: () => api.post<void>('/notifications/read-all'),
+  getPreferences: () => api.get<NotificationPref>('/notifications/preferences'),
+  updatePreferences: (data: NotificationPref) =>
+    api.put<NotificationPref>('/notifications/preferences', data),
+  getPublicKey: () => api.get<string>('/push/public-key', { responseType: 'text' }),
+  subscribePush: (data: PushSubscription) => api.post<void>('/push/subscribe', data),
+  unsubscribePush: (endpoint: string) => api.delete<void>('/push/subscribe', { body: { endpoint } }),
+  testPush: () => api.post<void>('/push/test'),
 }

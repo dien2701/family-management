@@ -54,11 +54,11 @@
 | 15–16 | Cây FE: hiển thị, thêm người, chỉnh sửa và điều hướng | Claude Code | Sonnet · high | ✅ 2026-09-25 |
 | 17 | Lịch và sự kiện FE | Claude Code | Sonnet · medium | ✅ 2026-09-25 |
 | 18–19 | Dashboard FE và PWA | **Antigravity** | Gemini 3.8 Flash · Planning | ✅ 2026-09-25 |
-| 20–21 | Đề xuất sự kiện và Thông báo FE | **Antigravity** | Gemini 3.1 Pro · Planning | ⬜ |
-| 22 | Đính kèm và trang Xuất dữ liệu FE | **Antigravity** | Gemini 3.8 Flash · Planning | ⬜ |
-| 23 | Quản trị FE: hàng đợi, đã xóa, cấu hình | **Antigravity** | Gemini 3.1 Pro · Planning | ⬜ |
-| 24 | Trợ lý AI FE | Claude Code | Sonnet · high | ⬜ |
-| 25 | In cây khổ lớn | Claude Code | Sonnet · medium | ⬜ |
+| 20–21 | Đề xuất sự kiện và Thông báo FE | **Antigravity** | Gemini 3.1 Pro · Planning | ✅ 2026-09-26 |
+| 22 | Đính kèm và trang Xuất dữ liệu FE | **Antigravity** | Gemini 3.8 Flash · Planning | ✅ 2026-09-25 |
+| 23 | Quản trị FE: hàng đợi, đã xóa, cấu hình | **Antigravity** | Gemini 3.1 Pro · Planning | ✅ 2026-09-25 |
+| 24 | Trợ lý AI FE | Claude Code | Sonnet · high | ✅ 2026-09-26 |
+| 25 | In cây khổ lớn | Claude Code | Sonnet · medium | ✅ 2026-09-26 |
 | **GĐ B** | **Backend** | | | |
 | 26–27 | Gỡ dòng họ BE, Thành viên BE + seed 28 người | Claude Code | Sonnet · high | ⬜ |
 | 28 | Người thân, "Tôi là ai" và tự sửa hồ sơ BE | Claude Code | Sonnet · high | ⬜ |
@@ -535,17 +535,19 @@ IDEA §10 · DECISIONS #72, #73, #77
 
 ---
 
-### Đợt 25 — In cây khổ lớn ⬜
+### Đợt 25 — In cây khổ lớn ✅ 2026-09-26
 IDEA §8 · DECISIONS #34, #72, #83
 > Hợp đồng 4 báo cáo và trang "Xuất dữ liệu" đã chuyển sang Đợt 22 (DECISIONS #83). Đợt này chỉ còn In cây.
-- [ ] **"In cây"** (từ trang Cây), chạy được đầy đủ ở chế độ giả lập vì tính hoàn toàn ở máy:
+- [x] **"In cây"** (từ trang Cây), chạy được đầy đủ ở chế độ giả lập vì tính hoàn toàn ở máy:
   - chọn gốc, khổ A3 hoặc A2, dọc hoặc ngang, có hoặc không có ảnh;
   - dùng lại `layoutTree` và render sang SVG vector (nhúng font Be Vietnam Pro);
   - xuất PDF (cây quá lớn thì chia trang theo khổ, có dấu cắt ghép) và PNG khoảng 300 dpi;
-  - có cột "Đời" và tiêu đề.
-- [ ] Chạy trong Web Worker hoặc chia nhỏ công việc để không treo giao diện với 500 ô.
+  - có cột "Đời" và tiêu đề. ✅ 2026-09-26
+- [x] Chạy trong Web Worker hoặc chia nhỏ công việc để không treo giao diện với 500 ô. ✅ 2026-09-26
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** Nút "In cây" ở thanh công cụ trang Cây mở hộp thoại chọn gốc, khổ A3/A2, dọc/ngang, có/không ảnh, PDF/PNG; tính hoàn toàn ở máy nên chạy được ở chế độ giả lập, không đổi hợp đồng API. Dựng lại bằng `layoutTree` (mọi đời, không thu gọn) thành SVG vector có tiêu đề, cột "Đời", ô/đường nối theo token màu. PDF: jsPDF + svg2pdf.js, nhúng font Be Vietnam Pro TTF, cây lớn chia trang theo khổ (tỉ lệ tối thiểu 0,14 mm/unit) kèm dấu cắt ở bốn góc và "Trang k/n · hàng · cột". PNG: cả tờ ở 300 dpi, quá ~16 triệu điểm ảnh thì tự hạ dpi (hộp thoại báo dpi thực, cảnh báo nếu < 150). Không dùng Worker (canvas/SVG cần DOM): chia lô 60 mục và nhường luồng chính, có nút Dừng và tiến độ.
+File chính: `features/tree/print/{geometry,fonts,photos,scene,exportPdf,exportPng,runPrint,async}.ts`, `features/tree/components/PrintTreeDialog.tsx`, sửa `TreeToolbar.tsx`, `TreePage.tsx`, `strings.ts`; thêm phụ thuộc `jspdf`, `svg2pdf.js`, `@expo-google-fonts/be-vietnam-pro` (chỉ lấy file TTF, tải khi bấm "Tạo file").
+Việc nên làm thêm: (1) dấu ✝ và số thứ tự hôn nhân vẽ bằng nét/số vì Be Vietnam Pro không có glyph ✝ ⚭; (2) ở Đợt 19 nên loại các chunk jspdf/html2canvas khỏi precache của service worker (`globIgnores`) để cài offline không nặng.
 
 **🔧 Setup thủ công cần làm:** Không có.
 

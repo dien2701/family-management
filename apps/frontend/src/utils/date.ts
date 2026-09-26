@@ -22,3 +22,10 @@ export function formatDate(iso: string | undefined): string {
   const date = new Date(iso)
   return Number.isNaN(date.getTime()) ? '' : VN_DATE.format(date)
 }
+
+/** Đổi thời điểm UTC (ISO) sang `HH:mm dd/MM/yyyy` theo giờ +7. */
+export function formatDateTime(iso: string | undefined): string {
+  if (!iso) return ''
+  const date = new Date(iso)
+  return Number.isNaN(date.getTime()) ? '' : `${formatTime(date.getTime())} ${VN_DATE.format(date)}`
+}

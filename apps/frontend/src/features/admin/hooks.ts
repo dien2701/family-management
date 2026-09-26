@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ME_KEY } from '@/hooks/useMe'
-import type { AccountListQuery } from '@/types/api'
-import { adminAccountsApi, linkRequestsApi, type AccountAction } from './api'
+import type { AccountListQuery, Schemas } from '@/types/api'
+import { adminAccountsApi, linkRequestsApi, adminSettingsApi, adminDeletedMembersApi, type AccountAction } from './api'
 
 const ACCOUNTS_KEY = ['admin', 'accounts'] as const
 const LINK_REQUESTS_KEY = ['admin', 'link-requests'] as const
@@ -85,5 +85,36 @@ export function useUnlinkMember() {
   return useMutation({
     mutationFn: (accountId: number) => adminAccountsApi.unlinkMember(accountId),
     onSettled: invalidate,
+  })
+}
+
+export function useSettings() {
+  return useQuery({
+    queryKey: ['admin', 'settings'],
+    queryFn: () => adminSettingsApi.get(),
+  })
+}
+
+export function useUpdateSettings() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (settings: Schemas['SystemSettings']) => adminSettingsApi.update(settings),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'settings'] }),
+  })
+}
+
+export function useDeletedMembers(page: number, size: number) {
+  return useQuery({
+    queryKey: ['admin', 'deleted-members', page, size],
+    queryFn: () => adminDeletedMembersApi.list({ page, size }),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export function useDeletedMemberSnapshot(auditId: number | null) {
+  return useQuery({
+    queryKey: ['admin', 'deleted-members', auditId],
+    queryFn: () => auditId ? adminDeletedMembersApi.get(auditId) : Promise.reject('No auditId'),
+    enabled: auditId !== null,
   })
 }

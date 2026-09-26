@@ -48,7 +48,7 @@ async function uploadAvatar(memberId: number, file: File): Promise<Attachment> {
 
 export const memberApi = {
   getMembers: (query: MemberListQuery) =>
-    api.get<MemberPage>('/members', { query: query as Record<string, any> }),
+    api.get<MemberPage>('/members', { query: query as Record<string, string | number | boolean | null | undefined> }),
   getMemberDetail: (id: number) => api.get<MemberDetail>(`/members/${id}`),
   createMember: (input: MemberInput) => api.post<MemberDetail>('/members', input),
   updateMember: (id: number, input: MemberInput) =>

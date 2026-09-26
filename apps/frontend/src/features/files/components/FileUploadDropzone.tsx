@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
-import { UploadCloud, File as FileIcon, AlertCircle, CheckCircle2, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { UploadCloud, File as FileIcon, AlertCircle, X } from 'lucide-react'
+import { cn } from '@/utils/cn'
 import { useApi } from '@/services/api'
 import { toast } from '@/components/ui/use-toast'
 import type { Schemas } from '@/types/api'
@@ -21,7 +21,7 @@ const ALLOWED_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
 ]
 
-export function FileUploadDropzone({ memberId, onUploadSuccess, className }: FileUploadDropzoneProps) {
+export function FileUploadDropzone({ memberId, className }: FileUploadDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -97,8 +97,8 @@ export function FileUploadDropzone({ memberId, onUploadSuccess, className }: Fil
       
       // onUploadSuccess(...)
       setFile(null)
-    } catch (err: any) {
-      const msg = err.body?.detail || 'Lỗi khi tải tệp lên.'
+    } catch (err) {
+      const msg = (err as Error).message || 'Lỗi khi tải tệp lên.'
       setError(msg)
       toast({
         variant: 'destructive',

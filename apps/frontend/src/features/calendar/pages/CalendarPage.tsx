@@ -62,7 +62,7 @@ export function CalendarPage() {
         </div>
         <Button onClick={() => openCreate()}>
           <Plus aria-hidden="true" />
-          {isAdmin ? s.addEvent : s.proposeCreateTitle || 'Đề xuất sự kiện'}
+          {isAdmin ? s.addEvent : s.proposeEvent}
         </Button>
       </div>
 

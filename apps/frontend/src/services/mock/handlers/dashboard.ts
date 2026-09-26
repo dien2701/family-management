@@ -4,6 +4,7 @@ import { daysBetween, generateOccurrences, type Occurrence } from '@/utils/occur
 import type { HandlerContext } from '../context'
 import type { MockRequest, MockRouter } from '../router'
 import type { MockStore } from '../store'
+import { generationsByMember } from '../treeGraph'
 import { requireApproved } from './common'
 
 const addDays = (date: SolarDate, days: number): SolarDate => fromJdn(toJdn(date) + days)
@@ -34,7 +35,7 @@ async function getDashboard(_: MockRequest, context: HandlerContext): Promise<Da
   if (treeNodes.length > 0) {
     const nodeMemberIds = new Set(treeNodes.map((n) => n.memberId))
     onTree = store.members.filter((m) => nodeMemberIds.has(m.id)).length
-    maxGeneration = Math.max(...treeNodes.map((n) => n.generation))
+    maxGeneration = Math.max(0, ...generationsByMember(store).values())
   }
 
   // Calculate events
@@ -58,7 +59,7 @@ async function getDashboard(_: MockRequest, context: HandlerContext): Promise<Da
   let pendingProposals = 0
   let pendingLinkRequests = 0
 
-  if (user.role === 'ADMIN') {
+  if (user.systemRole === 'ADMIN') {
     try {
       const res = await fetch('/api/admin/accounts?approval=WAITING')
       if (res.ok) {
@@ -82,7 +83,7 @@ async function getDashboard(_: MockRequest, context: HandlerContext): Promise<Da
     nextEvent,
     recentEvents,
     upcoming30,
-    ...(user.role === 'ADMIN' && {
+    ...(user.systemRole === 'ADMIN' && {
       pendingAccounts,
       pendingProposals,
       pendingLinkRequests,

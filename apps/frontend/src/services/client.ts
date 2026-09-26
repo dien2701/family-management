@@ -31,6 +31,8 @@ type RequestOptions = {
   query?: Record<string, QueryValue | QueryValue[]>
   body?: unknown
   signal?: AbortSignal
+  /** Phản hồi `text/plain` (ví dụ VAPID public key), không phải JSON. */
+  responseType?: 'text'
 }
 
 // ---------- Phiên đăng nhập (chỉ trong bộ nhớ) ----------
@@ -167,6 +169,7 @@ async function request<T>(
 
   if (!response.ok) throw new ApiError(response.status, await parseProblem(response))
   if (response.status === 204) return undefined as T
+  if (options.responseType === 'text') return (await response.text()) as T
   return (await response.json()) as T
 }
 
@@ -183,6 +186,6 @@ export const api = {
     request<T>('PUT', path, { ...options, body }),
   patch: <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'body'>) =>
     request<T>('PATCH', path, { ...options, body }),
-  delete: <T>(path: string, options?: Omit<RequestOptions, 'body'>) =>
+  delete: <T>(path: string, options?: RequestOptions) =>
     request<T>('DELETE', path, options),
 }

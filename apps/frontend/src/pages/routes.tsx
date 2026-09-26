@@ -6,6 +6,8 @@ import { SettingsPage } from '@/features/notification/pages/SettingsPage'
 import { AdminLayout } from '@/features/admin/components/AdminLayout'
 import { AccountsPage } from '@/features/admin/pages/AccountsPage'
 import { LinkRequestsPage } from '@/features/admin/pages/LinkRequestsPage'
+import { DeletedMembersPage } from '@/features/admin/pages/DeletedMembersPage'
+import { SettingsPage as AdminSettingsPage } from '@/features/admin/pages/SettingsPage'
 import { adminStrings } from '@/features/admin/strings'
 import {
   ApprovalGuard,
@@ -33,6 +35,10 @@ import { TreePage } from '@/features/tree/pages/TreePage'
 import { MemberDetailPage } from '@/features/member/pages/MemberDetailPage'
 import { MemberFormPage } from '@/features/member/pages/MemberFormPage'
 import { MorePage } from './MorePage'
+import { CommonDocumentsPage } from '@/features/files/pages/CommonDocumentsPage'
+import { ExportPage } from '@/features/reports/pages/ExportPage'
+import { AssistantPage } from '@/features/ai/pages/AssistantPage'
+import { aiStrings } from '@/features/ai/strings'
 import { NotFoundPage } from './NotFoundPage'
 
 const handle = (title: string): RouteHandle => ({ title })
@@ -121,6 +127,17 @@ export const routes: RouteObject[] = [
                 element: <LunarConverterPage />,
                 handle: handle('Đổi lịch âm – dương'),
               },
+              {
+                path: 'them/tai-lieu-chung',
+                element: <CommonDocumentsPage />,
+                handle: handle('Tài liệu chung'),
+              },
+              {
+                path: 'them/xuat-du-lieu',
+                element: <ExportPage />,
+                handle: handle('Xuất dữ liệu'),
+              },
+              { path: 'tro-ly', element: <AssistantPage />, handle: handle(aiStrings.title) },
               { path: 'de-xuat', element: <MyProposalsPage />, handle: handle('Đề xuất của tôi') },
               { path: 'thong-bao', element: <InboxPage />, handle: handle('Thông báo') },
               { path: 'thong-bao/cai-dat', element: <SettingsPage />, handle: handle('Cài đặt thông báo') },
@@ -147,6 +164,16 @@ export const routes: RouteObject[] = [
                         path: 'de-xuat',
                         element: <AdminProposalsPage />,
                         handle: handle('Duyệt đề xuất'),
+                      },
+                      {
+                        path: 'da-xoa',
+                        element: <DeletedMembersPage />,
+                        handle: handle('Thành viên đã xóa'),
+                      },
+                      {
+                        path: 'cau-hinh',
+                        element: <AdminSettingsPage />,
+                        handle: handle('Cấu hình hệ thống'),
                       },
                     ],
                   },

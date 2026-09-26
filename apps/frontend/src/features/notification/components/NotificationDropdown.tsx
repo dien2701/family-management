@@ -1,6 +1,6 @@
-import { format } from 'date-fns'
-import { Check, Settings, Trash } from 'lucide-react'
-import { Link, useNavigate } from 'react-router'
+import { formatDateTime } from '@/utils/date'
+import { Check, Settings } from 'lucide-react'
+import { useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { useNotifications, useReadAllNotifications, useReadNotification } from '../hooks'
 import { useEffect, useRef } from 'react'
@@ -49,18 +49,18 @@ export function NotificationDropdown({ onClose }: Props) {
           data.items.map(n => (
             <div 
               key={n.id} 
-              className={`p-3 rounded-md transition-colors cursor-pointer ${n.read ? 'bg-surface hover:bg-surface-muted' : 'bg-primary/5 hover:bg-primary/10'}`}
+              className={`p-3 rounded-md transition-colors cursor-pointer ${n.isRead ? 'bg-surface hover:bg-surface-muted' : 'bg-primary/5 hover:bg-primary/10'}`}
               onClick={() => {
-                if (!n.read) read.mutate(n.id)
+                if (!n.isRead) read.mutate(n.id)
                 if (n.link) {
                   onClose()
                   navigate(n.link)
                 }
               }}
             >
-              <h4 className={`text-sm ${n.read ? 'font-medium text-foreground' : 'font-semibold text-primary'}`}>{n.title}</h4>
+              <h4 className={`text-sm ${n.isRead ? 'font-medium text-foreground' : 'font-semibold text-primary'}`}>{n.title}</h4>
               <p className="text-sm text-text-muted mt-1">{n.body}</p>
-              <p className="text-xs text-text-muted mt-2">{format(new Date(n.createdAt), 'HH:mm dd/MM')}</p>
+              <p className="text-xs text-text-muted mt-2">{formatDateTime(n.createdAt).slice(0, -5)}</p>
             </div>
           ))
         )}

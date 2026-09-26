@@ -1,6 +1,6 @@
+import { formatDateTime } from '@/utils/date'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { format } from 'date-fns'
 import { Check, X } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Pagination } from '@/components/shared/Pagination'
@@ -135,7 +135,7 @@ export function AdminProposalsPage() {
 
                 <div className="flex items-center justify-between mt-2">
                   <p className="text-xs text-text-muted">
-                    Ngày gửi: {format(new Date(p.createdAt), 'HH:mm dd/MM/yyyy')}
+                    Ngày gửi: {formatDateTime(p.createdAt)}
                   </p>
                   
                   {p.status === 'PENDING' && (
@@ -154,9 +154,9 @@ export function AdminProposalsPage() {
           </div>
           
           <Pagination
-            currentPage={page}
+            page={page - 1}
             totalPages={data.totalPages}
-            onPageChange={changePage}
+            onChange={(p) => changePage(p + 1)}
           />
         </>
       )}
@@ -194,7 +194,7 @@ export function AdminProposalsPage() {
           />
           <div className="flex justify-end gap-2 mt-2">
             <Button variant="ghost" onClick={() => setRejecting(null)}>Hủy</Button>
-            <Button variant="destructive" loading={reject.isPending} onClick={() => void handleReject()}>Từ chối</Button>
+            <Button variant="danger" loading={reject.isPending} onClick={() => void handleReject()}>Từ chối</Button>
           </div>
         </div>
       </ModalDialog>

@@ -43,7 +43,7 @@ export function useCreateProposal() {
 export function useApproveProposal() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, modifiedPayload }: { id: number; modifiedPayload?: Record<string, any> }) =>
+    mutationFn: ({ id, modifiedPayload }: { id: number; modifiedPayload?: Record<string, unknown> }) =>
       proposalApi.approve(id, modifiedPayload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: proposalKeys.all })

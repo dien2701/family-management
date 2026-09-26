@@ -226,7 +226,7 @@ async function month({ query }: MockRequest, context: HandlerContext): Promise<C
     lunar: d.lunar,
     occurrences: byDay.get(toJdn(d.solar)) ?? [],
   }))
-  return { mode, year, month: monthNo, leap, days }
+  return { mode: mode as 'solar' | 'lunar', year, month: monthNo, leap, days }
 }
 
 async function recent({ query }: MockRequest, context: HandlerContext): Promise<CalendarOccurrence[]> {

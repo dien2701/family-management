@@ -139,6 +139,7 @@ type EventFormProps = {
 function EventForm({ event, initialDate, mode, onDone, onDelete }: EventFormProps) {
   const create = useCreateEvent()
   const update = useUpdateEvent()
+  const createProposal = useCreateProposal()
   const {
     register,
     control,

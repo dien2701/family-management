@@ -1,9 +1,9 @@
+import { formatDateTime } from '@/utils/date'
 import { useSearchParams } from 'react-router'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Pagination } from '@/components/shared/Pagination'
 import { Button } from '@/components/ui/button'
 import { useMyProposals } from '../hooks'
-import { format } from 'date-fns'
 
 export function MyProposalsPage() {
   const [params, setParams] = useSearchParams()
@@ -45,23 +45,23 @@ export function MyProposalsPage() {
                     {p.status === 'PENDING' ? 'Chờ duyệt' : p.status === 'APPROVED' ? 'Đã duyệt' : 'Từ chối'}
                   </span>
                 </div>
-                {p.payload && p.payload.title && (
+                {typeof p.payload?.title === 'string' && (
                   <p className="mt-1 font-medium">{p.payload.title}</p>
                 )}
                 {p.note && p.status === 'REJECTED' && (
                   <p className="mt-2 text-danger">Lý do từ chối: {p.note}</p>
                 )}
                 <p className="mt-4 text-xs text-text-muted">
-                  Gửi lúc {format(new Date(p.createdAt), 'HH:mm dd/MM/yyyy')}
+                  Gửi lúc {formatDateTime(p.createdAt)}
                 </p>
               </div>
             ))}
           </div>
           
           <Pagination
-            currentPage={page}
+            page={page - 1}
             totalPages={data.totalPages}
-            onPageChange={changePage}
+            onChange={(p) => changePage(p + 1)}
           />
         </>
       )}

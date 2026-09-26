@@ -1,4 +1,4 @@
-import { ChevronsDown, ListTree, Maximize2, Plus, Search, UserRound } from 'lucide-react'
+import { ChevronsDown, ListTree, Maximize2, Plus, Printer, Search, UserRound } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,6 +24,7 @@ type TreeToolbarProps = {
   onAddRoot: () => void
   onPick: (nodeId: number) => void
   onMyAncestors: () => void
+  onPrint: () => void
   onShowAll: () => void
   onMoreDepth: () => void
 }
@@ -49,6 +50,7 @@ export function TreeToolbar({
   onAddRoot,
   onPick,
   onMyAncestors,
+  onPrint,
   onShowAll,
   onMoreDepth,
 }: TreeToolbarProps) {
@@ -138,6 +140,10 @@ export function TreeToolbar({
           <Button variant="secondary" onClick={onMyAncestors}>
             <UserRound aria-hidden="true" />
             {s.myAncestors}
+          </Button>
+          <Button variant="secondary" onClick={onPrint}>
+            <Printer aria-hidden="true" />
+            {s.print}
           </Button>
           {isAdmin && (
             <Button onClick={onAddRoot}>

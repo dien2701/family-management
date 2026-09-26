@@ -8,6 +8,10 @@ import { registerTreeHandlers } from './tree'
 import { registerDashboardHandlers } from './dashboard'
 import { registerProposalHandlers } from './proposals'
 import { registerNotificationHandlers } from './notifications'
+import { registerReportHandlers } from './reports'
+import { registerSettingsHandlers } from './settings'
+import { registerDeletedMembersHandlers } from './deleted'
+import { registerAiHandlers } from './ai'
 
 /** Mỗi đợt FE thêm `register...Handlers` của module mình ở đây. */
 export function buildRouter(): MockRouter {
@@ -21,5 +25,9 @@ export function buildRouter(): MockRouter {
   registerDashboardHandlers(router)
   registerProposalHandlers(router)
   registerNotificationHandlers(router)
+  registerReportHandlers(router)
+  registerSettingsHandlers(router)
+  registerDeletedMembersHandlers(router)
+  registerAiHandlers(router)
   return router
 }

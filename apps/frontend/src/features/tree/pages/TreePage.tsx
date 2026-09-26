@@ -22,6 +22,7 @@ import { MoveDialog } from '../components/MoveDialog'
 import { DeleteSlotDialog, RemoveMemberDialog } from '../components/NodeConfirmDialogs'
 import { NodeMenuDialog, type MenuAction } from '../components/NodeMenuDialog'
 import { PairDialog } from '../components/PairDialog'
+import { PrintTreeDialog } from '../components/PrintTreeDialog'
 import { ReorderDialog } from '../components/ReorderDialog'
 import { TreeCanvas, type ViewRequest } from '../components/TreeCanvas'
 import { TreeToolbar, type ViewStatus } from '../components/TreeToolbar'
@@ -131,6 +132,7 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
   const [flowKey, setFlowKey] = useState(0)
   const [notice, setNotice] = useState<Notice | null>(null)
   const [dragId, setDragId] = useState<number | null>(null)
+  const [printOpen, setPrintOpen] = useState(false)
 
   // Đang xem tổ tiên là một phần của cây nên không chỉnh sửa ở chế độ này
   const editing = isAdmin && ancestorsOf === null
@@ -395,6 +397,7 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
             reveal(nodeId)
           }}
           onMyAncestors={showMyAncestors}
+          onPrint={() => setPrintOpen(true)}
           onShowAll={showAll}
           onMoreDepth={() => setDepthLimit((d) => (d === null ? d : d + 1))}
         />
@@ -431,6 +434,14 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
         </div>
       </div>
 
+      <PrintTreeDialog
+        open={printOpen}
+        graph={graph}
+        index={index}
+        generations={generations}
+        defaultRootId={viewRootId}
+        onClose={() => setPrintOpen(false)}
+      />
       <NodeMenuDialog
         open={flow?.kind === 'menu'}
         node={menuNode ?? null}

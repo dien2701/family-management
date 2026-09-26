@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { FileText, Download, Trash2, X, FileImage, Image as ImageIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/cn'
 import { useApi } from '@/services/api'
 import { toast } from '@/components/ui/use-toast'
 import type { Schemas } from '@/types/api'
-import { useViewer } from '@/features/auth/hooks'
+import { useMe } from '@/hooks/useMe'
 
 type AttachmentListProps = {
   attachments: Schemas['Attachment'][]
@@ -16,8 +16,8 @@ export function AttachmentList({ attachments, onDeleteSuccess, className }: Atta
   const [lightboxImage, setLightboxImage] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const api = useApi()
-  const { data: viewer } = useViewer()
-  const isAdmin = viewer?.role === 'ADMIN'
+  const { data: viewer } = useMe()
+  const isAdmin = viewer?.systemRole === 'ADMIN'
 
   const images = attachments.filter(a => a.mimeType.startsWith('image/'))
   const documents = attachments.filter(a => !a.mimeType.startsWith('image/'))
@@ -30,11 +30,11 @@ export function AttachmentList({ attachments, onDeleteSuccess, className }: Atta
       await api.delete(`/api/attachments/${id}`)
       toast({ title: 'Thành công', description: 'Đã xóa tệp đính kèm.' })
       onDeleteSuccess?.(id)
-    } catch (err: any) {
+    } catch (err) {
       toast({ 
         variant: 'destructive', 
         title: 'Lỗi', 
-        description: err.body?.detail || 'Không thể xóa tệp.' 
+        description: (err as Error).message || 'Không thể xóa tệp.' 
       })
     } finally {
       setDeletingId(null)
@@ -45,11 +45,11 @@ export function AttachmentList({ attachments, onDeleteSuccess, className }: Atta
     try {
       // Gọi API tải về, chế độ mock sẽ báo lỗi 503
       await api.get(`/api/attachments/${attachment.id}/download`)
-    } catch (err: any) {
+    } catch (err) {
       toast({ 
         variant: 'destructive', 
         title: 'Lỗi tải xuống', 
-        description: err.body?.detail || 'Không thể tải tệp về.' 
+        description: (err as Error).message || 'Không thể tải tệp về.' 
       })
     }
   }

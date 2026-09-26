@@ -1,11 +1,10 @@
-import { LayoutDashboard, Users, UserCheck, UserMinus, TreeDeciduous, ArrowRight, ShieldAlert, CalendarHeart, Flame, Cake, Loader2 } from 'lucide-react'
+import { LayoutDashboard, Users, UserCheck, UserMinus, TreeDeciduous, ArrowRight, ShieldAlert, CalendarHeart, Flame, Cake, Loader2, type LucideIcon } from 'lucide-react'
 import { Link } from 'react-router'
+import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { useAuth } from '@/features/auth/hooks'
+import { useAuth } from '@/hooks/useAuth'
 import { useDashboard } from '../hooks'
 import type { CalendarOccurrence } from '@/types/api'
-import { useMemo } from 'react'
-import { formatDate } from '@/utils/lunar' // wait, verify utils/lunar or occurrences export
 
 function EventIcon({ type }: { type: CalendarOccurrence['type'] }) {
   if (type === 'MEMORIAL') return <Flame className="w-5 h-5 text-event-memorial" />
@@ -37,7 +36,7 @@ function EventCard({ event, title }: { event: CalendarOccurrence; title: string 
   )
 }
 
-function StatTile({ title, value, icon: Icon, colorClass }: { title: string, value: number, icon: any, colorClass?: string }) {
+function StatTile({ title, value, icon: Icon, colorClass }: { title: string, value: number, icon: LucideIcon, colorClass?: string }) {
   return (
     <div className="bg-surface rounded-card p-4 shadow-card border border-border flex items-center gap-4">
       <div className={`p-3 rounded-full bg-surface-muted ${colorClass || 'text-text-muted'}`}>
@@ -52,7 +51,7 @@ function StatTile({ title, value, icon: Icon, colorClass }: { title: string, val
 }
 
 export function DashboardPage() {
-  const { role } = useAuth()
+  const { user } = useAuth()
   const { data, isLoading } = useDashboard()
 
   if (isLoading) {
@@ -71,7 +70,7 @@ export function DashboardPage() {
         icon={LayoutDashboard}
         title="Gia phả trống"
         description="Hãy bắt đầu bằng cách thêm thành viên đầu tiên vào cây."
-        action={{ label: "Tới Cây gia phả", href: "/cay" }}
+        action={<Button asChild><Link to="/cay">Tới Cây gia phả</Link></Button>}
       />
     )
   }
@@ -88,14 +87,14 @@ export function DashboardPage() {
       </div>
 
       {/* Admin Pending Tasks */}
-      {role === 'ADMIN' && (data.pendingAccounts > 0 || data.pendingLinkRequests > 0) && (
+      {user?.systemRole === 'ADMIN' && ((data.pendingAccounts ?? 0) > 0 || (data.pendingLinkRequests ?? 0) > 0) && (
         <div className="bg-warning-bg border border-warning/20 rounded-card p-4 shadow-card">
           <div className="flex items-center gap-2 mb-4 text-warning">
             <ShieldAlert className="w-5 h-5" />
             <h3 className="text-18 font-semibold">Cần quản trị viên xử lý</h3>
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
-            {data.pendingAccounts > 0 && (
+            {(data.pendingAccounts ?? 0) > 0 && (
               <Link to="/quan-tri/tai-khoan" className="flex-1 bg-surface p-3 rounded-field border border-warning/30 flex items-center justify-between hover:bg-surface-muted transition-colors">
                 <div>
                   <div className="text-14 text-text-muted">Tài khoản chờ duyệt</div>
@@ -104,7 +103,7 @@ export function DashboardPage() {
                 <ArrowRight className="w-5 h-5 text-warning/50" />
               </Link>
             )}
-            {data.pendingLinkRequests > 0 && (
+            {(data.pendingLinkRequests ?? 0) > 0 && (
               <Link to="/quan-tri/yeu-cau-lien-ket" className="flex-1 bg-surface p-3 rounded-field border border-warning/30 flex items-center justify-between hover:bg-surface-muted transition-colors">
                 <div>
                   <div className="text-14 text-text-muted">Yêu cầu liên kết</div>

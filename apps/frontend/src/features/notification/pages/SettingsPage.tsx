@@ -1,28 +1,26 @@
 import { useEffect } from 'react'
-import { Controller, useForm } from 'react-router-dom' // Wait, I need react-hook-form
 import { Controller as RHFController, useForm as useRHF } from 'react-hook-form'
 import { Bell, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { FormField } from '@/components/shared/FormField'
-import { Alert } from '@/components/shared/Alert'
-import { useNotificationPreferences, useUpdateNotificationPreferences, useTestPush, useSubscribePush } from '../hooks'
+import { useNotificationPreferences, useUpdateNotificationPreferences, useTestPush } from '../hooks'
 import type { Schemas } from '@/types/api'
 import { ApiError } from '@/services/client'
 import { registerPush } from '../push'
 
 export function SettingsPage() {
-  const { data: pref, isPending, refetch } = useNotificationPreferences()
+  const { data: pref, isPending } = useNotificationPreferences()
   const updatePref = useUpdateNotificationPreferences()
   const testPush = useTestPush()
   
   const { control, handleSubmit, reset, formState: { isSubmitting, isDirty } } = useRHF<Schemas['NotificationPref']>({
     defaultValues: {
-      eventReminders: true,
-      systemUpdates: true,
-      proposals: true,
-      remindDays: [7, 3, 1, 0],
-      remindTime: '08:00'
+      notifyEvents: true,
+      notifyMemorials: true,
+      notifyProposals: true,
+      remindDaysBefore: [7, 3, 1, 0],
+      remindHour: '08:00',
     }
   })
 
@@ -36,8 +34,8 @@ export function SettingsPage() {
     try {
       await updatePref.mutateAsync(values)
       reset(values) // to reset isDirty
-    } catch (e) {
-      // handle error
+    } catch {
+      // Lỗi đã hiện ở tầng mutation; giữ nguyên form
     }
   }
 
@@ -79,30 +77,30 @@ export function SettingsPage() {
         <div className="flex flex-col gap-4">
           <RHFController
             control={control}
-            name="eventReminders"
+            name="notifyEvents"
             render={({ field }) => (
               <label className="flex items-center gap-3">
-                <input type="checkbox" checked={field.value} onChange={e => field.onChange(e.target.checked)} className="w-4 h-4" />
-                <span>Nhắc sự kiện (Giỗ, sinh nhật, sự kiện chung)</span>
+                <input type="checkbox" checked={field.value as boolean} onChange={e => field.onChange(e.target.checked)} className="w-4 h-4" />
+                <span>Nhắc sự kiện (sinh nhật, sự kiện chung)</span>
               </label>
             )}
           />
           <RHFController
             control={control}
-            name="systemUpdates"
+            name="notifyMemorials"
             render={({ field }) => (
               <label className="flex items-center gap-3">
-                <input type="checkbox" checked={field.value} onChange={e => field.onChange(e.target.checked)} className="w-4 h-4" />
-                <span>Cập nhật hệ thống</span>
+                <input type="checkbox" checked={field.value as boolean} onChange={e => field.onChange(e.target.checked)} className="w-4 h-4" />
+                <span>Nhắc ngày giỗ</span>
               </label>
             )}
           />
           <RHFController
             control={control}
-            name="proposals"
+            name="notifyProposals"
             render={({ field }) => (
               <label className="flex items-center gap-3">
-                <input type="checkbox" checked={field.value} onChange={e => field.onChange(e.target.checked)} className="w-4 h-4" />
+                <input type="checkbox" checked={field.value as boolean} onChange={e => field.onChange(e.target.checked)} className="w-4 h-4" />
                 <span>Đề xuất thay đổi (dành cho Admin và người đề xuất)</span>
               </label>
             )}
@@ -113,20 +111,20 @@ export function SettingsPage() {
           <h3 className="font-medium">Thời gian nhắc (Sự kiện)</h3>
           <RHFController
             control={control}
-            name="remindTime"
+            name="remindHour"
             render={({ field }) => (
               <FormField label="Giờ nhắc (HH:mm)">
-                <Input type="time" {...field} className="w-32" />
+                <Input type="time" {...field} value={field.value as string} className="w-32" />
               </FormField>
             )}
           />
           <RHFController
             control={control}
-            name="remindDays"
+            name="remindDaysBefore"
             render={({ field }) => (
               <FormField label="Số ngày nhắc trước" hint="Cách nhau bằng dấu phẩy, VD: 7, 3, 1, 0 (0 là đúng ngày)">
                 <Input 
-                  value={field.value?.join(', ') || ''} 
+                  value={(field.value as number[] | undefined)?.join(', ') ?? ''} 
                   onChange={e => {
                     const val = e.target.value.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n))
                     field.onChange(val)

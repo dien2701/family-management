@@ -14,6 +14,7 @@ import { MemberProfileCard } from '../components/MemberProfileCard'
 import { RelativesSection } from '../components/RelativesSection'
 import { TreeSection } from '../components/TreeSection'
 import { memberStrings } from '../strings'
+import { AttachmentsSection } from '@/features/files/components/AttachmentsSection'
 
 export function MemberDetailPage() {
   const { id } = useParams()
@@ -100,11 +101,11 @@ export function MemberDetailPage() {
 
       <TreeSection memberId={member.id} isAdmin={isAdmin} />
 
-      {/* Khối Đợt 22: Tệp đính kèm */}
-      <section className="rounded-card border border-border bg-surface p-4 shadow-card opacity-60">
-        <h2 className="font-semibold text-lg">{str.sections.attachments}</h2>
-        <p className="text-text-muted mt-2 text-sm">{str.comingSoon}</p>
-      </section>
+      <AttachmentsSection memberId={member.id} canEdit={isAdmin || isSelf} />
+
+
+
+
 
       <ConfirmDialog
         open={confirming}

@@ -1,8 +1,9 @@
-import { ArrowLeftRight, ChevronRight, ShieldCheck, UserCheck, UserCog } from 'lucide-react'
+import { ArrowLeftRight, ChevronRight, ShieldCheck, Sparkles, UserCheck, UserCog, Files, FileDown } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
 import { adminStrings } from '@/features/admin/strings'
+import { aiStrings } from '@/features/ai/strings'
 import { AccountCard } from '@/features/auth/components/AccountCard'
 import { isAdmin } from '@/features/auth/routing'
 import { linkStrings } from '@/features/link/strings'
@@ -28,6 +29,12 @@ const ADMIN_ITEM: Item = {
 
 const ITEMS: Item[] = [
   {
+    to: '/tro-ly',
+    label: aiStrings.menu,
+    description: aiStrings.menuDescription,
+    icon: Sparkles,
+  },
+  {
     to: '/de-xuat',
     label: 'Đề xuất của tôi',
     description: 'Quản lý các đề xuất thay đổi sự kiện',
@@ -44,6 +51,18 @@ const ITEMS: Item[] = [
     label: 'Đổi lịch âm – dương',
     description: 'Tra ngày âm lịch và dương lịch tương ứng',
     icon: ArrowLeftRight,
+  },
+  {
+    to: '/them/tai-lieu-chung',
+    label: 'Tài liệu chung',
+    description: 'Các tài liệu, biểu mẫu chung của dòng họ',
+    icon: Files,
+  },
+  {
+    to: '/them/xuat-du-lieu',
+    label: 'Xuất dữ liệu',
+    description: 'Tải báo cáo thành viên, sự kiện và lịch giỗ',
+    icon: FileDown,
   },
   {
     to: '/chinh-sach-bao-mat',

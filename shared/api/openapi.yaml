@@ -40,6 +40,14 @@ tags:
     description: Liên kết tài khoản với thành viên ("Tôi là ai"), quan hệ 1–1
   - name: tree
     description: Cây gia phả do Admin dựng tay (các ô, vợ/chồng, cha mẹ–con)
+  - name: reports
+    description: Báo cáo và xuất dữ liệu
+  - name: ai
+    description: Trợ lý AI (chỉ đọc dữ liệu, không tự ghi)
+  - name: admin-settings
+    description: Cấu hình hệ thống (chỉ Admin)
+  - name: admin-deleted-members
+    description: Thành viên đã xóa (chỉ Admin)
 paths:
   /api/me/consent:
     post:
@@ -921,6 +929,202 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/files/quota:
+    get:
+      tags:
+        - files
+      summary: Lấy thông tin dung lượng lưu trữ
+      operationId: getQuota
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/attachments/common:
+    get:
+      tags:
+        - files
+      summary: Danh sách tài liệu chung
+      operationId: listCommonAttachments
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attachment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/attachments/{id}:
+    delete:
+      tags:
+        - files
+      summary: Xóa tệp đính kèm
+      operationId: deleteAttachment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Đã xóa
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/attachments/{id}/download:
+    get:
+      tags:
+        - files
+      summary: Tải tệp đính kèm
+      description: Trả về URL tải có chữ ký ngắn hạn.
+      operationId: getAttachmentDownloadUrl
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadUrlResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/reports/members.xlsx:
+    get:
+      tags:
+        - reports
+      summary: Báo cáo danh sách thành viên (Excel)
+      operationId: exportMembersExcel
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/reports/members.pdf:
+    get:
+      tags:
+        - reports
+      summary: Báo cáo danh sách thành viên (PDF)
+      operationId: exportMembersPdf
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/reports/events.xlsx:
+    get:
+      tags:
+        - reports
+      summary: Báo cáo sự kiện (Excel)
+      operationId: exportEventsExcel
+      parameters:
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/reports/memorials.pdf:
+    get:
+      tags:
+        - reports
+      summary: Báo cáo lịch giỗ (PDF)
+      operationId: exportMemorialsPdf
+      parameters:
+        - name: lunarYear
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/members/{id}/attachments:
+    get:
+      tags:
+        - members
+      summary: Danh sách đính kèm của thành viên
+      operationId: listMemberAttachments
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attachment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/members/{id}/relatives:
     get:
       tags:
@@ -1844,6 +2048,506 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/admin/settings:
+    get:
+      tags:
+        - admin-settings
+      summary: Lấy cấu hình hệ thống
+      operationId: getSettings
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemSettings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      tags:
+        - admin-settings
+      summary: Cập nhật cấu hình hệ thống
+      operationId: updateSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemSettings'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemSettings'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/admin/deleted-members:
+    get:
+      tags:
+        - admin-deleted-members
+      summary: Danh sách snapshot thành viên đã xóa
+      operationId: listDeletedMembers
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+            maximum: 100
+            minimum: 1
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponseDeletedMemberSnapshotSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/admin/deleted-members/{auditId}:
+    get:
+      tags:
+        - admin-deleted-members
+      summary: Chi tiết snapshot thành viên đã xóa
+      operationId: getDeletedMemberSnapshot
+      parameters:
+        - name: auditId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletedMemberSnapshot'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/ai/chat:
+    post:
+      tags:
+        - ai
+      summary: Hỏi trợ lý AI (streaming SSE)
+      description: |
+        Trả `text/event-stream`. Mỗi event có `event:` là tên và `data:` là JSON:
+        - `token`: `{ "text": "..." }` — một đoạn chữ của câu trả lời, nối dần vào cuối.
+        - `draft`: `AiDraft` — thẻ xem trước đề xuất sự kiện do AI soạn (AI không tự ghi dữ liệu).
+        - `done`: `AiQuota` — kết thúc lượt, kèm số lượt còn lại.
+        - `error`: `{ "code": "...", "message": "..." }` — lỗi giữa chừng (ví dụ `AI_UNAVAILABLE`).
+
+        Hết lượt trong ngày thì trả 429 `AI_QUOTA_EXCEEDED` (chưa mở luồng).
+      operationId: aiChat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiChatRequest'
+      responses:
+        '200':
+          description: Luồng sự kiện
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          description: Trợ lý chưa dùng được (`SERVER_REQUIRED` ở chế độ giả lập, `AI_UNAVAILABLE`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+  /api/ai/quota:
+    get:
+      tags:
+        - ai
+      summary: Số lượt hỏi còn lại hôm nay (User 15, Admin 30, đặt lại 0h giờ Việt Nam)
+      operationId: getAiQuota
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiQuota'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/ai/messages:
+    get:
+      tags:
+        - ai
+      summary: Lịch sử trò chuyện của tài khoản hiện tại (cũ trước, mới sau)
+      operationId: listAiMessages
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 50
+            minimum: 1
+            maximum: 200
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/ai/drafts/{id}/submit:
+    post:
+      tags:
+        - ai
+      summary: User gửi bản nháp của AI thành đề xuất sự kiện
+      operationId: submitAiDraft
+      parameters:
+        - $ref: '#/components/parameters/AiDraftId'
+      responses:
+        '200':
+          description: Thành công (bản nháp chuyển sang `SUBMITTED`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiDraft'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/ai/drafts/{id}/apply:
+    post:
+      tags:
+        - ai
+      summary: Admin áp dụng thẳng bản nháp của AI vào sự kiện chung
+      operationId: applyAiDraft
+      parameters:
+        - $ref: '#/components/parameters/AiDraftId'
+      responses:
+        '200':
+          description: Thành công (bản nháp chuyển sang `APPLIED`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiDraft'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/proposals:
+    post:
+      tags:
+        - proposals
+      summary: Đề xuất thêm/sửa/xóa sự kiện chung
+      operationId: createProposal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProposalInput'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposal'
+    get:
+      tags:
+        - proposals
+      summary: (Admin) Danh sách đề xuất chờ duyệt (hoặc tất cả)
+      operationId: getProposals
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProposalPage'
+  /api/proposals/mine:
+    get:
+      tags:
+        - proposals
+      summary: Danh sách đề xuất của tôi
+      operationId: getMyProposals
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProposalPage'
+  /api/proposals/count:
+    get:
+      tags:
+        - proposals
+      summary: Đếm số lượng đề xuất đang chờ
+      operationId: countPendingProposals
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: integer
+  /api/proposals/{id}/approve:
+    post:
+      tags:
+        - proposals
+      summary: Duyệt đề xuất
+      operationId: approveProposal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveProposalRequest'
+      responses:
+        '200':
+          description: Thành công
+  /api/proposals/{id}/reject:
+    post:
+      tags:
+        - proposals
+      summary: Từ chối đề xuất
+      operationId: rejectProposal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectProposalRequest'
+      responses:
+        '200':
+          description: Thành công
+  /api/notifications:
+    get:
+      tags:
+        - notifications
+      summary: Danh sách thông báo
+      operationId: getNotifications
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPage'
+  /api/notifications/unread-count:
+    get:
+      tags:
+        - notifications
+      summary: Số thông báo chưa đọc
+      operationId: getUnreadCount
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: integer
+  /api/notifications/{id}/read:
+    post:
+      tags:
+        - notifications
+      summary: Đánh dấu đã đọc
+      operationId: readNotification
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Thành công
+  /api/notifications/read-all:
+    post:
+      tags:
+        - notifications
+      summary: Đánh dấu tất cả đã đọc
+      operationId: readAllNotifications
+      responses:
+        '200':
+          description: Thành công
+  /api/notifications/preferences:
+    get:
+      tags:
+        - notifications
+      summary: Lấy cài đặt thông báo
+      operationId: getNotificationPreferences
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPref'
+    put:
+      tags:
+        - notifications
+      summary: Cập nhật cài đặt thông báo
+      operationId: updateNotificationPreferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationPref'
+      responses:
+        '200':
+          description: Thành công
+  /api/push/public-key:
+    get:
+      tags:
+        - push
+      summary: Lấy VAPID public key
+      operationId: getPushPublicKey
+      responses:
+        '200':
+          description: Thành công
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/push/subscribe:
+    post:
+      tags:
+        - push
+      summary: Đăng ký thiết bị nhận thông báo push
+      operationId: subscribePush
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+      responses:
+        '200':
+          description: Thành công
+    delete:
+      tags:
+        - push
+      summary: Hủy đăng ký push trên thiết bị
+      operationId: unsubscribePush
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnsubscribePushRequest'
+      responses:
+        '200':
+          description: Thành công
+  /api/push/test:
+    post:
+      tags:
+        - push
+      summary: Gửi thử thông báo push đến thiết bị hiện tại
+      operationId: testPush
+      responses:
+        '200':
+          description: Thành công
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1851,6 +2555,15 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
+    AiDraftId:
+      name: id
+      in: path
+      required: true
+      description: '`id` của bản nháp do AI soạn'
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
     EventId:
       name: id
       in: path
@@ -2282,6 +2995,12 @@ components:
             - 'null'
           format: int64
           description: Bắt buộc với AVATAR; `null` với DOCUMENT nghĩa là tài liệu chung
+        title:
+          type:
+            - string
+            - 'null'
+          maxLength: 255
+          description: Tiêu đề tài liệu, dùng cho kind=DOCUMENT
         fileName:
           type: string
           maxLength: 255
@@ -2320,6 +3039,11 @@ components:
             - integer
             - 'null'
           format: int64
+        title:
+          type:
+            - string
+            - 'null'
+          maxLength: 255
         publicId:
           type: string
           description: '`public_id` Cloudinary trả về sau khi tải lên'
@@ -2345,6 +3069,10 @@ components:
           format: int64
         url:
           type: string
+        title:
+          type:
+            - string
+            - 'null'
         fileName:
           type: string
         mimeType:
@@ -2389,6 +3117,25 @@ components:
         - size
         - totalElements
         - totalPages
+    QuotaResponse:
+      type: object
+      properties:
+        usedMb:
+          type: number
+          format: double
+        limitMb:
+          type: number
+          format: double
+      required:
+        - usedMb
+        - limitMb
+    DownloadUrlResponse:
+      type: object
+      properties:
+        url:
+          type: string
+      required:
+        - url
     ConsentRequest:
       type: object
       properties:
@@ -3218,3 +3965,381 @@ components:
         totalPages:
           type: integer
           format: int32
+    SystemSettings:
+      type: object
+      properties:
+        policyVersion:
+          type: integer
+          format: int32
+        aiQuotaUser:
+          type: integer
+          format: int32
+        aiQuotaAdmin:
+          type: integer
+          format: int32
+        uploadMaxMb:
+          type: integer
+          format: int32
+        totalQuotaMb:
+          type: integer
+          format: int32
+      required:
+        - policyVersion
+        - aiQuotaUser
+        - aiQuotaAdmin
+        - uploadMaxMb
+        - totalQuotaMb
+    DeletedMemberSnapshotSummary:
+      type: object
+      properties:
+        auditId:
+          type: integer
+          format: int64
+        deletedAt:
+          type: string
+          format: date-time
+        deletedBy:
+          type: string
+        fullName:
+          type: string
+      required:
+        - auditId
+        - deletedAt
+        - deletedBy
+        - fullName
+    PageResponseDeletedMemberSnapshotSummary:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeletedMemberSnapshotSummary'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    DeletedMemberSnapshot:
+      type: object
+      properties:
+        member:
+          $ref: '#/components/schemas/MemberDetail'
+        relations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Relative'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+      required:
+        - member
+        - relations
+        - attachments
+    AiChatRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 1000
+      required:
+        - message
+    AiQuota:
+      type: object
+      description: Lượt hỏi trong ngày (theo giờ Việt Nam). `remaining = limit - used`.
+      properties:
+        limit:
+          type: integer
+          format: int32
+          description: 15 với User, 30 với Admin (cấu hình ở `SystemSettings`)
+        used:
+          type: integer
+          format: int32
+        remaining:
+          type: integer
+          format: int32
+        resetAt:
+          type: string
+          format: date-time
+          description: Lúc đặt lại lượt, 0h giờ Việt Nam của ngày kế tiếp
+      required:
+        - limit
+        - used
+        - remaining
+        - resetAt
+    AiDraftStatus:
+      type: string
+      description: '`PENDING` chưa xử lý, `SUBMITTED` đã gửi thành đề xuất (User), `APPLIED` đã áp dụng (Admin)'
+      enum:
+        - PENDING
+        - SUBMITTED
+        - APPLIED
+    AiDraftChange:
+      type: object
+      description: Một dòng khác biệt của bản nháp. `before` rỗng khi thêm mới, `after` rỗng khi xóa.
+      properties:
+        field:
+          type: string
+        label:
+          type: string
+        before:
+          type:
+            - string
+            - 'null'
+        after:
+          type:
+            - string
+            - 'null'
+      required:
+        - field
+        - label
+        - before
+        - after
+    AiDraft:
+      type: object
+      description: Thẻ xem trước đề xuất sự kiện chung do AI soạn (`draftProposal`, DECISIONS #77).
+      properties:
+        id:
+          type: integer
+          format: int64
+        action:
+          type: string
+          enum:
+            - CREATE
+            - UPDATE
+            - DELETE
+        eventId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Sự kiện bị sửa hoặc xóa; rỗng khi `CREATE`
+        eventTitle:
+          type: string
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AiDraftChange'
+        status:
+          $ref: '#/components/schemas/AiDraftStatus'
+      required:
+        - id
+        - action
+        - eventId
+        - eventTitle
+        - changes
+        - status
+    AiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        role:
+          type: string
+          enum:
+            - USER
+            - ASSISTANT
+        content:
+          type: string
+          description: Văn bản có thể chứa markdown (chỉ với `ASSISTANT`)
+        draft:
+          oneOf:
+            - $ref: '#/components/schemas/AiDraft'
+            - type: 'null'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - role
+        - content
+        - draft
+        - createdAt
+
+    ProposalInput:
+      type: object
+      properties:
+        targetType:
+          type: string
+        action:
+          type: string
+        targetId:
+          type:
+            - integer
+            - 'null'
+        payload:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+      required:
+        - targetType
+        - action
+    Proposal:
+      type: object
+      properties:
+        id:
+          type: integer
+        accountId:
+          type: integer
+        accountName:
+          type: string
+        targetType:
+          type: string
+        action:
+          type: string
+        targetId:
+          type:
+            - integer
+            - 'null'
+        payload:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+        status:
+          type: string
+        note:
+          type:
+            - string
+            - 'null'
+        baseUpdatedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        conflict:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - accountId
+        - accountName
+        - targetType
+        - action
+        - status
+        - conflict
+        - createdAt
+    ProposalPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Proposal'
+        totalPages:
+          type: integer
+      required:
+        - items
+        - totalPages
+    ApproveProposalRequest:
+      type: object
+      properties:
+        modifiedPayload:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+    RejectProposalRequest:
+      type: object
+      properties:
+        note:
+          type: string
+      required:
+        - note
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        link:
+          type:
+            - string
+            - 'null'
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - title
+        - body
+        - isRead
+        - createdAt
+    NotificationPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+        totalPages:
+          type: integer
+      required:
+        - items
+        - totalPages
+    NotificationPref:
+      type: object
+      properties:
+        notifyEvents:
+          type: boolean
+        notifyMemorials:
+          type: boolean
+        notifyProposals:
+          type: boolean
+        remindDaysBefore:
+          type: array
+          items:
+            type: integer
+        remindHour:
+          type: string
+      required:
+        - notifyEvents
+        - notifyMemorials
+        - notifyProposals
+        - remindDaysBefore
+        - remindHour
+    PushSubscription:
+      type: object
+      properties:
+        endpoint:
+          type: string
+        keys:
+          type: object
+          properties:
+            p256dh:
+              type: string
+            auth:
+              type: string
+          required:
+            - p256dh
+            - auth
+      required:
+        - endpoint
+        - keys
+    UnsubscribePushRequest:
+      type: object
+      properties:
+        endpoint:
+          type: string
+      required:
+        - endpoint

@@ -1,6 +1,6 @@
+import { formatDateTime } from '@/utils/date'
 import { useSearchParams, useNavigate } from 'react-router'
 import { Check, Settings } from 'lucide-react'
-import { format } from 'date-fns'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Pagination } from '@/components/shared/Pagination'
 import { Button } from '@/components/ui/button'
@@ -49,16 +49,16 @@ export function InboxPage() {
               <div 
                 key={n.id} 
                 className={`flex flex-col gap-1 p-4 rounded-lg border cursor-pointer transition-colors ${
-                  n.read ? 'bg-surface hover:bg-surface-muted border-border' : 'bg-primary/5 hover:bg-primary/10 border-primary/20'
+                  n.isRead ? 'bg-surface hover:bg-surface-muted border-border' : 'bg-primary/5 hover:bg-primary/10 border-primary/20'
                 }`}
                 onClick={() => {
-                  if (!n.read) read.mutate(n.id)
+                  if (!n.isRead) read.mutate(n.id)
                   if (n.link) navigate(n.link)
                 }}
               >
                 <div className="flex items-start justify-between gap-4">
-                  <h3 className={`text-base ${n.read ? 'font-medium text-foreground' : 'font-semibold text-primary'}`}>{n.title}</h3>
-                  <span className="text-xs text-text-muted whitespace-nowrap">{format(new Date(n.createdAt), 'HH:mm dd/MM')}</span>
+                  <h3 className={`text-base ${n.isRead ? 'font-medium text-foreground' : 'font-semibold text-primary'}`}>{n.title}</h3>
+                  <span className="text-xs text-text-muted whitespace-nowrap">{formatDateTime(n.createdAt).slice(0, -5)}</span>
                 </div>
                 <p className="text-sm text-text-muted mt-1">{n.body}</p>
               </div>
@@ -66,9 +66,9 @@ export function InboxPage() {
           </div>
           
           <Pagination
-            currentPage={page}
+            page={page - 1}
             totalPages={data.totalPages}
-            onPageChange={changePage}
+            onChange={(p) => changePage(p + 1)}
           />
         </>
       )}
