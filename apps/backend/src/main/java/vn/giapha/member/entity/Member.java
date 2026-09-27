@@ -203,6 +203,12 @@ public class Member {
         this.avatarUrl = avatarUrl;
     }
 
+    /** Đổi ảnh đại diện (qua {@code /api/files/confirm}); {@code null} để gỡ ảnh. */
+    public void changeAvatar(String url, Instant now) {
+        this.avatarUrl = url;
+        this.updatedAt = now;
+    }
+
     public String getPhone() {
         return phone;
     }

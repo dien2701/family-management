@@ -80,6 +80,18 @@ public class CalendarService {
         return LunarCalendar.isValid(lunar);
     }
 
+    /** Số ngày của tháng âm (29 hoặc 30), dùng để dựng lịch tháng theo âm (module event). */
+    public int daysInMonth(int lunarYear, int month, boolean leap) {
+        requireLunarMonth(lunarYear, month, leap);
+        return LunarCalendar.daysInMonth(lunarYear, month, leap);
+    }
+
+    /** Ngày dương của mùng 1 tháng âm, dùng để dựng lịch tháng theo âm (module event). */
+    public LocalDate firstDayOfMonth(int lunarYear, int month, boolean leap) {
+        requireLunarMonth(lunarYear, month, leap);
+        return LunarCalendar.firstDayOfMonth(lunarYear, month, leap);
+    }
+
     public int leapMonth(int lunarYear) {
         requireLunarYear(lunarYear);
         return LunarCalendar.leapMonth(lunarYear);

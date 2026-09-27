@@ -9,7 +9,7 @@ import vn.giapha.member.entity.Gender;
 
 /**
  * Dòng trong danh sách thành viên. Họ tên ghi nguyên văn, kể cả "Cụ", "Ông", "Bà", "(Tức ...)".
- * {@code generation} và {@code onTree} lấy từ cây gia phả (Đợt 29); chưa có cây thì {@code null} và {@code false}.
+ * {@code generation} và {@code onTree} lấy từ cây gia phả; người chưa có trên cây thì {@code null} và {@code false}.
  */
 public record MemberSummary(
         Long id,

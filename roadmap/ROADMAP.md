@@ -63,9 +63,9 @@
 | **GĐ B** | **Backend** | | | |
 | 26–27 | Gỡ dòng họ BE, Thành viên BE + seed 28 người | Claude Code | Sonnet · high | ✅ 2026-09-27 |
 | 28 | Người thân, "Tôi là ai" và tự sửa hồ sơ BE | Claude Code | Sonnet · high | ✅ 2026-09-27 |
-| 29 | Cây BE | Claude Code | Sonnet · high | ⬜ |
-| 30 | Upload và đính kèm BE | Claude Code | Sonnet · medium | ⬜ |
-| 31 | Sự kiện chung và lịch nhắc BE | Claude Code | Sonnet · medium | ⬜ |
+| 29 | Cây BE | Claude Code | Sonnet · high | ✅ 2026-09-27 |
+| 30 | Upload và đính kèm BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
+| 31 | Sự kiện chung và lịch nhắc BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
 | 32 | Dashboard và quản trị BE | Claude Code | Sonnet · medium | ⬜ |
 | 33–34 | Đề xuất sự kiện và Thông báo BE | Claude Code | Sonnet · medium | ⬜ |
 | 35 | Web Push BE | Claude Code | Sonnet · medium | ⬜ |
@@ -76,8 +76,8 @@
 | ~~40~~ | ~~E2E Playwright~~ (bỏ theo #84) | | | ❌ |
 | 41 | Deploy production | Claude Code | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 29 — Cây BE
-Công cụ **Claude Code** · Model **Sonnet** · Effort **high**.
+## ▶️ Đợt đang chờ: Đợt 32 — Dashboard và quản trị BE
+Công cụ **Claude Code** · Model **Sonnet** · Effort **medium**.
 
 ---
 
@@ -671,19 +671,26 @@ IDEA §6.1, §6.2, §6.3 · DECISIONS #62, #75, #76, #79–#82
 
 ---
 
-### Đợt 29 — Cây BE ⬜
+### Đợt 29 — Cây BE ✅ 2026-09-27
 IDEA §8 · DECISIONS #60–62
-- [ ] `V9__tree.sql`: `tree_node` (`member_id` NULL UNIQUE, FK tự tham chiếu), `tree_spouse` (`spouse_node_id` UNIQUE).
-- [ ] `GET /api/tree`: tải toàn bộ bằng một truy vấn, dựng đồ thị trong bộ nhớ. Mục tiêu: 500 ô dưới 300 ms.
-- [ ] Các thao tác ghi theo hợp đồng (thêm gốc, con, vợ/chồng, cha/mẹ, gỡ, điền, xóa ô trống, di chuyển, đổi thứ tự, đổi cặp):
+- [x] `V9__tree.sql`: `tree_node` (`member_id` NULL UNIQUE, FK tự tham chiếu), `tree_spouse` (`spouse_node_id` UNIQUE). ✅ 2026-09-27
+- [x] `GET /api/tree`: tải toàn bộ bằng một truy vấn, dựng đồ thị trong bộ nhớ. Mục tiêu: 500 ô dưới 300 ms. ✅ 2026-09-27
+- [x] Các thao tác ghi theo hợp đồng (thêm gốc, con, vợ/chồng, cha/mẹ, gỡ, điền, xóa ô trống, di chuyển, đổi thứ tự, đổi cặp): ✅ 2026-09-27
   - chỉ Admin được làm;
   - quy tắc giống hệt `utils/tree` (bản FE ở Đợt 14);
   - khóa các dòng liên quan (`SELECT … FOR UPDATE`) để hai Admin thao tác cùng lúc không làm hỏng cây;
   - ghi audit log.
-- [ ] `TreeDeletionGuard` (hiện thực `MemberDeletionGuard`): chặn xóa người đang có trên cây, trả 409 `MEMBER_ON_TREE`.
-- [ ] Danh sách thành viên: lọc theo `generation` và `onTree` (đời tính theo cùng thuật toán).
+- [x] `TreeDeletionGuard` (hiện thực `MemberDeletionGuard`): chặn xóa người đang có trên cây, trả 409 `MEMBER_ON_TREE`. ✅ 2026-09-27
+- [x] Danh sách thành viên: lọc theo `generation` và `onTree` (đời tính theo cùng thuật toán). ✅ 2026-09-27
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- `V9__tree.sql` (`tree_node`, `tree_spouse` với `spouse_node_id` là khóa chính) và entity/repository; `GET /api/tree` đọc hai bảng rồi dựng đồ thị trong bộ nhớ (thẻ thành viên lấy bằng một truy vấn `MemberFacade.findCards`).
+- Mười một thao tác ghi theo hợp đồng ở `TreeController`/`TreeService`, chỉ Admin (đọc lại từ DB). Quy tắc là bản Java của `utils/tree`: `TreeIndex` (graph.ts), `TreeRules` + `TreeError` (rules.ts, cùng mã lỗi và thông báo), `detach` (delete.ts). Mỗi thao tác khóa **cả cây** bằng `SELECT … FOR UPDATE` theo thứ tự id rồi kiểm tra trên đồ thị vừa đọc dưới khóa; audit log (`TREE_NODE`) chỉ giữ những dòng đã đổi, trước và sau.
+- `TreeDeletionGuard` (409 `MEMBER_ON_TREE`). Đảo phụ thuộc để `member` không phải gọi `tree`: `MemberTreePlacement` (ở `member`) do `TreePlacementService` hiện thực; `MemberService` dùng để lọc `generation`/`onTree`, sắp xếp theo đời và trả `generation`/`onTree` ở danh sách và hồ sơ.
+- `MemberFacade` thêm `MemberCard`/`findCards` (giữ nguyên `OccurrenceMember`/`findAllForOccurrences` của Đợt 31 đã làm trước đó trong nhánh này).
+- File chính: `apps/backend/src/main/java/vn/giapha/tree/**`, `member/MemberTreePlacement.java`, `member/MemberFacade.java`, `member/service/MemberService.java`, `db/migration/V9__tree.sql`.
+- Khác handler giả lập: thiếu khóa `newParentNodeId` (move) hoặc `coParentNodeId` (co-parent) trong JSON trả 400 `MALFORMED_REQUEST` thay vì `VALIDATION_ERROR` theo trường (record Jackson không phân biệt thiếu với null nên dùng `@JsonProperty(required = true)`).
+- Việc nên làm thêm: khóa cả cây thay vì chỉ các dòng liên quan là chủ ý (cây vài trăm ô, chỉ Admin ghi); nếu sau này cây lớn hoặc nhiều Admin ghi song song thì thu hẹp phạm vi khóa. Đợt 30 (Upload BE) chưa làm trong nhánh này nên `V10` còn trống; kiểm tra thứ tự Flyway khi làm tiếp (V9 cây đã có, V11 sự kiện của Đợt 31 đã có).
 
 **🔧 Setup thủ công cần làm:** Không có.
 
@@ -693,16 +700,20 @@ IDEA §8 · DECISIONS #60–62
 
 ---
 
-### Đợt 30 — Upload và đính kèm BE ⬜
+### Đợt 30 — Upload và đính kèm BE ✅ 2026-09-27
 IDEA §6.7 · DECISIONS #62, #67
-- [ ] `V10__attachment.sql`: bảng `attachment` (`kind` AVATAR|DOCUMENT, `member_id` NULL nghĩa là tài liệu chung).
-- [ ] `POST /api/files/sign`: cấp chữ ký Cloudinary, folder `giapha/`, kiểm tra quota trước khi cấp.
-- [ ] `POST /api/files/confirm`: xác minh `public_id` bằng Cloudinary Admin API (định dạng, ≤ 10 MB, đúng folder) rồi lưu. AVATAR thì cập nhật `member.avatar_url` và xóa ảnh cũ.
-- [ ] Các API còn lại theo hợp đồng: danh sách tệp của thành viên, tài liệu chung, xóa (chỉ Admin, xóa luôn trên Cloudinary), link tải có chữ ký và hết hạn ngắn, quota.
-- [ ] Cloudinary đặt sau interface `FileStorage`, test dùng bản giả. Listener `MemberDeletedEvent` xóa tệp **sau khi commit**.
-- [ ] Quyền upload (#78): User đã liên kết chỉ được `sign`/`confirm` `kind=AVATAR` cho hồ sơ của mình (kiểm `memberId = user.member_id` ở cả hai bước, chỉ jpg/png/webp). `DOCUMENT`, tài liệu chung và xóa tệp chỉ Admin.
+- [x] `V10__attachment.sql`: bảng `attachment` (`kind` AVATAR|DOCUMENT, `member_id` NULL nghĩa là tài liệu chung).
+- [x] `POST /api/files/sign`: cấp chữ ký Cloudinary, folder `giapha/`, kiểm tra quota trước khi cấp.
+- [x] `POST /api/files/confirm`: xác minh `public_id` bằng Cloudinary Admin API (định dạng, ≤ 10 MB, đúng folder) rồi lưu. AVATAR thì cập nhật `member.avatar_url` và xóa ảnh cũ.
+- [x] Các API còn lại theo hợp đồng: danh sách tệp của thành viên, tài liệu chung, xóa (chỉ Admin, xóa luôn trên Cloudinary), link tải có chữ ký và hết hạn ngắn, quota.
+- [x] Cloudinary đặt sau interface `FileStorage`, test dùng bản giả. Listener `MemberDeletedEvent` xóa tệp **sau khi commit**.
+- [x] Quyền upload (#78): User đã liên kết chỉ được `sign`/`confirm` `kind=AVATAR` cho hồ sơ của mình (kiểm `memberId = user.member_id` ở cả hai bước, chỉ jpg/png/webp). `DOCUMENT`, tài liệu chung và xóa tệp chỉ Admin.
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** Module `file` mới: `V10__attachment.sql`, entity `Attachment`/`FileFormat`, `AttachmentService` (sign, confirm, danh sách, tải, xóa, quota), `FileController` + `AttachmentController` khớp hợp đồng. Cloudinary gọi thẳng bằng HTTP (`CloudinaryFileStorage` sau interface `FileStorage`, không thêm SDK): ký SHA-1, đọc tệp bằng Admin API, `destroy`, link tải `authenticated` hết hạn 5 phút. Quyền upload kiểm từ DB qua `AuthFacade` ở cả sign và confirm. `MemberFileCleanup` vừa đóng góp `"attachments"` vào snapshot vừa xóa dòng khi `MemberDeletedEvent`, tệp trên Cloudinary xóa sau commit (`StorageCleaner`). Thêm `MemberFacade.changeAvatar`/`Member.changeAvatar`, cấu hình `app.file.*`.
+- Quy ước: `public_id` do máy chủ sinh (`giapha/avatar/<memberId>-<uuid>`, `giapha/document/<uuid>[.ext]`). Ảnh (jpg/png/webp) công khai, dùng thẳng `url`; pdf/docx/xlsx là `raw` + `authenticated`, `url` trỏ về `/api/attachments/{id}/download`.
+- Danh sách tệp của thành viên chỉ trả `DOCUMENT` (ảnh đại diện đã ở `avatarUrl`). Hết dung lượng: 400 `QUOTA_EXCEEDED`; chưa có khóa: 503 `STORAGE_NOT_CONFIGURED`. Chỉ bổ sung mô tả trong `openapi.yaml`, không đổi schema.
+- Bản giả `FileStorage` cho test chưa viết (DECISIONS #84). File chính: `apps/backend/src/main/java/vn/giapha/file/`.
+- Việc nên làm thêm: PDF đặt `raw` nên nếu Cloudinary chặn giao hàng tệp raw thì phải đổi sang `image`.
 
 **🔧 Setup thủ công cần làm:** Tạo tài khoản Cloudinary, điền `CLOUDINARY_*` vào `apps/backend/.env`.
 
@@ -713,13 +724,19 @@ IDEA §6.7 · DECISIONS #62, #67
 
 ---
 
-### Đợt 31 — Sự kiện chung và lịch nhắc BE ⬜
+### Đợt 31 — Sự kiện chung và lịch nhắc BE ✅ 2026-09-27
 IDEA §6.5, §7 · DECISIONS #31, #65, #72
-- [ ] `V11__custom_event.sql`. CRUD `/api/events`: Admin ghi, mọi tài khoản đã duyệt đọc. Kiểm tra lịch, cờ nhuận, ngày/tháng hợp lệ. Ghi audit log. Viết `EventFacade`.
-- [ ] `OccurrenceService.between(from, to, types)`: giỗ, sinh nhật và sự kiện chung theo IDEA §6.5 và §7. `eventKey` phải giống bản FE (dùng lại ở Đợt 35).
-- [ ] `GET /api/calendar/upcoming`, `/month`, `/recent` theo hợp đồng.
+- [x] `V11__custom_event.sql`. CRUD `/api/events`: Admin ghi, mọi tài khoản đã duyệt đọc. Kiểm tra lịch, cờ nhuận, ngày/tháng hợp lệ. Ghi audit log. Viết `EventFacade`. ✅ 2026-09-27
+- [x] `OccurrenceService.between(from, to, types)`: giỗ, sinh nhật và sự kiện chung theo IDEA §6.5 và §7. `eventKey` phải giống bản FE (dùng lại ở Đợt 35). ✅ 2026-09-27
+- [x] `GET /api/calendar/upcoming`, `/month`, `/recent` theo hợp đồng. ✅ 2026-09-27
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- Module `event` mới: entity/repository/dto/mapper/service/controller cho `CustomEvent` (`/api/events` CRUD, Admin ghi qua `EventService.requireAdmin`, audit log `TARGET_TYPE=EVENT`) và `EventFacade` (đọc, dùng cho Đợt 32-34).
+- `OccurrenceRules` (thuần, cổng ở `OccurrenceService.between`) sinh giỗ/sinh nhật/sự kiện chung, cổng đúng `generate.ts`: quy tắc ghi đè/tháng nhuận/tháng thiếu qua `CalendarFacade`, `eventKey` cùng dạng `TYPE:id:yyyy-MM-dd`, cùng thứ tự sắp xếp (ngày → loại → tên tiếng Việt → eventKey).
+- `GET /api/calendar/upcoming|month|recent` ở `CalendarOccurrenceController`, validate giống hợp đồng và handler giả lập (days ∈ {7,15,30,90,365}, type, sort, mode, leap, limit 1-50).
+- Mở rộng `MemberFacade.findAllForOccurrences()` (dữ liệu sinh/mất/giỗ ghi đè, không SĐT/email) và `CalendarFacade.daysInMonth`/`firstDayOfMonth` (phục vụ lịch tháng âm) để module `event` dùng qua facade, không đụng entity/internal của module khác.
+- File chính: `apps/backend/src/main/java/vn/giapha/event/**`, `apps/backend/src/main/java/vn/giapha/member/MemberFacade.java`, `apps/backend/src/main/java/vn/giapha/calendar/{CalendarFacade,service/CalendarService}.java`, `apps/backend/src/main/resources/db/migration/V11__custom_event.sql`.
+- Việc nên làm thêm: Đợt 29 (Cây BE) và Đợt 30 (Upload BE) vẫn đang ⬜ trong bảng Tiến độ — nếu các migration đó cũng cần V9/V10, kiểm tra thứ tự merge để tránh trùng số Flyway với `V11` ở đây.
 
 **🔧 Setup thủ công cần làm:** Không có.
 

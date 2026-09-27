@@ -904,7 +904,7 @@ paths:
       description: |
         Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`).
         Máy chủ kiểm MIME (jpg, png, webp, pdf, docx, xlsx; ảnh đại diện chỉ jpg/png/webp), tối đa 10 MB mỗi tệp và 1 GB toàn hệ thống.
-        Lỗi: 400 `VALIDATION_ERROR`, 403 `FORBIDDEN`. Ở chế độ giả lập trả 503 "Cần kết nối máy chủ" (DECISIONS #72).
+        Lỗi: 400 `VALIDATION_ERROR` (gồm hết dung lượng: `QUOTA_EXCEEDED`), 403 `FORBIDDEN`, 503 `STORAGE_NOT_CONFIGURED` khi chưa có khóa Cloudinary. Ở chế độ giả lập trả 503 "Cần kết nối máy chủ" (DECISIONS #72).
       operationId: signUpload
       requestBody:
         required: true
@@ -1131,6 +1131,9 @@ paths:
       tags:
         - members
       summary: Danh sách đính kèm của thành viên
+      description: |
+        Chỉ các tài liệu (`kind = DOCUMENT`) gắn với thành viên, mới nhất trước. Ảnh đại diện nằm ở `avatarUrl` của hồ sơ.
+        Ảnh có `url` công khai; PDF/docx/xlsx có `url` trỏ về `/api/attachments/{id}/download`.
       operationId: listMemberAttachments
       parameters:
         - $ref: '#/components/parameters/MemberId'

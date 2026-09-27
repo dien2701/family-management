@@ -48,6 +48,16 @@ public class CalendarFacade {
         return service.leapMonth(lunarYear);
     }
 
+    /** Số ngày của tháng âm (29 hoặc 30). */
+    public int daysInMonth(int lunarYear, int month, boolean leap) {
+        return service.daysInMonth(lunarYear, month, leap);
+    }
+
+    /** Ngày dương của mùng 1 tháng âm. */
+    public LocalDate firstDayOfMonth(int lunarYear, int month, boolean leap) {
+        return service.firstDayOfMonth(lunarYear, month, leap);
+    }
+
     /**
      * Ngày âm (tháng thường) để cúng giỗ, mừng sinh nhật âm hoặc làm sự kiện âm trong năm âm {@code lunarYear}.
      * {@code override} là ngày cúng do Admin ghi đè, {@code null} nếu không có.

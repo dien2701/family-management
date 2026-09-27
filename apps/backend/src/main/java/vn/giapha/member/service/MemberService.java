@@ -28,6 +28,7 @@ import vn.giapha.common.util.SearchText;
 import vn.giapha.member.MemberDeletedEvent;
 import vn.giapha.member.MemberDeletionGuard;
 import vn.giapha.member.MemberSnapshotContributor;
+import vn.giapha.member.MemberTreePlacement;
 import vn.giapha.member.dto.MemberDetail;
 import vn.giapha.member.dto.MemberFilter;
 import vn.giapha.member.dto.MemberInput;
@@ -42,8 +43,9 @@ import vn.giapha.member.repository.MemberRepository;
  * Thành viên gia phả (IDEA §4, §6.1; DECISIONS #58, #62, #66, #76). Admin thêm, sửa, xóa; User đã liên kết chỉ tự sửa
  * hồ sơ của mình. Vai trò và liên kết của người gọi luôn đọc từ DB, không tin claim (có thể cũ tới 15 phút).
  *
- * <p>Danh sách lọc theo tên và trạng thái ở DB, còn tuổi, sắp xếp và phân trang làm trong bộ nhớ: gia phả chỉ có vài
- * trăm thành viên (IDEA §1) và cách này cho đúng thứ tự A–Z tiếng Việt, đúng như handler giả lập của frontend.
+ * <p>Danh sách lọc theo tên và trạng thái ở DB, còn tuổi, đời, có trên cây, sắp xếp và phân trang làm trong bộ nhớ:
+ * gia phả chỉ có vài trăm thành viên (IDEA §1) và cách này cho đúng thứ tự A–Z tiếng Việt, đúng như handler giả lập
+ * của frontend. Đời lấy từ cây gia phả qua {@link MemberTreePlacement}.
  */
 @Service
 public class MemberService {
@@ -66,11 +68,13 @@ public class MemberService {
     private final ApplicationEventPublisher events;
     private final ObjectProvider<MemberDeletionGuard> guards;
     private final ObjectProvider<MemberSnapshotContributor> snapshotContributors;
+    private final MemberTreePlacement placement;
     private final Clock clock;
 
     MemberService(MemberRepository repository, MemberInputParser parser, MemberMapper mapper, AuthFacade auth,
             AuditLogWriter audit, ApplicationEventPublisher events, ObjectProvider<MemberDeletionGuard> guards,
-            ObjectProvider<MemberSnapshotContributor> snapshotContributors, Clock clock) {
+            ObjectProvider<MemberSnapshotContributor> snapshotContributors, MemberTreePlacement placement,
+            Clock clock) {
         this.repository = repository;
         this.parser = parser;
         this.mapper = mapper;
@@ -79,6 +83,7 @@ public class MemberService {
         this.events = events;
         this.guards = guards;
         this.snapshotContributors = snapshotContributors;
+        this.placement = placement;
         this.clock = clock;
     }
 
@@ -86,18 +91,19 @@ public class MemberService {
 
     @Transactional(readOnly = true)
     public MemberPage list(MemberFilter filter, int page, int size) {
-        // Chưa có cây gia phả (Đợt 29): không ai có đời và mọi người đều onTree=false
-        if (Boolean.TRUE.equals(filter.onTree()) || filter.generation() != null) {
-            return new MemberPage(List.of(), page, size, 0, 0);
-        }
         int currentYear = LocalDate.now(clock.withZone(VIETNAM)).getYear();
+        Map<Long, Integer> generations = placement.generations();
         List<Member> matched = repository.findAll(specOf(filter)).stream()
                 .filter(m -> inAgeRange(m, filter, currentYear))
-                .sorted(comparatorOf(filter.sort()))
+                .filter(m -> filter.onTree() == null || filter.onTree() == generations.containsKey(m.getId()))
+                .filter(m -> filter.generation() == null || filter.generation().equals(generations.get(m.getId())))
+                .sorted(comparatorOf(filter.sort(), generations))
                 .toList();
         int from = (int) Math.min((long) page * size, matched.size());
         int to = Math.min(from + size, matched.size());
-        List<MemberSummary> items = matched.subList(from, to).stream().map(mapper::toSummary).toList();
+        List<MemberSummary> items = matched.subList(from, to).stream()
+                .map(m -> mapper.toSummary(m, generations.get(m.getId()), generations.containsKey(m.getId())))
+                .toList();
         return new MemberPage(items, page, size, matched.size(), (int) Math.ceil(matched.size() / (double) size));
     }
 
@@ -106,7 +112,7 @@ public class MemberService {
     public MemberDetail get(Long viewerId, Long id) {
         Member member = find(id);
         boolean contact = auth.find(viewerId).map(a -> a.admin() || id.equals(a.memberId())).orElse(false);
-        return mapper.toDetail(member, contact);
+        return detailOf(member, contact);
     }
 
     // ---------- Ghi ----------
@@ -144,7 +150,7 @@ public class MemberService {
         MemberDetail before = mapper.toDetail(member, false);
         member.apply(profile, Instant.now(clock));
         audit.write(actorId, "UPDATE", TARGET_TYPE, id, before, mapper.toDetail(member, false));
-        return mapper.toDetail(member, true);
+        return detailOf(member, true);
     }
 
     /**
@@ -171,6 +177,13 @@ public class MemberService {
     }
 
     // ---------- Nội bộ ----------
+
+    /** Hồ sơ kèm đời và trạng thái trên cây. */
+    private MemberDetail detailOf(Member member, boolean includeContact) {
+        Map<Long, Integer> generations = placement.generations();
+        return mapper.toDetail(member, includeContact, generations.get(member.getId()),
+                generations.containsKey(member.getId()));
+    }
 
     private Member find(Long id) {
         return repository.findById(id).orElseThrow(
@@ -224,14 +237,18 @@ public class MemberService {
                 && (filter.ageMax() == null || age <= filter.ageMax());
     }
 
-    private static Comparator<Member> comparatorOf(String sort) {
+    private static Comparator<Member> comparatorOf(String sort, Map<Long, Integer> generations) {
         return switch (sort == null ? "name" : sort) {
             // Lớn tuổi trước = năm sinh nhỏ trước; chưa rõ năm sinh xếp cuối
             case "age" -> Comparator.comparing(Member::getBirthYear, Comparator.nullsLast(Comparator.<Integer>naturalOrder()))
                     .thenComparing(BY_NAME);
             case "created" -> Comparator.comparing(Member::getCreatedAt, Comparator.<Instant>reverseOrder())
                     .thenComparing(Member::getId, Comparator.<Long>reverseOrder());
-            // Chưa có cây nên mọi người chưa có đời: xếp theo tên (Đợt 29 xếp theo đời)
+            // Đời nhỏ trước, người chưa lên cây xếp cuối
+            case "generation" -> Comparator
+                    .comparing((Member m) -> generations.get(m.getId()),
+                            Comparator.nullsLast(Comparator.<Integer>naturalOrder()))
+                    .thenComparing(BY_NAME);
             default -> BY_NAME;
         };
     }

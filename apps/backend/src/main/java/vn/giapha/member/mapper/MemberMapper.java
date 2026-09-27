@@ -26,16 +26,29 @@ public class MemberMapper {
         this.json = json;
     }
 
-    /** {@code generation} và {@code onTree} chờ Đợt 29 (cây gia phả); hiện chưa có cây nên {@code null} và {@code false}. */
+    /** Không có thông tin cây: {@code generation = null}, {@code onTree = false} (dòng người thân, audit log). */
     public MemberSummary toSummary(Member m) {
-        return new MemberSummary(m.getId(), m.getFullName(), m.getGender(), m.getAvatarUrl(), labelsOf(m),
-                m.getBirthYear(), m.isDeceased(), m.getDeathYear(), null, false, m.getCreatedAt());
+        return toSummary(m, null, false);
     }
 
-    /** @param includeContact có đưa SĐT và email hay không (chỉ Admin và chính chủ) */
+    /** @param generation đời trên cây (gốc là 1), null khi chưa có trên cây */
+    public MemberSummary toSummary(Member m, Integer generation, boolean onTree) {
+        return new MemberSummary(m.getId(), m.getFullName(), m.getGender(), m.getAvatarUrl(), labelsOf(m),
+                m.getBirthYear(), m.isDeceased(), m.getDeathYear(), generation, onTree, m.getCreatedAt());
+    }
+
+    /** Không có thông tin cây: {@code generation = null}, {@code onTree = false}. */
     public MemberDetail toDetail(Member m, boolean includeContact) {
+        return toDetail(m, includeContact, null, false);
+    }
+
+    /**
+     * @param includeContact có đưa SĐT và email hay không (chỉ Admin và chính chủ)
+     * @param generation     đời trên cây (gốc là 1), null khi chưa có trên cây
+     */
+    public MemberDetail toDetail(Member m, boolean includeContact, Integer generation, boolean onTree) {
         return new MemberDetail(m.getId(), m.getFullName(), m.getGender(), m.getAvatarUrl(), labelsOf(m),
-                m.getBirthYear(), m.isDeceased(), m.getDeathYear(), null, false, m.getCreatedAt(),
+                m.getBirthYear(), m.isDeceased(), m.getDeathYear(), generation, onTree, m.getCreatedAt(),
                 m.getTabooName(), includeContact ? m.getPhone() : null, includeContact ? m.getEmail() : null,
                 m.getBiography(), birthOf(m), deathSolarOf(m), deathLunarOf(m), memorialOf(m), m.getBurialPlace(),
                 m.getUpdatedAt());
