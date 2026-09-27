@@ -1,10 +1,12 @@
 package vn.giapha.event;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
 import vn.giapha.event.dto.CalendarOccurrenceResponse;
+import vn.giapha.event.dto.CustomEventInput;
 import vn.giapha.event.dto.CustomEventResponse;
 import vn.giapha.event.entity.EventCalendar;
 import vn.giapha.event.service.EventService;
@@ -40,6 +42,36 @@ public class EventFacade {
     /** 10 sự kiện vừa diễn ra gần nhất (dashboard, IDEA §6.8). */
     public List<CalendarOccurrenceResponse> recent10() {
         return occurrences.recent(10);
+    }
+
+    /** 404 {@code EVENT_NOT_FOUND} khi không có (đề xuất Đợt 33: cần chắc chắn có trước khi ghi nhận). */
+    public CustomEventResponse get(Long id) {
+        return service.get(id);
+    }
+
+    /** Không ném lỗi khi không có (đề xuất Đợt 33: kiểm tra xung đột lúc đọc, sự kiện có thể đã bị xóa). */
+    public Optional<CustomEventResponse> find(Long id) {
+        return service.findOptional(id);
+    }
+
+    /** Cùng quy tắc với {@code POST /api/events} (đề xuất Đợt 33: validate trước khi cho Admin duyệt). */
+    public void validate(CustomEventInput input) {
+        service.validate(input);
+    }
+
+    /** Áp dụng đề xuất CREATE đã được duyệt; cùng quy tắc và audit log với API ghi trực tiếp. */
+    public CustomEventResponse create(Long actorId, CustomEventInput input) {
+        return service.create(actorId, input);
+    }
+
+    /** Áp dụng đề xuất UPDATE đã được duyệt. */
+    public CustomEventResponse update(Long actorId, Long id, CustomEventInput input) {
+        return service.update(actorId, id, input);
+    }
+
+    /** Áp dụng đề xuất DELETE đã được duyệt. */
+    public void delete(Long actorId, Long id) {
+        service.delete(actorId, id);
     }
 
     private static EventRef toRef(CustomEventResponse r) {

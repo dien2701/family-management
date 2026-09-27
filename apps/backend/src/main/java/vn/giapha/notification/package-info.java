@@ -1,5 +1,5 @@
 /**
- * Hộp thư, Web Push, lịch nhắc.
+ * Trung tâm thông báo trong app và tùy chọn của từng tài khoản.
  */
 @ApplicationModule(displayName = "Notification")
 package vn.giapha.notification;

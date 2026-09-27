@@ -33,6 +33,14 @@ public interface UserAccountRepository
               and u.approvalStatus = vn.giapha.auth.entity.ApprovalStatus.APPROVED""")
     boolean existsUsableAdmin();
 
+    /** Id các Admin dùng được (ACTIVE và đã duyệt); dùng để báo mọi Admin (thông báo, Đợt 34). */
+    @Query("""
+            select u.id from UserAccount u
+            where u.systemRole = vn.giapha.auth.entity.SystemRole.ADMIN
+              and u.status = vn.giapha.auth.entity.AccountStatus.ACTIVE
+              and u.approvalStatus = vn.giapha.auth.entity.ApprovalStatus.APPROVED""")
+    List<Long> findUsableAdminIds();
+
     /** Khóa dòng tài khoản để các thao tác duyệt/khóa/đổi vai trò trên cùng một người chạy tuần tự. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from UserAccount u where u.id = :id")

@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import jakarta.persistence.criteria.Predicate;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -20,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import vn.giapha.auth.AccountApprovedEvent;
 import vn.giapha.auth.MemberDirectory;
 import vn.giapha.auth.dto.AccountAdminResponse;
 import vn.giapha.auth.dto.AccountFilter;
@@ -53,16 +55,19 @@ public class AdminAccountService {
     private final UserAccountMapper mapper;
     private final AccountLinking linking;
     private final MemberDirectory members;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
 
     AdminAccountService(UserAccountRepository users, RefreshTokenService refreshTokens, AuditLogWriter audit,
-            UserAccountMapper mapper, AccountLinking linking, MemberDirectory members, Clock clock) {
+            UserAccountMapper mapper, AccountLinking linking, MemberDirectory members,
+            ApplicationEventPublisher events, Clock clock) {
         this.users = users;
         this.refreshTokens = refreshTokens;
         this.audit = audit;
         this.mapper = mapper;
         this.linking = linking;
         this.members = members;
+        this.events = events;
         this.clock = clock;
     }
 
@@ -95,6 +100,7 @@ public class AdminAccountService {
         return mutate(actorId, targetId, "APPROVE", (actor, target, admins) -> {
             requireApproval(target, ApprovalStatus.WAITING, ApprovalStatus.REJECTED);
             target.approve(actor.getId(), Instant.now(clock));
+            events.publishEvent(new AccountApprovedEvent(target.getId()));
         });
     }
 

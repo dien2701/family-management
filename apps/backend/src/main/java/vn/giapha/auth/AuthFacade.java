@@ -70,6 +70,12 @@ public class AuthFacade implements AccountAccessLookup {
         return users.countByApprovalStatusAndStatusNot(ApprovalStatus.WAITING, AccountStatus.PENDING);
     }
 
+    /** Id các Admin dùng được, để báo mọi Admin (thông báo, Đợt 34). */
+    @Transactional(readOnly = true)
+    public List<Long> usableAdminIds() {
+        return users.findUsableAdminIds();
+    }
+
     /**
      * Đọc tài khoản và khóa dòng ({@code FOR UPDATE}) cho tới hết transaction, để các thao tác về liên kết của cùng
      * một tài khoản chạy tuần tự. Phải gọi trong transaction.

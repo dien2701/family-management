@@ -3,6 +3,7 @@ package vn.giapha.event.service;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -51,6 +52,20 @@ public class EventService {
     @Transactional(readOnly = true)
     public CustomEventResponse get(Long id) {
         return mapper.toResponse(find(id));
+    }
+
+    /** Không ném lỗi khi không có (đề xuất, Đợt 33: kiểm tra xung đột). */
+    @Transactional(readOnly = true)
+    public Optional<CustomEventResponse> findOptional(Long id) {
+        return repository.findById(id).map(mapper::toResponse);
+    }
+
+    /**
+     * Kiểm tra input theo đúng quy tắc của {@code create}/{@code update} (ngày âm/dương có thật, năm hỗ trợ...) mà
+     * không lưu gì, để đề xuất (Đợt 33) validate bằng cùng validator với API sự kiện ghi trực tiếp.
+     */
+    public void validate(CustomEventInput input) {
+        parser.parse(input);
     }
 
     @Transactional

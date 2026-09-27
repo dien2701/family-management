@@ -13,6 +13,7 @@ import vn.giapha.event.EventFacade;
 import vn.giapha.event.dto.CalendarOccurrenceResponse;
 import vn.giapha.member.MemberFacade;
 import vn.giapha.member.MemberFacade.MemberStats;
+import vn.giapha.proposal.ProposalFacade;
 import vn.giapha.tree.TreeFacade;
 
 /**
@@ -26,12 +27,15 @@ public class DashboardService {
     private final TreeFacade tree;
     private final EventFacade events;
     private final AuthFacade auth;
+    private final ProposalFacade proposals;
 
-    DashboardService(MemberFacade members, TreeFacade tree, EventFacade events, AuthFacade auth) {
+    DashboardService(MemberFacade members, TreeFacade tree, EventFacade events, AuthFacade auth,
+            ProposalFacade proposals) {
         this.members = members;
         this.tree = tree;
         this.events = events;
         this.auth = auth;
+        this.proposals = proposals;
     }
 
     @Transactional(readOnly = true)
@@ -50,8 +54,7 @@ public class DashboardService {
         Integer pendingLinkRequests = null;
         if (account.admin()) {
             pendingAccounts = (int) auth.pendingAccountCount();
-            // Đợt 33 mới có module đề xuất; cho tới đó luôn 0 (roadmap Đợt 32).
-            pendingProposals = 0;
+            pendingProposals = (int) proposals.pendingCount();
             pendingLinkRequests = (int) members.pendingLinkRequestCount();
         }
 

@@ -7,12 +7,14 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import vn.giapha.auth.AccountPendingEvent;
 import vn.giapha.auth.dto.AuthResponse;
 import vn.giapha.auth.dto.EmailRequest;
 import vn.giapha.auth.dto.GoogleLoginRequest;
@@ -23,6 +25,7 @@ import vn.giapha.auth.dto.RegisterRequest;
 import vn.giapha.auth.dto.ResetPasswordRequest;
 import vn.giapha.auth.dto.VerifyOtpRequest;
 import vn.giapha.auth.entity.AccountStatus;
+import vn.giapha.auth.entity.ApprovalStatus;
 import vn.giapha.auth.entity.OtpPurpose;
 import vn.giapha.auth.entity.UserAccount;
 import vn.giapha.auth.google.GoogleIdTokenVerifier;
@@ -62,6 +65,7 @@ public class AuthService {
     private final UserAccountMapper mapper;
     private final ConsentService consents;
     private final RootAdminService rootAdmin;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
     private final Policy loginPerIpPolicy;
     /** Băm một mật khẩu giả khi email không tồn tại để thời gian phản hồi không lộ email nào có thật. */
@@ -71,7 +75,7 @@ public class AuthService {
             RefreshTokenService refreshTokens, LoginAttemptService loginAttempts,
             GoogleIdTokenVerifier googleVerifier, PasswordEncoder passwordEncoder, JwtService jwtService,
             RateLimiter rateLimiter, UserAccountMapper mapper, ConsentService consents, RootAdminService rootAdmin,
-            Clock clock, AppProperties props) {
+            ApplicationEventPublisher events, Clock clock, AppProperties props) {
         this.users = users;
         this.otps = otps;
         this.otpService = otpService;
@@ -84,6 +88,7 @@ public class AuthService {
         this.mapper = mapper;
         this.consents = consents;
         this.rootAdmin = rootAdmin;
+        this.events = events;
         this.clock = clock;
         this.loginPerIpPolicy = new Policy("login-ip", props.auth().loginPerMinutePerIp(),
                 Duration.ofMinutes(1));
@@ -146,7 +151,7 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException("OTP_EXPIRED",
                         "Mã xác thực đã hết hạn hoặc không tồn tại. Vui lòng gửi lại mã."));
         user.setStatus(AccountStatus.ACTIVE);
-        return authenticated(rootAdmin.promoteIfRoot(user));
+        return authenticated(activated(user));
     }
 
     // ---------- Đăng nhập ----------
@@ -192,18 +197,21 @@ public class AuthService {
                     "Không xác minh được tài khoản Google. Vui lòng thử lại.");
         }
         UserAccount user = users.findByGoogleSub(identity.sub()).orElse(null);
+        boolean newlyActivated = false;
         if (user == null) {
             user = users.findByEmail(email).orElse(null);
             if (user == null) {
                 user = createFromGoogle(identity, email);
+                newlyActivated = true;
             } else {
+                newlyActivated = user.getStatus() == AccountStatus.PENDING;
                 linkGoogle(user, identity, email);
             }
         }
         if (user.getStatus() == AccountStatus.LOCKED) {
             throw accountLocked();
         }
-        return authenticated(rootAdmin.promoteIfRoot(user));
+        return authenticated(newlyActivated ? activated(user) : rootAdmin.promoteIfRoot(user));
     }
 
     // ---------- Refresh, đăng xuất, thông tin cá nhân ----------
@@ -323,6 +331,15 @@ public class AuthService {
 
     private AuthResult authenticated(UserAccount user) {
         return new AuthResult(authResponse(user), refreshTokens.issue(user.getId()));
+    }
+
+    /** Tài khoản vừa chuyển ACTIVE lần đầu: nâng Admin gốc nếu đúng email, rồi báo mọi Admin nếu vẫn đang chờ duyệt. */
+    private UserAccount activated(UserAccount user) {
+        UserAccount promoted = rootAdmin.promoteIfRoot(user);
+        if (promoted.getApprovalStatus() == ApprovalStatus.WAITING) {
+            events.publishEvent(new AccountPendingEvent(promoted.getId()));
+        }
+        return promoted;
     }
 
     private AuthResponse authResponse(UserAccount user) {

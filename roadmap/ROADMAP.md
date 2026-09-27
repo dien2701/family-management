@@ -67,7 +67,7 @@
 | 30 | Upload và đính kèm BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
 | 31 | Sự kiện chung và lịch nhắc BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
 | 32 | Dashboard và quản trị BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
-| 33–34 | Đề xuất sự kiện và Thông báo BE | Claude Code | Sonnet · medium | ⬜ |
+| 33–34 | Đề xuất sự kiện và Thông báo BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
 | 35 | Web Push BE | Claude Code | Sonnet · medium | ⬜ |
 | 36–37 | AI BE: provider, tool, SSE, quota, soạn đề xuất, phạm vi | Claude Code | Sonnet · high | ⬜ |
 | 38 | Export BE (Excel, PDF) | Claude Code | Sonnet · medium | ⬜ |
@@ -76,7 +76,7 @@
 | ~~40~~ | ~~E2E Playwright~~ (bỏ theo #84) | | | ❌ |
 | 41 | Deploy production | Claude Code | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 32 — Dashboard và quản trị BE
+## ▶️ Đợt đang chờ: Đợt 35 — Web Push BE
 Công cụ **Claude Code** · Model **Sonnet** · Effort **medium**.
 
 ---
@@ -771,23 +771,23 @@ IDEA §6.8, §6.10 · DECISIONS #55, #62
 
 ---
 
-### Đợt 33–34 — Đề xuất sự kiện và Thông báo BE ⬜
+### Đợt 33–34 — Đề xuất sự kiện và Thông báo BE ✅ 2026-09-27
 IDEA §6.6, §9 · DECISIONS #65, #77
 **Phần 33 — Đề xuất sự kiện BE**
-- [ ] `V13__proposal.sql` (`target_type` chỉ có `EVENT`).
-- [ ] `POST /api/proposals`:
+- [x] `V13__proposal.sql` (`target_type` chỉ có `EVENT`). ✅ 2026-09-27
+- [x] `POST /api/proposals`: ✅ 2026-09-27
   - chỉ nhận `targetType=EVENT`, không cần liên kết;
-  - server tự tính `diff` và lưu `base_updated_at`;
+  - server tự tính lưu `base_updated_at`;
   - validate payload bằng **cùng validator** với API sự kiện ghi trực tiếp.
-- [ ] Các API còn lại theo hợp đồng: `mine`, danh sách chờ, `count`, `approve` (nhận payload đã chỉnh), `reject`.
+- [x] Các API còn lại theo hợp đồng: `mine`, danh sách chờ, `count`, `approve` (nhận payload đã chỉnh), `reject`. ✅ 2026-09-27
   - Khi duyệt thì áp dụng qua `EventFacade` trong một transaction và ghi audit log.
   - Báo `conflict: true` khi `updated_at > base_updated_at`.
-- [ ] Phát `ProposalReviewed` (để Đợt 34 dùng). Dashboard lấy `pendingProposals` là số thật.
+- [x] Phát `ProposalReviewed` (để Đợt 34 dùng). Dashboard lấy `pendingProposals` là số thật. ✅ 2026-09-27
 
 **Phần 34 — Thông báo BE: hộp thư, tùy chọn**
-- [ ] `V14__notification.sql`: `notification` và `notification_pref` (giá trị mặc định tạo lười ở lần đọc đầu tiên).
-- [ ] API hộp thư và tùy chọn theo hợp đồng. Mỗi người chỉ đọc được thông báo của chính mình.
-- [ ] Listener tạo thông báo:
+- [x] `V14__notification.sql`: `notification` và `notification_pref` (giá trị mặc định tạo lười ở lần đọc đầu tiên). ✅ 2026-09-27
+- [x] API hộp thư và tùy chọn theo hợp đồng. Mỗi người chỉ đọc được thông báo của chính mình. ✅ 2026-09-27
+- [x] Listener tạo thông báo: ✅ 2026-09-27
   - tài khoản mới chờ duyệt → mọi Admin;
   - được duyệt → người đó;
   - kết quả liên kết → người yêu cầu;
@@ -795,9 +795,18 @@ IDEA §6.6, §9 · DECISIONS #65, #77
   - đề xuất mới → mọi Admin;
   - `ProposalReviewed` → người đề xuất.
 
-  Đợt 8 cần phát event cho tài khoản chờ duyệt: nếu chưa có thì thêm ở đợt này.
+  Đợt 8 cần phát event cho tài khoản chờ duyệt: nếu chưa có thì thêm ở đợt này. ✅ đã thêm (`AccountPendingEvent`, phát ở `AuthService`).
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- Module `proposal` mới (entity/repository/service/controller/mapper/facade): `POST/GET /api/proposals`, `/mine`, `/count`, `/{id}/approve`, `/{id}/reject`. Duyệt áp dụng qua `EventFacade.create/update/delete` (cùng transaction, cùng audit log với API sự kiện trực tiếp); `conflict` tính lại mỗi lần đọc từ `custom_event.updated_at` hiện tại so với `base_updated_at`, không lưu. Validate payload bằng đúng Bean Validation của `CustomEventInput` **và** `EventInputParser` (thêm `EventFacade.validate/get/find/create/update/delete`, `EventService.validate/findOptional`).
+- Module `notification` mới: hộp thư (`/api/notifications`, `/unread-count`, `/{id}/read`, `/read-all`) và tùy chọn (`/preferences`, tạo lười với mặc định `notifyEvents/Memorials/Proposals=true`, `remindDaysBefore=[30,7,3,1,0]`, `remindHour="07:00"` theo IDEA §9 mục 4). 3 listener (`AccountNotificationListener`, `LinkNotificationListener`, `ProposalNotificationListener`) nghe `AccountPendingEvent`/`AccountApprovedEvent` (mới, auth), `LinkDecidedEvent` (member, đã có từ Đợt 28) và `ProposalCreatedEvent`/`ProposalReviewedEvent` (mới, proposal); `notifyProposals=false` thì bỏ qua 2 loại thông báo về đề xuất.
+- `AuthService`: phát `AccountPendingEvent` đúng lúc tài khoản chuyển `ACTIVE` lần đầu (xác thực OTP, Google tài khoản mới, hoặc Google liên kết tài khoản `PENDING` cũ) và vẫn `WAITING` sau khi kiểm tra Admin gốc; `AdminAccountService.approve()` phát `AccountApprovedEvent`. `AuthFacade` thêm `usableAdminIds()`.
+- `DashboardService`: `pendingProposals` đổi từ 0 sang `ProposalFacade.pendingCount()` thật.
+- Việc nên làm thêm:
+  - IDEA §9 mục 5 còn nói "yêu cầu liên kết mới → mọi Admin", nhưng checklist Đợt 34 không liệt kê listener này nên **chưa làm** (không tự mở rộng phạm vi); thêm ở đợt sau nếu cần.
+  - Roadmap ghi "server tự tính `diff`" nhưng `shared/api/openapi.yaml` (`Proposal`) không có trường `diff` — chỉ lưu `payload` và `baseUpdatedAt` đúng hợp đồng; FE tự so `payload` với sự kiện hiện tại để hiển thị khác biệt nếu cần.
+  - Mặc định `remindHour` lớp giả lập FE đang là `"08:00"` (BE dùng `"07:00"` theo IDEA §9 mục 4) — lệch nhau, để Đợt 35 hoặc lúc nối BE thật (Đợt 39) đồng bộ lại.
+  - Chưa có API `/api/push/*` (Đợt 35 làm riêng).
 
 **🔧 Setup thủ công cần làm:** Không có.
 
