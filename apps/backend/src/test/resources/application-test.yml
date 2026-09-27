@@ -1,0 +1,17 @@
+# Giá trị giả chỉ dùng cho test; kết nối DB thật do Testcontainers (@ServiceConnection) cấp
+spring:
+  datasource:
+    password: test
+
+app:
+  jwt:
+    secret: test-only-secret-test-only-secret-0123456789
+  google:
+    client-id: test-client-id.apps.googleusercontent.com
+  auth:
+    # Mọi request MockMvc cùng một IP; nới hạn mức theo IP để các test không đụng nhau.
+    # Hạn mức theo email vẫn giữ nguyên mặc định để test khóa đăng nhập và OTP.
+    login-per-minute-per-ip: 100000
+    otp-hourly-limit-per-ip: 100000
+  # Admin gốc dành riêng cho test AccountApprovalApiTest; các test khác không được dùng email này
+  root-admin-email: root.admin@giapha.test

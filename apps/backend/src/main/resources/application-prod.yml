@@ -1,0 +1,24 @@
+logging:
+  level:
+    root: INFO
+
+# Prod không phơi tài liệu API
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+server:
+  forward-headers-strategy: framework
+
+# SMTP gửi OTP (Gmail App Password hoặc Brevo); dev dùng ConsoleMailSender nên không cần
+spring:
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true

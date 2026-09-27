@@ -1,38 +1,38 @@
-# VAI TRÒ CỦA BẠN (ROLE)
-Bạn là Antigravity - một Senior Fullstack Engineer và System Architect. Nhiệm vụ của bạn là lập trình hệ thống En-learning với chất lượng code chuẩn Enterprise.
+# AGENTS.md — Tộc Phả (dành cho Antigravity)
 
-# KIẾN TRÚC & TECH STACK
-Monorepo, hai ứng dụng nằm trong `apps/`. Nguồn sự thật về phiên bản là `apps/frontend/package.json` và `apps/backend/pom.xml`.
-- **Frontend (`apps/frontend`):** React 19 + TypeScript, build bằng Vite. Giao diện dùng Ant Design 6 kết hợp Tailwind CSS 4 (màu và font lấy từ design tokens). Định tuyến bằng React Router 7, đa ngôn ngữ bằng i18next (VI/EN), biểu đồ bằng Recharts. KHÔNG dùng Redux, Bootstrap, Reactstrap hay Create React App.
-- **Backend (`apps/backend`):** Java 21, Spring Boot 4.1, Spring Data JPA (Hibernate), Spring Security, Bean Validation. Kiến trúc modular monolith.
-- **Database:** MySQL 9.0. Schema do Flyway quản lý (`apps/backend/src/main/resources/db/migration`), Hibernate chạy `ddl-auto: validate` nên entity phải khớp SQL.
-- **Hạ tầng trong tiến trình:** Caffeine (cache), `@Scheduled` + `email_logs` (email nhắc học, dọn dẹp), bucket4j (rate limit). Audio/ảnh giữ đường dẫn ngoài. AI đi qua interface, bản giả ở profile `dev`, OpenAI thật khi có `OPENAI_API_KEY`.
-- **Giai đoạn hiện tại:** frontend gọi backend thật cho mọi module (mock đã xoá). Xem `.docs/FEATURES_DONE.md` và `.docs/ROADMAP.md`.
+> File này cho agent của **Antigravity** (Gemini). Nguồn quy tắc chính là `CLAUDE.md`, **mọi quy tắc trong đó đều áp dụng**. File này chỉ thêm những điều Antigravity cần biết vì không có hook và skill của Claude Code (DECISIONS #83).
 
-# QUY TẮC VẬN HÀNH BỘ NHỚ (CRITICAL MEMORY RULES)
-1. **Khởi động phiên:** Ở mỗi đầu phiên chat, BẮT BUỘC đọc ngầm 2 file: `.docs/ARCHITECTURE.md` (để hiểu database/logic) và `.docs/FEATURES_DONE.md` (để biết tiến độ hiện tại).
-2. **Tuân thủ Thiết kế:** Khi làm UI, BẮT BUỘC đọc file `.docs/STYLEGUIDE.md`. Sử dụng các biến màu và font chuẩn.
+## Đầu mỗi phiên
+1. Đọc `CLAUDE.md` (tổng quan, thuật ngữ, quy ước). Trong `roadmap/ROADMAP.md` **chỉ đọc** mục Quy tắc, bảng Tiến độ và mục của đợt được giao (không đọc cả file).
+2. Chỉ nhận đợt có cột **Công cụ = Antigravity** trong bảng Tiến độ (hiện là Đợt 11, 18–19, 20–21, 22, 23). Đợt ghi Claude Code thì dừng và báo người dùng.
+3. Đọc đúng các file mà prompt của đợt nêu, gồm:
+   - `.claude/rules/frontend.md` (thêm `security.md` nếu đợt đụng quyền);
+   - `docs/DESIGN.md` trước khi làm UI;
+   - các mục IDEA và DECISIONS mà prompt nêu.
+   `docs/DECISIONS.md` thắng `roadmap/IDEA.md` khi mâu thuẫn.
 
-# QUY TẮC LẬP TRÌNH (CODING STANDARDS)
-1. **TypeScript (Frontend):** Giữ code sạch sẽ, dễ đọc, có kiểu rõ ràng, áp dụng React Hooks chuẩn. Kiểu dữ liệu dùng chung đặt ở `src/types`. Chạy `npm run lint` và `npm run build` (gồm `tsc -b`) trước khi coi là xong.
-2. **Frontend Constraints:**
-   - Phân tách rõ ràng Logic và UI. Component dùng chung (`components/ui`, `components/practice`) chỉ nhận props, không gọi API.
-   - Component name dùng `PascalCase`. File name dùng `PascalCase` hoặc `kebab-case` phù hợp với codebase.
-3. **Backend Constraints:**
-   - Luồng `Controller → Service → Repository → MySQL`. Giữ Controller siêu mỏng (chỉ xử lý Request/Response). Toàn bộ Business Logic phải nằm trong Service.
-   - Luôn xử lý lỗi bằng Try/Catch.
-   - Đổi schema thì sửa SQL Flyway và entity JPA cùng lúc. Quy tắc sửa V1 hay thêm V2 xem `.docs/ARCHITECTURE.md`, mục 1.
-4. **Data Fetching:** Gọi API qua axios instance ở `src/shared/api/client.ts`, bọc trong `src/services/*` và dùng hook `useApi`. KHÔNG dùng RTK Query. Kiểu dữ liệu trả về của backend phải khớp `src/types`.
+## Thuật ngữ bắt buộc
+- **Tài khoản** (user): người đăng nhập, vai trò Admin hoặc User. **Thành viên** (member): người trong gia phả, là dữ liệu nội dung.
+- Hai khái niệm khác nhau, liên kết 1–1 và không bắt buộc ("Tôi là ai"). Giao diện không dùng lẫn hai từ này.
 
-# QUY CHUẨN BẢO MẬT
-- Hashing mật khẩu: Sử dụng `BCrypt` (Spring Security) với cost là `12`. BẠN BỊ CẤM lưu mật khẩu dạng Plain Text.
-- Quản lý token: Dùng JWT cho access token, ký và kiểm bằng Spring Security OAuth2 Resource Server (Nimbus JOSE, HS256, khoá `JWT_SECRET`). KHÔNG dùng `jsonwebtoken` (thư viện của Node.js).
-- Refresh Token: chỉ lưu SHA-256 trong bảng `refresh_tokens`. Mã OTP đặt lại mật khẩu (6 số): chỉ lưu HMAC-SHA256 có khoá `RESET_CODE_SECRET`, băm kèm id người dùng, cùng bộ đếm `attempts`, trong bảng `password_reset_tokens`. Không lưu token hay mã thô. Cache chỉ để tăng tốc, không là nơi duy nhất giữ trạng thái đăng nhập.
-- Quy tắc payload: BẠN BỊ CẤM trả về trường `passwordHash` hoặc các thông tin nhạy cảm trong API Response.
-- Quy tắc Cookie: `Refresh Token` BẮT BUỘC phải được set vào cookie thông qua Header `Set-Cookie` với cấu hình `HTTP Only`.
-- Bí mật (`JWT_SECRET`, `RESET_CODE_SECRET`, OpenAI API key, mật khẩu DB và `MAIL_PASSWORD`) đặt trong `.env`, KHÔNG commit và KHÔNG để trong code React. Mẫu các khoá nằm ở `apps/backend/.env.example`.
+## Điều cấm (Claude Code chặn bằng hook, ở đây phải tự giữ)
+- Không đọc, tạo hay sửa file `.env*` (trừ `.env.example`). Không đưa bí mật hay token vào code, lớp giả lập, hay localStorage.
+- Không sửa file Flyway `V*.sql` đã có.
+- Không sửa gì trong `apps/backend/`: GĐ A chỉ làm frontend.
+- Không sửa tay `apps/frontend/src/services/schema.d.ts`: chỉ sinh bằng `npm run gen:api`.
+- Trong `shared/api/openapi.yaml` chỉ thêm phần của đợt đang làm. Không đổi hợp đồng của đợt khác.
+- **Không tạo dữ liệu giả.** Chỉ có 28 thành viên ở `shared/fixtures/seed/members.json` và dữ liệu người dùng tự nhập. Dữ liệu mẫu chỉ được nằm trong test.
+- Không commit, push, tạo PR khi người dùng chưa yêu cầu. Mỗi đợt một nhánh `dot-NN-<ten>`.
+- Không làm việc ngoài checklist của đợt. Thấy việc cần làm thêm thì ghi vào mục ghi chú của đợt.
+- Không chạy song song với phiên Claude Code trên cùng repo.
 
-# QUY TẮC GIAO TIẾP (NO YAPPING - TOKEN OPTIMIZATION)
-- **CẤM NÓI NHẢM:** Không chào hỏi, không nói "Chắc chắn rồi", "Tôi sẽ giúp bạn". Hãy đi thẳng vào vấn đề.
-- **CẤM GIẢI THÍCH DÔNG DÀI:** Chỉ giải thích code khi người dùng chủ động yêu cầu.
-- **CHỈ IN CODE DIFF:** Khi được yêu cầu sửa lỗi trong một file dài, CHỈ in ra hàm/đoạn code bị thay đổi. CẤM in lại toàn bộ nội dung file.
+## Skill và kiểm tra (DECISIONS #84)
+- Dùng skill `ui-ux-pro-max` (`.agents/skills/ui-ux-pro-max`) cho phần UI. Không dùng được thì dừng và báo người dùng.
+- **Không** viết test mới, **không** chạy `npm run lint`/`build`/`test`, **không** mở trình duyệt. Chỉ chạy `npm run gen:api` khi có sửa `openapi.yaml`. Người dùng tự chạy kiểm tra và báo lỗi.
+- Test cũ hỏng vì đổi code thì xóa test đó, không sửa.
+
+## Có điểm chưa rõ
+Hỏi người dùng trước khi làm. Hỏi ngắn, nêu các phương án và khuyến nghị. Không tự giả định rồi viết luôn.
+
+## Khi xong đợt
+Làm đúng mục "Khi code xong một đợt" trong `roadmap/ROADMAP.md`: tick ✅ kèm ngày (checkbox, tiêu đề, bảng Tiến độ), điền **✅ Đã làm**, in ra chat **khối hướng dẫn thủ công** theo mẫu (setup, lệnh kiểm tra, bước test tay kèm 375px/1280px, lệnh git gợi ý, "➡️ Đợt tiếp" kèm prompt mẫu đã điền, kể cả khi đợt kế thuộc Claude Code), rồi **DỪNG**.

@@ -1,0 +1,63 @@
+import type { components, operations } from '@/services/schema'
+
+/** Kiểu DTO lấy từ schema.d.ts (sinh tự động bằng `npm run gen:api`), không viết tay lại. */
+export type Schemas = components['schemas']
+
+export type Me = Schemas['MeResponse']
+export type AccountAdmin = Schemas['AccountAdminResponse']
+export type AccountAdminPage = Schemas['PageResponseAccountAdminResponse']
+/** Tham số lọc của `GET /api/admin/accounts`. */
+export type AccountListQuery = NonNullable<operations['list']['parameters']['query']>
+export type AuthResponse = Schemas['AuthResponse']
+export type OtpSent = Schemas['OtpSentResponse']
+export type MemberSummary = Schemas['MemberSummary']
+export type MemberDetail = Schemas['MemberDetail']
+export type MemberPage = Schemas['MemberPage']
+export type MemberInput = Schemas['MemberInput']
+export type LinkedMember = Schemas['LinkedMember']
+export type Relative = Schemas['Relative']
+export type RelativeInput = Schemas['RelativeInput']
+export type LinkRequest = Schemas['LinkRequest']
+export type LinkRequestStatus = Schemas['LinkRequestStatus']
+export type TreeResponse = Schemas['TreeResponse']
+export type TreeNode = Schemas['TreeNode']
+export type TreeSpouse = Schemas['TreeSpouse']
+export type TreeMember = Schemas['TreeMember']
+export type TreeMemberInput = Schemas['TreeMemberInput']
+export type TreeChildInput = Schemas['TreeChildInput']
+export type TreeMoveInput = Schemas['TreeMoveInput']
+export type TreeOrderInput = Schemas['TreeOrderInput']
+export type TreeCoParentInput = Schemas['TreeCoParentInput']
+export type FileSignResponse = Schemas['FileSignResponse']
+export type Attachment = Schemas['Attachment']
+export type EventType = Schemas['EventType']
+export type CustomEvent = Schemas['CustomEvent']
+export type CustomEventInput = Schemas['CustomEventInput']
+export type CalendarOccurrence = Schemas['CalendarOccurrence']
+export type CalendarDay = Schemas['CalendarDay']
+export type CalendarMonth = Schemas['CalendarMonth']
+// Chưa có trong shared/api/openapi.yaml; chuyển sang Schemas khi hợp đồng bổ sung /dashboard
+export type DashboardResponse = {
+  totalMembers: number
+  living: number
+  deceased: number
+  onTree: number
+  maxGeneration: number
+  nextEvent?: CalendarOccurrence
+  recentEvents: CalendarOccurrence[]
+  upcoming30: CalendarOccurrence[]
+  pendingAccounts?: number
+  pendingProposals?: number
+  pendingLinkRequests?: number
+}
+export type AiQuota = Schemas['AiQuota']
+export type AiDraft = Schemas['AiDraft']
+export type AiDraftChange = Schemas['AiDraftChange']
+export type AiMessage = Schemas['AiMessage']
+export type Proposal = Schemas['Proposal']
+export type ProposalInput = Schemas['ProposalInput']
+export type ProposalPage = Schemas['ProposalPage']
+export type Notification = Schemas['Notification']
+export type NotificationPage = Schemas['NotificationPage']
+export type NotificationPref = Schemas['NotificationPref']
+export type PushSubscription = Schemas['PushSubscription']

@@ -1,0 +1,121 @@
+@import './assets/fonts/be-vietnam-pro.css';
+@import 'tailwindcss';
+
+/* Token theo docs/DESIGN.md §8.1. Cần token mới thì sửa DESIGN.md trước. */
+@theme {
+  --font-sans: 'Be Vietnam Pro', system-ui, sans-serif;
+
+  --color-bg: #eef3f8;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f7fa;
+  --color-border: #e3e8ef;
+  --color-primary: #24466f;
+  --color-primary-hover: #1b3658;
+  --color-primary-fg: #ffffff;
+  --color-secondary: #e4ecf6;
+  --color-secondary-hover: #d3e0f0;
+  --color-secondary-fg: #24466f;
+  --color-accent: #1c9be6;
+  --color-accent-text: #0b6fb3;
+  --color-text: #0f1b2d;
+  --color-text-muted: #5b6b7f;
+  --color-deceased: #9aa5b1;
+  --color-tree-line: #c9d3df;
+  --color-success: #1f7a45;
+  --color-success-bg: #e6f6ec;
+  --color-warning: #9a5b00;
+  --color-warning-bg: #fff4de;
+  --color-danger: #c5221f;
+  --color-danger-bg: #fdecea;
+  --color-event-memorial: #6d4aa8;
+  --color-event-birthday: #1c9be6;
+  --color-event-custom: #c77700;
+
+  --radius-button: 10px;
+  --radius-field: 12px;
+  --radius-card: 16px;
+  --shadow-card: 0 1px 2px rgb(15 27 45 / 0.06);
+  --shadow-overlay: 0 8px 24px rgb(15 27 45 / 0.16);
+
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+}
+
+/* Biến shadcn/ui theo DESIGN.md §8.2 */
+:root {
+  --background: var(--color-bg);
+  --foreground: var(--color-text);
+  --card: var(--color-surface);
+  --card-foreground: var(--color-text);
+  --popover: var(--color-surface);
+  --popover-foreground: var(--color-text);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-primary-fg);
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-secondary-fg);
+  --muted: var(--color-surface-muted);
+  --muted-foreground: var(--color-text-muted);
+  --accent: var(--color-secondary);
+  --accent-foreground: var(--color-secondary-fg);
+  --destructive: var(--color-danger);
+  --border: var(--color-border);
+  --input: var(--color-border);
+  --ring: var(--color-accent);
+  --radius: 12px;
+}
+
+/*
+ * Tên lớp tiện ích của shadcn. Không map `accent`, `primary`, `secondary`, `border`
+ * vì đã có sẵn ở @theme (accent của DESIGN là xanh nhấn, khác accent của shadcn):
+ * component shadcn mới thêm vào cần đổi `bg-accent` thành `bg-secondary`.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  a[href],
+  summary,
+  select {
+    cursor: pointer;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

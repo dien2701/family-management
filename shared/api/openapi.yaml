@@ -1,0 +1,4345 @@
+openapi: 3.1.0
+info:
+  title: Tộc Phả API
+  version: v2
+  description: |
+    Hợp đồng API của Tộc Phả (bản chốt v2: một gia phả chung, hai vai trò Admin và User).
+    File này viết tay và là **nguồn sự thật** (DECISIONS #70): frontend sinh kiểu TypeScript từ đây
+    (`npm run gen:api`), backend phải khớp (test hợp đồng từ Đợt 26). Muốn đổi API thì sửa file này trước.
+
+    Khởi tạo từ `/v3/api-docs` của backend Đợt 8, đã bỏ `/api/family/**`. Các phần chưa có backend
+    (mọi thứ dưới thẻ `members`) do lớp giả lập của frontend phục vụ cho tới Đợt 26–39.
+
+    Mọi API nghiệp vụ chỉ nhận tài khoản đã được duyệt (403 `ACCOUNT_NOT_APPROVED`). Lỗi luôn là `ProblemDetail`.
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+servers:
+  - url: /
+    description: 'Cùng origin với frontend (dev: proxy /api sang :8080)'
+security:
+  - bearerAuth: []
+tags:
+  - name: auth
+    description: Đăng ký, đăng nhập, OTP, refresh token
+  - name: me
+    description: Tài khoản đang đăng nhập
+  - name: admin-accounts
+    description: Duyệt và quản lý tài khoản (chỉ Admin)
+  - name: calendar
+    description: Đổi lịch âm - dương, các sự kiện sắp tới và lịch tháng
+  - name: events
+    description: Sự kiện chung (giỗ và sinh nhật tự sinh từ hồ sơ thành viên)
+  - name: members
+    description: Thành viên gia phả
+  - name: files
+    description: Tải tệp lên Cloudinary bằng chữ ký do backend cấp
+  - name: relatives
+    description: Danh sách người thân trong hồ sơ thành viên (một chiều, tách khỏi cây)
+  - name: member-links
+    description: Liên kết tài khoản với thành viên ("Tôi là ai"), quan hệ 1–1
+  - name: tree
+    description: Cây gia phả do Admin dựng tay (các ô, vợ/chồng, cha mẹ–con)
+  - name: reports
+    description: Báo cáo và xuất dữ liệu
+  - name: ai
+    description: Trợ lý AI (chỉ đọc dữ liệu, không tự ghi)
+  - name: admin-settings
+    description: Cấu hình hệ thống (chỉ Admin)
+  - name: admin-deleted-members
+    description: Thành viên đã xóa (chỉ Admin)
+paths:
+  /api/me/consent:
+    post:
+      tags:
+        - me
+      summary: Ghi nhận đồng ý chính sách dữ liệu cá nhân
+      operationId: consent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentRequest'
+        required: true
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/auth/verify-reset-otp:
+    post:
+      tags:
+        - auth
+      summary: Kiểm tra OTP đặt lại mật khẩu (chưa tiêu OTP)
+      operationId: verifyResetOtp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyOtpRequest'
+        required: true
+      security: []
+      responses:
+        '200':
+          description: Thành công
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/auth/verify-otp:
+    post:
+      tags:
+        - auth
+      summary: Xác thực OTP đăng ký và đăng nhập luôn
+      operationId: verifyOtp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyOtpRequest'
+        required: true
+      security: []
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/auth/reset-password:
+    post:
+      tags:
+        - auth
+      summary: Đặt mật khẩu mới bằng OTP
+      operationId: resetPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+        required: true
+      security: []
+      responses:
+        '200':
+          description: Thành công
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/auth/resend-otp:
+    post:
+      tags:
+        - auth
+      summary: Gửi lại OTP đăng ký
+      operationId: resendOtp
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+        required: true
+      security: []
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpSentResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/auth/register:
+    post:
+      tags:
+        - auth
+      summary: Đăng ký bằng email và gửi OTP
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security: []
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpSentResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/auth/refresh:
+    post:
+      tags:
+        - auth
+      summary: Đổi refresh cookie lấy access token mới
+      operationId: refresh
+      parameters:
+        - name: refresh_token
+          in: cookie
+          required: false
+          schema:
+            type: string
+      security: []
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/auth/logout:
+    post:
+      tags:
+        - auth
+      summary: Đăng xuất, thu hồi refresh token
+      operationId: logout
+      parameters:
+        - name: refresh_token
+          in: cookie
+          required: false
+          schema:
+            type: string
+      security: []
+      responses:
+        '200':
+          description: Thành công
+  /api/auth/login:
+    post:
+      tags:
+        - auth
+      summary: Đăng nhập bằng email và mật khẩu
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security: []
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/auth/google:
+    post:
+      tags:
+        - auth
+      summary: Đăng nhập bằng Google ID token
+      operationId: google
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleLoginRequest'
+        required: true
+      security: []
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/auth/forgot-password:
+    post:
+      tags:
+        - auth
+      summary: Quên mật khẩu, gửi OTP đặt lại
+      operationId: forgotPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+        required: true
+      security: []
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpSentResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/admin/accounts/{id}/unlock:
+    post:
+      tags:
+        - admin-accounts
+      summary: Mở khóa tài khoản
+      operationId: unlock
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/admin/accounts/{id}/revoke-admin:
+    post:
+      tags:
+        - admin-accounts
+      summary: Gỡ quyền Admin
+      operationId: revokeAdmin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/admin/accounts/{id}/reject:
+    post:
+      tags:
+        - admin-accounts
+      summary: Từ chối duyệt tài khoản
+      operationId: reject
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/admin/accounts/{id}/lock:
+    post:
+      tags:
+        - admin-accounts
+      summary: Khóa tài khoản
+      operationId: lock
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/admin/accounts/{id}/grant-admin:
+    post:
+      tags:
+        - admin-accounts
+      summary: Cấp quyền Admin
+      operationId: grantAdmin
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/admin/accounts/{id}/approve:
+    post:
+      tags:
+        - admin-accounts
+      summary: Duyệt tài khoản
+      operationId: approve
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/me:
+    get:
+      tags:
+        - me
+      summary: Thông tin tài khoản đang đăng nhập
+      operationId: me
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/calendar/lunar-month-info:
+    get:
+      tags:
+        - calendar
+      summary: Thông tin một tháng âm
+      operationId: lunarMonthInfo
+      description: Số ngày (29/30), ngày dương đầu và cuối của một tháng âm, kèm tháng nhuận của năm
+      parameters:
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: leap
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LunarMonthInfoResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/calendar/convert:
+    get:
+      tags:
+        - calendar
+      summary: Đổi ngày dương và âm
+      operationId: convert
+      description: Đổi ngày dương sang âm (truyền solar) hoặc âm sang dương (truyền lunarYear, lunarMonth, lunarDay, leap)
+      parameters:
+        - name: solar
+          in: query
+          description: Ngày dương, dạng yyyy-MM-dd
+          required: false
+          schema:
+            type: string
+            format: date
+          example: '2026-02-17'
+        - name: lunarYear
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: lunarMonth
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: lunarDay
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: leap
+          in: query
+          description: Ngày thuộc tháng nhuận
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConvertResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/admin/accounts:
+    get:
+      tags:
+        - admin-accounts
+      summary: Danh sách tài khoản (Admin)
+      operationId: list
+      parameters:
+        - name: approval
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - WAITING
+              - APPROVED
+              - REJECTED
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - PENDING
+              - ACTIVE
+              - LOCKED
+        - name: role
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - ADMIN
+              - USER
+        - name: q
+          in: query
+          description: Tìm theo họ tên (không phân biệt hoa thường, dấu) hoặc email
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+            maximum: 100
+            minimum: 1
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponseAccountAdminResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/members:
+    get:
+      tags:
+        - members
+      summary: Danh sách thành viên
+      description: |
+        Mọi tài khoản đã duyệt xem được. Tìm theo tên **không cần gõ dấu**. Các bộ lọc kết hợp bằng AND.
+        `ageMin`/`ageMax` tính theo năm (còn sống: đến năm hiện tại; đã mất: đến năm mất dương). Người chưa rõ
+        năm sinh, hoặc đã mất mà chưa rõ năm mất, không tính được tuổi nên bị loại khi có một trong hai tham số. `generation` và `onTree` lấy từ cây gia phả (cây trống thì
+        không ai có đời và mọi người đều `onTree=false`).
+      operationId: listMembers
+      parameters:
+        - name: q
+          in: query
+          description: Tìm theo họ tên, không phân biệt hoa thường và dấu
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+        - name: sort
+          in: query
+          description: |
+            `name` tên A-Z (theo cả chuỗi họ tên); `age` lớn tuổi trước, người chưa rõ năm sinh xếp cuối;
+            `created` mới thêm trước; `generation` đời nhỏ trước, người chưa lên cây xếp cuối.
+          required: false
+          schema:
+            type: string
+            enum:
+              - name
+              - age
+              - created
+              - generation
+            default: name
+        - name: ageMin
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 150
+        - name: ageMax
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            maximum: 150
+        - name: generation
+          in: query
+          description: Đời (độ sâu trên cây, đời 1 là gốc)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+        - name: deceased
+          in: query
+          description: '`true` chỉ người đã mất, `false` chỉ người còn sống'
+          required: false
+          schema:
+            type: boolean
+        - name: onTree
+          in: query
+          description: '`true` chỉ người đã có trên cây, `false` chỉ người chưa có'
+          required: false
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+            maximum: 100
+            minimum: 1
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberPage'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - members
+      summary: Thêm thành viên
+      description: |
+        Chỉ Admin. Chỉ `fullName` là bắt buộc. Các trường về việc đã mất (`deathSolar`, `deathLunar`,
+        `memorialOverride`, `burialPlace`) chỉ hợp lệ khi `isDeceased = true`, nếu không thì 400 `VALIDATION_ERROR`.
+        Ngày mất gửi **một trong hai** (`deathSolar` hoặc `deathLunar`); có cả hai thì dùng `deathSolar`. Khi có năm, máy chủ
+        tự tính ngày ở lịch còn lại và trả cả hai; `deathLunar` không có năm thì `deathSolar` là `null`.
+      operationId: createMember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInput'
+      responses:
+        '201':
+          description: Đã tạo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDetail'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/members/{id}:
+    get:
+      tags:
+        - members
+      summary: Chi tiết thành viên
+      description: |
+        Mọi tài khoản đã duyệt xem được. `phone` và `email` chỉ có trong body khi người gọi là Admin
+        hoặc chính chủ hồ sơ (`user.member_id`); với người khác hai trường này **không xuất hiện**.
+      operationId: getMember
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - members
+      summary: Sửa thành viên
+      description: |
+        Admin sửa mọi hồ sơ. User đã liên kết "Tôi là ai" chỉ sửa hồ sơ của chính mình (`user.member_id`), có hiệu lực ngay,
+        và **không** được đổi nhóm "đã mất" (`isDeceased`, `deathSolar`, `deathLunar`, `memorialOverride`, `burialPlace`):
+        khác giá trị hiện có thì 403 `DEATH_FIELDS_ADMIN_ONLY`. Người khác thì 403 `FORBIDDEN`.
+        Ảnh đại diện không đổi qua API này mà qua `/api/files/confirm`. Quy tắc dữ liệu như `POST /api/members`.
+      operationId: updateMember
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberInput'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDetail'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - members
+      summary: Xóa thành viên
+      description: |
+        Chỉ Admin. Bị chặn nếu người đó đang có trên cây (409 `MEMBER_ON_TREE`): phải gỡ khỏi cây trước.
+        Khi xóa: xóa các dòng người thân liên quan, gỡ liên kết tài khoản, xóa tệp đính kèm; audit log giữ bản sao đầy đủ.
+      operationId: deleteMember
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '204':
+          description: Đã xóa
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/files/sign:
+    post:
+      tags:
+        - files
+      summary: Xin chữ ký để tải tệp lên Cloudinary
+      description: |
+        Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`).
+        Máy chủ kiểm MIME (jpg, png, webp, pdf, docx, xlsx; ảnh đại diện chỉ jpg/png/webp), tối đa 10 MB mỗi tệp và 1 GB toàn hệ thống.
+        Lỗi: 400 `VALIDATION_ERROR`, 403 `FORBIDDEN`. Ở chế độ giả lập trả 503 "Cần kết nối máy chủ" (DECISIONS #72).
+      operationId: signUpload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileSignRequest'
+      responses:
+        '200':
+          description: Chữ ký có hiệu lực ngắn
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileSignResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/files/confirm:
+    post:
+      tags:
+        - files
+      summary: Xác nhận tệp đã tải lên Cloudinary
+      description: |
+        Máy chủ kiểm lại tệp trên Cloudinary rồi ghi nhận. Với `AVATAR`, ảnh cũ của hồ sơ bị thay và `avatarUrl` được cập nhật.
+        Quyền như `/api/files/sign`.
+      operationId: confirmUpload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileConfirmRequest'
+      responses:
+        '200':
+          description: Đã ghi nhận
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/files/quota:
+    get:
+      tags:
+        - files
+      summary: Lấy thông tin dung lượng lưu trữ
+      operationId: getQuota
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuotaResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/attachments/common:
+    get:
+      tags:
+        - files
+      summary: Danh sách tài liệu chung
+      operationId: listCommonAttachments
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attachment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/attachments/{id}:
+    delete:
+      tags:
+        - files
+      summary: Xóa tệp đính kèm
+      operationId: deleteAttachment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Đã xóa
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/attachments/{id}/download:
+    get:
+      tags:
+        - files
+      summary: Tải tệp đính kèm
+      description: Trả về URL tải có chữ ký ngắn hạn.
+      operationId: getAttachmentDownloadUrl
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadUrlResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/reports/members.xlsx:
+    get:
+      tags:
+        - reports
+      summary: Báo cáo danh sách thành viên (Excel)
+      operationId: exportMembersExcel
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/reports/members.pdf:
+    get:
+      tags:
+        - reports
+      summary: Báo cáo danh sách thành viên (PDF)
+      operationId: exportMembersPdf
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/reports/events.xlsx:
+    get:
+      tags:
+        - reports
+      summary: Báo cáo sự kiện (Excel)
+      operationId: exportEventsExcel
+      parameters:
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/reports/memorials.pdf:
+    get:
+      tags:
+        - reports
+      summary: Báo cáo lịch giỗ (PDF)
+      operationId: exportMemorialsPdf
+      parameters:
+        - name: lunarYear
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/members/{id}/attachments:
+    get:
+      tags:
+        - members
+      summary: Danh sách đính kèm của thành viên
+      operationId: listMemberAttachments
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attachment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/members/{id}/relatives:
+    get:
+      tags:
+        - relatives
+      summary: Danh sách người thân của một hồ sơ
+      description: |
+        Mọi tài khoản đã duyệt xem được. Một chiều: chỉ có các dòng do chủ hồ sơ hoặc Admin khai trong hồ sơ này,
+        hồ sơ bên kia không tự có dòng ngược lại. Sắp theo thời điểm thêm.
+      operationId: listRelatives
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Relative'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - relatives
+      summary: Thêm người thân vào hồ sơ
+      description: |
+        Chủ hồ sơ (User đã liên kết, `user.member_id = id`) hoặc Admin; có hiệu lực ngay. `label` bắt buộc, cắt khoảng trắng hai đầu,
+        tối đa 50 ký tự. Người thân phải là thành viên đã có. Lỗi: 400 `VALIDATION_ERROR` (nhãn, hoặc tự thêm chính mình),
+        404 `MEMBER_NOT_FOUND`, 409 `RELATIVE_EXISTS` (người này đã có trong danh sách, muốn đổi nhãn thì sửa dòng cũ),
+        403 `FORBIDDEN` (không phải chủ hồ sơ hay Admin).
+      operationId: addRelative
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelativeInput'
+      responses:
+        '201':
+          description: Đã thêm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relative'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/members/{id}/relatives/{relativeId}:
+    put:
+      tags:
+        - relatives
+      summary: Sửa nhãn của một người thân
+      description: Chỉ đổi được `label` (quy tắc như khi thêm). Quyền như `POST`. 404 `RELATIVE_NOT_FOUND` khi dòng không thuộc hồ sơ này.
+      operationId: updateRelative
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+        - $ref: '#/components/parameters/RelativeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RelativeLabelInput'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Relative'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - relatives
+      summary: Xóa một người thân khỏi hồ sơ
+      description: Quyền như `POST`. Chỉ xóa dòng trong hồ sơ này, thành viên được nhắc tới vẫn giữ nguyên.
+      operationId: deleteRelative
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+        - $ref: '#/components/parameters/RelativeId'
+      responses:
+        '204':
+          description: Đã xóa
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/link-requests:
+    get:
+      tags:
+        - member-links
+      summary: Danh sách yêu cầu liên kết (Admin)
+      description: Hàng đợi duyệt của Admin. Cũ nhất trước.
+      operationId: listLinkRequests
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/LinkRequestStatus'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LinkRequest'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - member-links
+      summary: Gửi yêu cầu "Đây là tôi"
+      description: |
+        Tài khoản đã duyệt yêu cầu liên kết với một thành viên; Admin duyệt thì mới có hiệu lực. Lỗi: 404 `MEMBER_NOT_FOUND`,
+        409 `ACCOUNT_ALREADY_LINKED` (phải hủy liên kết cũ trước), 409 `MEMBER_ALREADY_LINKED` (thành viên đã có tài khoản khác),
+        409 `LINK_REQUEST_EXISTS` (đang có yêu cầu chờ duyệt).
+      operationId: createLinkRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LinkRequestInput'
+      responses:
+        '201':
+          description: Đã gửi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkRequest'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/link-requests/mine:
+    get:
+      tags:
+        - member-links
+      summary: Các yêu cầu liên kết của tôi
+      description: Mới nhất trước, gồm mọi trạng thái. Giao diện dùng dòng `PENDING` (nếu có) để hiện "đang chờ duyệt".
+      operationId: myLinkRequests
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LinkRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/link-requests/{id}/approve:
+    post:
+      tags:
+        - member-links
+      summary: Duyệt yêu cầu liên kết (Admin)
+      description: |
+        Gán `user.member_id`. Nếu hồ sơ chưa có email thì chép email tài khoản sang (một lần, DECISIONS #81).
+        Lỗi: 404 `LINK_REQUEST_NOT_FOUND`, 409 `LINK_REQUEST_NOT_PENDING`, 409 `MEMBER_ALREADY_LINKED`, 409 `ACCOUNT_ALREADY_LINKED`.
+      operationId: approveLinkRequest
+      parameters:
+        - $ref: '#/components/parameters/LinkRequestId'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/link-requests/{id}/reject:
+    post:
+      tags:
+        - member-links
+      summary: Từ chối yêu cầu liên kết (Admin)
+      description: 'Lỗi: 404 `LINK_REQUEST_NOT_FOUND`, 409 `LINK_REQUEST_NOT_PENDING`.'
+      operationId: rejectLinkRequest
+      parameters:
+        - $ref: '#/components/parameters/LinkRequestId'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/me/member-link:
+    delete:
+      tags:
+        - member-links
+      summary: Tự hủy liên kết của tôi
+      description: Gỡ `user.member_id`. Không xóa email đã chép sang hồ sơ. 409 `NOT_LINKED` khi chưa liên kết.
+      operationId: unlinkMe
+      responses:
+        '204':
+          description: Đã hủy liên kết
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/admin/accounts/{id}/member-link:
+    put:
+      tags:
+        - admin-accounts
+        - member-links
+      summary: Admin gán thành viên cho tài khoản
+      description: |
+        Không cần yêu cầu. Chỉ tài khoản đã duyệt và đang hoạt động (409 `INVALID_ACCOUNT_STATE`). Lỗi khác: 404 `ACCOUNT_NOT_FOUND`
+        hoặc `MEMBER_NOT_FOUND`, 409 `MEMBER_ALREADY_LINKED` (thành viên đã có tài khoản khác), 409 `ACCOUNT_ALREADY_LINKED`
+        (tài khoản đã liên kết người khác, phải hủy trước). Yêu cầu "Đây là tôi" đang chờ của tài khoản đó tự chuyển sang hủy
+        (`CANCELLED`). Chép email như khi duyệt yêu cầu (DECISIONS #81).
+      operationId: adminLinkMember
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminMemberLinkInput'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+        - admin-accounts
+        - member-links
+      summary: Admin hủy liên kết của một tài khoản
+      description: Hủy được của bất kỳ ai. Không xóa email đã chép sang hồ sơ. 409 `NOT_LINKED` khi tài khoản chưa liên kết.
+      operationId: adminUnlinkMember
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree:
+    get:
+      tags:
+        - tree
+      summary: Toàn bộ cây gia phả
+      description: |
+        Mọi tài khoản đã duyệt xem được. Trả toàn bộ đồ thị (nút và cạnh); **đời không nằm trong response**,
+        frontend tự tính theo độ sâu (DECISIONS #34, #60). Cây trống thì cả hai mảng rỗng.
+
+        Quy ước của đồ thị:
+        - Ô **thuộc dòng** là ô không xuất hiện trong `spouses[].spouseNodeId`. Ô không có `parentNodeId` là **gốc**
+          (có thể có nhiều gốc, mỗi gốc là Đời 01 của cây rời của nó).
+        - Ô **vợ/chồng** là ô có trong `spouses[].spouseNodeId`. Ô này không có `parentNodeId` và không có vợ/chồng riêng.
+        - Con của một cặp: `parentNodeId` luôn là ô **thuộc dòng**, `coParentNodeId` là ô vợ/chồng của ô đó
+          (hoặc `null` khi con chỉ thuộc một mình cha/mẹ). Bấm "+ Con" trên ô vợ/chồng thì `parentNodeId` là ô thuộc dòng của ô đó.
+        - `memberId = null` là ô trống (đã gỡ người ra khỏi cây); ô trống vẫn có thể có con và vợ/chồng.
+        - Anh em (cùng `parentNodeId`, hoặc cùng là gốc) xếp theo `sortOrder` tăng dần, rồi theo `id`.
+      operationId: getTree
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/tree/roots:
+    post:
+      tags:
+        - tree
+      summary: Thêm người gốc
+      description: |
+        Chỉ Admin. Đưa một thành viên chưa có trên cây vào làm gốc mới (Đời 01). Có thể có nhiều gốc; gốc mới xếp cuối.
+        Lỗi: 409 `MEMBER_ALREADY_ON_TREE`.
+      operationId: addTreeRoot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeMemberInput'
+      responses:
+        '201':
+          description: Đã thêm, trả ô mới
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/children:
+    post:
+      tags:
+        - tree
+      summary: Thêm con vào một ô
+      description: |
+        Chỉ Admin. Con mới xếp cuối các anh em. Cặp cha–mẹ được xác định như sau:
+        - bấm trên **ô vợ/chồng** thì cặp là ô đó cùng người thuộc dòng của nó (`coParentNodeId`, nếu gửi, phải là chính ô đó);
+        - bấm trên ô thuộc dòng có **≥ 2 vợ/chồng** thì bắt buộc gửi `coParentNodeId`, thiếu thì 409 `TREE_NEEDS_CO_PARENT`;
+        - có đúng 1 vợ/chồng thì tự nhận cặp đó; không có thì con chỉ thuộc một mình cha/mẹ.
+
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `MEMBER_ALREADY_ON_TREE`, `TREE_INVALID_CO_PARENT`, `TREE_NEEDS_CO_PARENT`.
+      operationId: addTreeChild
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeChildInput'
+      responses:
+        '201':
+          description: Đã thêm, trả ô mới
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/spouses:
+    post:
+      tags:
+        - tree
+      summary: Thêm vợ/chồng cho một ô
+      description: |
+        Chỉ Admin. Chỉ có trên ô **thuộc dòng** (ô vợ/chồng không có vợ/chồng riêng). Người mới xếp sau vợ/chồng cuối.
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SPOUSE_NOT_ALLOWED`, `MEMBER_ALREADY_ON_TREE`.
+      operationId: addTreeSpouse
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeMemberInput'
+      responses:
+        '201':
+          description: Đã thêm, trả ô vợ/chồng mới
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/parent:
+    post:
+      tags:
+        - tree
+      summary: Thêm cha/mẹ cho người gốc
+      description: |
+        Chỉ Admin. Chỉ có trên ô **thuộc dòng ở Đời 01** (gốc). Người mới trở thành gốc, thế vào chỗ của ô này
+        trong danh sách gốc; ô này thành con của người mới nên cả cây rời đó dịch xuống một đời. Không tự đặt giới tính.
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_PARENT_ONLY_AT_TOP`, `MEMBER_ALREADY_ON_TREE`.
+      operationId: addTreeParent
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeMemberInput'
+      responses:
+        '201':
+          description: Đã thêm, trả ô cha/mẹ mới
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/member:
+    put:
+      tags:
+        - tree
+      summary: Điền người vào ô trống
+      description: |
+        Chỉ Admin. Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người), `MEMBER_ALREADY_ON_TREE`.
+      operationId: fillTreeSlot
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeMemberInput'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+        - tree
+      summary: Gỡ người khỏi cây (ô thành ô trống)
+      description: |
+        Chỉ Admin. Ô thành **ô trống** nằm đúng chỗ cũ, con cháu và vợ/chồng không bị ảnh hưởng; thành viên vẫn còn nguyên.
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_EMPTY` (ô đã trống).
+      operationId: removeTreeMember
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      responses:
+        '200':
+          description: Thành công, trả ô đã trống
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}:
+    delete:
+      tags:
+        - tree
+      summary: Xóa ô trống
+      description: |
+        Chỉ Admin. Chỉ xóa được **ô trống** không còn con (theo cả `parentNodeId` và `coParentNodeId`) và không còn vợ/chồng.
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người), `TREE_SLOT_HAS_LINKS`.
+      operationId: deleteTreeNode
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      responses:
+        '204':
+          description: Đã xóa
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/move:
+    post:
+      tags:
+        - tree
+      summary: Di chuyển nhánh
+      description: |
+        Chỉ Admin. Một ô **thuộc dòng** đi kèm vợ/chồng và toàn bộ con cháu, tới làm con của `newParentNodeId`
+        (ô thuộc dòng hoặc ô vợ/chồng; cặp cha–mẹ xác định như `POST /api/tree/nodes/{id}/children`) hoặc thành gốc mới
+        khi `newParentNodeId` là `null`. Ô được chuyển xếp cuối các anh em ở nơi đến.
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_MOVE_LINEAGE_ONLY` (ô vợ/chồng), `TREE_CYCLE` (nơi đến nằm trong chính nhánh),
+        `TREE_NEEDS_CO_PARENT`, `TREE_INVALID_CO_PARENT`.
+      operationId: moveTreeNode
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeMoveInput'
+      responses:
+        '200':
+          description: Thành công, trả ô đã chuyển
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/order:
+    put:
+      tags:
+        - tree
+      summary: Đổi thứ tự anh em
+      description: |
+        Chỉ Admin. Đổi chỗ ô thuộc dòng với người anh em kề bên (cùng cha/mẹ, hoặc cùng là gốc).
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_MOVE_LINEAGE_ONLY` (ô vợ/chồng), `TREE_ORDER_EDGE` (đã ở đầu hoặc cuối hàng).
+      operationId: reorderTreeNode
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeOrderInput'
+      responses:
+        '200':
+          description: Thành công, trả ô đã đổi chỗ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/tree/nodes/{id}/co-parent:
+    put:
+      tags:
+        - tree
+      summary: Đổi cặp cha–mẹ của một người con
+      description: |
+        Chỉ Admin. `coParentNodeId` phải là vợ/chồng của cha/mẹ hiện tại (`parentNodeId`). Cha/mẹ có đúng 1 vợ/chồng thì `null` tự nhận người đó;
+        có ≥ 2 vợ/chồng thì bắt buộc chọn (409 `TREE_NEEDS_CO_PARENT`).
+        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_NOT_A_CHILD` (ô không có cha/mẹ), `TREE_INVALID_CO_PARENT`, `TREE_NEEDS_CO_PARENT`.
+      operationId: setTreeCoParent
+      parameters:
+        - $ref: '#/components/parameters/TreeNodeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TreeCoParentInput'
+      responses:
+        '200':
+          description: Thành công, trả ô đã đổi cặp
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeNode'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/events:
+    get:
+      tags:
+        - events
+      summary: Danh sách sự kiện chung
+      description: Mọi tài khoản đã duyệt xem được. Xếp theo `id` tăng dần. Chỉ gồm **sự kiện chung**; giỗ và sinh nhật do `/api/calendar/*` tự sinh từ hồ sơ thành viên.
+      operationId: listEvents
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomEvent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - events
+      summary: Thêm sự kiện chung
+      description: 'Chỉ Admin (User gửi đề xuất, Đợt 20–21). `year = null` nghĩa là lặp hằng năm theo `calendar`; có `year` thì chỉ diễn ra một lần vào đúng ngày đó.'
+      operationId: createEvent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomEventInput'
+      responses:
+        '201':
+          description: Đã thêm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/events/{id}:
+    get:
+      tags:
+        - events
+      summary: Chi tiết một sự kiện chung
+      description: 'Lỗi: 404 `EVENT_NOT_FOUND`.'
+      operationId: getEvent
+      parameters:
+        - $ref: '#/components/parameters/EventId'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomEvent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - events
+      summary: Sửa sự kiện chung
+      description: 'Chỉ Admin. Thay toàn bộ nội dung. Lỗi: 404 `EVENT_NOT_FOUND`.'
+      operationId: updateEvent
+      parameters:
+        - $ref: '#/components/parameters/EventId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomEventInput'
+      responses:
+        '200':
+          description: Đã sửa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - events
+      summary: Xóa sự kiện chung
+      description: 'Chỉ Admin. Lỗi: 404 `EVENT_NOT_FOUND`.'
+      operationId: deleteEvent
+      parameters:
+        - $ref: '#/components/parameters/EventId'
+      responses:
+        '204':
+          description: Đã xóa
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/calendar/upcoming:
+    get:
+      tags:
+        - calendar
+      summary: Các sự kiện sắp diễn ra
+      description: |
+        Giỗ, sinh nhật và sự kiện chung có ngày dương từ **hôm nay** (giờ +7, `daysUntil = 0`) đến hôm nay + `days` ngày.
+        Ngày cúng theo quy tắc IDEA §7 (ngày ghi đè, tháng nhuận, tháng thiếu). Xếp theo ngày dương, cùng ngày thì Giỗ, Sinh nhật, Sự kiện chung rồi theo tên.
+      operationId: upcomingOccurrences
+      parameters:
+        - name: days
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            enum:
+              - 7
+              - 15
+              - 30
+              - 90
+              - 365
+            default: 30
+        - name: type
+          in: query
+          description: Chỉ lấy một loại; bỏ trống là cả ba loại
+          required: false
+          schema:
+            $ref: '#/components/schemas/EventType'
+        - name: sort
+          in: query
+          description: '`asc` gần nhất trước (mặc định), `desc` xa nhất trước'
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: asc
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarOccurrence'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/calendar/month:
+    get:
+      tags:
+        - calendar
+      summary: Lịch một tháng
+      description: |
+        Từng ngày của một tháng kèm sự kiện của ngày đó. `mode = solar`: `year`/`month` là tháng dương. `mode = lunar`:
+        là tháng âm (`leap = true` cho tháng nhuận), các ngày đi từ mùng 1 đến hết tháng âm đó, mỗi ngày kèm ngày dương.
+      operationId: calendarMonth
+      parameters:
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 12
+        - name: mode
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - solar
+              - lunar
+            default: solar
+        - name: leap
+          in: query
+          description: Chỉ có nghĩa khi `mode = lunar`
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarMonth'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/calendar/recent:
+    get:
+      tags:
+        - calendar
+      summary: Các sự kiện vừa diễn ra
+      description: Các sự kiện có ngày dương **trước hôm nay** (trong vòng một năm), gần nhất trước (`daysUntil` âm). Dùng cho dashboard.
+      operationId: recentOccurrences
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarOccurrence'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/admin/settings:
+    get:
+      tags:
+        - admin-settings
+      summary: Lấy cấu hình hệ thống
+      operationId: getSettings
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemSettings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      tags:
+        - admin-settings
+      summary: Cập nhật cấu hình hệ thống
+      operationId: updateSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemSettings'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemSettings'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/admin/deleted-members:
+    get:
+      tags:
+        - admin-deleted-members
+      summary: Danh sách snapshot thành viên đã xóa
+      operationId: listDeletedMembers
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 20
+            maximum: 100
+            minimum: 1
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponseDeletedMemberSnapshotSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/admin/deleted-members/{auditId}:
+    get:
+      tags:
+        - admin-deleted-members
+      summary: Chi tiết snapshot thành viên đã xóa
+      operationId: getDeletedMemberSnapshot
+      parameters:
+        - name: auditId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletedMemberSnapshot'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/ai/chat:
+    post:
+      tags:
+        - ai
+      summary: Hỏi trợ lý AI (streaming SSE)
+      description: |
+        Trả `text/event-stream`. Mỗi event có `event:` là tên và `data:` là JSON:
+        - `token`: `{ "text": "..." }` — một đoạn chữ của câu trả lời, nối dần vào cuối.
+        - `draft`: `AiDraft` — thẻ xem trước đề xuất sự kiện do AI soạn (AI không tự ghi dữ liệu).
+        - `done`: `AiQuota` — kết thúc lượt, kèm số lượt còn lại.
+        - `error`: `{ "code": "...", "message": "..." }` — lỗi giữa chừng (ví dụ `AI_UNAVAILABLE`).
+
+        Hết lượt trong ngày thì trả 429 `AI_QUOTA_EXCEEDED` (chưa mở luồng).
+      operationId: aiChat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiChatRequest'
+      responses:
+        '200':
+          description: Luồng sự kiện
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          description: Trợ lý chưa dùng được (`SERVER_REQUIRED` ở chế độ giả lập, `AI_UNAVAILABLE`)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+  /api/ai/quota:
+    get:
+      tags:
+        - ai
+      summary: Số lượt hỏi còn lại hôm nay (User 15, Admin 30, đặt lại 0h giờ Việt Nam)
+      operationId: getAiQuota
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiQuota'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/ai/messages:
+    get:
+      tags:
+        - ai
+      summary: Lịch sử trò chuyện của tài khoản hiện tại (cũ trước, mới sau)
+      operationId: listAiMessages
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 50
+            minimum: 1
+            maximum: 200
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/ai/drafts/{id}/submit:
+    post:
+      tags:
+        - ai
+      summary: User gửi bản nháp của AI thành đề xuất sự kiện
+      operationId: submitAiDraft
+      parameters:
+        - $ref: '#/components/parameters/AiDraftId'
+      responses:
+        '200':
+          description: Thành công (bản nháp chuyển sang `SUBMITTED`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiDraft'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/ai/drafts/{id}/apply:
+    post:
+      tags:
+        - ai
+      summary: Admin áp dụng thẳng bản nháp của AI vào sự kiện chung
+      operationId: applyAiDraft
+      parameters:
+        - $ref: '#/components/parameters/AiDraftId'
+      responses:
+        '200':
+          description: Thành công (bản nháp chuyển sang `APPLIED`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiDraft'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/proposals:
+    post:
+      tags:
+        - proposals
+      summary: Đề xuất thêm/sửa/xóa sự kiện chung
+      operationId: createProposal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProposalInput'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposal'
+    get:
+      tags:
+        - proposals
+      summary: (Admin) Danh sách đề xuất chờ duyệt (hoặc tất cả)
+      operationId: getProposals
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProposalPage'
+  /api/proposals/mine:
+    get:
+      tags:
+        - proposals
+      summary: Danh sách đề xuất của tôi
+      operationId: getMyProposals
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProposalPage'
+  /api/proposals/count:
+    get:
+      tags:
+        - proposals
+      summary: Đếm số lượng đề xuất đang chờ
+      operationId: countPendingProposals
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: integer
+  /api/proposals/{id}/approve:
+    post:
+      tags:
+        - proposals
+      summary: Duyệt đề xuất
+      operationId: approveProposal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveProposalRequest'
+      responses:
+        '200':
+          description: Thành công
+  /api/proposals/{id}/reject:
+    post:
+      tags:
+        - proposals
+      summary: Từ chối đề xuất
+      operationId: rejectProposal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RejectProposalRequest'
+      responses:
+        '200':
+          description: Thành công
+  /api/notifications:
+    get:
+      tags:
+        - notifications
+      summary: Danh sách thông báo
+      operationId: getNotifications
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPage'
+  /api/notifications/unread-count:
+    get:
+      tags:
+        - notifications
+      summary: Số thông báo chưa đọc
+      operationId: getUnreadCount
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: integer
+  /api/notifications/{id}/read:
+    post:
+      tags:
+        - notifications
+      summary: Đánh dấu đã đọc
+      operationId: readNotification
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Thành công
+  /api/notifications/read-all:
+    post:
+      tags:
+        - notifications
+      summary: Đánh dấu tất cả đã đọc
+      operationId: readAllNotifications
+      responses:
+        '200':
+          description: Thành công
+  /api/notifications/preferences:
+    get:
+      tags:
+        - notifications
+      summary: Lấy cài đặt thông báo
+      operationId: getNotificationPreferences
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPref'
+    put:
+      tags:
+        - notifications
+      summary: Cập nhật cài đặt thông báo
+      operationId: updateNotificationPreferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationPref'
+      responses:
+        '200':
+          description: Thành công
+  /api/push/public-key:
+    get:
+      tags:
+        - push
+      summary: Lấy VAPID public key
+      operationId: getPushPublicKey
+      responses:
+        '200':
+          description: Thành công
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/push/subscribe:
+    post:
+      tags:
+        - push
+      summary: Đăng ký thiết bị nhận thông báo push
+      operationId: subscribePush
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+      responses:
+        '200':
+          description: Thành công
+    delete:
+      tags:
+        - push
+      summary: Hủy đăng ký push trên thiết bị
+      operationId: unsubscribePush
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnsubscribePushRequest'
+      responses:
+        '200':
+          description: Thành công
+  /api/push/test:
+    post:
+      tags:
+        - push
+      summary: Gửi thử thông báo push đến thiết bị hiện tại
+      operationId: testPush
+      responses:
+        '200':
+          description: Thành công
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    AiDraftId:
+      name: id
+      in: path
+      required: true
+      description: '`id` của bản nháp do AI soạn'
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    EventId:
+      name: id
+      in: path
+      required: true
+      description: '`id` của sự kiện chung'
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    TreeNodeId:
+      name: id
+      in: path
+      required: true
+      description: '`id` của ô trên cây (không phải id thành viên)'
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    MemberId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    RelativeId:
+      name: relativeId
+      in: path
+      required: true
+      description: '`id` của dòng người thân (không phải id của thành viên được nhắc tới)'
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    LinkRequestId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    AccountId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+  responses:
+    ValidationError:
+      description: 'Dữ liệu không hợp lệ (`VALIDATION_ERROR`, `MALFORMED_REQUEST`, lỗi lịch âm...)'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    Unauthorized:
+      description: Chưa đăng nhập, phiên hết hạn hoặc sai thông tin đăng nhập (`UNAUTHENTICATED`, `INVALID_CREDENTIALS`...)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    Forbidden:
+      description: Không có quyền (`FORBIDDEN`), tài khoản chưa được duyệt (`ACCOUNT_NOT_APPROVED`) hoặc bị khóa (`ACCOUNT_LOCKED`)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    NotFound:
+      description: Không tìm thấy (`ACCOUNT_NOT_FOUND`, `MEMBER_NOT_FOUND`, `EVENT_NOT_FOUND`, `TREE_NODE_NOT_FOUND`, `RELATIVE_NOT_FOUND`, `LINK_REQUEST_NOT_FOUND`)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    Conflict:
+      description: 'Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `INVALID_ACCOUNT_STATE`, `MEMBER_ON_TREE`, `RELATIVE_EXISTS`, `MEMBER_ALREADY_LINKED`, `ACCOUNT_ALREADY_LINKED`, `LINK_REQUEST_EXISTS`, `LINK_REQUEST_NOT_PENDING`, `NOT_LINKED`, các mã cây `MEMBER_ALREADY_ON_TREE`, `TREE_*`)'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    TooManyRequests:
+      description: Vượt giới hạn tần suất hoặc tài khoản bị khóa đăng nhập tạm (`LOGIN_LOCKED`, `RATE_LIMITED`, `OTP_RATE_LIMITED`)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+  schemas:
+    ProblemDetail:
+      type: object
+      description: Lỗi theo RFC 9457; `detail` là thông báo tiếng Việt hiển thị được cho người dùng.
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+        code:
+          type: string
+          description: Mã lỗi máy đọc được, ví dụ `ACCOUNT_NOT_APPROVED`, `MEMBER_NOT_FOUND`.
+        errors:
+          type: array
+          description: Lỗi theo từng trường (chỉ có khi `code = VALIDATION_ERROR` hoặc lỗi lịch âm).
+          items:
+            $ref: '#/components/schemas/FieldError'
+    FieldError:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+      required:
+        - field
+        - message
+    SolarDate:
+      type: object
+      description: Ngày dương đầy đủ.
+      properties:
+        year:
+          type: integer
+          format: int32
+        month:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        day:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 31
+      required:
+        - year
+        - month
+        - day
+    MemberLunarDate:
+      type: object
+      description: Ngày âm; `year` bỏ trống nghĩa là chỉ biết ngày/tháng (không tính "giỗ lần thứ N").
+      properties:
+        day:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 30
+        month:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        leap:
+          type: boolean
+          description: Ngày thuộc tháng nhuận
+        year:
+          type:
+            - integer
+            - 'null'
+          format: int32
+      required:
+        - day
+        - month
+        - leap
+    MemberBirth:
+      type: object
+      description: Ngày sinh; được phép chỉ có năm. `calendar` là lịch dùng để tính sinh nhật hằng năm của người này.
+      properties:
+        year:
+          type:
+            - integer
+            - 'null'
+          format: int32
+        month:
+          type:
+            - integer
+            - 'null'
+          format: int32
+          minimum: 1
+          maximum: 12
+        day:
+          type:
+            - integer
+            - 'null'
+          format: int32
+          minimum: 1
+          maximum: 31
+        calendar:
+          type: string
+          enum:
+            - SOLAR
+            - LUNAR
+          default: SOLAR
+        leap:
+          type: boolean
+          description: Chỉ có nghĩa khi `calendar = LUNAR`
+      required:
+        - calendar
+        - leap
+    MemorialOverride:
+      type: object
+      description: Ngày giỗ ghi đè (âm lịch, không nhuận), dùng thay cho ngày mất khi gia đình cúng ngày khác.
+      properties:
+        day:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 30
+        month:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+      required:
+        - day
+        - month
+    MemberSummary:
+      type: object
+      description: Dòng trong danh sách thành viên. Họ tên ghi nguyên văn, kể cả "Cụ", "Ông", "Bà", "(Tức ...)".
+      properties:
+        id:
+          type: integer
+          format: int64
+        fullName:
+          type: string
+        gender:
+          type:
+            - string
+            - 'null'
+          enum:
+            - M
+            - F
+            - null
+          description: Được để trống
+        avatarUrl:
+          type:
+            - string
+            - 'null'
+        labels:
+          type: array
+          description: Nhãn đặc biệt, ví dụ "Liệt sỹ"
+          items:
+            type: string
+        birthYear:
+          type:
+            - integer
+            - 'null'
+          format: int32
+        isDeceased:
+          type: boolean
+        deathYear:
+          type:
+            - integer
+            - 'null'
+          format: int32
+          description: Năm mất theo dương lịch (nếu biết)
+        generation:
+          type:
+            - integer
+            - 'null'
+          format: int32
+          description: Đời = độ sâu trên cây; `null` khi chưa có trên cây
+        onTree:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - fullName
+        - gender
+        - avatarUrl
+        - labels
+        - birthYear
+        - isDeceased
+        - deathYear
+        - generation
+        - onTree
+        - createdAt
+    MemberDetail:
+      description: Hồ sơ đầy đủ của một thành viên.
+      allOf:
+        - $ref: '#/components/schemas/MemberSummary'
+        - type: object
+          properties:
+            tabooName:
+              type:
+                - string
+                - 'null'
+              description: Tên húy
+            phone:
+              type:
+                - string
+                - 'null'
+              description: Chỉ có khi người gọi là Admin hoặc chính chủ; người khác không nhận trường này.
+            email:
+              type:
+                - string
+                - 'null'
+              description: Chỉ có khi người gọi là Admin hoặc chính chủ; người khác không nhận trường này.
+            biography:
+              type:
+                - string
+                - 'null'
+            birth:
+              oneOf:
+                - $ref: '#/components/schemas/MemberBirth'
+                - type: 'null'
+              description: '`null` khi chưa biết gì về ngày sinh'
+            deathSolar:
+              oneOf:
+                - $ref: '#/components/schemas/SolarDate'
+                - type: 'null'
+              description: Ngày mất theo dương; tự tính từ ngày mất âm khi có năm, `null` khi chưa có.
+            deathLunar:
+              oneOf:
+                - $ref: '#/components/schemas/MemberLunarDate'
+                - type: 'null'
+              description: Ngày mất theo âm (nguồn nhập của dữ liệu ban đầu); `null` khi chưa có.
+            memorialOverride:
+              oneOf:
+                - $ref: '#/components/schemas/MemorialOverride'
+                - type: 'null'
+            burialPlace:
+              type:
+                - string
+                - 'null'
+            updatedAt:
+              type: string
+              format: date-time
+          required:
+            - tabooName
+            - biography
+            - birth
+            - deathSolar
+            - deathLunar
+            - memorialOverride
+            - burialPlace
+            - updatedAt
+    MemberInput:
+      type: object
+      description: |
+        Nội dung hồ sơ khi thêm hoặc sửa (PUT thay toàn bộ, trường bỏ trống nghĩa là xóa giá trị).
+        Họ tên ghi nguyên văn. Không có `avatarUrl`: ảnh đại diện đổi qua `/api/files/confirm`.
+      properties:
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        gender:
+          type:
+            - string
+            - 'null'
+          enum:
+            - M
+            - F
+            - null
+        tabooName:
+          type:
+            - string
+            - 'null'
+          maxLength: 200
+        labels:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+        biography:
+          type:
+            - string
+            - 'null'
+          maxLength: 5000
+        phone:
+          type:
+            - string
+            - 'null'
+          maxLength: 30
+        email:
+          type:
+            - string
+            - 'null'
+          maxLength: 254
+        birth:
+          oneOf:
+            - $ref: '#/components/schemas/MemberBirth'
+            - type: 'null'
+        isDeceased:
+          type: boolean
+        deathSolar:
+          oneOf:
+            - $ref: '#/components/schemas/SolarDate'
+            - type: 'null'
+        deathLunar:
+          oneOf:
+            - $ref: '#/components/schemas/MemberLunarDate'
+            - type: 'null'
+        memorialOverride:
+          oneOf:
+            - $ref: '#/components/schemas/MemorialOverride'
+            - type: 'null'
+        burialPlace:
+          type:
+            - string
+            - 'null'
+          maxLength: 300
+      required:
+        - fullName
+        - isDeceased
+    FileKind:
+      type: string
+      enum:
+        - AVATAR
+        - DOCUMENT
+    FileSignRequest:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/FileKind'
+        memberId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Bắt buộc với AVATAR; `null` với DOCUMENT nghĩa là tài liệu chung
+        title:
+          type:
+            - string
+            - 'null'
+          maxLength: 255
+          description: Tiêu đề tài liệu, dùng cho kind=DOCUMENT
+        fileName:
+          type: string
+          maxLength: 255
+        mimeType:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
+          minimum: 1
+      required:
+        - kind
+        - fileName
+        - mimeType
+        - sizeBytes
+    FileSignResponse:
+      type: object
+      properties:
+        uploadUrl:
+          type: string
+          description: Địa chỉ Cloudinary để gửi `multipart/form-data`
+        fields:
+          type: object
+          description: Các trường đã ký (api_key, timestamp, signature, folder, public_id...), gửi kèm trường `file`
+          additionalProperties:
+            type: string
+      required:
+        - uploadUrl
+        - fields
+    FileConfirmRequest:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/FileKind'
+        memberId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+        title:
+          type:
+            - string
+            - 'null'
+          maxLength: 255
+        publicId:
+          type: string
+          description: '`public_id` Cloudinary trả về sau khi tải lên'
+        fileName:
+          type: string
+          maxLength: 255
+      required:
+        - kind
+        - publicId
+        - fileName
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        kind:
+          $ref: '#/components/schemas/FileKind'
+        memberId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+        url:
+          type: string
+        title:
+          type:
+            - string
+            - 'null'
+        fileName:
+          type: string
+        mimeType:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - kind
+        - memberId
+        - url
+        - fileName
+        - mimeType
+        - sizeBytes
+        - createdAt
+    MemberPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MemberSummary'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+      required:
+        - items
+        - page
+        - size
+        - totalElements
+        - totalPages
+    QuotaResponse:
+      type: object
+      properties:
+        usedMb:
+          type: number
+          format: double
+        limitMb:
+          type: number
+          format: double
+      required:
+        - usedMb
+        - limitMb
+    DownloadUrlResponse:
+      type: object
+      properties:
+        url:
+          type: string
+      required:
+        - url
+    ConsentRequest:
+      type: object
+      properties:
+        acceptTerms:
+          type: boolean
+      required:
+        - acceptTerms
+    MeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+        fullName:
+          type: string
+        avatarUrl:
+          type: string
+        systemRole:
+          type: string
+          enum:
+            - ADMIN
+            - USER
+        status:
+          type: string
+          enum:
+            - PENDING
+            - ACTIVE
+            - LOCKED
+        approvalStatus:
+          type: string
+          enum:
+            - WAITING
+            - APPROVED
+            - REJECTED
+        consentRequired:
+          type: boolean
+        familyId:
+          type: integer
+          format: int64
+          deprecated: true
+          description: Còn do backend Đợt 8 trả về. Frontend đọc lần cuối ở Đợt 10, backend bỏ ở Đợt 26.
+        familyRole:
+          type: string
+          enum:
+            - MANAGER
+            - MEMBER
+          deprecated: true
+          description: Như `familyId`.
+        memberId:
+          type: integer
+          format: int64
+          description: Thành viên mà tài khoản đã liên kết ("Tôi là ai"); không có nghĩa là chưa liên kết.
+        hideMaternalLine:
+          type: boolean
+          deprecated: true
+          description: Như `familyId`.
+        createdAt:
+          type: string
+          format: date-time
+    VerifyOtpRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          minLength: 0
+          pattern: ^[A-Za-z0-9._%+'-]+@[A-Za-z0-9-]+([.][A-Za-z0-9-]+)*[.][A-Za-z]{2,}$
+        otp:
+          type: string
+          minLength: 1
+          pattern: '[0-9]{6}'
+      required:
+        - email
+        - otp
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        tokenType:
+          type: string
+        expiresIn:
+          type: integer
+          format: int64
+        user:
+          $ref: '#/components/schemas/MeResponse'
+    ResetPasswordRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          minLength: 0
+          pattern: ^[A-Za-z0-9._%+'-]+@[A-Za-z0-9-]+([.][A-Za-z0-9-]+)*[.][A-Za-z]{2,}$
+        otp:
+          type: string
+          minLength: 1
+          pattern: '[0-9]{6}'
+        newPassword:
+          type: string
+          maxLength: 72
+          minLength: 8
+        confirmPassword:
+          type: string
+          minLength: 1
+      required:
+        - confirmPassword
+        - email
+        - newPassword
+        - otp
+    EmailRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          minLength: 0
+          pattern: ^[A-Za-z0-9._%+'-]+@[A-Za-z0-9-]+([.][A-Za-z0-9-]+)*[.][A-Za-z]{2,}$
+      required:
+        - email
+    OtpSentResponse:
+      type: object
+      properties:
+        email:
+          type: string
+        expiresInSeconds:
+          type: integer
+          format: int64
+        resendAfterSeconds:
+          type: integer
+          format: int64
+    RegisterRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+          maxLength: 100
+          minLength: 0
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          minLength: 0
+          pattern: ^[A-Za-z0-9._%+'-]+@[A-Za-z0-9-]+([.][A-Za-z0-9-]+)*[.][A-Za-z]{2,}$
+        password:
+          type: string
+          maxLength: 72
+          minLength: 8
+        confirmPassword:
+          type: string
+          minLength: 1
+        acceptTerms:
+          type: boolean
+      required:
+        - acceptTerms
+        - confirmPassword
+        - email
+        - fullName
+        - password
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          maxLength: 254
+          minLength: 0
+          pattern: ^[A-Za-z0-9._%+'-]+@[A-Za-z0-9-]+([.][A-Za-z0-9-]+)*[.][A-Za-z]{2,}$
+        password:
+          type: string
+          maxLength: 200
+          minLength: 0
+      required:
+        - email
+        - password
+    GoogleLoginRequest:
+      type: object
+      properties:
+        idToken:
+          type: string
+          maxLength: 4096
+          minLength: 0
+      required:
+        - idToken
+    AccountAdminResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+        fullName:
+          type: string
+        avatarUrl:
+          type: string
+        systemRole:
+          type: string
+          enum:
+            - ADMIN
+            - USER
+        status:
+          type: string
+          enum:
+            - PENDING
+            - ACTIVE
+            - LOCKED
+        lockReason:
+          type: string
+          enum:
+            - MANUAL
+            - MEMBER_LOCKED
+        approvalStatus:
+          type: string
+          enum:
+            - WAITING
+            - APPROVED
+            - REJECTED
+        approvedBy:
+          type: integer
+          format: int64
+        approvedAt:
+          type: string
+          format: date-time
+        memberId:
+          type: integer
+          format: int64
+        member:
+          oneOf:
+            - $ref: '#/components/schemas/LinkedMember'
+            - type: 'null'
+          description: Thành viên đang liên kết ("Tôi là ai"); `null` khi chưa liên kết (DECISIONS #80).
+        createdAt:
+          type: string
+          format: date-time
+    LunarMonthInfoResponse:
+      type: object
+      properties:
+        year:
+          type: integer
+          format: int32
+        month:
+          type: integer
+          format: int32
+        leap:
+          type: boolean
+        days:
+          type: integer
+          format: int32
+        firstDay:
+          type: string
+          format: date
+        lastDay:
+          type: string
+          format: date
+        yearLeapMonth:
+          type: integer
+          format: int32
+    ConvertResponse:
+      type: object
+      properties:
+        solar:
+          type: string
+          format: date
+        lunar:
+          $ref: '#/components/schemas/LunarDateResponse'
+    LunarDateResponse:
+      type: object
+      properties:
+        year:
+          type: integer
+          format: int32
+        month:
+          type: integer
+          format: int32
+        day:
+          type: integer
+          format: int32
+        leap:
+          type: boolean
+    LinkedMember:
+      type: object
+      description: Thành viên rút gọn (id và họ tên ghi nguyên văn), đủ để hiện link tới hồ sơ.
+      properties:
+        id:
+          type: integer
+          format: int64
+        fullName:
+          type: string
+      required:
+        - id
+        - fullName
+    Relative:
+      type: object
+      description: 'Một dòng trong danh sách người thân của hồ sơ: trong hồ sơ này, `relative` là "`label`". Ví dụ "Cụ Nguyễn Văn Uyên — cha".'
+      properties:
+        id:
+          type: integer
+          format: int64
+        relative:
+          $ref: '#/components/schemas/MemberSummary'
+        label:
+          type: string
+          maxLength: 50
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - relative
+        - label
+        - createdAt
+    RelativeInput:
+      type: object
+      properties:
+        relativeMemberId:
+          type: integer
+          format: int64
+          minimum: 1
+        label:
+          type: string
+          description: Bắt buộc, cắt khoảng trắng hai đầu, tối đa 50 ký tự.
+          maxLength: 50
+      required:
+        - relativeMemberId
+        - label
+    RelativeLabelInput:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Bắt buộc, cắt khoảng trắng hai đầu, tối đa 50 ký tự.
+          maxLength: 50
+      required:
+        - label
+    LinkRequestStatus:
+      type: string
+      enum:
+        - PENDING
+        - APPROVED
+        - REJECTED
+        - CANCELLED
+      description: '`CANCELLED` khi Admin gán trực tiếp cho tài khoản đó, hoặc thành viên bị xóa.'
+    LinkRequest:
+      type: object
+      description: Yêu cầu "Đây là tôi" của một tài khoản.
+      properties:
+        id:
+          type: integer
+          format: int64
+        accountId:
+          type: integer
+          format: int64
+        accountFullName:
+          type: string
+        accountEmail:
+          type: string
+        member:
+          $ref: '#/components/schemas/LinkedMember'
+        status:
+          $ref: '#/components/schemas/LinkRequestStatus'
+        createdAt:
+          type: string
+          format: date-time
+        decidedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+      required:
+        - id
+        - accountId
+        - accountFullName
+        - accountEmail
+        - member
+        - status
+        - createdAt
+        - decidedAt
+    LinkRequestInput:
+      type: object
+      properties:
+        memberId:
+          type: integer
+          format: int64
+          minimum: 1
+      required:
+        - memberId
+    AdminMemberLinkInput:
+      type: object
+      properties:
+        memberId:
+          type: integer
+          format: int64
+          minimum: 1
+      required:
+        - memberId
+    TreeMember:
+      type: object
+      description: Tóm tắt thành viên hiển thị trong ô của cây. Họ tên ghi nguyên văn.
+      properties:
+        fullName:
+          type: string
+        gender:
+          type:
+            - string
+            - 'null'
+          enum:
+            - M
+            - F
+            - null
+          description: Được để trống; ô của người chưa rõ giới tính vẽ trung tính
+        avatarUrl:
+          type:
+            - string
+            - 'null'
+        labels:
+          type: array
+          description: Nhãn đặc biệt, ví dụ "Liệt sỹ"
+          items:
+            type: string
+        birthYear:
+          type:
+            - integer
+            - 'null'
+          format: int32
+        isDeceased:
+          type: boolean
+        deathYear:
+          type:
+            - integer
+            - 'null'
+          format: int32
+          description: Năm mất theo dương lịch (nếu biết)
+      required:
+        - fullName
+        - gender
+        - avatarUrl
+        - labels
+        - birthYear
+        - isDeceased
+        - deathYear
+    TreeNode:
+      type: object
+      description: Một ô trên cây. Đời không có trong DTO (tính theo độ sâu ở frontend).
+      properties:
+        id:
+          type: integer
+          format: int64
+        memberId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: '`null` là ô trống. Mỗi thành viên có tối đa một ô trên cây.'
+        member:
+          description: Tóm tắt thành viên; `null` khi là ô trống (khớp với `memberId`)
+          oneOf:
+            - $ref: '#/components/schemas/TreeMember'
+            - type: 'null'
+        parentNodeId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Ô cha/mẹ **thuộc dòng**; `null` với gốc và với ô vợ/chồng
+        coParentNodeId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Ô vợ/chồng của `parentNodeId` cùng sinh ra ô này; `null` khi chỉ thuộc một mình cha/mẹ
+        sortOrder:
+          type: integer
+          format: int32
+          description: Thứ tự anh em, nhỏ trước
+      required:
+        - id
+        - memberId
+        - member
+        - parentNodeId
+        - coParentNodeId
+        - sortOrder
+    TreeSpouse:
+      type: object
+      description: Quan hệ vợ/chồng của một ô thuộc dòng. Mỗi ô vợ/chồng thuộc đúng một ô thuộc dòng.
+      properties:
+        nodeId:
+          type: integer
+          format: int64
+          description: Ô thuộc dòng
+        spouseNodeId:
+          type: integer
+          format: int64
+          description: Ô vợ/chồng
+        order:
+          type: integer
+          format: int32
+          minimum: 1
+          description: Thứ tự vợ/chồng (1 = Cả, 2 = Hai...)
+      required:
+        - nodeId
+        - spouseNodeId
+        - order
+    TreeResponse:
+      type: object
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeNode'
+        spouses:
+          type: array
+          items:
+            $ref: '#/components/schemas/TreeSpouse'
+      required:
+        - nodes
+        - spouses
+    TreeMemberInput:
+      type: object
+      properties:
+        memberId:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Thành viên chưa có trên cây (mỗi thành viên chỉ có một ô)
+      required:
+        - memberId
+    TreeChildInput:
+      type: object
+      properties:
+        memberId:
+          type: integer
+          format: int64
+          minimum: 1
+        coParentNodeId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Ô vợ/chồng là mẹ/cha còn lại của con; bắt buộc khi người này có từ 2 vợ/chồng trở lên
+      required:
+        - memberId
+    TreeMoveInput:
+      type: object
+      properties:
+        newParentNodeId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Ô đến làm cha/mẹ; `null` là thành gốc mới
+        coParentNodeId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Ô vợ/chồng là mẹ/cha còn lại; bắt buộc khi ô đến có từ 2 vợ/chồng trở lên
+      required:
+        - newParentNodeId
+    TreeOrderInput:
+      type: object
+      properties:
+        direction:
+          type: string
+          enum:
+            - LEFT
+            - RIGHT
+          description: Đổi chỗ với người anh em bên trái hoặc bên phải
+      required:
+        - direction
+    TreeCoParentInput:
+      type: object
+      properties:
+        coParentNodeId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+      required:
+        - coParentNodeId
+    EventType:
+      type: string
+      description: Loại sự kiện trên lịch. Giỗ và sinh nhật tự sinh từ hồ sơ thành viên; sự kiện chung do Admin nhập.
+      enum:
+        - MEMORIAL
+        - BIRTHDAY
+        - CUSTOM
+    LunarDate:
+      type: object
+      description: Một ngày âm đầy đủ.
+      properties:
+        year:
+          type: integer
+          format: int32
+        month:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        day:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 30
+        leap:
+          type: boolean
+      required:
+        - year
+        - month
+        - day
+        - leap
+    CustomEvent:
+      type: object
+      description: |
+        Sự kiện chung. `calendar` là lịch người nhập dùng để tính ngày. `year = null` nghĩa là lặp hằng năm
+        (âm lịch theo quy tắc IDEA §7); có `year` thì chỉ diễn ra một lần vào đúng ngày đó.
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        description:
+          type:
+            - string
+            - 'null'
+        calendar:
+          type: string
+          enum:
+            - SOLAR
+            - LUNAR
+        day:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 31
+        month:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        year:
+          type:
+            - integer
+            - 'null'
+          format: int32
+        leap:
+          type: boolean
+          description: Chỉ có nghĩa khi `calendar = LUNAR`
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - calendar
+        - day
+        - month
+        - year
+        - leap
+        - createdAt
+        - updatedAt
+    CustomEventInput:
+      type: object
+      description: Nội dung sự kiện chung khi thêm hoặc sửa (PUT thay toàn bộ).
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type:
+            - string
+            - 'null'
+          maxLength: 2000
+        calendar:
+          type: string
+          enum:
+            - SOLAR
+            - LUNAR
+        day:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 31
+        month:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 12
+        year:
+          type:
+            - integer
+            - 'null'
+          format: int32
+          description: Bỏ trống = lặp hằng năm
+        leap:
+          type: boolean
+          default: false
+          description: Chỉ có nghĩa khi `calendar = LUNAR`
+      required:
+        - title
+        - calendar
+        - day
+        - month
+    CalendarOccurrence:
+      type: object
+      description: |
+        Một lần xảy ra của giỗ, sinh nhật hoặc sự kiện chung. `title` do máy chủ dựng, ví dụ "Giỗ Cụ Nguyễn Văn Sửu"
+        (họ tên nguyên văn). `eventKey` ổn định giữa các lần gọi: `MEMORIAL:{memberId}:{yyyy-MM-dd}`,
+        `BIRTHDAY:{memberId}:{yyyy-MM-dd}`, `CUSTOM:{eventId}:{yyyy-MM-dd}` (ngày dương của lần xảy ra).
+      properties:
+        eventKey:
+          type: string
+        type:
+          $ref: '#/components/schemas/EventType'
+        title:
+          type: string
+        description:
+          type:
+            - string
+            - 'null'
+          description: Ghi chú của sự kiện chung; `null` với giỗ và sinh nhật
+        memberId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Người được giỗ hoặc mừng sinh nhật; `null` với sự kiện chung
+        eventId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Chỉ có với sự kiện chung
+        solar:
+          $ref: '#/components/schemas/SolarDate'
+        lunar:
+          $ref: '#/components/schemas/LunarDate'
+        daysUntil:
+          type: integer
+          format: int32
+          description: Số ngày tính từ hôm nay (giờ +7); 0 là hôm nay, âm là đã qua
+        ordinal:
+          type:
+            - integer
+            - 'null'
+          format: int32
+          description: '"Giỗ lần thứ N" (MEMORIAL) hoặc "tròn N tuổi" (BIRTHDAY); `null` khi không biết năm mất/năm sinh hoặc với sự kiện chung'
+      required:
+        - eventKey
+        - type
+        - title
+        - description
+        - memberId
+        - eventId
+        - solar
+        - lunar
+        - daysUntil
+        - ordinal
+    CalendarDay:
+      type: object
+      properties:
+        solar:
+          $ref: '#/components/schemas/SolarDate'
+        lunar:
+          $ref: '#/components/schemas/LunarDate'
+        occurrences:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarOccurrence'
+      required:
+        - solar
+        - lunar
+        - occurrences
+    CalendarMonth:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum:
+            - solar
+            - lunar
+        year:
+          type: integer
+          format: int32
+        month:
+          type: integer
+          format: int32
+        leap:
+          type: boolean
+        days:
+          type: array
+          description: Theo thứ tự ngày, đủ mọi ngày của tháng
+          items:
+            $ref: '#/components/schemas/CalendarDay'
+      required:
+        - mode
+        - year
+        - month
+        - leap
+        - days
+    PageResponseAccountAdminResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountAdminResponse'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    SystemSettings:
+      type: object
+      properties:
+        policyVersion:
+          type: integer
+          format: int32
+        aiQuotaUser:
+          type: integer
+          format: int32
+        aiQuotaAdmin:
+          type: integer
+          format: int32
+        uploadMaxMb:
+          type: integer
+          format: int32
+        totalQuotaMb:
+          type: integer
+          format: int32
+      required:
+        - policyVersion
+        - aiQuotaUser
+        - aiQuotaAdmin
+        - uploadMaxMb
+        - totalQuotaMb
+    DeletedMemberSnapshotSummary:
+      type: object
+      properties:
+        auditId:
+          type: integer
+          format: int64
+        deletedAt:
+          type: string
+          format: date-time
+        deletedBy:
+          type: string
+        fullName:
+          type: string
+      required:
+        - auditId
+        - deletedAt
+        - deletedBy
+        - fullName
+    PageResponseDeletedMemberSnapshotSummary:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeletedMemberSnapshotSummary'
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    DeletedMemberSnapshot:
+      type: object
+      properties:
+        member:
+          $ref: '#/components/schemas/MemberDetail'
+        relations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Relative'
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+      required:
+        - member
+        - relations
+        - attachments
+    AiChatRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 1000
+      required:
+        - message
+    AiQuota:
+      type: object
+      description: Lượt hỏi trong ngày (theo giờ Việt Nam). `remaining = limit - used`.
+      properties:
+        limit:
+          type: integer
+          format: int32
+          description: 15 với User, 30 với Admin (cấu hình ở `SystemSettings`)
+        used:
+          type: integer
+          format: int32
+        remaining:
+          type: integer
+          format: int32
+        resetAt:
+          type: string
+          format: date-time
+          description: Lúc đặt lại lượt, 0h giờ Việt Nam của ngày kế tiếp
+      required:
+        - limit
+        - used
+        - remaining
+        - resetAt
+    AiDraftStatus:
+      type: string
+      description: '`PENDING` chưa xử lý, `SUBMITTED` đã gửi thành đề xuất (User), `APPLIED` đã áp dụng (Admin)'
+      enum:
+        - PENDING
+        - SUBMITTED
+        - APPLIED
+    AiDraftChange:
+      type: object
+      description: Một dòng khác biệt của bản nháp. `before` rỗng khi thêm mới, `after` rỗng khi xóa.
+      properties:
+        field:
+          type: string
+        label:
+          type: string
+        before:
+          type:
+            - string
+            - 'null'
+        after:
+          type:
+            - string
+            - 'null'
+      required:
+        - field
+        - label
+        - before
+        - after
+    AiDraft:
+      type: object
+      description: Thẻ xem trước đề xuất sự kiện chung do AI soạn (`draftProposal`, DECISIONS #77).
+      properties:
+        id:
+          type: integer
+          format: int64
+        action:
+          type: string
+          enum:
+            - CREATE
+            - UPDATE
+            - DELETE
+        eventId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Sự kiện bị sửa hoặc xóa; rỗng khi `CREATE`
+        eventTitle:
+          type: string
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/AiDraftChange'
+        status:
+          $ref: '#/components/schemas/AiDraftStatus'
+      required:
+        - id
+        - action
+        - eventId
+        - eventTitle
+        - changes
+        - status
+    AiMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        role:
+          type: string
+          enum:
+            - USER
+            - ASSISTANT
+        content:
+          type: string
+          description: Văn bản có thể chứa markdown (chỉ với `ASSISTANT`)
+        draft:
+          oneOf:
+            - $ref: '#/components/schemas/AiDraft'
+            - type: 'null'
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - role
+        - content
+        - draft
+        - createdAt
+
+    ProposalInput:
+      type: object
+      properties:
+        targetType:
+          type: string
+        action:
+          type: string
+        targetId:
+          type:
+            - integer
+            - 'null'
+        payload:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+      required:
+        - targetType
+        - action
+    Proposal:
+      type: object
+      properties:
+        id:
+          type: integer
+        accountId:
+          type: integer
+        accountName:
+          type: string
+        targetType:
+          type: string
+        action:
+          type: string
+        targetId:
+          type:
+            - integer
+            - 'null'
+        payload:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+        status:
+          type: string
+        note:
+          type:
+            - string
+            - 'null'
+        baseUpdatedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+        conflict:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - accountId
+        - accountName
+        - targetType
+        - action
+        - status
+        - conflict
+        - createdAt
+    ProposalPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Proposal'
+        totalPages:
+          type: integer
+      required:
+        - items
+        - totalPages
+    ApproveProposalRequest:
+      type: object
+      properties:
+        modifiedPayload:
+          type:
+            - object
+            - 'null'
+          additionalProperties: true
+    RejectProposalRequest:
+      type: object
+      properties:
+        note:
+          type: string
+      required:
+        - note
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        link:
+          type:
+            - string
+            - 'null'
+        isRead:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - title
+        - body
+        - isRead
+        - createdAt
+    NotificationPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+        totalPages:
+          type: integer
+      required:
+        - items
+        - totalPages
+    NotificationPref:
+      type: object
+      properties:
+        notifyEvents:
+          type: boolean
+        notifyMemorials:
+          type: boolean
+        notifyProposals:
+          type: boolean
+        remindDaysBefore:
+          type: array
+          items:
+            type: integer
+        remindHour:
+          type: string
+      required:
+        - notifyEvents
+        - notifyMemorials
+        - notifyProposals
+        - remindDaysBefore
+        - remindHour
+    PushSubscription:
+      type: object
+      properties:
+        endpoint:
+          type: string
+        keys:
+          type: object
+          properties:
+            p256dh:
+              type: string
+            auth:
+              type: string
+          required:
+            - p256dh
+            - auth
+      required:
+        - endpoint
+        - keys
+    UnsubscribePushRequest:
+      type: object
+      properties:
+        endpoint:
+          type: string
+      required:
+        - endpoint

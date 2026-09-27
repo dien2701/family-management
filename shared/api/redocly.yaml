@@ -1,0 +1,5 @@
+# Bộ quy tắc khuyến nghị của Redocly. Tắt operation-4xx-response vì /api/auth/logout thật sự không có lỗi 4xx (idempotent).
+extends:
+  - recommended
+rules:
+  operation-4xx-response: off
