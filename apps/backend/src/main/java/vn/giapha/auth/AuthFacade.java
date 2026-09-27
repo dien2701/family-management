@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import vn.giapha.auth.entity.AccountStatus;
+import vn.giapha.auth.entity.ApprovalStatus;
 import vn.giapha.auth.entity.SystemRole;
 import vn.giapha.auth.entity.UserAccount;
 import vn.giapha.auth.repository.UserAccountRepository;
@@ -61,6 +62,12 @@ public class AuthFacade implements AccountAccessLookup {
     @Transactional(readOnly = true)
     public boolean isMemberLinked(Long memberId) {
         return users.existsByMemberId(memberId);
+    }
+
+    /** Số tài khoản đang chờ Admin duyệt (dashboard, IDEA §6.8). */
+    @Transactional(readOnly = true)
+    public long pendingAccountCount() {
+        return users.countByApprovalStatusAndStatusNot(ApprovalStatus.WAITING, AccountStatus.PENDING);
     }
 
     /**

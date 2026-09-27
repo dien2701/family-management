@@ -101,10 +101,9 @@ class AuthApiTest {
                 .andExpect(jsonPath("$.consentRequired").value(false))
                 .andReturn();
         assertNoSecrets(me);
-        // Đăng ký email lưu consent ngay (DECISIONS #57)
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM user_consent WHERE user_id = ? "
-                + "AND policy_version = ? AND ip IS NOT NULL", Integer.class, userId(email),
-                props.policy().version())).isEqualTo(1);
+        // Đăng ký email lưu consent ngay (DECISIONS #57); phiên bản chính sách nay đọc từ system_setting (Đợt 32)
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM user_consent WHERE user_id = ? AND ip IS NOT NULL",
+                Integer.class, userId(email))).isEqualTo(1);
     }
 
     @Test

@@ -68,6 +68,10 @@ public class TreeService {
         this.clock = clock;
     }
 
+    /** Số người trên cây và đời sâu nhất (dashboard, module admin). */
+    public record TreeStats(int onTree, int maxGeneration) {
+    }
+
     /** Ảnh chụp một ô để ghi audit log (không chứa gì nhạy cảm). */
     record NodeSnapshot(Long id, Long memberId, Long parentNodeId, Long coParentNodeId, int sortOrder) {
     }
@@ -104,6 +108,14 @@ public class TreeService {
         return new TreeResponse(
                 nodeList.stream().map(n -> mapper.toNode(n, cards)).toList(),
                 spouses.findAllOrdered().stream().map(mapper::toSpouse).toList());
+    }
+
+    @Transactional(readOnly = true)
+    public TreeStats stats() {
+        Map<Long, Integer> generations = new TreeIndex(nodes.findAllOrdered(), spouses.findAllOrdered())
+                .generationsByMember();
+        int maxGeneration = generations.values().stream().mapToInt(Integer::intValue).max().orElse(0);
+        return new TreeStats(generations.size(), maxGeneration);
     }
 
     // ---------- Ghi ----------

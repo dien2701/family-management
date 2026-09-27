@@ -4,9 +4,11 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import vn.giapha.event.dto.CalendarOccurrenceResponse;
 import vn.giapha.event.dto.CustomEventResponse;
 import vn.giapha.event.entity.EventCalendar;
 import vn.giapha.event.service.EventService;
+import vn.giapha.event.service.OccurrenceService;
 
 /** API công khai của module event cho module khác (đề xuất Đợt 33, dashboard, AI). */
 @Component
@@ -18,14 +20,26 @@ public class EventFacade {
     }
 
     private final EventService service;
+    private final OccurrenceService occurrences;
 
-    EventFacade(EventService service) {
+    EventFacade(EventService service, OccurrenceService occurrences) {
         this.service = service;
+        this.occurrences = occurrences;
     }
 
     /** Toàn bộ sự kiện chung, theo id tăng dần. */
     public List<EventRef> list() {
         return service.list().stream().map(EventFacade::toRef).toList();
+    }
+
+    /** Sự kiện trong 30 ngày tới, gần nhất trước (dashboard, IDEA §6.8). */
+    public List<CalendarOccurrenceResponse> upcoming30() {
+        return occurrences.upcoming(30, null, "asc");
+    }
+
+    /** 10 sự kiện vừa diễn ra gần nhất (dashboard, IDEA §6.8). */
+    public List<CalendarOccurrenceResponse> recent10() {
+        return occurrences.recent(10);
     }
 
     private static EventRef toRef(CustomEventResponse r) {

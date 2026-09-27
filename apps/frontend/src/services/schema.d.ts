@@ -463,7 +463,7 @@ export interface paths {
          * Xin chữ ký để tải tệp lên Cloudinary
          * @description Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`).
          *     Máy chủ kiểm MIME (jpg, png, webp, pdf, docx, xlsx; ảnh đại diện chỉ jpg/png/webp), tối đa 10 MB mỗi tệp và 1 GB toàn hệ thống.
-         *     Lỗi: 400 `VALIDATION_ERROR`, 403 `FORBIDDEN`. Ở chế độ giả lập trả 503 "Cần kết nối máy chủ" (DECISIONS #72).
+         *     Lỗi: 400 `VALIDATION_ERROR` (gồm hết dung lượng: `QUOTA_EXCEEDED`), 403 `FORBIDDEN`, 503 `STORAGE_NOT_CONFIGURED` khi chưa có khóa Cloudinary. Ở chế độ giả lập trả 503 "Cần kết nối máy chủ" (DECISIONS #72).
          */
         post: operations["signUpload"];
         delete?: never;
@@ -639,7 +639,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Danh sách đính kèm của thành viên */
+        /**
+         * Danh sách đính kèm của thành viên
+         * @description Chỉ các tài liệu (`kind = DOCUMENT`) gắn với thành viên, mới nhất trước. Ảnh đại diện nằm ở `avatarUrl` của hồ sơ.
+         *     Ảnh có `url` công khai; PDF/docx/xlsx có `url` trỏ về `/api/attachments/{id}/download`.
+         */
         get: operations["listMemberAttachments"];
         put?: never;
         post?: never;
@@ -1228,6 +1232,28 @@ export interface paths {
         };
         /** Chi tiết snapshot thành viên đã xóa */
         get: operations["getDeletedMemberSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tổng quan
+         * @description Thẻ số liệu, sự kiện gần nhất sắp tới, 10 sự kiện vừa diễn ra, sự kiện trong 30 ngày tới (IDEA §6.8).
+         *     Admin thấy thêm `pendingAccounts`, `pendingProposals`, `pendingLinkRequests` (`pendingProposals` luôn 0
+         *     cho tới khi có module đề xuất).
+         */
+        get: operations["getDashboard"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2200,6 +2226,36 @@ export interface components {
             member: components["schemas"]["MemberDetail"];
             relations: components["schemas"]["Relative"][];
             attachments: components["schemas"]["Attachment"][];
+        };
+        DashboardResponse: {
+            /** Format: int32 */
+            totalMembers: number;
+            /** Format: int32 */
+            living: number;
+            /** Format: int32 */
+            deceased: number;
+            /** Format: int32 */
+            onTree: number;
+            /** Format: int32 */
+            maxGeneration: number;
+            nextEvent?: components["schemas"]["CalendarOccurrence"];
+            recentEvents: components["schemas"]["CalendarOccurrence"][];
+            upcoming30: components["schemas"]["CalendarOccurrence"][];
+            /**
+             * Format: int32
+             * @description Chỉ Admin
+             */
+            pendingAccounts?: number;
+            /**
+             * Format: int32
+             * @description Chỉ Admin; luôn 0 cho tới khi có module đề xuất (Đợt 33)
+             */
+            pendingProposals?: number;
+            /**
+             * Format: int32
+             * @description Chỉ Admin
+             */
+            pendingLinkRequests?: number;
         };
         AiChatRequest: {
             message: string;
@@ -4345,6 +4401,28 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+        };
+    };
+    getDashboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     aiChat: {

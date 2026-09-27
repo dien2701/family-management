@@ -346,9 +346,9 @@ class AccountApprovalApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.consentRequired").value(false))
                 .andExpect(jsonPath("$.approvalStatus").value("WAITING"));
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM user_consent WHERE user_id = ? "
-                + "AND policy_version = ? AND ip IS NOT NULL", Integer.class, session.id(),
-                props.policy().version())).isEqualTo(1);
+        // Phiên bản chính sách nay đọc từ system_setting (Đợt 32), không còn từ AppProperties
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM user_consent WHERE user_id = ? AND ip IS NOT NULL",
+                Integer.class, session.id())).isEqualTo(1);
 
         // Gọi lại không ghi thêm
         mvc.perform(consentRequest(session, "{\"acceptTerms\":true}")).andExpect(status().isOk());

@@ -13,7 +13,9 @@ import tools.jackson.databind.json.JsonMapper;
 
 import vn.giapha.common.exception.BusinessException;
 import vn.giapha.member.entity.BirthCalendar;
+import vn.giapha.member.entity.LinkRequestStatus;
 import vn.giapha.member.entity.Member;
+import vn.giapha.member.repository.MemberLinkRequestRepository;
 import vn.giapha.member.repository.MemberRepository;
 
 /**
@@ -49,14 +51,35 @@ public class MemberFacade {
             Integer birthYear, boolean deceased, Integer deathYear) {
     }
 
+    /** Thẻ số liệu của dashboard (IDEA §6.8). */
+    public record MemberStats(int total, int living, int deceased) {
+    }
+
     private final MemberRepository repository;
+    private final MemberLinkRequestRepository linkRequests;
     private final JsonMapper json;
     private final Clock clock;
 
-    MemberFacade(MemberRepository repository, JsonMapper json, Clock clock) {
+    MemberFacade(MemberRepository repository, MemberLinkRequestRepository linkRequests, JsonMapper json,
+            Clock clock) {
         this.repository = repository;
+        this.linkRequests = linkRequests;
         this.json = json;
         this.clock = clock;
+    }
+
+    /** Tổng số thành viên, còn sống và đã mất (dashboard). */
+    @Transactional(readOnly = true)
+    public MemberStats stats() {
+        long total = repository.count();
+        long deceased = repository.countByDeceased(true);
+        return new MemberStats((int) total, (int) (total - deceased), (int) deceased);
+    }
+
+    /** Số yêu cầu "Tôi là ai" đang chờ Admin duyệt (dashboard). */
+    @Transactional(readOnly = true)
+    public long pendingLinkRequestCount() {
+        return linkRequests.countByStatus(LinkRequestStatus.PENDING);
     }
 
     @Transactional(readOnly = true)

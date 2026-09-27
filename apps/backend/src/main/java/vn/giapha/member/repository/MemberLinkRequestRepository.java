@@ -25,6 +25,9 @@ public interface MemberLinkRequestRepository extends JpaRepository<MemberLinkReq
 
     boolean existsByAccountIdAndStatus(Long accountId, LinkRequestStatus status);
 
+    /** Số yêu cầu đang chờ duyệt (dashboard, IDEA §6.8). */
+    long countByStatus(LinkRequestStatus status);
+
     List<MemberLinkRequest> findByAccountIdAndStatus(Long accountId, LinkRequestStatus status);
 
     List<MemberLinkRequest> findByMemberIdAndStatus(Long memberId, LinkRequestStatus status);

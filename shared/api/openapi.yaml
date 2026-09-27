@@ -48,6 +48,8 @@ tags:
     description: Cấu hình hệ thống (chỉ Admin)
   - name: admin-deleted-members
     description: Thành viên đã xóa (chỉ Admin)
+  - name: dashboard
+    description: Tổng quan (thẻ số liệu, sự kiện gần nhất)
 paths:
   /api/me/consent:
     post:
@@ -2180,6 +2182,27 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/dashboard:
+    get:
+      tags:
+        - dashboard
+      summary: Tổng quan
+      description: |
+        Thẻ số liệu, sự kiện gần nhất sắp tới, 10 sự kiện vừa diễn ra, sự kiện trong 30 ngày tới (IDEA §6.8).
+        Admin thấy thêm `pendingAccounts`, `pendingProposals`, `pendingLinkRequests` (`pendingProposals` luôn 0
+        cho tới khi có module đề xuất).
+      operationId: getDashboard
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /api/ai/chat:
     post:
       tags:
@@ -4071,6 +4094,54 @@ components:
         - member
         - relations
         - attachments
+    DashboardResponse:
+      type: object
+      properties:
+        totalMembers:
+          type: integer
+          format: int32
+        living:
+          type: integer
+          format: int32
+        deceased:
+          type: integer
+          format: int32
+        onTree:
+          type: integer
+          format: int32
+        maxGeneration:
+          type: integer
+          format: int32
+        nextEvent:
+          $ref: '#/components/schemas/CalendarOccurrence'
+        recentEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarOccurrence'
+        upcoming30:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarOccurrence'
+        pendingAccounts:
+          type: integer
+          format: int32
+          description: Chỉ Admin
+        pendingProposals:
+          type: integer
+          format: int32
+          description: Chỉ Admin; luôn 0 cho tới khi có module đề xuất (Đợt 33)
+        pendingLinkRequests:
+          type: integer
+          format: int32
+          description: Chỉ Admin
+      required:
+        - totalMembers
+        - living
+        - deceased
+        - onTree
+        - maxGeneration
+        - recentEvents
+        - upcoming30
     AiChatRequest:
       type: object
       properties:

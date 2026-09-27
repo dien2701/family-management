@@ -46,7 +46,8 @@ public class OpenApiConfig {
                                         + "hoặc bị khóa (`ACCOUNT_LOCKED`)"))
                         .addResponses("NotFound", problem(
                                 "Không tìm thấy (`ACCOUNT_NOT_FOUND`, `MEMBER_NOT_FOUND`, `EVENT_NOT_FOUND`, "
-                                        + "`TREE_NODE_NOT_FOUND`, `RELATIVE_NOT_FOUND`, `LINK_REQUEST_NOT_FOUND`)"))
+                                        + "`TREE_NODE_NOT_FOUND`, `RELATIVE_NOT_FOUND`, `LINK_REQUEST_NOT_FOUND`, "
+                                        + "`AUDIT_NOT_FOUND`)"))
                         .addResponses("Conflict", problem(
                                 "Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `INVALID_ACCOUNT_STATE`, "
                                         + "`MEMBER_ON_TREE`, `RELATIVE_EXISTS`, `MEMBER_ALREADY_LINKED`, "

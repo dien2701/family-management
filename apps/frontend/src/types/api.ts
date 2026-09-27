@@ -36,20 +36,7 @@ export type CustomEventInput = Schemas['CustomEventInput']
 export type CalendarOccurrence = Schemas['CalendarOccurrence']
 export type CalendarDay = Schemas['CalendarDay']
 export type CalendarMonth = Schemas['CalendarMonth']
-// Chưa có trong shared/api/openapi.yaml; chuyển sang Schemas khi hợp đồng bổ sung /dashboard
-export type DashboardResponse = {
-  totalMembers: number
-  living: number
-  deceased: number
-  onTree: number
-  maxGeneration: number
-  nextEvent?: CalendarOccurrence
-  recentEvents: CalendarOccurrence[]
-  upcoming30: CalendarOccurrence[]
-  pendingAccounts?: number
-  pendingProposals?: number
-  pendingLinkRequests?: number
-}
+export type DashboardResponse = Schemas['DashboardResponse']
 export type AiQuota = Schemas['AiQuota']
 export type AiDraft = Schemas['AiDraft']
 export type AiDraftChange = Schemas['AiDraftChange']

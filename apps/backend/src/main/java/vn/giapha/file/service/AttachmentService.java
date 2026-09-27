@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import vn.giapha.auth.AuthFacade;
 import vn.giapha.common.audit.AuditLogWriter;
+import vn.giapha.common.config.DynamicSettings;
 import vn.giapha.common.exception.BusinessException;
 import vn.giapha.common.exception.FieldError;
 import vn.giapha.config.AppProperties;
@@ -55,10 +56,12 @@ public class AttachmentService {
     private final AuthFacade auth;
     private final AuditLogWriter audit;
     private final AppProperties.File config;
+    private final DynamicSettings settings;
     private final Clock clock;
 
     AttachmentService(AttachmentRepository attachments, FileStorage storage, StorageCleaner cleaner,
-            MemberFacade members, AuthFacade auth, AuditLogWriter audit, AppProperties props, Clock clock) {
+            MemberFacade members, AuthFacade auth, AuditLogWriter audit, AppProperties props,
+            DynamicSettings settings, Clock clock) {
         this.attachments = attachments;
         this.storage = storage;
         this.cleaner = cleaner;
@@ -66,6 +69,7 @@ public class AttachmentService {
         this.auth = auth;
         this.audit = audit;
         this.config = props.file();
+        this.settings = settings;
         this.clock = clock;
     }
 
@@ -82,8 +86,8 @@ public class AttachmentService {
         Long size = request.sizeBytes();
         if (size == null || size < 1) {
             errors.add(new FieldError("sizeBytes", "Tệp không hợp lệ."));
-        } else if (size > config.maxFileSize().toBytes()) {
-            errors.add(new FieldError("sizeBytes", "Tệp tối đa " + config.maxFileSize().toMegabytes() + " MB."));
+        } else if (size > settings.uploadMaxBytes()) {
+            errors.add(new FieldError("sizeBytes", "Tệp tối đa " + settings.uploadMaxMb() + " MB."));
         }
         if (format != null && fileName != null && FileFormat.ofFileName(fileName).filter(format::equals).isEmpty()) {
             errors.add(new FieldError("fileName", "Đuôi tệp không khớp với định dạng."));
@@ -129,12 +133,12 @@ public class AttachmentService {
                 List.of(new FieldError("publicId", "Chưa tìm thấy tệp trên kho lưu trữ."))));
         long bytes = stored.bytes();
         // Số liệu do kho trả về mới đáng tin; tệp vi phạm thì gỡ khỏi kho ngay
-        if (bytes < 1 || bytes > config.maxFileSize().toBytes() || !storedFormatMatches(stored, publicId, format)) {
+        if (bytes < 1 || bytes > settings.uploadMaxBytes() || !storedFormatMatches(stored, publicId, format)) {
             storage.delete(publicId, format);
             throw validation(List.of(new FieldError("publicId",
-                    "Tệp không hợp lệ hoặc vượt quá " + config.maxFileSize().toMegabytes() + " MB.")));
+                    "Tệp không hợp lệ hoặc vượt quá " + settings.uploadMaxMb() + " MB.")));
         }
-        if (attachments.totalBytes() + bytes > config.totalLimit().toBytes()) {
+        if (attachments.totalBytes() + bytes > settings.totalQuotaBytes()) {
             storage.delete(publicId, format);
             throw quotaExceeded();
         }
@@ -190,7 +194,7 @@ public class AttachmentService {
     @Transactional(readOnly = true)
     public QuotaResponse quota() {
         return new QuotaResponse((double) attachments.totalBytes() / BYTES_PER_MB,
-                (double) config.totalLimit().toBytes() / BYTES_PER_MB);
+                (double) settings.totalQuotaBytes() / BYTES_PER_MB);
     }
 
     // ---------- Xóa ----------
@@ -246,7 +250,7 @@ public class AttachmentService {
     }
 
     private void requireQuota(long incomingBytes) {
-        if (attachments.totalBytes() + incomingBytes > config.totalLimit().toBytes()) {
+        if (attachments.totalBytes() + incomingBytes > settings.totalQuotaBytes()) {
             throw quotaExceeded();
         }
     }

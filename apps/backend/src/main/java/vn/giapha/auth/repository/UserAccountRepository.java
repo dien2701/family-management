@@ -13,12 +13,17 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import vn.giapha.auth.entity.AccountStatus;
+import vn.giapha.auth.entity.ApprovalStatus;
 import vn.giapha.auth.entity.UserAccount;
 
 public interface UserAccountRepository
         extends JpaRepository<UserAccount, Long>, JpaSpecificationExecutor<UserAccount> {
 
     Optional<UserAccount> findByEmail(String email);
+
+    /** Tài khoản thật (đã xác thực OTP) đang ở một trạng thái duyệt; dùng cho thẻ "chờ duyệt" ở dashboard. */
+    long countByApprovalStatusAndStatusNot(ApprovalStatus approvalStatus, AccountStatus status);
 
     /** Có Admin dùng được (ACTIVE và đã duyệt) hay chưa; Admin bị khóa/từ chối không tính. */
     @Query("""

@@ -66,7 +66,7 @@
 | 29 | Cây BE | Claude Code | Sonnet · high | ✅ 2026-09-27 |
 | 30 | Upload và đính kèm BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
 | 31 | Sự kiện chung và lịch nhắc BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
-| 32 | Dashboard và quản trị BE | Claude Code | Sonnet · medium | ⬜ |
+| 32 | Dashboard và quản trị BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
 | 33–34 | Đề xuất sự kiện và Thông báo BE | Claude Code | Sonnet · medium | ⬜ |
 | 35 | Web Push BE | Claude Code | Sonnet · medium | ⬜ |
 | 36–37 | AI BE: provider, tool, SSE, quota, soạn đề xuất, phạm vi | Claude Code | Sonnet · high | ⬜ |
@@ -746,14 +746,21 @@ IDEA §6.5, §7 · DECISIONS #31, #65, #72
 
 ---
 
-### Đợt 32 — Dashboard và quản trị BE ⬜
+### Đợt 32 — Dashboard và quản trị BE ✅ 2026-09-27
 IDEA §6.8, §6.10 · DECISIONS #55, #62
-- [ ] `GET /api/dashboard` theo hợp đồng. Số người trên cây và số đời lấy qua `TreeFacade`. Admin có thêm 3 số chờ duyệt (`pendingProposals` bằng 0 cho tới Đợt 33).
-- [ ] `V12__system_setting.sql` (key-value), có cache Caffeine. `GET/PUT /api/admin/settings`. Các chỗ đang dùng giá trị cấu hình (phiên bản chính sách, giới hạn upload) chuyển sang đọc từ đây.
-- [ ] `GET /api/admin/deleted-members` và `GET /api/admin/deleted-members/{auditId}` đọc snapshot từ `audit_log`.
-- [ ] Ghi audit log cho mọi thao tác quản trị.
+- [x] `GET /api/dashboard` theo hợp đồng. Số người trên cây và số đời lấy qua `TreeFacade`. Admin có thêm 3 số chờ duyệt (`pendingProposals` bằng 0 cho tới Đợt 33). ✅ 2026-09-27
+- [x] `V12__system_setting.sql` (key-value), có cache Caffeine. `GET/PUT /api/admin/settings`. Các chỗ đang dùng giá trị cấu hình (phiên bản chính sách, giới hạn upload) chuyển sang đọc từ đây. ✅ 2026-09-27
+- [x] `GET /api/admin/deleted-members` và `GET /api/admin/deleted-members/{auditId}` đọc snapshot từ `audit_log`. ✅ 2026-09-27
+- [x] Ghi audit log cho mọi thao tác quản trị. ✅ 2026-09-27
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- Hợp đồng: thêm `GET /api/dashboard` (`DashboardResponse`, tag `dashboard` mới), đã chạy `npm run gen:api`. `SystemSettings`/`DeletedMemberSnapshot*` đã có sẵn hợp đồng từ trước, giờ mới có backend.
+- Module `admin` mới: `SystemSettingsService` (key-value + cache Caffeine, cũng là `DynamicSettings` cho module khác đọc), `DashboardService` (gộp số liệu qua `MemberFacade`, `TreeFacade` (mới), `EventFacade`, `AuthFacade`), `DeletedMemberQueryService` (đọc lại snapshot từ `audit_log` qua `AuditLogReader` mới ở module `common`).
+- Đổi hướng phụ thuộc: thêm cổng `common.config.DynamicSettings` để `ConsentService` (phiên bản chính sách) và `AttachmentService` (giới hạn tệp) đọc cấu hình động từ module `admin` mà không phụ thuộc ngược; bỏ `AppProperties.Policy` và `AppProperties.File.maxFileSize/totalLimit` (tĩnh, cũ).
+- Thêm `TreeFacade` (module tree, mới), `EventFacade.upcoming30/recent10`, `MemberFacade.stats/pendingLinkRequestCount`, `AuthFacade.pendingAccountCount` để `admin` gọi qua facade đúng quy tắc Modulith.
+- Sửa 2 chỗ test cũ (`AuthApiTest`, `AccountApprovalApiTest`) đọc `props.policy().version()` đã bỏ — chỉ còn kiểm tra có ghi consent, không kiểm phiên bản cụ thể (DECISIONS #84).
+- File chính: `apps/backend/src/main/java/vn/giapha/admin/**`, `common/config/DynamicSettings.java`, `common/audit/AuditLogReader.java`, `tree/TreeFacade.java`, `V12__system_setting.sql`, `shared/api/openapi.yaml`.
+- Việc nên làm thêm: Đợt 33 đổi `pendingProposals` từ 0 sang số thật qua `ProposalFacade`; AI quota (`aiQuotaUser`/`aiQuotaAdmin`) đã lưu trong `system_setting` nhưng chưa có module AI để đọc (Đợt 36–37 nối vào `DynamicSettings`).
 
 **🔧 Setup thủ công cần làm:** Không có.
 
