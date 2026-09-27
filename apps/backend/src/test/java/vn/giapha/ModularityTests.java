@@ -11,7 +11,7 @@ import org.springframework.modulith.core.ApplicationModules;
 class ModularityTests {
 
     private static final List<String> EXPECTED_MODULES = List.of(
-            "auth", "family", "member", "tree", "calendar", "event", "proposal",
+            "auth", "member", "tree", "calendar", "event", "proposal",
             "notification", "file", "ai", "report", "admin", "common");
 
     private final ApplicationModules modules = ApplicationModules.of(GiaPhaApplication.class);

@@ -100,8 +100,8 @@ class AccountApprovalApiTest {
         mvc.perform(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, root.bearer())).andExpect(status().isOk());
         mvc.perform(get("/api/admin/accounts").header(HttpHeaders.AUTHORIZATION, root.bearer()))
                 .andExpect(status().isOk());
-        assertThat(count("SELECT COUNT(*) FROM audit_log WHERE action = 'ROOT_ADMIN_PROMOTE' AND actor_id = ? "
-                + "AND family_id IS NULL", root.id())).isEqualTo(1);
+        assertThat(count("SELECT COUNT(*) FROM audit_log WHERE action = 'ROOT_ADMIN_PROMOTE' AND actor_id = ?",
+                root.id())).isEqualTo(1);
     }
 
     @Test
@@ -231,15 +231,12 @@ class AccountApprovalApiTest {
         notApproved(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
         notApproved(get("/api/calendar/lunar-month-info?year=2026&month=1")
                 .header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
-        notApproved(get("/api/family").header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
-        notApproved(post("/api/family").header(HttpHeaders.AUTHORIZATION, waiting.bearer())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Họ A\",\"acceptPolicy\":true}"));
-        notApproved(post("/api/family/join").header(HttpHeaders.AUTHORIZATION, waiting.bearer())
-                .contentType(MediaType.APPLICATION_JSON).content("{\"code\":\"ABCDEFGH\"}"));
+        notApproved(post("/api/members").header(HttpHeaders.AUTHORIZATION, waiting.bearer())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"fullName\":\"Người Thử\",\"isDeceased\":false}"));
         notApproved(get("/api/admin/accounts").header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
-        // Đường dẫn chưa có controller cũng không lọt qua cổng: mặc định chặn, không phải mặc định cho phép
         notApproved(get("/api/members").header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
+        // Đường dẫn chưa có controller cũng không lọt qua cổng: mặc định chặn, không phải mặc định cho phép
+        notApproved(get("/api/tree").header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
     }
 
     @Test
@@ -281,23 +278,23 @@ class AccountApprovalApiTest {
     @Test
     void writesCheckApprovalAndLockFromDatabaseNotFromStaleClaim() throws Exception {
         Session user = accounts.approved();
-        String createFamily = "{\"name\":\"Họ Thử\",\"acceptPolicy\":true}";
+        String createMember = "{\"fullName\":\"Người Thử\",\"isDeceased\":false}";
 
         // Token còn claim APPROVED nhưng Admin vừa từ chối: ghi bị chặn ngay
         jdbc.update("UPDATE user_account SET approval_status = 'REJECTED' WHERE id = ?", user.id());
-        notApproved(post("/api/family").header(HttpHeaders.AUTHORIZATION, user.bearer())
-                .contentType(MediaType.APPLICATION_JSON).content(createFamily));
+        notApproved(post("/api/members").header(HttpHeaders.AUTHORIZATION, user.bearer())
+                .contentType(MediaType.APPLICATION_JSON).content(createMember));
 
         // Bị khóa: cũng chặn ngay, mã riêng
         jdbc.update("UPDATE user_account SET approval_status = 'APPROVED', status = 'LOCKED' WHERE id = ?", user.id());
-        mvc.perform(post("/api/family").header(HttpHeaders.AUTHORIZATION, user.bearer())
-                .contentType(MediaType.APPLICATION_JSON).content(createFamily))
+        mvc.perform(post("/api/members").header(HttpHeaders.AUTHORIZATION, user.bearer())
+                .contentType(MediaType.APPLICATION_JSON).content(createMember))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("ACCOUNT_LOCKED"));
 
         // Tài khoản đã bị xóa: coi như chưa đăng nhập
         jdbc.update("DELETE FROM user_account WHERE id = ?", user.id());
-        mvc.perform(post("/api/family").header(HttpHeaders.AUTHORIZATION, user.bearer())
-                .contentType(MediaType.APPLICATION_JSON).content(createFamily))
+        mvc.perform(post("/api/members").header(HttpHeaders.AUTHORIZATION, user.bearer())
+                .contentType(MediaType.APPLICATION_JSON).content(createMember))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -318,9 +315,7 @@ class AccountApprovalApiTest {
         Session user = accounts.approved();
 
         mvc.perform(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, user.bearer())).andExpect(status().isOk());
-        mvc.perform(post("/api/family").header(HttpHeaders.AUTHORIZATION, user.bearer())
-                .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Họ Thử\",\"acceptPolicy\":true}"))
-                .andExpect(status().isCreated());
+        mvc.perform(get("/api/members").header(HttpHeaders.AUTHORIZATION, user.bearer())).andExpect(status().isOk());
     }
 
     // ---------- Consent ----------
@@ -351,7 +346,7 @@ class AccountApprovalApiTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.consentRequired").value(false))
                 .andExpect(jsonPath("$.approvalStatus").value("WAITING"));
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM user_consent WHERE user_id = ? AND family_id IS NULL "
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM user_consent WHERE user_id = ? "
                 + "AND policy_version = ? AND ip IS NOT NULL", Integer.class, session.id(),
                 props.policy().version())).isEqualTo(1);
 

@@ -50,7 +50,7 @@ public class CalendarFacade {
 
     /**
      * Ngày âm (tháng thường) để cúng giỗ, mừng sinh nhật âm hoặc làm sự kiện âm trong năm âm {@code lunarYear}.
-     * {@code override} là ngày cúng do Manager ghi đè, {@code null} nếu không có.
+     * {@code override} là ngày cúng do Admin ghi đè, {@code null} nếu không có.
      */
     public LunarDate lunarOccurrence(int lunarYear, LunarMonthDay original, LunarMonthDay override) {
         return service.lunarOccurrence(lunarYear, original, override);

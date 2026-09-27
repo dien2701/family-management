@@ -98,10 +98,9 @@ apps/backend/
     │   │   │   ├── exception/               BusinessException, GlobalExceptionHandler (ProblemDetail)
     │   │   │   ├── consent/                 user_consent
     │   │   │   ├── web/                     Trang kết quả (phân trang)
-    │   │   │   └── util/                    TextNormalizer (bỏ dấu), DateUtils, IdGenerator
+    │   │   │   └── util/                    SearchText (bỏ dấu), DateUtils, IdGenerator
     │   │   │
     │   │   ├── auth/                      ┐
-    │   │   ├── family/                    │  (module cũ, gỡ ở Đợt 26)
     │   │   ├── member/                    │
     │   │   ├── tree/                      │  Mỗi module có cùng bố cục
     │   │   ├── calendar/                  │  (xem ví dụ member/ bên dưới)
@@ -269,5 +268,5 @@ Không tạo sẵn thư mục rỗng. Mỗi đợt chỉ tạo phần mình cầ
 | `shared/api/openapi.yaml`, `shared/fixtures/seed/`, `services/mock/` | Đợt 9 |
 | `utils/tree/`, `shared/fixtures/tree/` | Đợt 14 |
 | `utils/occurrences/`, `shared/fixtures/occurrences/` | Đợt 17 |
-| Gỡ `features/family` (FE) / module `family` (BE) | Đợt 10 / Đợt 26 |
+| Gỡ `features/family` (FE) / module `family` (BE) | Đợt 10 / Đợt 26 (đã xong) |
 | `infra/`, `.github/workflows/deploy.yml` | Đợt 41 |

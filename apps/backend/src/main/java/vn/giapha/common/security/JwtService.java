@@ -34,12 +34,6 @@ public class JwtService {
                 .expiresAt(now.plus(props.jwt().accessTtl()))
                 .claim(CurrentUser.CLAIM_SYSTEM_ROLE, user.systemRole())
                 .claim(CurrentUser.CLAIM_APPROVAL, user.approval());
-        if (user.familyId() != null) {
-            claims.claim(CurrentUser.CLAIM_FAMILY_ID, user.familyId());
-        }
-        if (user.familyRole() != null) {
-            claims.claim(CurrentUser.CLAIM_FAMILY_ROLE, user.familyRole());
-        }
         if (user.memberId() != null) {
             claims.claim(CurrentUser.CLAIM_MEMBER_ID, user.memberId());
         }

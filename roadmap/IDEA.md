@@ -94,7 +94,7 @@ member(id,
        avatar_url, phone, email, biography TEXT, labels JSON NULL,
        birth_year, birth_month, birth_day, birthday_calendar[SOLAR|LUNAR] DEFAULT SOLAR, birth_lunar_leap,
        is_deceased, death_year, death_month, death_day,        -- ngày mất theo dương (tự tính nếu nhập âm có năm)
-       death_lunar_day, death_lunar_month, death_lunar_leap,
+       death_lunar_year NULL, death_lunar_day, death_lunar_month, death_lunar_leap,   -- năm âm NULL khi chỉ biết ngày/tháng
        memorial_override_day NULL, memorial_override_month NULL,
        burial_place,
        created_by, created_at, updated_at)

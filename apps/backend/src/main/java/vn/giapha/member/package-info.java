@@ -1,5 +1,5 @@
 /**
- * Thành viên, quan hệ, đời, chi, khóa nhánh.
+ * Thành viên gia phả, danh sách người thân, liên kết "Tôi là ai" và xóa thành viên.
  */
 @ApplicationModule(displayName = "Member")
 package vn.giapha.member;

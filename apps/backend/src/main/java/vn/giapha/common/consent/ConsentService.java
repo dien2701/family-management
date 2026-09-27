@@ -23,17 +23,11 @@ public class ConsentService {
         this.clock = clock;
     }
 
-    /** Chạy trong transaction của nơi gọi để đồng ý và việc tạo/tham gia family cùng commit hoặc cùng rollback. */
-    @Transactional(propagation = Propagation.MANDATORY)
-    public void record(Long userId, Long familyId, String ip) {
-        repository.save(new UserConsent(userId, familyId, props.policy().version(), Instant.now(clock), ip));
-    }
-
-    /** Consent không gắn dòng họ (DECISIONS #57). Đã đồng ý phiên bản hiện hành rồi thì không ghi thêm. */
+    /** Chạy trong transaction của nơi gọi. Đã đồng ý phiên bản hiện hành rồi thì không ghi thêm (DECISIONS #57). */
     @Transactional(propagation = Propagation.MANDATORY)
     public void recordIfMissing(Long userId, String ip) {
         if (!hasAcceptedCurrentPolicy(userId)) {
-            record(userId, null, ip);
+            repository.save(new UserConsent(userId, props.policy().version(), Instant.now(clock), ip));
         }
     }
 

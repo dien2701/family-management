@@ -11,7 +11,7 @@ import vn.giapha.calendar.LunarMonthDay;
  *
  * <p>Ngày âm trong năm âm Y được chọn theo thứ tự:
  * <ol>
- *   <li>có ngày ghi đè (Manager đặt ngày cúng khác) thì lấy ngày ghi đè thay cho ngày gốc;</li>
+ *   <li>có ngày ghi đè (Admin đặt ngày cúng khác) thì lấy ngày ghi đè thay cho ngày gốc;</li>
  *   <li>ngày thuộc tháng nhuận thì cúng vào tháng thường cùng số, kể cả khi năm Y cũng nhuận tháng đó;</li>
  *   <li>năm Y tháng đó thiếu (29 ngày) mà ngày là 30 thì cúng ngày 29.</li>
  * </ol>

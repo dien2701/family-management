@@ -61,8 +61,8 @@
 | 25 | In cây khổ lớn | Claude Code | Sonnet · medium | ✅ 2026-09-26 |
 | 25b | Giao diện bổ sung: header gọn, dark mode, Hồ sơ cá nhân, Cài đặt, đổi tên Sự kiện | Claude Code | Sonnet · medium | ✅ 2026-09-26 |
 | **GĐ B** | **Backend** | | | |
-| 26–27 | Gỡ dòng họ BE, Thành viên BE + seed 28 người | Claude Code | Sonnet · high | ⬜ |
-| 28 | Người thân, "Tôi là ai" và tự sửa hồ sơ BE | Claude Code | Sonnet · high | ⬜ |
+| 26–27 | Gỡ dòng họ BE, Thành viên BE + seed 28 người | Claude Code | Sonnet · high | ✅ 2026-09-27 |
+| 28 | Người thân, "Tôi là ai" và tự sửa hồ sơ BE | Claude Code | Sonnet · high | ✅ 2026-09-27 |
 | 29 | Cây BE | Claude Code | Sonnet · high | ⬜ |
 | 30 | Upload và đính kèm BE | Claude Code | Sonnet · medium | ⬜ |
 | 31 | Sự kiện chung và lịch nhắc BE | Claude Code | Sonnet · medium | ⬜ |
@@ -76,7 +76,7 @@
 | ~~40~~ | ~~E2E Playwright~~ (bỏ theo #84) | | | ❌ |
 | 41 | Deploy production | Claude Code | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 26–27 — Gỡ dòng họ BE, Thành viên BE + seed 28 người
+## ▶️ Đợt đang chờ: Đợt 29 — Cây BE
 Công cụ **Claude Code** · Model **Sonnet** · Effort **high**.
 
 ---
@@ -475,7 +475,20 @@ IDEA §6.7, §6.9 · DECISIONS #67, #72, #83
 - [ ] Thanh quota "x MB / 1 GB" dạng meter (`role="meter"` hoặc `<meter>`, không chỉ dựa vào màu), có kèm chữ (hiện cho Admin).
 - [ ] Trang **"Xuất dữ liệu"** (menu Thêm, chuyển từ Đợt 25): 4 nút tải (chọn năm hoặc năm âm), có trạng thái đang tải. Ở chế độ giả lập thì báo cần máy chủ.
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- **Phần 26:** xóa module `family` (code và `FamilyApiTest`), `FamilyRole`, claim `familyId`/`familyRole`, `ROLE_MANAGER`, `app.family.*` và `FRONTEND_BASE_URL`. `CurrentUser`, `UserAccount`, `UserConsent`, `AuditLog`, `AuditLogWriter.write(...)` (bỏ tham số `familyId`), `MeResponse`, `AuthFacade` (chỉ còn `find`, `accessOf`, `revokeSessions`) không còn dấu vết dòng họ. `V5__drop_family.sql`. `openapi.yaml`: bỏ 3 trường deprecated của `MeResponse`, đã chạy `gen:api`. Springdoc: thêm `@Tag`, `@Operation`, `@ApiResponse` cho auth, me, calendar, admin/accounts; `OpenApiConfig` khai báo `ProblemDetail` và 6 response lỗi dùng chung, `common/web/ApiRefs`.
+- **Phần 27:** `V6__member.sql` (bảng `member`, index `search_name`, FK + UNIQUE cho `user_account.member_id`, `ON DELETE SET NULL`), `V7__seed_members.sql` sinh bằng `shared/fixtures/seed/to-sql.mjs` (28 người, cách chạy trong README). Module `member`: `MemberController` (5 endpoint theo hợp đồng), `MemberService`, `MemberInputParser` (kiểm tra, chuẩn hóa, đổi ngày mất âm/dương qua `CalendarFacade`), `MemberMapper`, entity `Member`, `MemberFacade`, `MemberDeletionGuard`, `MemberDeletedEvent`. Ghi audit log khi tạo, sửa, xóa.
+- Test cũ sửa cho khớp (không viết test mới): `/api/family` thành `/api/members`, bỏ điều kiện `family_id`, `ModularityTests` bỏ module `family`, `AuditLogWriterTest` bỏ tham số `familyId`.
+
+**Việc nên làm thêm / ghi cho đợt sau:**
+- ⚠️ `POST /api/auth/change-password` (ghi ở Đợt 25b) **chưa làm**: nằm ngoài checklist Đợt 26–27, chưa có handler BE nên form đổi mật khẩu chỉ chạy được sau khi làm.
+- Thêm cột `death_lunar_year` vào `member` (IDEA §4 thiếu, hợp đồng và dữ liệu ban đầu cần); đã bổ sung vào IDEA §4. `biography` dùng `VARCHAR(5000)` thay `TEXT` để Hibernate `validate` khớp.
+- Snapshot "đã xóa" ở audit log có dạng `{member, relations, attachments}` (khớp `DeletedMemberSnapshot`). Hai mảng sau đang rỗng: **Đợt 28** hiện thực `MemberSnapshotContributor` với `section() = "relations"` và **Đợt 30** với `"attachments"`. Cả hai cũng lắng nghe `MemberDeletedEvent` (phát đồng bộ, ngay trước khi xóa dòng `member`, để dọn bảng có FK trước).
+- Đợt 29: hiện thực `MemberDeletionGuard` (409 `MEMBER_ON_TREE`) và điền `generation`, `onTree` trong `MemberMapper`. Hiện `GET /api/members` coi cây là rỗng: `onTree=true` hoặc `generation=N` trả danh sách trống, `sort=generation` xếp theo tên.
+- Audit log của tạo/sửa **không** chứa `phone`, `email` (dữ liệu cá nhân, audit không bao giờ xóa); chỉ snapshot khi xóa có đầy đủ theo IDEA §6.1.
+- `MemberMapper` viết tay thay MapStruct vì phần lớn trường được gom nhóm (ngày sinh, ngày mất dương/âm) và SĐT/email chỉ đưa ra theo quyền.
+- Tài liệu springdoc của `logout`, `verify-reset-otp`, `reset-password` ghi 200 cho khớp hợp đồng hiện có dù thực tế trả 204. Test hợp đồng (so `/v3/api-docs` với `openapi.yaml`, DECISIONS #70) chưa viết theo #84.
+- Chưa chạy compile/test (theo #84): bạn chạy `.\mvnw.cmd compile` để bắt lỗi biên dịch.
 
 **🔧 Setup thủ công cần làm:** Không có.
 
@@ -572,31 +585,31 @@ Việc nên làm thêm: (1) dấu ✝ và số thứ tự hôn nhân vẽ bằng
 - Quản trị → Tài khoản đổi tên hiển thị thành "Quản lý người dùng".
 **⚠️ Ghi cho BE:** thêm `POST /api/auth/change-password` (đã có trong `openapi.yaml`, chưa có handler: đăng nhập/`/me` chạy BE thật nên form đổi mật khẩu chỉ chạy được sau khi BE làm). Làm cùng Đợt 26–27 hoặc đợt riêng.
 
-### Đợt 26–27 — Gỡ dòng họ BE, Thành viên BE + seed 28 người ⬜
+### Đợt 26–27 — Gỡ dòng họ BE, Thành viên BE + seed 28 người ✅ 2026-09-27
 IDEA §4, §6.1, Phụ lục A · DECISIONS #54, #57, #58, #62, #63, #66, #68, #70
 **Phần 26 — Gỡ dòng họ BE**
-- [ ] Xóa module `family`: code, test, `FamilyFacade` và mọi chỗ gọi tới nó. Bỏ claim `familyId` và `familyRole`, bỏ `ROLE_MANAGER` trong `SecurityConfig`, bỏ `app.family.*`. `CurrentUser` không còn `familyId`.
-- [ ] `V5__drop_family.sql`:
+- [x] Xóa module `family`: code, test, `FamilyFacade` và mọi chỗ gọi tới nó. Bỏ claim `familyId` và `familyRole`, bỏ `ROLE_MANAGER` trong `SecurityConfig`, bỏ `app.family.*`. `CurrentUser` không còn `familyId`. ✅ 2026-09-27
+- [x] `V5__drop_family.sql`: ✅ 2026-09-27
   - bỏ FK rồi xóa bảng `family_invitation` và `family`;
   - bỏ các cột `user_account.family_id`, `family_role`, `hide_maternal_line`;
   - bỏ `user_consent.family_id`;
   - bỏ `audit_log.family_id` cùng index của nó.
   - Entity phải khớp (`ddl-auto: validate`).
-- [ ] Sửa annotation springdoc của auth, me, calendar, admin/accounts cho khớp hợp đồng.
+- [x] Sửa annotation springdoc của auth, me, calendar, admin/accounts cho khớp hợp đồng. ✅ 2026-09-27
 
 **Phần 27 — Thành viên BE + seed 28 người**
-- [ ] `V6__member.sql`: bảng `member` theo IDEA §4, có index `search_name`. Thêm FK và UNIQUE cho `user_account.member_id`.
-- [ ] `V7__seed_members.sql` **sinh bằng script** `shared/fixtures/seed/to-sql.mjs` từ `members.json` (cách chạy ghi trong README), không sửa tay.
-- [ ] CRUD theo hợp đồng (ở đợt này chỉ Admin ghi, quyền chủ hồ sơ tự sửa làm ở Đợt 28):
+- [x] `V6__member.sql`: bảng `member` theo IDEA §4, có index `search_name`. Thêm FK và UNIQUE cho `user_account.member_id`. ✅ 2026-09-27
+- [x] `V7__seed_members.sql` **sinh bằng script** `shared/fixtures/seed/to-sql.mjs` từ `members.json` (cách chạy ghi trong README), không sửa tay. ✅ 2026-09-27
+- [x] CRUD theo hợp đồng (ở đợt này chỉ Admin ghi, quyền chủ hồ sơ tự sửa làm ở Đợt 28): ✅ 2026-09-27
   - `search_name` do Service chuẩn hóa;
   - ngày mất nhập theo một lịch thì tự điền lịch còn lại qua `CalendarFacade`, trừ khi không có năm;
   - các trường về cái chết chỉ hợp lệ khi đã mất.
-- [ ] `GET /api/members` và `GET /api/members/{id}`: tìm không dấu, lọc, sắp xếp, phân trang. Riêng lọc `generation` và `onTree` để lại cho Đợt 29. SĐT và email chỉ trả cho Admin và chính chủ.
-- [ ] Xóa:
+- [x] `GET /api/members` và `GET /api/members/{id}`: tìm không dấu, lọc, sắp xếp, phân trang. Riêng lọc `generation` và `onTree` để lại cho Đợt 29. SĐT và email chỉ trả cho Admin và chính chủ. ✅ 2026-09-27
+- [x] Xóa: ✅ 2026-09-27
   - hỏi các bean `MemberDeletionGuard` (Đợt 29 thêm guard của cây);
   - ghi snapshot vào audit log;
   - phát `MemberDeletedEvent` trong transaction để các đợt sau tự dọn người thân, liên kết, tệp.
-- [ ] Viết `MemberFacade`. Ghi audit log khi tạo, sửa, xóa.
+- [x] Viết `MemberFacade`. Ghi audit log khi tạo, sửa, xóa. ✅ 2026-09-27
 
 **✅ Đã làm:** _(điền khi xong)_
 
@@ -617,32 +630,39 @@ _Phần 27:_
 
 ---
 
-### Đợt 28 — Người thân, "Tôi là ai" và tự sửa hồ sơ BE ⬜
+### Đợt 28 — Người thân, "Tôi là ai" và tự sửa hồ sơ BE ✅ 2026-09-27
 IDEA §6.1, §6.2, §6.3 · DECISIONS #62, #75, #76, #79–#82
-- [ ] `V8__relative_link.sql`: `member_relative` (`UNIQUE(member_id, relative_member_id)`, CHECK không tự thêm, FK tới `member`) và `member_link_request`.
-- [ ] API người thân theo hợp đồng. Chủ hồ sơ (`user.member_id` đọc từ DB) và Admin được ghi, mọi tài khoản đã duyệt được đọc. Ghi audit log.
-- [ ] Quyền chủ hồ sơ cho `PUT /api/members/{id}` (#76):
+- [x] `V8__relative_link.sql`: `member_relative` (`UNIQUE(member_id, relative_member_id)`, CHECK không tự thêm, FK tới `member`) và `member_link_request`. ✅ 2026-09-27
+- [x] API người thân theo hợp đồng. Chủ hồ sơ (`user.member_id` đọc từ DB) và Admin được ghi, mọi tài khoản đã duyệt được đọc. Ghi audit log. ✅ 2026-09-27
+- [x] Quyền chủ hồ sơ cho `PUT /api/members/{id}` (#76): ✅ 2026-09-27
   - User chỉ sửa được hồ sơ của mình, sửa hồ sơ người khác thì 403;
   - nhóm "đã mất" đổi giá trị thì 403 `DEATH_FIELDS_ADMIN_ONLY`, giữ nguyên thì bỏ qua;
   - Admin sửa được mọi trường của mọi hồ sơ.
-- [ ] API yêu cầu liên kết theo hợp đồng:
+- [x] API yêu cầu liên kết theo hợp đồng: ✅ 2026-09-27
   - không liên kết được thành viên đã có tài khoản;
   - Admin duyệt thì gán `user.member_id` (UNIQUE chống đua);
   - User tự hủy liên kết của mình (`DELETE /api/me/member-link`).
   - `/api/me` trả `memberId`.
-- [ ] Admin gán/hủy liên kết trực tiếp (#80): `PUT` và `DELETE /api/admin/accounts/{id}/member-link` theo hợp đồng.
+- [x] Admin gán/hủy liên kết trực tiếp (#80): `PUT` và `DELETE /api/admin/accounts/{id}/member-link` theo hợp đồng. ✅ 2026-09-27
   - chỉ gán cho tài khoản ACTIVE + APPROVED (`INVALID_ACCOUNT_STATE`);
   - 409 `MEMBER_ALREADY_LINKED` / `ACCOUNT_ALREADY_LINKED` khi một bên đã có liên kết;
   - yêu cầu "Đây là tôi" đang chờ của tài khoản đó chuyển sang hủy;
   - `GET /api/admin/accounts` trả thêm thành viên đang liên kết;
   - phát event để Đợt 34 gửi thông báo cho người được gán; ghi audit log.
-- [ ] Chép email (#81): khi liên kết có hiệu lực (duyệt yêu cầu hoặc Admin gán), `member.email` đang trống thì lấy email của tài khoản, trong cùng transaction. Không đụng họ tên, ảnh, SĐT. Không có đường nào đổi `user_account.email` theo hồ sơ.
-- [ ] Khóa, từ chối tài khoản không gỡ `member_id` (#82).
-- [ ] Listener `MemberDeletedEvent`: xóa các dòng người thân ở cả hai phía, hủy các yêu cầu đang chờ, gỡ `user.member_id`.
+- [x] Chép email (#81): khi liên kết có hiệu lực (duyệt yêu cầu hoặc Admin gán), `member.email` đang trống thì lấy email của tài khoản, trong cùng transaction. Không đụng họ tên, ảnh, SĐT. Không có đường nào đổi `user_account.email` theo hồ sơ. ✅ 2026-09-27
+- [x] Khóa, từ chối tài khoản không gỡ `member_id` (#82). ✅ 2026-09-27
+- [x] Listener `MemberDeletedEvent`: xóa các dòng người thân ở cả hai phía, hủy các yêu cầu đang chờ, gỡ `user.member_id`. ✅ 2026-09-27
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- `V8__relative_link.sql` (`member_relative`, `member_link_request`); API người thân (`RelativeService`, `MemberRelativeController`) và yêu cầu liên kết + tự hủy (`MemberLinkService`, `LinkRequestController`) trong module member; `MemberService.update` cho chủ hồ sơ (403 `FORBIDDEN` / `DEATH_FIELDS_ADMIN_ONLY`).
+- Module auth: `PUT`/`DELETE /api/admin/accounts/{id}/member-link` (`AdminAccountService`, `AdminAccountController`), `AccountAdminResponse.member`, luật liên kết dùng chung `AccountLinking`, thêm hàm liên kết vào `AuthFacade`. Auth gọi ngược sang member qua cổng `auth/MemberDirectory` (member hiện thực bằng `MemberDirectoryAdapter`) để không phụ thuộc vòng.
+- Chép email (`Member.fillEmailIfBlank`), `LinkDecidedEvent` (APPROVED/REJECTED/ASSIGNED) cho Đợt 34, `MemberDeletionCleanup` + `RelativesSnapshotContributor` cho xóa thành viên.
+- Việc phát sinh / lưu ý:
+  - `member_relative` dùng FK mặc định (RESTRICT) vì MySQL cấm CHECK trên cột có FK CASCADE; dọn khi xóa do listener. `member_link_request.member_id` cố ý không có FK để yêu cầu `CANCELLED` còn lại làm lịch sử (thành viên đã xóa hiện họ tên rỗng, giống giả lập).
+  - Duyệt yêu cầu cũng đòi tài khoản ACTIVE + APPROVED (như Admin gán); Admin gán trực tiếp không ghi audit riêng cho việc chép email, chỉ ghi `memberId` vào audit của tài khoản.
+  - Không đổi `openapi.yaml` (hợp đồng đã đủ từ Đợt 13), không cần `gen:api`. Chưa sửa test cũ nào (không có test nào dùng các lớp đã đổi).
 
-**🔧 Setup thủ công cần làm:** Không có.
+**🔧 Setup thủ công cần làm:** Không có (DB dev tự chạy V8 khi khởi động).
 
 **🧪 Test thủ công (từng bước):**
 1. Frontend ở chế độ thật: lặp lại các bước 🧪 của Đợt 13, kết quả phải giống ở chế độ giả lập.

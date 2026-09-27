@@ -20,8 +20,8 @@ import vn.giapha.common.exception.BusinessException;
 import vn.giapha.support.IntegrationTest;
 
 /**
- * API đổi lịch và {@link CalendarFacade} trên Spring context thật. Module calendar không đọc dữ liệu family
- * nên không có trường hợp truy cập chéo family; chỉ cần đăng nhập.
+ * API đổi lịch và {@link CalendarFacade} trên Spring context thật. Module calendar không đọc dữ liệu gia phả
+ * nên chỉ cần đăng nhập.
  */
 @IntegrationTest
 @AutoConfigureMockMvc

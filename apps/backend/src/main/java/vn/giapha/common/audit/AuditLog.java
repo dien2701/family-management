@@ -21,9 +21,6 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "family_id", updatable = false)
-    private Long familyId;
-
     @Column(name = "actor_id", updatable = false)
     private Long actorId;
 
@@ -50,9 +47,8 @@ public class AuditLog {
     protected AuditLog() {
     }
 
-    AuditLog(Long familyId, Long actorId, String action, String targetType, Long targetId,
+    AuditLog(Long actorId, String action, String targetType, Long targetId,
             String beforeData, String afterData, Instant createdAt) {
-        this.familyId = familyId;
         this.actorId = actorId;
         this.action = action;
         this.targetType = targetType;
@@ -64,10 +60,6 @@ public class AuditLog {
 
     public Long getId() {
         return id;
-    }
-
-    public Long getFamilyId() {
-        return familyId;
     }
 
     public Long getActorId() {

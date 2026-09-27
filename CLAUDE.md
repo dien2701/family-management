@@ -6,7 +6,7 @@
 ## Tổng quan
 PWA quản lý **một gia phả chung** (bản chốt v2, 2026-09-25): thành viên, danh sách người thân trong hồ sơ, cây gia phả do Admin dựng tay, ngày giỗ âm lịch, sinh nhật, sự kiện, nhắc lịch bằng Web Push, trợ lý AI (Gemini).
 - Khoảng 1.000 tài khoản, vài trăm thành viên. Chỉ có tiếng Việt, múi giờ `Asia/Ho_Chi_Minh`, ưu tiên điện thoại.
-- **Không có dòng họ hay tenant** (module `family` cũ sẽ gỡ: FE ở Đợt 10, BE ở Đợt 26). Có 2 vai trò: **Admin** (nhiều người, ngang quyền) và **User**. Tài khoản mới phải được Admin duyệt mới xem được dữ liệu.
+- **Không có dòng họ hay tenant** (module `family` đã gỡ: FE ở Đợt 10, BE ở Đợt 26). Có 2 vai trò: **Admin** (nhiều người, ngang quyền) và **User**. Tài khoản mới phải được Admin duyệt mới xem được dữ liệu.
 - Thành viên chỉ bắt buộc họ tên (ghi nguyên văn), không tự đặt giới tính. Mỗi hồ sơ có danh sách **người thân** một chiều (thành viên đã có + nhãn), độc lập với cây. User đã liên kết "Tôi là ai" tự sửa trực tiếp hồ sơ, người thân và ảnh đại diện của mình, trừ các trường về việc đã mất (chỉ Admin). Đề xuất chỉ còn cho sự kiện chung (DECISIONS mục K #75–#78). Dữ liệu ban đầu là 28 thành viên ở `shared/fixtures/seed/members.json` (IDEA Phụ lục A).
 - **Tài khoản ≠ thành viên** (DECISIONS #79–#82): xem mục Thuật ngữ bên dưới. Liên kết 1–1, qua yêu cầu "Tôi là ai" (Admin duyệt) hoặc Admin gán trực tiếp; User tự hủy, Admin hủy được. Khi liên kết, email tài khoản được chép một lần sang hồ sơ nếu ô email đang trống.
 - **Hai công cụ** (DECISIONS #83): các đợt FE nhẹ (11, 18–23) làm bằng **Antigravity** (Gemini, đọc `AGENTS.md`), còn lại làm bằng **Claude Code**. Cột "Công cụ" ở bảng Tiến độ của ROADMAP là nguồn sự thật.
@@ -60,7 +60,6 @@ apps/
       config/ common/                       cấu hình và tiện ích dùng chung
       auth member tree calendar event proposal
       notification file ai report admin     mỗi module: controller/ service/ repository/ entity/ dto/ mapper/
-      (family: module cũ, gỡ ở Đợt 26)
     src/main/resources/db/migration/        Flyway V{n}__*.sql
     .env.example
   frontend/                React + Vite

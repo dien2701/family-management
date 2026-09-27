@@ -100,16 +100,13 @@ public class SecurityConfig {
         return new SecretKeySpec(key, "HmacSHA256");
     }
 
-    /** Quyền theo claim: ROLE_ADMIN hoặc ROLE_USER, thêm ROLE_MANAGER khi là Manager của family. */
+    /** Quyền theo claim: ROLE_ADMIN hoặc ROLE_USER. */
     private Converter<Jwt, AbstractAuthenticationToken> jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             List<GrantedAuthority> authorities = new ArrayList<>();
             boolean admin = CurrentUser.ROLE_ADMIN.equals(jwt.getClaimAsString(CurrentUser.CLAIM_SYSTEM_ROLE));
             authorities.add(new SimpleGrantedAuthority(admin ? "ROLE_ADMIN" : "ROLE_USER"));
-            if (CurrentUser.ROLE_MANAGER.equals(jwt.getClaimAsString(CurrentUser.CLAIM_FAMILY_ROLE))) {
-                authorities.add(new SimpleGrantedAuthority("ROLE_MANAGER"));
-            }
             return authorities;
         });
         return converter;

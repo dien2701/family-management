@@ -99,11 +99,10 @@ class AuthApiTest {
                 .andExpect(jsonPath("$.systemRole").value("USER"))
                 .andExpect(jsonPath("$.approvalStatus").value("WAITING"))
                 .andExpect(jsonPath("$.consentRequired").value(false))
-                .andExpect(jsonPath("$.familyId").doesNotExist())
                 .andReturn();
         assertNoSecrets(me);
-        // Đăng ký email lưu consent ngay, không gắn dòng họ (DECISIONS #57)
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM user_consent WHERE user_id = ? AND family_id IS NULL "
+        // Đăng ký email lưu consent ngay (DECISIONS #57)
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM user_consent WHERE user_id = ? "
                 + "AND policy_version = ? AND ip IS NOT NULL", Integer.class, userId(email),
                 props.policy().version())).isEqualTo(1);
     }
@@ -121,15 +120,11 @@ class AuthApiTest {
         assertThat(Duration.between(jwt.getIssuedAt(), jwt.getExpiresAt())).isEqualTo(Duration.ofMinutes(15));
         assertThat(jwt.getHeaders().get("alg")).isEqualTo("HS256");
 
-        // Sau khi có family, claim mới xuất hiện ở lần refresh kế tiếp
-        jdbc.update("INSERT INTO family (name, created_by, created_at) VALUES ('Họ Test', ?, NOW(6))", userId(email));
-        long familyId = jdbc.queryForObject("SELECT MAX(id) FROM family", Long.class);
-        jdbc.update("UPDATE user_account SET family_id = ?, family_role = 'MANAGER', member_id = 7 WHERE email = ?",
-                familyId, email);
+        // Sau khi liên kết thành viên, claim mới xuất hiện ở lần refresh kế tiếp (thành viên 7 có từ dữ liệu ban đầu)
+        jdbc.update("UPDATE user_account SET member_id = 7 WHERE email = ?", email);
         MvcResult refreshed = refresh(cookie(login)).andExpect(status().isOk()).andReturn();
         Jwt after = jwtDecoder.decode(token(refreshed));
-        assertThat(after.getClaimAsString("familyRole")).isEqualTo("MANAGER");
-        assertThat(((Number) after.getClaim("familyId")).longValue()).isEqualTo(familyId);
+        assertThat(after.getClaims()).doesNotContainKeys("familyId", "familyRole");
         assertThat(((Number) after.getClaim("memberId")).longValue()).isEqualTo(7L);
     }
 

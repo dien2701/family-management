@@ -1,7 +1,7 @@
 # Dữ liệu ban đầu: 28 thành viên
 
 Nguồn duy nhất của dữ liệu ban đầu (DECISIONS #68). Frontend đọc file này ở chế độ giả lập (Đợt 9).
-Backend nạp bằng một migration Flyway **sinh từ chính file này** (Đợt 27), có test đối chiếu số lượng và nội dung.
+Backend nạp bằng một migration Flyway **sinh từ chính file này** (Đợt 27, `V7__seed_members.sql`).
 
 ## Nguồn
 
@@ -22,3 +22,17 @@ và so với file này.
   `deathLunar` có `year`. Test `seed.test.ts` tính lại và so.
 - Mọi trường khác (giới tính, ngày sinh, SĐT, email, ảnh, người thân, vị trí trên cây...) **để trống**, nên không xuất
   hiện trong file. Người dùng tự bổ sung sau. Không được thêm dữ liệu bịa vào file này.
+
+## Sinh migration cho backend
+
+`V7__seed_members.sql` do script `to-sql.mjs` sinh từ `members.json`. **Không sửa file SQL bằng tay**: sửa `members.json`
+rồi chạy lại (Node 24, từ thư mục gốc repo):
+
+```bash
+node shared/fixtures/seed/to-sql.mjs
+```
+
+Script ghi thẳng vào `apps/backend/src/main/resources/db/migration/V7__seed_members.sql` (truyền đường dẫn khác làm
+tham số nếu cần), gán `id` theo thứ tự trong `members.json`, chuẩn hóa `search_name` giống `SearchText` của backend
+và báo lỗi nếu gặp trường chưa được hỗ trợ hoặc ngày mất thiếu một trong hai lịch. Flyway kiểm checksum nên **chỉ sinh
+lại khi chưa có môi trường nào đã chạy V7**; đã chạy rồi thì thêm một file V mới để sửa dữ liệu.

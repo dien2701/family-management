@@ -1774,26 +1774,9 @@ export interface components {
             consentRequired?: boolean;
             /**
              * Format: int64
-             * @deprecated
-             * @description Còn do backend Đợt 8 trả về. Frontend đọc lần cuối ở Đợt 10, backend bỏ ở Đợt 26.
-             */
-            familyId?: number;
-            /**
-             * @deprecated
-             * @description Như `familyId`.
-             * @enum {string}
-             */
-            familyRole?: "MANAGER" | "MEMBER";
-            /**
-             * Format: int64
              * @description Thành viên mà tài khoản đã liên kết ("Tôi là ai"); không có nghĩa là chưa liên kết.
              */
             memberId?: number;
-            /**
-             * @deprecated
-             * @description Như `familyId`.
-             */
-            hideMaternalLine?: boolean;
             /** Format: date-time */
             createdAt?: string;
         };

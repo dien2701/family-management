@@ -67,7 +67,7 @@ public class RootAdminService {
                 "approvalStatus", locked.getApprovalStatus());
         locked.setSystemRole(SystemRole.ADMIN);
         locked.approve(locked.getId(), Instant.now(clock));
-        audit.write(null, locked.getId(), "ROOT_ADMIN_PROMOTE", "ACCOUNT", locked.getId(), before,
+        audit.write(locked.getId(), "ROOT_ADMIN_PROMOTE", "ACCOUNT", locked.getId(), before,
                 Map.of("systemRole", SystemRole.ADMIN, "approvalStatus", ApprovalStatus.APPROVED));
         return locked;
     }

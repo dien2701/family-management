@@ -4,7 +4,6 @@ import java.time.Instant;
 
 import vn.giapha.auth.entity.AccountStatus;
 import vn.giapha.auth.entity.ApprovalStatus;
-import vn.giapha.auth.entity.FamilyRole;
 import vn.giapha.auth.entity.SystemRole;
 
 /**
@@ -20,9 +19,6 @@ public record MeResponse(
         AccountStatus status,
         ApprovalStatus approvalStatus,
         boolean consentRequired,
-        Long familyId,
-        FamilyRole familyRole,
         Long memberId,
-        boolean hideMaternalLine,
         Instant createdAt) {
 }

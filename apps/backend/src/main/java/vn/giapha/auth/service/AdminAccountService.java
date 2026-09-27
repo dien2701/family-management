@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import jakarta.persistence.criteria.Predicate;
 
@@ -19,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import vn.giapha.auth.MemberDirectory;
 import vn.giapha.auth.dto.AccountAdminResponse;
 import vn.giapha.auth.dto.AccountFilter;
 import vn.giapha.auth.entity.AccountStatus;
@@ -30,6 +32,7 @@ import vn.giapha.auth.mapper.UserAccountMapper;
 import vn.giapha.auth.repository.UserAccountRepository;
 import vn.giapha.common.audit.AuditLogWriter;
 import vn.giapha.common.exception.BusinessException;
+import vn.giapha.common.web.LinkedMember;
 import vn.giapha.common.web.PageResponse;
 
 /**
@@ -48,14 +51,18 @@ public class AdminAccountService {
     private final RefreshTokenService refreshTokens;
     private final AuditLogWriter audit;
     private final UserAccountMapper mapper;
+    private final AccountLinking linking;
+    private final MemberDirectory members;
     private final Clock clock;
 
     AdminAccountService(UserAccountRepository users, RefreshTokenService refreshTokens, AuditLogWriter audit,
-            UserAccountMapper mapper, Clock clock) {
+            UserAccountMapper mapper, AccountLinking linking, MemberDirectory members, Clock clock) {
         this.users = users;
         this.refreshTokens = refreshTokens;
         this.audit = audit;
         this.mapper = mapper;
+        this.linking = linking;
+        this.members = members;
         this.clock = clock;
     }
 
@@ -73,7 +80,11 @@ public class AdminAccountService {
         requireAdmin(users.findById(actorId).orElse(null));
         Page<UserAccount> result = users.findAll(specOf(filter),
                 PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))));
-        return PageResponse.of(result, mapper::toAdminView);
+        PageResponse<AccountAdminResponse> page = PageResponse.of(result, mapper::toAdminView);
+        Map<Long, String> names = members.fullNames(
+                page.items().stream().map(AccountAdminResponse::memberId).filter(Objects::nonNull).toList());
+        return new PageResponse<>(page.items().stream().map(item -> withMember(item, names)).toList(), page.page(),
+                page.size(), page.totalElements(), page.totalPages());
     }
 
     // ---------- Duyệt ----------
@@ -150,6 +161,30 @@ public class AdminAccountService {
         });
     }
 
+    // ---------- Liên kết "Tôi là ai" (DECISIONS #80, #81) ----------
+
+    /**
+     * Gán thành viên cho tài khoản, không cần yêu cầu. Yêu cầu "Đây là tôi" đang chờ của tài khoản đó chuyển sang hủy,
+     * email tài khoản được chép sang hồ sơ nếu hồ sơ chưa có, và event được phát để gửi thông báo (phần này của module
+     * member, gọi qua {@link MemberDirectory#afterAdminLink}).
+     */
+    @Transactional
+    public AccountAdminResponse linkMember(Long actorId, Long targetId, Long memberId) {
+        return mutate(actorId, targetId, "LINK_MEMBER", (actor, target, admins) -> {
+            if (!members.fullNames(List.of(memberId)).containsKey(memberId)) {
+                throw new BusinessException(HttpStatus.NOT_FOUND, "MEMBER_NOT_FOUND", "Không tìm thấy thành viên.");
+            }
+            linking.link(target, memberId);
+            members.afterAdminLink(target.getId(), target.getEmail(), memberId, actor.getId());
+        });
+    }
+
+    /** Hủy được liên kết của bất kỳ tài khoản nào. Email đã chép sang hồ sơ giữ nguyên. */
+    @Transactional
+    public AccountAdminResponse unlinkMember(Long actorId, Long targetId) {
+        return mutate(actorId, targetId, "UNLINK_MEMBER", (actor, target, admins) -> linking.unlink(target));
+    }
+
     // ---------- Nội bộ ----------
 
     private AccountAdminResponse mutate(Long actorId, Long targetId, String action, Change change) {
@@ -163,8 +198,23 @@ public class AdminAccountService {
                         "Không tìm thấy tài khoản này."));
         Map<String, Object> before = snapshot(target);
         change.apply(actor, target, admins);
-        audit.write(null, actor.getId(), action, TARGET_TYPE, target.getId(), before, snapshot(target));
-        return mapper.toAdminView(target);
+        audit.write(actor.getId(), action, TARGET_TYPE, target.getId(), before, snapshot(target));
+        return view(target);
+    }
+
+    private AccountAdminResponse view(UserAccount user) {
+        AccountAdminResponse response = mapper.toAdminView(user);
+        if (user.getMemberId() == null) {
+            return response;
+        }
+        return withMember(response, members.fullNames(List.of(user.getMemberId())));
+    }
+
+    /** Thành viên bị xóa giữa chừng (không còn tên) thì coi như không có thành viên để hiện. */
+    private static AccountAdminResponse withMember(AccountAdminResponse response, Map<Long, String> names) {
+        Long memberId = response.memberId();
+        String name = memberId == null ? null : names.get(memberId);
+        return name == null ? response : response.withMember(new LinkedMember(memberId, name));
     }
 
     /** Người gọi phải là Admin đang hoạt động và đã duyệt, theo DB. */
@@ -222,6 +272,7 @@ public class AdminAccountService {
         m.put("systemRole", u.getSystemRole());
         m.put("status", u.getStatus());
         m.put("approvalStatus", u.getApprovalStatus());
+        m.put("memberId", u.getMemberId());
         return m;
     }
 

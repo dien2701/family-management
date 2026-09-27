@@ -43,6 +43,4 @@ app:
     from: ${MAIL_FROM:no-reply@giapha.local}
   policy:
     version: "1.0"
-  family:
-    frontend-base-url: ${FRONTEND_BASE_URL:http://localhost:5173}
   root-admin-email: ${ROOT_ADMIN_EMAIL:}

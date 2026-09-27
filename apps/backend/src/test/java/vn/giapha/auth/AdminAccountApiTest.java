@@ -231,8 +231,8 @@ class AdminAccountApiTest {
 
         accounts.refresh(b).andExpect(status().isUnauthorized());
         // Token cũ còn claim APPROVED nhưng thao tác ghi đọc DB nên bị chặn ngay
-        mvc.perform(post("/api/family").header(HttpHeaders.AUTHORIZATION, b.bearer())
-                .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Họ Thử\",\"acceptPolicy\":true}"))
+        mvc.perform(post("/api/members").header(HttpHeaders.AUTHORIZATION, b.bearer())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"fullName\":\"Người Thử\",\"isDeceased\":false}"))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("ACCOUNT_NOT_APPROVED"));
     }
 
@@ -251,8 +251,8 @@ class AdminAccountApiTest {
                 .content("{\"email\":\"%s\",\"password\":\"%s\"}".formatted(b.email(), AccountFixtures.PASSWORD)))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("ACCOUNT_LOCKED"));
         // Token cũ: ghi bị chặn ngay
-        mvc.perform(post("/api/family").header(HttpHeaders.AUTHORIZATION, b.bearer())
-                .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Họ Thử\",\"acceptPolicy\":true}"))
+        mvc.perform(post("/api/members").header(HttpHeaders.AUTHORIZATION, b.bearer())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"fullName\":\"Người Thử\",\"isDeceased\":false}"))
                 .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("ACCOUNT_LOCKED"));
         // Đã khóa thì không khóa lại
         act(admin, b.id(), "lock").andExpect(status().isConflict())
@@ -394,7 +394,7 @@ class AdminAccountApiTest {
         act(admin, b.id(), "reject").andExpect(status().isOk());
 
         List<String> actions = jdbc.queryForList("SELECT action FROM audit_log WHERE target_type = 'ACCOUNT' "
-                + "AND target_id = ? AND actor_id = ? AND family_id IS NULL ORDER BY id", String.class, b.id(),
+                + "AND target_id = ? AND actor_id = ? ORDER BY id", String.class, b.id(),
                 admin.id());
         assertThat(actions).containsExactly("APPROVE", "LOCK", "UNLOCK", "GRANT_ADMIN", "REVOKE_ADMIN", "REJECT");
 

@@ -64,19 +64,8 @@ public class UserAccount {
     @Column(name = "approved_at")
     private Instant approvedAt;
 
-    @Column(name = "family_id")
-    private Long familyId;
-
-    @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "family_role", length = 10)
-    private FamilyRole familyRole;
-
     @Column(name = "member_id")
     private Long memberId;
-
-    @Column(name = "hide_maternal_line", nullable = false)
-    private boolean hideMaternalLine;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -186,20 +175,18 @@ public class UserAccount {
         return status == AccountStatus.ACTIVE && approvalStatus == ApprovalStatus.APPROVED;
     }
 
-    public Long getFamilyId() {
-        return familyId;
-    }
-
-    public FamilyRole getFamilyRole() {
-        return familyRole;
-    }
-
     public Long getMemberId() {
         return memberId;
     }
 
-    public boolean isHideMaternalLine() {
-        return hideMaternalLine;
+    /** Điều kiện (đã duyệt, chưa liên kết, thành viên chưa có chủ) do {@code AccountLinking} kiểm trước khi gọi. */
+    public void linkMember(Long memberId) {
+        this.memberId = memberId;
+    }
+
+    /** Khóa hay từ chối tài khoản không gỡ liên kết (DECISIONS #82); chỉ User hoặc Admin hủy mới gọi hàm này. */
+    public void unlinkMember() {
+        this.memberId = null;
     }
 
     public Instant getCreatedAt() {

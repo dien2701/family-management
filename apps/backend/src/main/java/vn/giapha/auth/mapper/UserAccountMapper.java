@@ -14,5 +14,7 @@ public interface UserAccountMapper {
     @Mapping(target = "consentRequired", source = "consentRequired")
     MeResponse toMe(UserAccount user, boolean consentRequired);
 
+    /** {@code member} cần tên từ module member nên {@code AdminAccountService} gắn sau bằng {@code withMember}. */
+    @Mapping(target = "member", ignore = true)
     AccountAdminResponse toAdminView(UserAccount user);
 }

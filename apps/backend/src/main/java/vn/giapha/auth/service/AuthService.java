@@ -327,8 +327,7 @@ public class AuthService {
 
     private AuthResponse authResponse(UserAccount user) {
         CurrentUser claims = new CurrentUser(user.getId(), user.getSystemRole().name(),
-                user.getApprovalStatus().name(), user.getFamilyId(),
-                user.getFamilyRole() == null ? null : user.getFamilyRole().name(), user.getMemberId());
+                user.getApprovalStatus().name(), user.getMemberId());
         return AuthResponse.bearer(jwtService.createAccessToken(claims), jwtService.accessTtlSeconds(), toMe(user));
     }
 

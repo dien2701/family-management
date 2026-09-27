@@ -3201,26 +3201,10 @@ components:
             - REJECTED
         consentRequired:
           type: boolean
-        familyId:
-          type: integer
-          format: int64
-          deprecated: true
-          description: Còn do backend Đợt 8 trả về. Frontend đọc lần cuối ở Đợt 10, backend bỏ ở Đợt 26.
-        familyRole:
-          type: string
-          enum:
-            - MANAGER
-            - MEMBER
-          deprecated: true
-          description: Như `familyId`.
         memberId:
           type: integer
           format: int64
           description: Thành viên mà tài khoản đã liên kết ("Tôi là ai"); không có nghĩa là chưa liên kết.
-        hideMaternalLine:
-          type: boolean
-          deprecated: true
-          description: Như `familyId`.
         createdAt:
           type: string
           format: date-time
