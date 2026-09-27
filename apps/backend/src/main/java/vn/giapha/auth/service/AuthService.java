@@ -30,6 +30,7 @@ import vn.giapha.auth.google.GoogleIdentity;
 import vn.giapha.auth.mapper.UserAccountMapper;
 import vn.giapha.auth.repository.EmailOtpRepository;
 import vn.giapha.auth.repository.UserAccountRepository;
+import vn.giapha.common.consent.ConsentService;
 import vn.giapha.common.exception.BusinessException;
 import vn.giapha.common.exception.FieldError;
 import vn.giapha.common.security.CurrentUser;
@@ -59,6 +60,8 @@ public class AuthService {
     private final JwtService jwtService;
     private final RateLimiter rateLimiter;
     private final UserAccountMapper mapper;
+    private final ConsentService consents;
+    private final RootAdminService rootAdmin;
     private final Clock clock;
     private final Policy loginPerIpPolicy;
     /** Băm một mật khẩu giả khi email không tồn tại để thời gian phản hồi không lộ email nào có thật. */
@@ -67,7 +70,8 @@ public class AuthService {
     AuthService(UserAccountRepository users, EmailOtpRepository otps, OtpService otpService,
             RefreshTokenService refreshTokens, LoginAttemptService loginAttempts,
             GoogleIdTokenVerifier googleVerifier, PasswordEncoder passwordEncoder, JwtService jwtService,
-            RateLimiter rateLimiter, UserAccountMapper mapper, Clock clock, AppProperties props) {
+            RateLimiter rateLimiter, UserAccountMapper mapper, ConsentService consents, RootAdminService rootAdmin,
+            Clock clock, AppProperties props) {
         this.users = users;
         this.otps = otps;
         this.otpService = otpService;
@@ -78,6 +82,8 @@ public class AuthService {
         this.jwtService = jwtService;
         this.rateLimiter = rateLimiter;
         this.mapper = mapper;
+        this.consents = consents;
+        this.rootAdmin = rootAdmin;
         this.clock = clock;
         this.loginPerIpPolicy = new Policy("login-ip", props.auth().loginPerMinutePerIp(),
                 Duration.ofMinutes(1));
@@ -113,6 +119,8 @@ public class AuthService {
         } catch (DataIntegrityViolationException e) {
             throw emailTaken();
         }
+        // Đồng ý chính sách nằm ngay trong form đăng ký (DECISIONS #57), nên lưu cùng lúc với tài khoản
+        consents.recordIfMissing(user.getId(), clientIp);
         otpService.issue(email, OtpPurpose.REGISTER);
         return otpSent(email);
     }
@@ -138,7 +146,7 @@ public class AuthService {
                 .orElseThrow(() -> new BusinessException("OTP_EXPIRED",
                         "Mã xác thực đã hết hạn hoặc không tồn tại. Vui lòng gửi lại mã."));
         user.setStatus(AccountStatus.ACTIVE);
-        return authenticated(user);
+        return authenticated(rootAdmin.promoteIfRoot(user));
     }
 
     // ---------- Đăng nhập ----------
@@ -166,7 +174,7 @@ public class AuthService {
             throw accountLocked();
         }
         loginAttempts.reset(email);
-        return authenticated(user);
+        return authenticated(rootAdmin.promoteIfRoot(user));
     }
 
     /** Đăng nhập bằng Google ID token; tự liên kết theo email (DECISIONS #16). */
@@ -195,7 +203,7 @@ public class AuthService {
         if (user.getStatus() == AccountStatus.LOCKED) {
             throw accountLocked();
         }
-        return authenticated(user);
+        return authenticated(rootAdmin.promoteIfRoot(user));
     }
 
     // ---------- Refresh, đăng xuất, thông tin cá nhân ----------
@@ -215,7 +223,18 @@ public class AuthService {
                 .filter(u -> u.getStatus() == AccountStatus.ACTIVE)
                 .orElseThrow(() -> new BusinessException(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED",
                         "Chưa đăng nhập hoặc phiên đăng nhập đã hết hạn."));
-        return mapper.toMe(user);
+        return toMe(user);
+    }
+
+    /** Lưu lần đồng ý chính sách hiện hành (Google lần đầu, hoặc khi đổi phiên bản); đã đồng ý rồi thì không ghi thêm. */
+    @Transactional
+    public MeResponse acceptConsent(Long userId, String clientIp) {
+        UserAccount user = users.findById(userId)
+                .filter(u -> u.getStatus() == AccountStatus.ACTIVE)
+                .orElseThrow(() -> new BusinessException(HttpStatus.UNAUTHORIZED, "UNAUTHENTICATED",
+                        "Chưa đăng nhập hoặc phiên đăng nhập đã hết hạn."));
+        consents.recordIfMissing(user.getId(), clientIp);
+        return toMe(user);
     }
 
     // ---------- Quên mật khẩu ----------
@@ -307,10 +326,13 @@ public class AuthService {
     }
 
     private AuthResponse authResponse(UserAccount user) {
-        CurrentUser claims = new CurrentUser(user.getId(), user.getSystemRole().name(), user.getFamilyId(),
-                user.getFamilyRole() == null ? null : user.getFamilyRole().name(), user.getMemberId());
-        return AuthResponse.bearer(jwtService.createAccessToken(claims), jwtService.accessTtlSeconds(),
-                mapper.toMe(user));
+        CurrentUser claims = new CurrentUser(user.getId(), user.getSystemRole().name(),
+                user.getApprovalStatus().name(), user.getMemberId());
+        return AuthResponse.bearer(jwtService.createAccessToken(claims), jwtService.accessTtlSeconds(), toMe(user));
+    }
+
+    private MeResponse toMe(UserAccount user) {
+        return mapper.toMe(user, !consents.hasAcceptedCurrentPolicy(user.getId()));
     }
 
     private OtpSentResponse otpSent(String email) {

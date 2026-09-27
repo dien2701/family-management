@@ -1,6 +1,6 @@
 # CẤU TRÚC DỰ ÁN
 
-> Chốt 2026-09-25 (DECISIONS #51–53). Đây là cấu trúc **đích**. Đợt 0 dựng backend, Đợt 1 dựng frontend, các thư mục còn lại tạo dần theo từng đợt.
+> Chốt 2026-09-25 (DECISIONS #51–53), cập nhật theo đổi hướng v2 (DECISIONS #54–#74: bỏ dòng họ, hợp đồng API trước, lớp giả lập FE). Đây là cấu trúc **đích**. Đợt 0 dựng backend, Đợt 1 dựng frontend, các thư mục còn lại tạo dần theo từng đợt.
 > Quy tắc chung: Controller mỏng, logic nằm ở Service. Cấu hình, tiện ích và kiểu dùng chung tách riêng. Cấu trúc phải mở rộng được mà không phải đổi chỗ file.
 
 ## 1. Toàn repo
@@ -8,13 +8,20 @@
 ```
 Family-Management/
 ├── CLAUDE.md                     Hướng dẫn cho Claude (ngắn, rõ)
+├── AGENTS.md                     Ngữ cảnh cho Antigravity, dẫn về CLAUDE.md (DECISIONS #83)
 ├── .claude/                      Cấu hình Claude Code (mục 2)
+├── .agents/skills/               Skill cho Antigravity (ui-ux-pro-max…)
 ├── .mcp.json                     Kết nối công cụ ngoài, dùng HTTP
 ├── apps/
 │   ├── backend/                  Spring Boot (mục 3)
 │   └── frontend/                 React + Vite (mục 4)
 ├── shared/
-│   └── fixtures/lunar/           Dữ liệu đối chiếu âm–dương dùng chung BE và FE
+│   ├── api/openapi.yaml          Hợp đồng API viết tay, nguồn sự thật (DECISIONS #70)
+│   └── fixtures/                 Dữ liệu đối chiếu dùng chung BE và FE
+│       ├── lunar/                  Âm–dương 1900–2100
+│       ├── seed/                   members.json: 28 thành viên ban đầu (IDEA Phụ lục A) + script sinh SQL
+│       ├── tree/                   Các ca thao tác dựng cây và kết quả mong đợi
+│       └── occurrences/            Các ca lịch nhắc (giỗ, sinh nhật, sự kiện)
 ├── infra/                        docker-compose.dev|prod.yml, nginx/, backup/
 ├── .github/workflows/            ci.yml, deploy.yml
 ├── docs/                         DECISIONS.md, DESIGN.md, STRUCTURE.md, theme.png
@@ -38,17 +45,14 @@ Family-Management/
 │   │   └── SKILL.md                Đóng đợt: chạy lệnh kiểm tra, tick ROADMAP, in bảng skill
 │   ├── be-slice/
 │   │   ├── SKILL.md                Thêm một lát cắt BE vào module
-│   │   └── references/             Mẫu entity, service, controller, test
+│   │   └── references/             Mẫu entity, service, controller
 │   ├── fe-feature/
 │   │   ├── SKILL.md                Nối một module FE với API
 │   │   └── references/             Mẫu api.ts, hooks.ts, trang, strings.ts
 │   └── flyway-migration/
 │       ├── SKILL.md                Tạo file V{n+1} và sửa entity cho khớp
 │       └── scripts/next-version.ps1   In ra số V tiếp theo
-└── agents/                       Subagent chuyên biệt (Markdown + YAML frontmatter)
-    ├── code-reviewer.md            Rà soát diff theo rules
-    ├── test-writer.md              Viết test theo mẫu của dự án
-    └── security-reviewer.md        Rà soát auth, phân quyền, cách ly family
+└── agents/                       (trống: agent test/review đã xóa theo DECISIONS #84)
 ```
 
 **Hook trong `settings.json`:**
@@ -58,13 +62,12 @@ Family-Management/
 | `PreToolUse` (Edit/Write) | Chặn ghi vào `.env*` (trừ `.env.example`) và vào file Flyway `V*.sql` đã có |
 | `PostToolUse` (Edit/Write) | Sửa file `apps/frontend/**` thì chạy `eslint --fix` trên file đó |
 | `SessionStart` | In nhắc "đọc CLAUDE.md và roadmap/ROADMAP.md, chỉ làm một đợt" |
-| `Stop` | Nhắc chạy lệnh kiểm tra xong của đợt nếu có sửa code |
 
 **`.mcp.json`:** kết nối bằng HTTP, ưu tiên cài ở phạm vi dự án.
 
 | Server | Dùng cho |
 |---|---|
-| `playwright` | Điều khiển trình duyệt khi kiểm tra UI và viết E2E (Đợt 22) |
+| `playwright` | Điều khiển trình duyệt (chỉ khi người dùng yêu cầu; E2E đã bỏ theo #84) |
 | `mysql-dev` | Chỉ đọc DB dev để kiểm tra dữ liệu, không trỏ tới prod |
 
 ## 3. Backend: `apps/backend/`
@@ -94,11 +97,10 @@ apps/backend/
     │   │   │   ├── security/                CurrentUser, JwtService, RateLimiter, hằng số vai trò
     │   │   │   ├── exception/               BusinessException, GlobalExceptionHandler (ProblemDetail)
     │   │   │   ├── consent/                 user_consent
-    │   │   │   ├── web/                     Trang kết quả, header X-Family-Id cho Admin
-    │   │   │   └── util/                    TextNormalizer (bỏ dấu), DateUtils, IdGenerator
+    │   │   │   ├── web/                     Trang kết quả (phân trang)
+    │   │   │   └── util/                    SearchText (bỏ dấu), DateUtils, IdGenerator
     │   │   │
     │   │   ├── auth/                      ┐
-    │   │   ├── family/                    │
     │   │   ├── member/                    │
     │   │   ├── tree/                      │  Mỗi module có cùng bố cục
     │   │   ├── calendar/                  │  (xem ví dụ member/ bên dưới)
@@ -115,7 +117,7 @@ apps/backend/
     │   │   ├── package-info.java          @ApplicationModule
     │   │   ├── controller/                Nhận request, @Valid, trả response
     │   │   ├── service/                   Toàn bộ nghiệp vụ, @Transactional
-    │   │   ├── repository/                Spring Data JPA, ...AndFamilyId
+    │   │   ├── repository/                Spring Data JPA, truy vấn tường minh
     │   │   ├── entity/                    Entity JPA, khớp SQL Flyway
     │   │   ├── dto/                       record request/response
     │   │   ├── mapper/                    MapStruct
@@ -131,7 +133,7 @@ apps/backend/
         ├── java/vn/giapha/
         │   ├── ModularityTests.java       ApplicationModules.verify()
         │   ├── support/                   Base class Testcontainers, dữ liệu mẫu, helper JWT
-        │   └── <module>/                  Test theo module (controller, service, cách ly family)
+        │   └── <module>/                  Test cũ theo module (không viết thêm, #84)
         └── resources/                   Fixture test
 ```
 
@@ -154,7 +156,7 @@ apps/backend/
 
 ## 4. Frontend: `apps/frontend/`
 
-Tên thư mục theo ảnh, bỏ `redux/` (DECISIONS #52). Trạng thái từ server dùng TanStack Query, trạng thái toàn cục nhỏ (đăng nhập, family) dùng `context/`.
+Tên thư mục theo ảnh, bỏ `redux/` (DECISIONS #52). Trạng thái từ server dùng TanStack Query, trạng thái toàn cục nhỏ (đăng nhập) dùng `context/`.
 
 ```
 apps/frontend/
@@ -170,7 +172,6 @@ apps/frontend/
 ├── public/                       Phục vụ nguyên trạng
 │   ├── icons/                      Icon PWA 192, 512, maskable
 │   └── favicon.svg
-├── e2e/                          Test Playwright
 └── src/
     ├── main.tsx                  Điểm vào, gắn providers
     ├── App.tsx                   Router + khung ứng dụng
@@ -188,7 +189,6 @@ apps/frontend/
     │   ├── BottomNav.tsx             <768px, 5 mục
     │   ├── Header.tsx                Quay lại, tìm kiếm, chuông, avatar
     │   ├── AuthLayout.tsx            Trang đăng nhập, đăng ký
-    │   └── AdminLayout.tsx           Khu /quan-tri
     ├── pages/                    Chỉ ghép route với trang của feature, không chứa logic
     │   ├── routes.tsx                Bảng route, guard theo vai trò
     │   ├── DashboardPage.tsx
@@ -201,7 +201,6 @@ apps/frontend/
     │   └── NotFoundPage.tsx
     ├── features/                 Mỗi module nghiệp vụ một thư mục, khớp module backend
     │   ├── auth/                     api.ts, hooks.ts, schemas.ts (Zod), strings.ts, components/, pages/
-    │   ├── family/
     │   ├── member/
     │   ├── tree/
     │   │   └── layout/               layoutTree.ts (hàm thuần) + test
@@ -214,13 +213,16 @@ apps/frontend/
     │   ├── report/
     │   └── admin/
     ├── hooks/                    Hook dùng chung: useMediaQuery, useDebounce, useOnlineStatus
-    ├── context/                  AuthContext (token trong bộ nhớ), FamilyContext (Admin chọn family)
+    ├── context/                  AuthContext (token trong bộ nhớ, approvalStatus, vai trò)
     ├── services/                 Tầng gọi API dùng chung
     │   ├── client.ts                 Wrapper fetch, gắn Bearer, tự refresh khi 401, parse ProblemDetail
     │   ├── queryClient.ts            Cấu hình TanStack Query
-    │   └── schema.d.ts               Sinh bằng `npm run gen:api`, KHÔNG sửa tay
+    │   ├── schema.d.ts               Sinh từ shared/api/openapi.yaml bằng `npm run gen:api`, KHÔNG sửa tay
+    │   └── mock/                     Lớp giả lập GĐ A (router, store localStorage, handlers/<module>.ts); gỡ ở Đợt 39
     ├── utils/                    Hàm thuần dùng chung
     │   ├── lunar/                    Bản TS của lịch âm (chạy chung fixture với Java)
+    │   ├── tree/                     Mô hình cây thuần: đời, tổ tiên, kiểm tra thao tác (fixture shared/fixtures/tree)
+    │   ├── occurrences/              Lịch nhắc thuần (fixture shared/fixtures/occurrences)
     │   ├── date.ts                   Định dạng dd/MM/yyyy, múi giờ +7
     │   ├── text.ts                   Bỏ dấu tiếng Việt, chuẩn hóa tìm kiếm
     │   └── cn.ts                     Ghép className
@@ -263,4 +265,8 @@ Không tạo sẵn thư mục rỗng. Mỗi đợt chỉ tạo phần mình cầ
 | `.claude/skills/*`, `.claude/agents/*`, hook, `.mcp.json` | Đợt 0 (viết ngay, dùng từ Đợt 2) |
 | Từng module BE và `features/<module>` | Đợt của module đó |
 | `utils/lunar/`, `shared/fixtures/lunar/` | Đợt 6–7 |
-| `infra/`, `.github/workflows/deploy.yml` | Đợt 23 |
+| `shared/api/openapi.yaml`, `shared/fixtures/seed/`, `services/mock/` | Đợt 9 |
+| `utils/tree/`, `shared/fixtures/tree/` | Đợt 14 |
+| `utils/occurrences/`, `shared/fixtures/occurrences/` | Đợt 17 |
+| Gỡ `features/family` (FE) / module `family` (BE) | Đợt 10 / Đợt 26 (đã xong) |
+| `infra/`, `.github/workflows/deploy.yml` | Đợt 41 |

@@ -1,5 +1,5 @@
 /**
- * Quản trị hệ thống: user, family, khóa và xóa member.
+ * Quản trị hệ thống: cấu hình, thành viên đã xóa, hàng đợi.
  */
 @ApplicationModule(displayName = "Admin")
 package vn.giapha.admin;

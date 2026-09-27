@@ -28,9 +28,12 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import tools.jackson.databind.json.JsonMapper;
 
+import vn.giapha.common.security.AccountAccessLookup;
+import vn.giapha.common.security.ApprovalGateFilter;
 import vn.giapha.common.security.CurrentUser;
 import vn.giapha.common.security.ProblemDetailSecurityHandlers;
 
@@ -47,7 +50,8 @@ public class SecurityConfig {
     private static final int BCRYPT_COST = 12;
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, JsonMapper jsonMapper) {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, JsonMapper jsonMapper,
+            AccountAccessLookup accessLookup) {
         ProblemDetailSecurityHandlers handlers = new ProblemDetailSecurityHandlers(jsonMapper);
         http
                 // API stateless dùng Bearer token, không có session nên không cần CSRF; CORS tắt vì cùng domain qua nginx.
@@ -64,7 +68,10 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationEntryPoint(handlers)
                         .accessDeniedHandler(handlers)
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+                // Sau khi token đã được xác thực: tài khoản chưa duyệt không vào được API nghiệp vụ. Không khai báo
+                // bean để Spring Boot không đăng ký filter này lần nữa ở servlet container.
+                .addFilterAfter(new ApprovalGateFilter(accessLookup, handlers), BearerTokenAuthenticationFilter.class);
         return http.build();
     }
 
@@ -93,16 +100,13 @@ public class SecurityConfig {
         return new SecretKeySpec(key, "HmacSHA256");
     }
 
-    /** Quyền theo claim: ROLE_ADMIN hoặc ROLE_USER, thêm ROLE_MANAGER khi là Manager của family. */
+    /** Quyền theo claim: ROLE_ADMIN hoặc ROLE_USER. */
     private Converter<Jwt, AbstractAuthenticationToken> jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             List<GrantedAuthority> authorities = new ArrayList<>();
             boolean admin = CurrentUser.ROLE_ADMIN.equals(jwt.getClaimAsString(CurrentUser.CLAIM_SYSTEM_ROLE));
             authorities.add(new SimpleGrantedAuthority(admin ? "ROLE_ADMIN" : "ROLE_USER"));
-            if (CurrentUser.ROLE_MANAGER.equals(jwt.getClaimAsString(CurrentUser.CLAIM_FAMILY_ROLE))) {
-                authorities.add(new SimpleGrantedAuthority("ROLE_MANAGER"));
-            }
             return authorities;
         });
         return converter;

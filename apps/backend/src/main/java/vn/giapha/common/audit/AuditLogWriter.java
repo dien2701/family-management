@@ -27,7 +27,6 @@ public class AuditLogWriter {
     }
 
     /**
-     * @param familyId   family bị tác động, null với thao tác cấp hệ thống
      * @param actorId    user thực hiện, null với thao tác của hệ thống
      * @param action     ví dụ CREATE, UPDATE, DELETE, LOCK
      * @param targetType ví dụ MEMBER, MARRIAGE
@@ -35,9 +34,9 @@ public class AuditLogWriter {
      * @param after      trạng thái sau (null khi xóa)
      */
     @Transactional(propagation = Propagation.MANDATORY)
-    public void write(Long familyId, Long actorId, String action, String targetType, Long targetId,
+    public void write(Long actorId, String action, String targetType, Long targetId,
             Object before, Object after) {
-        repository.save(new AuditLog(familyId, actorId, action, targetType, targetId,
+        repository.save(new AuditLog(actorId, action, targetType, targetId,
                 toJson(before), toJson(after), Instant.now(clock)));
     }
 

@@ -53,19 +53,19 @@ public class UserAccount {
     @Column(name = "lock_reason", length = 20)
     private LockReason lockReason;
 
-    @Column(name = "family_id")
-    private Long familyId;
-
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "family_role", length = 10)
-    private FamilyRole familyRole;
+    @Column(name = "approval_status", nullable = false, length = 10)
+    private ApprovalStatus approvalStatus = ApprovalStatus.WAITING;
+
+    @Column(name = "approved_by")
+    private Long approvedBy;
+
+    @Column(name = "approved_at")
+    private Instant approvedAt;
 
     @Column(name = "member_id")
     private Long memberId;
-
-    @Column(name = "hide_maternal_line", nullable = false)
-    private boolean hideMaternalLine;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -124,6 +124,10 @@ public class UserAccount {
         return systemRole;
     }
 
+    public void setSystemRole(SystemRole systemRole) {
+        this.systemRole = systemRole;
+    }
+
     public AccountStatus getStatus() {
         return status;
     }
@@ -136,20 +140,53 @@ public class UserAccount {
         return lockReason;
     }
 
-    public Long getFamilyId() {
-        return familyId;
+    public void setLockReason(LockReason lockReason) {
+        this.lockReason = lockReason;
     }
 
-    public FamilyRole getFamilyRole() {
-        return familyRole;
+    public ApprovalStatus getApprovalStatus() {
+        return approvalStatus;
+    }
+
+    public Long getApprovedBy() {
+        return approvedBy;
+    }
+
+    public Instant getApprovedAt() {
+        return approvedAt;
+    }
+
+    /** Duyệt (hoặc duyệt lại) tài khoản; ghi lại Admin và thời điểm duyệt. */
+    public void approve(Long adminId, Instant at) {
+        this.approvalStatus = ApprovalStatus.APPROVED;
+        this.approvedBy = adminId;
+        this.approvedAt = at;
+    }
+
+    /** Từ chối: không còn "đã duyệt" nên xóa dấu vết duyệt; ai từ chối nằm trong audit log. */
+    public void reject() {
+        this.approvalStatus = ApprovalStatus.REJECTED;
+        this.approvedBy = null;
+        this.approvedAt = null;
+    }
+
+    /** Tài khoản đã xác thực OTP, không bị khóa và đã được duyệt: đủ điều kiện dùng dữ liệu gia phả. */
+    public boolean isActiveAndApproved() {
+        return status == AccountStatus.ACTIVE && approvalStatus == ApprovalStatus.APPROVED;
     }
 
     public Long getMemberId() {
         return memberId;
     }
 
-    public boolean isHideMaternalLine() {
-        return hideMaternalLine;
+    /** Điều kiện (đã duyệt, chưa liên kết, thành viên chưa có chủ) do {@code AccountLinking} kiểm trước khi gọi. */
+    public void linkMember(Long memberId) {
+        this.memberId = memberId;
+    }
+
+    /** Khóa hay từ chối tài khoản không gỡ liên kết (DECISIONS #82); chỉ User hoặc Admin hủy mới gọi hàm này. */
+    public void unlinkMember() {
+        this.memberId = null;
     }
 
     public Instant getCreatedAt() {

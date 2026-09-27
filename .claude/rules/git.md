@@ -7,6 +7,6 @@
 - Không commit bí mật: `.env*` (trừ `.env.example`), `settings.local.json`, khóa, token. Trước khi commit kiểm tra `git status` và `git diff --staged`.
 - Không sửa file Flyway `V*.sql` đã có. Đổi schema thì thêm file V mới.
 - Không dùng `--no-verify`, không bỏ qua hook, không `push --force` lên `main`. Cần ghi đè lịch sử nhánh riêng thì hỏi người dùng trước.
-- Mô tả PR gồm: đợt nào, đã làm gì, cách kiểm tra, kết quả `verify`/`lint`/`build`. Đợt chưa xong (chưa pass lệnh kiểm tra) thì không mở PR.
-- CI mỗi PR chạy BE `./mvnw verify`, FE `npm run lint` + `npm run build` + `npm test`. CI đỏ thì sửa, không merge.
+- Mô tả PR gồm: đợt nào, đã làm gì, cách kiểm tra, kết quả `lint`/`build`/`compile` do người dùng tự chạy.
+- CI mỗi PR chạy BE `./mvnw verify`, FE `npm run lint` + `npm run build` + `npm test`. CI đỏ thì sửa code; nếu đỏ vì test cũ không còn đúng thì xóa test đó (DECISIONS #84). Không merge khi CI đỏ.
 - Deploy thủ công bằng `workflow_dispatch` hoặc khi push tag `v*`.

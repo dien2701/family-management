@@ -1,12 +1,20 @@
 package vn.giapha.auth.mapper;
 
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
+import vn.giapha.auth.dto.AccountAdminResponse;
 import vn.giapha.auth.dto.MeResponse;
 import vn.giapha.auth.entity.UserAccount;
 
 @Mapper
 public interface UserAccountMapper {
 
-    MeResponse toMe(UserAccount user);
+    /** {@code consentRequired} không nằm trong entity mà suy ra từ bảng consent nên truyền vào riêng. */
+    @Mapping(target = "consentRequired", source = "consentRequired")
+    MeResponse toMe(UserAccount user, boolean consentRequired);
+
+    /** {@code member} cần tên từ module member nên {@code AdminAccountService} gắn sau bằng {@code withMember}. */
+    @Mapping(target = "member", ignore = true)
+    AccountAdminResponse toAdminView(UserAccount user);
 }

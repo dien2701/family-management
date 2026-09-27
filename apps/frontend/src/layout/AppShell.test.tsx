@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { AuthContext, type AuthContextValue } from '@/context/authContext'
 import { routes } from '@/pages/routes'
 
-// Người dùng đã đăng nhập và thuộc một dòng họ, để route guard cho vào khung chính
+// Người dùng đã đăng nhập và được duyệt, để route guard cho vào khung chính
 const auth: AuthContextValue = {
   status: 'authenticated',
   user: {
@@ -13,10 +13,11 @@ const auth: AuthContextValue = {
     fullName: 'Đặng Văn An',
     email: 'an@example.com',
     systemRole: 'USER',
-    familyId: 1,
+    approvalStatus: 'APPROVED',
   },
   setSession: () => {},
   refresh: async () => true,
+  updateUser: () => {},
   logout: async () => {},
 }
 
@@ -37,7 +38,7 @@ describe('BottomNav', () => {
     const labels = within(nav)
       .getAllByRole('link')
       .map((a) => a.textContent)
-    expect(labels).toEqual(['Tổng quan', 'Cây', 'Thành viên', 'Lịch', 'Thêm'])
+    expect(labels).toEqual(['Tổng quan', 'Cây gia phả', 'Thành viên', 'Lịch', 'Thêm'])
   })
 
   it('đánh dấu mục đang chọn bằng aria-current', () => {
@@ -65,7 +66,7 @@ describe('AppShell', () => {
     renderAt('/cay')
     const sidebar = screen.getByRole('navigation', { name: 'Điều hướng chính' })
     expect(within(sidebar).getAllByRole('link')).toHaveLength(5)
-    expect(within(sidebar).getByRole('link', { name: 'Cây' })).toHaveAttribute(
+    expect(within(sidebar).getByRole('link', { name: 'Cây gia phả' })).toHaveAttribute(
       'aria-current',
       'page',
     )

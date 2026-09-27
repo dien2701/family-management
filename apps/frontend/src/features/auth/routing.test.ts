@@ -1,16 +1,27 @@
 import { describe, expect, it } from 'vitest'
-import { areaOf, carryFrom, homePathFor, safeInternalPath } from './routing'
+import { approvalAreaOf, carryFrom, homePathFor, isAdmin, safeInternalPath } from './routing'
 
 describe('homePathFor', () => {
-  it('Admin vào khu quản trị, kể cả khi có familyId', () => {
-    expect(homePathFor({ systemRole: 'ADMIN' })).toBe('/quan-tri')
-    expect(homePathFor({ systemRole: 'ADMIN', familyId: 3 })).toBe('/quan-tri')
+  it('chờ duyệt vào /cho-duyet, không được duyệt vào /khong-duoc-duyet, đã duyệt vào Tổng quan', () => {
+    expect(homePathFor({ approvalStatus: 'WAITING' })).toBe('/cho-duyet')
+    expect(homePathFor({ approvalStatus: 'REJECTED' })).toBe('/khong-duoc-duyet')
+    expect(homePathFor({ approvalStatus: 'APPROVED' })).toBe('/')
   })
 
-  it('chưa có family vào /bat-dau, có family vào Dashboard', () => {
-    expect(homePathFor({ systemRole: 'USER' })).toBe('/bat-dau')
-    expect(homePathFor({ systemRole: 'USER', familyId: 3 })).toBe('/')
-    expect(areaOf({ systemRole: 'USER', familyId: 3 })).toBe('family')
+  it('Admin cũng theo trạng thái duyệt, không có khu vực riêng', () => {
+    expect(homePathFor({ systemRole: 'ADMIN', approvalStatus: 'APPROVED' })).toBe('/')
+  })
+
+  it('thiếu trạng thái duyệt thì coi là chờ duyệt để không mở cửa nhầm', () => {
+    expect(approvalAreaOf({})).toBe('waiting')
+  })
+})
+
+describe('isAdmin', () => {
+  it('chỉ Admin', () => {
+    expect(isAdmin({ systemRole: 'ADMIN' })).toBe(true)
+    expect(isAdmin({ systemRole: 'USER' })).toBe(false)
+    expect(isAdmin(null)).toBe(false)
   })
 })
 
@@ -33,8 +44,8 @@ describe('safeInternalPath', () => {
 })
 
 describe('carryFrom', () => {
-  it('mang theo đường dẫn nội bộ (link mời) qua các bước đăng ký', () => {
-    expect(carryFrom({ from: '/moi/ABCD2345' })).toEqual({ from: '/moi/ABCD2345' })
+  it('mang theo đường dẫn nội bộ qua các bước đăng ký', () => {
+    expect(carryFrom({ from: '/thanh-vien?q=an' })).toEqual({ from: '/thanh-vien?q=an' })
   })
 
   it('bỏ qua giá trị không an toàn hoặc không có', () => {

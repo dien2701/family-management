@@ -14,9 +14,11 @@ const buttonVariants = cva(
         secondary: 'bg-secondary text-secondary-fg hover:bg-secondary-hover',
         ghost: 'bg-transparent text-text hover:bg-surface-muted',
         danger: 'bg-danger text-primary-fg hover:opacity-90',
+        outline: 'border border-border bg-transparent text-text hover:bg-surface-muted',
       },
       size: {
         default: '',
+        sm: 'min-h-9 px-3 text-sm',
         icon: 'w-11 px-0',
       },
     },

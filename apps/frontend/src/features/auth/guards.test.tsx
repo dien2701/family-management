@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider, type InitialEntry } from 'react-router'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthContext, type AuthContextValue } from '@/context/authContext'
 import { routes } from '@/pages/routes'
+import { api } from '@/services/client'
 import type { Me } from '@/types/api'
 
 type Session = { status?: AuthContextValue['status']; user?: Me; loggedOut?: boolean }
@@ -15,6 +16,7 @@ function renderAt(entry: InitialEntry, { status, user, loggedOut }: Session) {
     loggedOut,
     setSession: () => {},
     refresh: async () => true,
+    updateUser: () => {},
     logout: async () => {},
   }
   const router = createMemoryRouter(routes, { initialEntries: [entry] })
@@ -28,11 +30,23 @@ function renderAt(entry: InitialEntry, { status, user, loggedOut }: Session) {
   return router.state.location
 }
 
-const withFamily: Me = { id: 1, fullName: 'An', systemRole: 'USER', familyId: 1 }
-const noFamily: Me = { id: 2, fullName: 'Bình', systemRole: 'USER' }
-const admin: Me = { id: 3, fullName: 'Cường', systemRole: 'ADMIN' }
+const approved: Me = { id: 1, fullName: 'An', systemRole: 'USER', approvalStatus: 'APPROVED' }
+const waiting: Me = { id: 2, fullName: 'Bình', systemRole: 'USER', approvalStatus: 'WAITING' }
+const rejected: Me = { id: 3, fullName: 'Chi', systemRole: 'USER', approvalStatus: 'REJECTED' }
+const admin: Me = { id: 4, fullName: 'Dũng', systemRole: 'ADMIN', approvalStatus: 'APPROVED' }
 
-describe('route guard', () => {
+beforeEach(() => {
+  // Các trang này gọi API thật; test chỉ xem route nên trả `/me` còn chờ duyệt và danh sách tài khoản rỗng
+  vi.spyOn(api, 'get').mockImplementation(async (path: string) =>
+    path === '/me'
+      ? ({ approvalStatus: 'WAITING' } as never)
+      : ({ items: [], page: 0, size: 20, totalElements: 0, totalPages: 0 } as never),
+  )
+})
+
+afterEach(() => vi.restoreAllMocks())
+
+describe('route guard: đăng nhập', () => {
   it('chưa đăng nhập: chuyển tới /dang-nhap và nhớ trang định vào', () => {
     const location = renderAt('/cay', {})
     expect(location.pathname).toBe('/dang-nhap')
@@ -52,27 +66,10 @@ describe('route guard', () => {
     expect(screen.getByRole('status')).toBeInTheDocument()
   })
 
-  it('có family: vào được app; bị đẩy khỏi /dang-nhap về Dashboard', () => {
-    expect(renderAt('/cay', { user: withFamily }).pathname).toBe('/cay')
-    expect(renderAt('/dang-nhap', { user: withFamily }).pathname).toBe('/')
-  })
-
-  it('chưa có family: trang trong app và trang đăng ký đều chuyển về /bat-dau', () => {
-    expect(renderAt('/', { user: noFamily }).pathname).toBe('/bat-dau')
-    expect(renderAt('/thanh-vien', { user: noFamily }).pathname).toBe('/bat-dau')
-    expect(renderAt('/dang-ky', { user: noFamily }).pathname).toBe('/bat-dau')
-  })
-
-  it('Admin vào /quan-tri; người thường không vào được /quan-tri', () => {
-    expect(renderAt('/', { user: admin }).pathname).toBe('/quan-tri')
-    expect(renderAt('/bat-dau', { user: admin }).pathname).toBe('/quan-tri')
-    expect(renderAt('/quan-tri', { user: withFamily }).pathname).toBe('/')
-  })
-
   it('đăng nhập xong thì về trang định vào nếu được phép', () => {
     const location = renderAt(
       { pathname: '/dang-nhap', state: { from: '/lich' } },
-      { user: withFamily },
+      { user: approved },
     )
     expect(location.pathname).toBe('/lich')
   })
@@ -80,8 +77,85 @@ describe('route guard', () => {
   it('bỏ qua đường dẫn ngoài trong state.from', () => {
     const location = renderAt(
       { pathname: '/dang-nhap', state: { from: 'https://evil.com' } },
-      { user: withFamily },
+      { user: approved },
     )
     expect(location.pathname).toBe('/')
+  })
+})
+
+describe('route guard: trạng thái duyệt', () => {
+  it('đã duyệt: vào được app, bị đẩy khỏi /dang-nhap và các trang chờ về Tổng quan', () => {
+    expect(renderAt('/cay', { user: approved }).pathname).toBe('/cay')
+    expect(renderAt('/dang-nhap', { user: approved }).pathname).toBe('/')
+    expect(renderAt('/cho-duyet', { user: approved }).pathname).toBe('/')
+    expect(renderAt('/khong-duoc-duyet', { user: approved }).pathname).toBe('/')
+  })
+
+  it('chờ duyệt: mọi trang trong app, trang đăng ký và Quản trị đều chuyển về /cho-duyet', () => {
+    for (const path of ['/', '/thanh-vien', '/them', '/dang-ky', '/quan-tri/tai-khoan']) {
+      expect(renderAt(path, { user: waiting }).pathname, path).toBe('/cho-duyet')
+    }
+    expect(renderAt('/khong-duoc-duyet', { user: waiting }).pathname).toBe('/cho-duyet')
+  })
+
+  it('bị từ chối: mọi trang chuyển về /khong-duoc-duyet', () => {
+    for (const path of ['/', '/cay', '/dang-nhap', '/cho-duyet', '/quan-tri/tai-khoan']) {
+      expect(renderAt(path, { user: rejected }).pathname, path).toBe('/khong-duoc-duyet')
+    }
+  })
+
+  it('chờ duyệt vẫn đọc được trang Chính sách bảo mật (trang công khai)', () => {
+    expect(renderAt('/chinh-sach-bao-mat', { user: waiting }).pathname).toBe('/chinh-sach-bao-mat')
+  })
+
+  it('Admin dùng chung khung app: vào Tổng quan, không có khu riêng', () => {
+    expect(renderAt('/', { user: admin }).pathname).toBe('/')
+    expect(renderAt('/dang-nhap', { user: admin }).pathname).toBe('/')
+  })
+
+  it('đường dẫn cũ của dòng họ không còn: /bat-dau, /moi/:code, /them/dong-ho đều là 404', () => {
+    for (const path of ['/bat-dau', '/moi/ABCD2345', '/them/dong-ho']) {
+      renderAt(path, { user: approved })
+      expect(
+        screen.getByRole('heading', { level: 2, name: 'Không tìm thấy trang' }),
+      ).toBeInTheDocument()
+      document.body.innerHTML = ''
+    }
+  })
+})
+
+describe('khu Quản trị', () => {
+  it('User đã duyệt gõ thẳng /quan-tri/tai-khoan hoặc /quan-tri: bị chặn về Tổng quan', () => {
+    expect(renderAt('/quan-tri/tai-khoan', { user: approved }).pathname).toBe('/')
+    expect(renderAt('/quan-tri', { user: approved }).pathname).toBe('/')
+    expect(api.get).not.toHaveBeenCalled()
+  })
+
+  it('Admin vào /quan-tri thì tới trang Tài khoản', () => {
+    expect(renderAt('/quan-tri', { user: admin }).pathname).toBe('/quan-tri/tai-khoan')
+    expect(screen.getByRole('heading', { level: 1, name: 'Quản lý tài khoản' })).toBeInTheDocument()
+  })
+
+  it('menu Quản trị: Admin thấy ở Sidebar và trang Thêm, User không thấy', () => {
+    renderAt('/them', { user: admin })
+    const sidebar = screen.getByRole('navigation', { name: 'Điều hướng chính' })
+    expect(within(sidebar).getByRole('link', { name: 'Quản trị' })).toHaveAttribute(
+      'href',
+      '/quan-tri',
+    )
+    const more = screen.getByRole('navigation', { name: 'Các mục khác' })
+    expect(within(more).getByRole('link', { name: /Quản trị/ })).toBeInTheDocument()
+    // Thanh dưới trên điện thoại vẫn đúng 5 mục
+    const bottom = screen.getByRole('navigation', { name: 'Điều hướng dưới' })
+    expect(within(bottom).getAllByRole('link')).toHaveLength(5)
+  })
+
+  it('menu Quản trị ẩn với User ở cả Sidebar lẫn trang Thêm', () => {
+    renderAt('/them', { user: approved })
+    const sidebar = screen.getByRole('navigation', { name: 'Điều hướng chính' })
+    expect(within(sidebar).queryByRole('link', { name: 'Quản trị' })).not.toBeInTheDocument()
+    const more = screen.getByRole('navigation', { name: 'Các mục khác' })
+    expect(within(more).queryByRole('link', { name: /Quản trị/ })).not.toBeInTheDocument()
+    expect(within(more).queryByRole('link', { name: /Dòng họ/ })).not.toBeInTheDocument()
   })
 })

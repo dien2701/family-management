@@ -1,14 +1,68 @@
-import { ChevronRight, ShieldCheck, TreeDeciduous } from 'lucide-react'
+import { ArrowLeftRight, ChevronRight, ShieldCheck, Sparkles, UserCheck, UserCog, Files, FileDown } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { lazy, Suspense } from 'react'
 import { Link } from 'react-router'
+import { adminStrings } from '@/features/admin/strings'
+import { aiStrings } from '@/features/ai/strings'
 import { AccountCard } from '@/features/auth/components/AccountCard'
+import { isAdmin } from '@/features/auth/routing'
+import { linkStrings } from '@/features/link/strings'
+import { useAuth } from '@/hooks/useAuth'
+import { InstallAppItem } from '@/features/pwa/components/InstallAppItem'
 
-const ITEMS: { to: string; label: string; description: string; icon: LucideIcon }[] = [
+// Mục "Dữ liệu tạm" chỉ có ở chế độ giả lập. Điều kiện viết trực tiếp (không qua hằng số khác) để Vite
+// cắt luôn import động khỏi bản build prod.
+const MockDataSection =
+  import.meta.env.DEV && import.meta.env.VITE_API_MODE === 'mock'
+    ? lazy(() => import('@/features/mockdata/components/MockDataSection'))
+    : null
+
+type Item = { to: string; label: string; description: string; icon: LucideIcon }
+
+// Chỉ Admin thấy; trên điện thoại thanh dưới chỉ có 5 mục nên Quản trị vào từ đây (Sidebar và rail có mục riêng)
+const ADMIN_ITEM: Item = {
+  to: '/quan-tri',
+  label: adminStrings.menu,
+  description: adminStrings.menuDescription,
+  icon: UserCog,
+}
+
+const ITEMS: Item[] = [
   {
-    to: '/them/dong-ho',
-    label: 'Dòng họ',
-    description: 'Thông tin, tài khoản và mã mời',
-    icon: TreeDeciduous,
+    to: '/tro-ly',
+    label: aiStrings.menu,
+    description: aiStrings.menuDescription,
+    icon: Sparkles,
+  },
+  {
+    to: '/de-xuat',
+    label: 'Đề xuất của tôi',
+    description: 'Quản lý các đề xuất thay đổi sự kiện',
+    icon: UserCog,
+  },
+  {
+    to: '/them/toi-la-ai',
+    label: linkStrings.menu,
+    description: linkStrings.menuDescription,
+    icon: UserCheck,
+  },
+  {
+    to: '/them/doi-lich',
+    label: 'Đổi lịch âm – dương',
+    description: 'Tra ngày âm lịch và dương lịch tương ứng',
+    icon: ArrowLeftRight,
+  },
+  {
+    to: '/them/tai-lieu-chung',
+    label: 'Tài liệu chung',
+    description: 'Các tài liệu, biểu mẫu chung của dòng họ',
+    icon: Files,
+  },
+  {
+    to: '/them/xuat-du-lieu',
+    label: 'Xuất dữ liệu',
+    description: 'Tải báo cáo thành viên, sự kiện và lịch giỗ',
+    icon: FileDown,
   },
   {
     to: '/chinh-sach-bao-mat',
@@ -18,14 +72,17 @@ const ITEMS: { to: string; label: string; description: string; icon: LucideIcon 
   },
 ]
 
-// Thẻ tài khoản + Đăng xuất (Đợt 3), mục Dòng họ (Đợt 5); các mục khác được thêm ở các đợt sau
+// Thẻ tài khoản + Đăng xuất (Đợt 3), mục Quản trị cho Admin (Đợt 10); các mục khác được thêm ở các đợt sau
 export function MorePage() {
+  const { user } = useAuth()
+  const items = isAdmin(user) ? [ADMIN_ITEM, ...ITEMS] : ITEMS
   return (
     <div className="mx-auto w-full max-w-3xl">
       <AccountCard />
       <nav aria-label="Các mục khác">
         <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
-          {ITEMS.map(({ to, label, description, icon: Icon }) => (
+          <InstallAppItem />
+          {items.map(({ to, label, description, icon: Icon }) => (
             <li key={to} className="border-b border-border last:border-b-0">
               <Link
                 to={to}
@@ -44,6 +101,11 @@ export function MorePage() {
           ))}
         </ul>
       </nav>
+      {MockDataSection && (
+        <Suspense fallback={null}>
+          <MockDataSection />
+        </Suspense>
+      )}
     </div>
   )
 }

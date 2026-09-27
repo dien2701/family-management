@@ -1,23 +1,31 @@
 import type { Me } from '@/types/api'
 
-/** Ba khu vực của app, mỗi user chỉ thuộc đúng một khu (IDEA §6.1). */
-export type Area = 'admin' | 'onboarding' | 'family'
+/** Nơi một tài khoản được phép ở, theo trạng thái duyệt (DECISIONS #56). */
+export type ApprovalArea = 'waiting' | 'rejected' | 'app'
 
-export function areaOf(user: Me): Area {
-  if (user.systemRole === 'ADMIN') return 'admin'
-  return user.familyId == null ? 'onboarding' : 'family'
+/** Chỉ `APPROVED` mới vào app; thiếu hoặc lạ thì coi là chờ duyệt để không mở cửa nhầm. */
+export function approvalAreaOf(user: Me): ApprovalArea {
+  if (user.approvalStatus === 'APPROVED') return 'app'
+  if (user.approvalStatus === 'REJECTED') return 'rejected'
+  return 'waiting'
 }
 
-const HOME: Record<Area, string> = { admin: '/quan-tri', onboarding: '/bat-dau', family: '/' }
+const HOME: Record<ApprovalArea, string> = {
+  waiting: '/cho-duyet',
+  rejected: '/khong-duoc-duyet',
+  app: '/',
+}
 
-/** Trang đích sau đăng nhập: Admin vào khu quản trị, chưa có family vào onboarding, còn lại vào Dashboard. */
+/** Trang đích sau đăng nhập: chờ duyệt, không được duyệt, hoặc Tổng quan. */
 export function homePathFor(user: Me): string {
-  return HOME[areaOf(user)]
+  return HOME[approvalAreaOf(user)]
 }
+
+export const isAdmin = (user: Me | null): boolean => user?.systemRole === 'ADMIN'
 
 /**
  * Lấy `from` (trang định vào trước khi bị chuyển tới đăng nhập) từ state của trang hiện tại để mang theo
- * sang đăng nhập/đăng ký/xác thực OTP, nhờ vậy link mời `/moi/:code` không bị mất giữa chừng.
+ * sang đăng nhập/đăng ký/xác thực OTP, nhờ vậy link sâu không bị mất giữa chừng.
  */
 export function carryFrom(state: unknown): { from: string } | undefined {
   const from = safeInternalPath((state as { from?: unknown } | null)?.from)

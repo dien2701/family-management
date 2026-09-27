@@ -21,9 +21,6 @@ public class UserConsent {
     @Column(name = "user_id", nullable = false, updatable = false)
     private Long userId;
 
-    @Column(name = "family_id", nullable = false, updatable = false)
-    private Long familyId;
-
     @Column(name = "policy_version", nullable = false, updatable = false, length = 20)
     private String policyVersion;
 
@@ -36,9 +33,8 @@ public class UserConsent {
     protected UserConsent() {
     }
 
-    UserConsent(Long userId, Long familyId, String policyVersion, Instant acceptedAt, String ip) {
+    UserConsent(Long userId, String policyVersion, Instant acceptedAt, String ip) {
         this.userId = userId;
-        this.familyId = familyId;
         this.policyVersion = policyVersion;
         this.acceptedAt = acceptedAt;
         this.ip = ip;
@@ -50,10 +46,6 @@ public class UserConsent {
 
     public Long getUserId() {
         return userId;
-    }
-
-    public Long getFamilyId() {
-        return familyId;
     }
 
     public String getPolicyVersion() {

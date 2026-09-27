@@ -18,6 +18,8 @@ export default defineConfig([
       prettier,
     ],
     languageOptions: { ecmaVersion: 2023, globals: globals.browser },
+    // Hàm tiện ích đặt cạnh component là chủ đích (ví dụ dayLabel trong MonthGrid); chỉ cảnh báo
+    rules: { 'react-refresh/only-export-components': 'warn' },
   },
   {
     // shadcn/ui xuất kèm hàm variants (cva) cùng component

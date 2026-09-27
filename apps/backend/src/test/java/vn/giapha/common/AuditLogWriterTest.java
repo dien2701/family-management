@@ -26,17 +26,16 @@ class AuditLogWriterTest {
     @Test
     @Transactional
     void storesBeforeAndAfterAsJson() {
-        writer.write(7L, 42L, "UPDATE", "MEMBER", 99L,
+        writer.write(42L, "UPDATE", "MEMBER", 99L,
                 Map.of("fullName", "Nguyễn Văn A"), Map.of("fullName", "Nguyễn Văn B"));
 
         Map<String, Object> row = jdbc.queryForMap(
-                "SELECT family_id, actor_id, action, target_type, target_id, "
+                "SELECT actor_id, action, target_type, target_id, "
                         + "JSON_UNQUOTE(JSON_EXTRACT(before_data, '$.fullName')) AS before_name, "
                         + "JSON_UNQUOTE(JSON_EXTRACT(after_data, '$.fullName')) AS after_name, "
                         + "JSON_TYPE(before_data) AS before_type, created_at "
                         + "FROM audit_log WHERE target_id = 99");
 
-        assertThat(row.get("family_id")).isEqualTo(7L);
         assertThat(row.get("actor_id")).isEqualTo(42L);
         assertThat(row.get("action")).isEqualTo("UPDATE");
         assertThat(row.get("target_type")).isEqualTo("MEMBER");
@@ -50,7 +49,7 @@ class AuditLogWriterTest {
     @Test
     @Transactional
     void createHasNullBefore() {
-        writer.write(null, null, "CREATE", "MEMBER", 100L, null, Map.of("fullName", "Trần Thị C"));
+        writer.write(null, "CREATE", "MEMBER", 100L, null, Map.of("fullName", "Trần Thị C"));
 
         Map<String, Object> row = jdbc.queryForMap(
                 "SELECT before_data, after_data FROM audit_log WHERE target_id = 100");
@@ -60,7 +59,7 @@ class AuditLogWriterTest {
 
     @Test
     void requiresSurroundingTransaction() {
-        assertThatThrownBy(() -> writer.write(1L, 1L, "CREATE", "MEMBER", 1L, null, Map.of()))
+        assertThatThrownBy(() -> writer.write(1L, "CREATE", "MEMBER", 1L, null, Map.of()))
                 .isInstanceOf(IllegalTransactionStateException.class);
     }
 }

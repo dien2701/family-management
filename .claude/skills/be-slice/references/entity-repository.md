@@ -1,4 +1,4 @@
-# Mẫu entity + repository (module `member`)
+# Mẫu entity + repository (module `member`, bản v2 — không có tenant)
 
 ```java
 package vn.giapha.member.entity;
@@ -9,9 +9,7 @@ public class Member {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "family_id", nullable = false, updatable = false)
-    private Long familyId;
-
+    // Họ tên ghi nguyên văn (có thể có "Cụ", "(Tức …)"), trường bắt buộc duy nhất
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
@@ -19,8 +17,10 @@ public class Member {
     @Column(name = "search_name", nullable = false)
     private String searchName;
 
-    @Column(nullable = false)
-    private boolean locked;
+    // Được để trống: không tự đặt giới tính
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender")
+    private Gender gender;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;   // DATETIME(6) UTC
@@ -32,12 +32,8 @@ public class Member {
 package vn.giapha.member.repository;
 
 public interface MemberRepository extends JpaRepository<Member, Long> {
-    // Truy vấn nghiệp vụ: luôn kèm familyId và locked=false
-    Optional<Member> findByIdAndFamilyIdAndLockedFalse(Long id, Long familyId);
-    Page<Member> findByFamilyIdAndLockedFalse(Long familyId, Pageable pageable);
-
-    // Chỉ module admin được gọi bản này
-    Optional<Member> findByIdAndFamilyId(Long id, Long familyId);
+    // Tìm không dấu: so với search_name đã chuẩn hóa
+    Page<Member> findBySearchNameContaining(String normalizedQuery, Pageable pageable);
 }
 ```
-Tên cột khớp Flyway; `ddl-auto: validate` sẽ báo lệch.
+Tên cột khớp Flyway; `ddl-auto: validate` sẽ báo lệch. Không thêm `family_id` hay cột `locked` (DECISIONS #54, #63).

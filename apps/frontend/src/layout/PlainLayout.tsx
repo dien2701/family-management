@@ -2,7 +2,7 @@ import { TreeDeciduous } from 'lucide-react'
 import { Outlet } from 'react-router'
 import { useRouteTitle } from '@/hooks/useRouteTitle'
 
-// Khung tối giản (không có thanh điều hướng) cho khu vực chưa vào app: onboarding và quản trị tạm
+// Khung tối giản (không có thanh điều hướng) cho tài khoản chưa vào được app: chờ duyệt và không được duyệt
 export function PlainLayout() {
   const title = useRouteTitle()
   return (

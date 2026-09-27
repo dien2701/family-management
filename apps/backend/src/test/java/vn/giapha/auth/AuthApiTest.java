@@ -97,9 +97,14 @@ class AuthApiTest {
                 .andExpect(jsonPath("$.email").value(email))
                 .andExpect(jsonPath("$.fullName").value("Nguyễn Văn A"))
                 .andExpect(jsonPath("$.systemRole").value("USER"))
-                .andExpect(jsonPath("$.familyId").doesNotExist())
+                .andExpect(jsonPath("$.approvalStatus").value("WAITING"))
+                .andExpect(jsonPath("$.consentRequired").value(false))
                 .andReturn();
         assertNoSecrets(me);
+        // Đăng ký email lưu consent ngay (DECISIONS #57)
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM user_consent WHERE user_id = ? "
+                + "AND policy_version = ? AND ip IS NOT NULL", Integer.class, userId(email),
+                props.policy().version())).isEqualTo(1);
     }
 
     @Test
@@ -110,19 +115,16 @@ class AuthApiTest {
         Jwt jwt = jwtDecoder.decode(token(login));
         assertThat(jwt.getSubject()).isEqualTo(String.valueOf(userId(email)));
         assertThat(jwt.getClaimAsString("sysRole")).isEqualTo("USER");
+        assertThat(jwt.getClaimAsString("approval")).isEqualTo("WAITING");
         assertThat(jwt.getClaims()).doesNotContainKeys("familyId", "familyRole", "memberId");
         assertThat(Duration.between(jwt.getIssuedAt(), jwt.getExpiresAt())).isEqualTo(Duration.ofMinutes(15));
         assertThat(jwt.getHeaders().get("alg")).isEqualTo("HS256");
 
-        // Sau khi có family, claim mới xuất hiện ở lần refresh kế tiếp
-        jdbc.update("INSERT INTO family (name, created_by, created_at) VALUES ('Họ Test', ?, NOW(6))", userId(email));
-        long familyId = jdbc.queryForObject("SELECT MAX(id) FROM family", Long.class);
-        jdbc.update("UPDATE user_account SET family_id = ?, family_role = 'MANAGER', member_id = 7 WHERE email = ?",
-                familyId, email);
+        // Sau khi liên kết thành viên, claim mới xuất hiện ở lần refresh kế tiếp (thành viên 7 có từ dữ liệu ban đầu)
+        jdbc.update("UPDATE user_account SET member_id = 7 WHERE email = ?", email);
         MvcResult refreshed = refresh(cookie(login)).andExpect(status().isOk()).andReturn();
         Jwt after = jwtDecoder.decode(token(refreshed));
-        assertThat(after.getClaimAsString("familyRole")).isEqualTo("MANAGER");
-        assertThat(((Number) after.getClaim("familyId")).longValue()).isEqualTo(familyId);
+        assertThat(after.getClaims()).doesNotContainKeys("familyId", "familyRole");
         assertThat(((Number) after.getClaim("memberId")).longValue()).isEqualTo(7L);
     }
 

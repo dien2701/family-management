@@ -20,7 +20,7 @@ import vn.giapha.config.AppProperties;
 
 /**
  * Refresh token 30 ngày, xoay vòng sau mỗi lần dùng (DECISIONS #17). Chuỗi thô chỉ tồn tại trong cookie;
- * DB lưu SHA-256. Đổi/đặt lại mật khẩu, khóa tài khoản, rời family gọi {@link #revokeAll(Long)}.
+ * DB lưu SHA-256. Đổi/đặt lại mật khẩu, khóa tài khoản gọi {@link #revokeAll(Long)}.
  */
 @Service
 public class RefreshTokenService {

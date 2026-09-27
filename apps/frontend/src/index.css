@@ -20,6 +20,7 @@
   --color-text: #0f1b2d;
   --color-text-muted: #5b6b7f;
   --color-deceased: #9aa5b1;
+  --color-tree-line: #c9d3df;
   --color-success: #1f7a45;
   --color-success-bg: #e6f6ec;
   --color-warning: #9a5b00;
@@ -64,6 +65,39 @@
   --radius: 12px;
 }
 
+
+/* Giao diện tối (người dùng yêu cầu 2026-09-26, thay #36): ghi đè token trên <html class="dark"> */
+:root.dark {
+  color-scheme: dark;
+  --color-bg: #0e1622;
+  --color-surface: #16202f;
+  --color-surface-muted: #1d2a3c;
+  --color-border: #2b3a4f;
+  --color-primary: #6fa3e0;
+  --color-primary-hover: #8bb6e8;
+  --color-primary-fg: #0b1524;
+  --color-secondary: #223450;
+  --color-secondary-hover: #2b4364;
+  --color-secondary-fg: #cfe0f5;
+  --color-accent: #4db4f2;
+  --color-accent-text: #6cc3f7;
+  --color-text: #e8eef6;
+  --color-text-muted: #9fb0c4;
+  --color-deceased: #7d8a99;
+  --color-tree-line: #3a4b62;
+  --color-success: #5fd08b;
+  --color-success-bg: #14301f;
+  --color-warning: #f0b45a;
+  --color-warning-bg: #38290f;
+  --color-danger: #ff8a85;
+  --color-danger-bg: #3d1a19;
+  --color-event-memorial: #b79af0;
+  --color-event-birthday: #4db4f2;
+  --color-event-custom: #f0a94a;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
+}
+
 /*
  * Tên lớp tiện ích của shadcn. Không map `accent`, `primary`, `secondary`, `border`
  * vì đã có sẵn ở @theme (accent của DESIGN là xanh nhấn, khác accent của shadcn):
@@ -89,11 +123,18 @@
   html {
     -webkit-text-size-adjust: 100%;
   }
+  /* Cỡ chữ người dùng chọn ở Cài đặt: mọi đơn vị rem co giãn theo */
+  html[data-font-size='large'] {
+    font-size: 112.5%;
+  }
+  html[data-font-size='xlarge'] {
+    font-size: 125%;
+  }
   body {
     background: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-sans);
-    font-size: 16px;
+    font-size: 1rem;
     line-height: 1.5;
   }
   :focus-visible {

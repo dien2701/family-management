@@ -1,12 +1,12 @@
-import { CircleAlert, Info } from 'lucide-react'
+import { CircleAlert, CircleCheck, Info } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { cn } from '@/utils/cn'
 
-type AlertProps = { variant?: 'danger' | 'info'; children: ReactNode; className?: string }
+type AlertProps = { variant?: 'danger' | 'info' | 'success'; children: ReactNode; className?: string }
 
 // Luôn có icon và chữ, không chỉ dựa vào màu (DESIGN §1)
 export function Alert({ variant = 'danger', children, className }: AlertProps) {
-  const Icon = variant === 'danger' ? CircleAlert : Info
+  const Icon = variant === 'danger' ? CircleAlert : variant === 'success' ? CircleCheck : Info
   return (
     <div
       role={variant === 'danger' ? 'alert' : 'status'}

@@ -1,0 +1,45 @@
+// Chuỗi UI của module Trợ lý AI (không dùng i18n, chỉ tiếng Việt)
+export const aiStrings = {
+  menu: 'Trợ lý',
+  menuDescription: 'Hỏi về thành viên, ngày giỗ, sinh nhật và sự kiện',
+  title: 'Trợ lý',
+  serverRequired: 'Cần kết nối máy chủ',
+  serverRequiredHint:
+    'Trợ lý trả lời qua máy chủ nên chưa dùng được ở chế độ giả lập. Bạn vẫn xem trước được giao diện.',
+  emptyTitle: 'Hỏi Trợ lý về gia phả',
+  emptyDescription:
+    'Trợ lý chỉ đọc dữ liệu để trả lời, không tự thay đổi gì. Thử một trong các câu sau:',
+  suggestionsLabel: 'Câu hỏi gợi ý',
+  suggestions: [
+    'Sắp tới có ngày giỗ nào?',
+    'Tháng này có sinh nhật ai?',
+    'Gia phả hiện có bao nhiêu thành viên?',
+    'Đổi ngày 15/8 âm lịch năm nay sang dương lịch',
+    'Thêm sự kiện họp mặt họ vào mùng 10 tháng 3 âm lịch',
+  ],
+  inputLabel: 'Câu hỏi cho Trợ lý',
+  inputPlaceholder: 'Nhập câu hỏi…',
+  send: 'Gửi',
+  stop: 'Dừng',
+  stopped: 'Đã dừng trả lời',
+  thinking: 'Trợ lý đang trả lời…',
+  quotaLeft: (n: number) => `Còn ${n} câu hôm nay`,
+  quotaOut: (resetDate: string) =>
+    `Bạn đã dùng hết lượt hôm nay. Lượt mới có từ 0h ngày ${resetDate} (giờ Việt Nam).`,
+  historyError: 'Không tải được lịch sử trò chuyện.',
+  genericError: 'Trợ lý chưa trả lời được. Bạn thử lại sau nhé.',
+  you: 'Bạn',
+  assistant: 'Trợ lý',
+  draft: {
+    title: 'Bản nháp do Trợ lý soạn',
+    action: { CREATE: 'Thêm sự kiện', UPDATE: 'Sửa sự kiện', DELETE: 'Xóa sự kiện' },
+    before: 'Trước',
+    after: 'Sau',
+    empty: '(trống)',
+    submit: 'Gửi đề xuất',
+    apply: 'Áp dụng',
+    submitted: 'Đã gửi đề xuất',
+    applied: 'Đã áp dụng',
+    note: 'Trợ lý không tự ghi dữ liệu. Bạn xem lại rồi mới xác nhận.',
+  },
+} as const
