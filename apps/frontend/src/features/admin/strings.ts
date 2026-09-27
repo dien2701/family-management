@@ -6,11 +6,11 @@ export const adminStrings = {
   menuDescription: 'Duyệt tài khoản và yêu cầu liên kết',
   nav: {
     label: 'Khu quản trị',
-    accounts: 'Tài khoản',
+    accounts: 'Người dùng',
     linkRequests: 'Yêu cầu liên kết',
   },
   accounts: {
-    title: 'Quản lý tài khoản',
+    title: 'Quản lý người dùng',
     tabsLabel: 'Nhóm tài khoản',
     tabWaiting: 'Chờ duyệt',
     tabAll: 'Tất cả',

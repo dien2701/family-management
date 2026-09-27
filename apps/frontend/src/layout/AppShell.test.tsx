@@ -38,7 +38,7 @@ describe('BottomNav', () => {
     const labels = within(nav)
       .getAllByRole('link')
       .map((a) => a.textContent)
-    expect(labels).toEqual(['Tổng quan', 'Cây', 'Thành viên', 'Lịch', 'Thêm'])
+    expect(labels).toEqual(['Tổng quan', 'Cây gia phả', 'Thành viên', 'Lịch', 'Thêm'])
   })
 
   it('đánh dấu mục đang chọn bằng aria-current', () => {
@@ -66,7 +66,7 @@ describe('AppShell', () => {
     renderAt('/cay')
     const sidebar = screen.getByRole('navigation', { name: 'Điều hướng chính' })
     expect(within(sidebar).getAllByRole('link')).toHaveLength(5)
-    expect(within(sidebar).getByRole('link', { name: 'Cây' })).toHaveAttribute(
+    expect(within(sidebar).getByRole('link', { name: 'Cây gia phả' })).toHaveAttribute(
       'aria-current',
       'page',
     )

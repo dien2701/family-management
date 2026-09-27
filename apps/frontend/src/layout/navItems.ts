@@ -21,9 +21,9 @@ export type NavItem = {
 // 5 mục dùng chung cho Sidebar, rail và BottomNav (DESIGN §4). BottomNav luôn đúng 5 mục.
 export const NAV_ITEMS: readonly NavItem[] = [
   { to: '/', label: 'Tổng quan', icon: LayoutDashboard, end: true },
-  { to: '/cay', label: 'Cây', icon: Network },
+  { to: '/cay', label: 'Cây gia phả', icon: Network },
   { to: '/thanh-vien', label: 'Thành viên', icon: Users },
-  { to: '/lich', label: 'Lịch', icon: CalendarDays },
+  { to: '/lich', label: 'Sự kiện', icon: CalendarDays },
   { to: '/them', label: 'Thêm', icon: Ellipsis, alsoActiveFor: ['/quan-tri', '/tro-ly'] },
 ]
 

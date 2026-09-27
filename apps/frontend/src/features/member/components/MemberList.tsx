@@ -16,6 +16,13 @@ type MemberListProps = {
   isFiltered?: boolean
 }
 
+// Chỉ có năm sinh nên tính theo năm: còn sống = năm nay − năm sinh, đã mất = "Thọ N"
+function ageLabel(m: MemberSummary): string | null {
+  if (!m.birthYear) return null
+  if (m.isDeceased) return m.deathYear ? `Thọ ${m.deathYear - m.birthYear}` : null
+  return String(new Date().getFullYear() - m.birthYear)
+}
+
 function MemberCard({ member }: { member: MemberSummary }) {
   return (
     <Link
@@ -38,9 +45,10 @@ function MemberCard({ member }: { member: MemberSummary }) {
             )}
           </div>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-text-muted">
+            {member.generation && <span>Đời: {member.generation}</span>}
             {member.birthYear && <span>Sinh: {member.birthYear}</span>}
             {member.deathYear && <span>Mất: {member.deathYear}</span>}
-            {member.generation && <span>Đời: {member.generation}</span>}
+            {ageLabel(member) && <span>Tuổi: {ageLabel(member)}</span>}
           </div>
         </div>
       </div>
@@ -58,6 +66,7 @@ function MemberTable({ members }: { members: MemberSummary[] }) {
             <th className="px-4 py-3 font-semibold">Đời</th>
             <th className="px-4 py-3 font-semibold">Sinh</th>
             <th className="px-4 py-3 font-semibold">Mất</th>
+            <th className="px-4 py-3 font-semibold">Tuổi</th>
             <th className="px-4 py-3 font-semibold">Trạng thái</th>
           </tr>
         </thead>
@@ -79,6 +88,7 @@ function MemberTable({ members }: { members: MemberSummary[] }) {
               <td className="px-4 py-3">{m.generation || '-'}</td>
               <td className="px-4 py-3">{m.birthYear || '-'}</td>
               <td className="px-4 py-3">{m.deathYear || '-'}</td>
+              <td className="px-4 py-3">{ageLabel(m) ?? '-'}</td>
               <td className="px-4 py-3">
                 {m.isDeceased ? <Badge tone="warning">Đã mất</Badge> : <Badge tone="success">Còn sống</Badge>}
               </td>

@@ -51,7 +51,7 @@ export function RemoveMemberDialog({ open, node, onClose, onDone }: Props) {
   )
 }
 
-/** Xóa ô trống: chỉ được khi không còn con và không còn vợ/chồng; lỗi của máy chủ hiện ngay trong hộp. */
+/** Xóa ô trống, giữ nhánh (#85); lỗi của máy chủ hiện ngay trong hộp. */
 export function DeleteSlotDialog({ open, node, onClose, onDone }: Props) {
   const s = treeStrings.deleteSlot
   const remove = useDeleteNode()

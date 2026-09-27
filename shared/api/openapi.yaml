@@ -138,6 +138,30 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  /api/auth/change-password:
+    post:
+      tags:
+        - auth
+      summary: Đổi mật khẩu khi đã đăng nhập
+      description: Cần mật khẩu hiện tại. Thu hồi mọi refresh token khác của tài khoản. Tài khoản chỉ đăng nhập bằng Google (chưa có mật khẩu) nhận 409.
+      operationId: changePassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+        required: true
+      responses:
+        '204':
+          description: Đã đổi mật khẩu
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
   /api/auth/resend-otp:
     post:
       tags:
@@ -1674,8 +1698,11 @@ paths:
         - tree
       summary: Xóa ô trống
       description: |
-        Chỉ Admin. Chỉ xóa được **ô trống** không còn con (theo cả `parentNodeId` và `coParentNodeId`) và không còn vợ/chồng.
-        Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người), `TREE_SLOT_HAS_LINKS`.
+        Chỉ Admin. Chỉ xóa được **ô trống** (đã gỡ người), kể cả khi ô còn con hoặc vợ/chồng; nhánh được giữ lại:
+        - ô vợ/chồng: bị bỏ, con của cặp đó thành con của một mình người thuộc dòng, thứ tự các vợ/chồng còn lại đánh lại từ 1;
+        - ô thuộc dòng có vợ/chồng: vợ/chồng thứ nhất thế vào đúng chỗ (cha/mẹ, cặp cha–mẹ, thứ tự anh em), nhận con cháu và các vợ/chồng còn lại;
+        - ô thuộc dòng không có vợ/chồng: con cháu lên thế chỗ, làm con của cha/mẹ của ô bị xóa (hoặc thành gốc), cả nhánh dịch lên một đời.
+        Thứ tự anh em được đánh lại từ 1. Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người).
       operationId: deleteTreeNode
       parameters:
         - $ref: '#/components/parameters/TreeNodeId'
@@ -3250,6 +3277,20 @@ components:
         - email
         - newPassword
         - otp
+    ChangePasswordRequest:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+          maxLength: 200
+          minLength: 1
+        newPassword:
+          type: string
+          maxLength: 72
+          minLength: 8
+      required:
+        - currentPassword
+        - newPassword
     EmailRequest:
       type: object
       properties:

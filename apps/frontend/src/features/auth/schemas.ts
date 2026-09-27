@@ -41,6 +41,21 @@ export const registerSchema = z
     path: ['confirmPassword'],
   })
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Vui lòng nhập mật khẩu hiện tại.').max(200, 'Mật khẩu quá dài.'),
+    newPassword: newPasswordSchema,
+    confirmPassword: confirmPasswordSchema,
+  })
+  .refine((v) => v.newPassword === v.confirmPassword, {
+    message: 'Mật khẩu nhập lại không khớp.',
+    path: ['confirmPassword'],
+  })
+  .refine((v) => v.newPassword !== v.currentPassword, {
+    message: 'Mật khẩu mới phải khác mật khẩu hiện tại.',
+    path: ['newPassword'],
+  })
+
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, 'Vui lòng nhập mật khẩu.').max(200, 'Mật khẩu quá dài.'),

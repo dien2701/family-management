@@ -7,6 +7,8 @@ import {
   Heart,
   Move,
   Network,
+  RotateCcw,
+  RotateCw,
   Trash2,
   UserMinus,
   UserPlus,
@@ -28,6 +30,8 @@ export type MenuAction =
   | 'profile'
   | 'viewFrom'
   | 'toggleCollapse'
+  | 'rotate'
+  | 'resetNode'
   | 'fill'
   | 'addChild'
   | 'addSpouse'
@@ -46,6 +50,9 @@ type NodeMenuDialogProps = {
   isAdmin: boolean
   /** Nhánh của ô này đang thu gọn. */
   collapsed: boolean
+  /** Ô này đang hiển thị dọc, và có cỡ/kiểu riêng đã chỉnh. */
+  vertical: boolean
+  customized: boolean
   onAction: (action: MenuAction) => void
   onClose: () => void
 }
@@ -83,7 +90,7 @@ function Item({
  * thao tác dựng cây, chỉ ở chỗ được phép theo `utils/tree`. Dạng hộp thoại (bottom sheet trên điện thoại) nên
  * vùng bấm luôn đủ 44px dù sơ đồ đang thu nhỏ.
  */
-export function NodeMenuDialog({ open, node, index, generation, isAdmin, collapsed, onAction, onClose }: NodeMenuDialogProps) {
+export function NodeMenuDialog({ open, node, index, generation, isAdmin, collapsed, vertical, customized, onAction, onClose }: NodeMenuDialogProps) {
   if (!node) return <ModalDialog open={false} title="" onClose={onClose}>{null}</ModalDialog>
 
   const empty = node.memberId === null
@@ -112,6 +119,14 @@ export function NodeMenuDialog({ open, node, index, generation, isAdmin, collaps
         <Item icon={Network} onClick={run('viewFrom')}>
           {empty ? t.viewFromSlot : t.viewFrom}
         </Item>
+        <Item icon={RotateCw} onClick={run('rotate')}>
+          {vertical ? t.rotateToHorizontal : t.rotateToVertical}
+        </Item>
+        {customized && (
+          <Item icon={RotateCcw} onClick={run('resetNode')}>
+            {t.resetNodeSize}
+          </Item>
+        )}
         {hasChildren && (
           <Item icon={collapsed ? ChevronsUpDown : ChevronsDownUp} onClick={run('toggleCollapse')}>
             {collapsed ? t.expand : t.collapse}

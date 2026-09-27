@@ -59,6 +59,7 @@
 | 23 | Quản trị FE: hàng đợi, đã xóa, cấu hình | **Antigravity** | Gemini 3.1 Pro · Planning | ✅ 2026-09-25 |
 | 24 | Trợ lý AI FE | Claude Code | Sonnet · high | ✅ 2026-09-26 |
 | 25 | In cây khổ lớn | Claude Code | Sonnet · medium | ✅ 2026-09-26 |
+| 25b | Giao diện bổ sung: header gọn, dark mode, Hồ sơ cá nhân, Cài đặt, đổi tên Sự kiện | Claude Code | Sonnet · medium | ✅ 2026-09-26 |
 | **GĐ B** | **Backend** | | | |
 | 26–27 | Gỡ dòng họ BE, Thành viên BE + seed 28 người | Claude Code | Sonnet · high | ⬜ |
 | 28 | Người thân, "Tôi là ai" và tự sửa hồ sơ BE | Claude Code | Sonnet · high | ⬜ |
@@ -75,8 +76,8 @@
 | ~~40~~ | ~~E2E Playwright~~ (bỏ theo #84) | | | ❌ |
 | 41 | Deploy production | Claude Code | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 18–19 — Dashboard FE và PWA
-Công cụ **Antigravity** · Model **Gemini 3.8 Flash** · Chế độ **Planning** · Prompt: dùng **Prompt mẫu Antigravity** ở trên với N = 18–19.
+## ▶️ Đợt đang chờ: Đợt 26–27 — Gỡ dòng họ BE, Thành viên BE + seed 28 người
+Công cụ **Claude Code** · Model **Sonnet** · Effort **high**.
 
 ---
 
@@ -259,7 +260,7 @@ IDEA §6.1, §8 · DECISIONS #60–62, #71
 - [x] Hợp đồng: ✅ 2026-09-25
   - `DELETE /api/tree/nodes/{id}/member` (gỡ khỏi cây, ô thành ô trống);
   - `PUT /api/tree/nodes/{id}/member` (điền ô trống);
-  - `DELETE /api/tree/nodes/{id}` (xóa ô trống, lỗi `TREE_SLOT_NOT_EMPTY` hoặc `TREE_SLOT_HAS_LINKS`);
+  - `DELETE /api/tree/nodes/{id}` (xóa ô trống, giữ nhánh — #85; lỗi `TREE_SLOT_NOT_EMPTY`);
   - `POST /api/tree/nodes/{id}/move` (`newParentNodeId|null`, `coParentNodeId`; lỗi `TREE_CYCLE`);
   - `PUT /api/tree/nodes/{id}/order`;
   - `PUT /api/tree/nodes/{id}/co-parent`.
@@ -561,6 +562,15 @@ Việc nên làm thêm: (1) dấu ✝ và số thứ tự hôn nhân vẽ bằng
 
 > Mỗi đợt BE làm đúng những endpoint mà `shared/api/openapi.yaml` đã có, khớp tên trường, mã lỗi và phân quyền.
 > Hành vi phải giống handler giả lập. Chỗ nào giả lập sai so với IDEA/DECISIONS thì sửa theo IDEA/DECISIONS và ghi vào ✅ Đã làm.
+
+### Đợt 25b — Giao diện bổ sung (ngoài kế hoạch, theo yêu cầu 2026-09-26) ✅ 2026-09-26
+**✅ Đã làm:**
+- Header gọn: quay lại + tiêu đề; phải: nút sáng/tối, chuông, avatar mở menu (Hồ sơ cá nhân, Cài đặt, Đăng xuất). Bỏ breadcrumb và ô tìm kiếm chưa hoạt động. Sửa chuông trên điện thoại trỏ nhầm `/notifications` thành `/thong-bao`.
+- Dark mode (sáng/tối/theo máy) và cỡ chữ (vừa/lớn/rất lớn): `hooks/useTheme.ts`, token `:root.dark` trong `index.css`, script chống nháy trong `index.html`. DECISIONS #36 và DESIGN.md đã đổi.
+- Trang mới `/ho-so` (thông tin tài khoản, liên kết "Tôi là ai", đổi mật khẩu, đăng xuất) và `/cai-dat` (giao diện, cỡ chữ, lối tắt thông báo và chính sách), ở `features/account/`.
+- Menu "Lịch" đổi nhãn thành "Sự kiện" (giữ đường dẫn `/lich`). Dashboard ghi rõ dương · âm, "4 ngày trước" không còn dấu trừ (cả trang Sự kiện).
+- Quản trị → Tài khoản đổi tên hiển thị thành "Quản lý người dùng".
+**⚠️ Ghi cho BE:** thêm `POST /api/auth/change-password` (đã có trong `openapi.yaml`, chưa có handler: đăng nhập/`/me` chạy BE thật nên form đổi mật khẩu chỉ chạy được sau khi BE làm). Làm cùng Đợt 26–27 hoặc đợt riêng.
 
 ### Đợt 26–27 — Gỡ dòng họ BE, Thành viên BE + seed 28 người ⬜
 IDEA §4, §6.1, Phụ lục A · DECISIONS #54, #57, #58, #62, #63, #66, #68, #70

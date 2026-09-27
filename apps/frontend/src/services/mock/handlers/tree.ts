@@ -13,6 +13,7 @@ import {
   checkRemoveMember,
   checkReorder,
   checkSetCoParent,
+  deleteSlot,
   TREE_ERROR_STATUS,
   type TreeIndex,
   type TreeViolation,
@@ -203,8 +204,18 @@ async function deleteNode({ params }: MockRequest, context: HandlerContext): Pro
   const check = checkDeleteSlot(indexOf(store), nodeId)
   if (!check.ok) throw violation(check)
 
-  store.tree.nodes = store.tree.nodes.filter((n) => n.id !== nodeId)
-  store.tree.spouses = treeSpousesOf(store).filter((s) => s.spouseNodeId !== nodeId)
+  // Giữ nhánh: người/con cháu thế chỗ theo `deleteSlot`, ở đây chỉ chép kết quả về kho
+  const next = deleteSlot(buildTreeResponse(store), nodeId)
+  const changed = new Map(next.nodes.map((n) => [n.id, n]))
+  store.tree.nodes = store.tree.nodes
+    .filter((n) => n.id !== nodeId)
+    .map((n) => {
+      const after = changed.get(n.id)
+      return after
+        ? { ...n, parentNodeId: after.parentNodeId, coParentNodeId: after.coParentNodeId, sortOrder: after.sortOrder }
+        : n
+    })
+  store.tree.spouses = next.spouses
   context.save()
 }
 

@@ -12,7 +12,6 @@ export type TreeErrorCode =
   | 'TREE_SPOUSE_NOT_ALLOWED'
   | 'TREE_SLOT_NOT_EMPTY'
   | 'TREE_SLOT_EMPTY'
-  | 'TREE_SLOT_HAS_LINKS'
   | 'TREE_CYCLE'
   | 'TREE_MOVE_LINEAGE_ONLY'
   | 'TREE_NOT_A_CHILD'
@@ -27,7 +26,6 @@ const MESSAGES: Record<TreeErrorCode, string> = {
   TREE_SPOUSE_NOT_ALLOWED: 'Ô vợ/chồng không thêm được vợ/chồng.',
   TREE_SLOT_NOT_EMPTY: 'Ô này đang có người, không phải ô trống.',
   TREE_SLOT_EMPTY: 'Ô này đã là ô trống.',
-  TREE_SLOT_HAS_LINKS: 'Ô trống còn con hoặc vợ/chồng nên chưa xóa được.',
   TREE_CYCLE: 'Không thể chuyển nhánh vào chính con cháu của nó.',
   TREE_MOVE_LINEAGE_ONLY: 'Chỉ chuyển được ô thuộc dòng; vợ/chồng đi theo người trong dòng.',
   TREE_NOT_A_CHILD: 'Ô này không có cha/mẹ nên không có cặp cha–mẹ.',
@@ -44,7 +42,6 @@ export const TREE_ERROR_STATUS: Record<TreeErrorCode, number> = {
   TREE_SPOUSE_NOT_ALLOWED: 409,
   TREE_SLOT_NOT_EMPTY: 409,
   TREE_SLOT_EMPTY: 409,
-  TREE_SLOT_HAS_LINKS: 409,
   TREE_CYCLE: 409,
   TREE_MOVE_LINEAGE_ONLY: 409,
   TREE_NOT_A_CHILD: 409,
@@ -138,16 +135,11 @@ export function checkFillSlot(index: TreeIndex, nodeId: number, memberId: number
   return checkMemberFree(index, memberId)
 }
 
-/** Chỉ xóa được ô trống không còn con (theo cả cha/mẹ và cặp cha–mẹ) và không còn vợ/chồng. */
+/** Xóa ô: chỉ ô trống (đã gỡ người). Ô còn con cháu hoặc vợ/chồng vẫn xóa được, xem `deleteSlot`. */
 export function checkDeleteSlot(index: TreeIndex, nodeId: number): TreeCheck {
   const node = index.nodes.get(nodeId)
   if (!node) return fail('TREE_NODE_NOT_FOUND')
-  if (node.memberId !== null) return fail('TREE_SLOT_NOT_EMPTY')
-  const hasSpouses = (index.spousesOf.get(nodeId)?.length ?? 0) > 0
-  const hasChildren = [...index.nodes.values()].some(
-    (n) => n.parentNodeId === nodeId || n.coParentNodeId === nodeId,
-  )
-  return hasSpouses || hasChildren ? fail('TREE_SLOT_HAS_LINKS') : { ok: true }
+  return node.memberId !== null ? fail('TREE_SLOT_NOT_EMPTY') : { ok: true }
 }
 
 /**

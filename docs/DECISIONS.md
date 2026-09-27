@@ -99,7 +99,7 @@
 35. **Lịch âm ở frontend**
     → **Chốt:** bản Java là nguồn chuẩn. Viết thêm bản TS của cùng thuật toán. Cả hai chạy chung bộ dữ liệu test `shared/fixtures/lunar/` (1900–2100).
 36. **Giao diện**
-    → **Chốt:** lấy phong cách từ `docs/theme.png` (chi tiết ở `docs/DESIGN.md`). Font **Be Vietnam Pro**, icon **lucide**. **Chưa làm dark mode**, chỉ có giao diện sáng.
+    → **Chốt:** lấy phong cách từ `docs/theme.png` (chi tiết ở `docs/DESIGN.md`). Font **Be Vietnam Pro**, icon **lucide**. ~~Chưa làm dark mode~~ 🔁 2026-09-26: có thêm giao diện tối (sáng/tối/theo máy) và cỡ chữ, lưu ở localStorage.
 37. **Ngôn ngữ**
     → **Chốt:** chuỗi tiếng Việt viết thẳng trong code, gom theo feature, không dùng thư viện i18n. Tên biến, hàm và commit viết bằng tiếng Anh. ⏳ **Ngôn ngữ comment chưa chốt**, tạm dùng **tiếng Việt, ngắn gọn**.
 38. **Offline**
@@ -345,6 +345,21 @@
     - Model: Opus chỉ ở Đợt 14; còn lại Sonnet, effort `high` cho đợt cây, quyền/tài khoản, AI; còn lại `medium`.
     - ROADMAP chỉ giữ đợt chưa làm và một prompt mẫu chung; đợt 0–10 chuyển sang `roadmap/DONE.md`. Mỗi phiên chỉ đọc mục của đợt được giao.
     - Phân quyền vẫn **bắt buộc chặn ở backend** như `.claude/rules/security.md`, chỉ là không có test tự động chứng minh; người dùng tự kiểm bằng bước 🧪.
+
+## N. Cây gia phả: xóa ô, cỡ ô, hiển thị dọc (chốt 2026-09-26, hỏi đáp với người dùng)
+
+85. **Xóa ô giữ nhánh; cỡ ô tự vừa tên; chế độ chữ dọc**
+    → **Chốt:**
+    - Vẫn 2 bước: "Gỡ khỏi cây" (người thành ô trống) rồi "Xóa ô". Ô trống **luôn xóa được**, bỏ lỗi `TREE_SLOT_HAS_LINKS`. Nhánh được giữ: ô vợ/chồng bị bỏ thì con của cặp đó thành con của một mình người thuộc dòng; ô thuộc dòng có vợ/chồng thì vợ/chồng thứ nhất thế chỗ (nhận con cháu và các vợ/chồng còn lại); ô thuộc dòng không có vợ/chồng thì con cháu lên thế chỗ (dịch lên một đời). Thứ tự anh em đánh lại từ 1. Hàm thuần `deleteSlot` ở `utils/tree/delete.ts`.
+    - Ô trên cây có kích thước **vừa với tên dài nhất đang hiện** (mọi ô cùng cỡ để layout không đổi), kèm nút cỡ chung Nhỏ / Vừa / Lớn. In cây vẫn dùng cỡ cố định 200×72.
+    - Nút "Hiển thị dọc": mọi ô đổi sang dạng cao hẹp, tên xoay dọc (`writing-mode`), bố cục các đời vẫn từ trên xuống. Lựa chọn (dọc/ngang, cỡ) nhớ trong `localStorage` của trình duyệt.
+    - Nhãn menu "Cây" đổi thành "Cây gia phả".
+86. **Cây: chữ dọc kiểu ảnh mẫu, cỡ và kiểu riêng từng ô, bấm ô nào cũng ra bảng (thay một phần #85)**
+    → **Chốt:**
+    - Ô dọc: mỗi từ của tên một dòng, chữ đứng thẳng (không xoay), năm sinh–mất ở cuối ô, không ảnh đại diện. Bỏ kiểu xoay chữ 90°.
+    - Kéo góc từng ô để đổi cỡ; menu ô có "Xoay ô sang dọc/ngang" và "Đặt lại cỡ và kiểu ô". Nút "Hiển thị dọc/ngang" chung vẫn còn, ô đã chỉnh riêng giữ lựa chọn của nó.
+    - Các tùy chỉnh này chỉ lưu trong `localStorage` của từng người xem (không lên máy chủ, không đổi API). `layoutTree` nhận cỡ riêng từng ô (`nodeSizes`); mỗi hàng đời cao bằng ô cao nhất, ô trong hàng căn giữa.
+    - Bấm vào bất kỳ ô nào, kể cả ô trống của Admin, đều mở bảng thao tác của ô (ô trống có mục "Chọn người điền vào ô").
 
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.

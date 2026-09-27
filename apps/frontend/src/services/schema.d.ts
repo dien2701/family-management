@@ -72,6 +72,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Đổi mật khẩu khi đã đăng nhập
+         * @description Cần mật khẩu hiện tại. Thu hồi mọi refresh token khác của tài khoản. Tài khoản chỉ đăng nhập bằng Google (chưa có mật khẩu) nhận 409.
+         */
+        post: operations["changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/resend-otp": {
         parameters: {
             query?: never;
@@ -971,8 +991,11 @@ export interface paths {
         post?: never;
         /**
          * Xóa ô trống
-         * @description Chỉ Admin. Chỉ xóa được **ô trống** không còn con (theo cả `parentNodeId` và `coParentNodeId`) và không còn vợ/chồng.
-         *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người), `TREE_SLOT_HAS_LINKS`.
+         * @description Chỉ Admin. Chỉ xóa được **ô trống** (đã gỡ người), kể cả khi ô còn con hoặc vợ/chồng; nhánh được giữ lại:
+         *     - ô vợ/chồng: bị bỏ, con của cặp đó thành con của một mình người thuộc dòng, thứ tự các vợ/chồng còn lại đánh lại từ 1;
+         *     - ô thuộc dòng có vợ/chồng: vợ/chồng thứ nhất thế vào đúng chỗ (cha/mẹ, cặp cha–mẹ, thứ tự anh em), nhận con cháu và các vợ/chồng còn lại;
+         *     - ô thuộc dòng không có vợ/chồng: con cháu lên thế chỗ, làm con của cha/mẹ của ô bị xóa (hoặc thành gốc), cả nhánh dịch lên một đời.
+         *     Thứ tự anh em được đánh lại từ 1. Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người).
          */
         delete: operations["deleteTreeNode"];
         options?: never;
@@ -1793,6 +1816,10 @@ export interface components {
             newPassword: string;
             confirmPassword: string;
         };
+        ChangePasswordRequest: {
+            currentPassword: string;
+            newPassword: string;
+        };
         EmailRequest: {
             /** Format: email */
             email: string;
@@ -2492,6 +2519,32 @@ export interface operations {
                 content?: never;
             };
             400: components["responses"]["ValidationError"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Đã đổi mật khẩu */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
             429: components["responses"]["TooManyRequests"];
         };
     };

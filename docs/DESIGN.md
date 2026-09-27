@@ -4,7 +4,7 @@ Nguồn: skill ui-ux-pro-max + docs/theme.png
 
 > Ảnh `docs/theme.png` là một dashboard giáo dục, nên chỉ lấy **phong cách** (navy + xanh dương, thẻ bo tròn gần như phẳng), không lấy nội dung.
 > Skill ui-ux-pro-max đối chiếu: phong cách *Minimalism*, font Be Vietnam Pro, icon lucide, kiểm tra tương phản ≥ 4.5:1, focus nhìn thấy được, tôn trọng `prefers-reduced-motion`.
-> Chỉ có giao diện sáng (DECISIONS #36), không có bộ token dark. Ưu tiên điện thoại. WCAG AA, chữ nền tối thiểu 16px.
+> Giao diện sáng là mặc định; có thêm giao diện tối (bảng ghi đè `:root.dark` trong `src/index.css`, đổi ở nút trên header và trang Cài đặt; DECISIONS #36 đã đổi 2026-09-26). Ưu tiên điện thoại. WCAG AA, chữ nền tối thiểu 16px.
 
 ## 1. Token màu
 

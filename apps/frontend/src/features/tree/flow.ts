@@ -21,6 +21,10 @@ export type MemberNodeData = {
   /** Ô này giữ nút "+ vợ/chồng" của người thuộc dòng `spouseAddFor`, ở phía `spouseAddSide`. */
   spouseAddFor: number | null
   spouseAddSide: 'left' | 'right' | null
+  /** Tên viết dọc trong ô cao hẹp. */
+  vertical: boolean
+  /** Cỡ chung (Nhỏ/Vừa/Lớn): nội dung ô được phóng theo. */
+  scale: number
 }
 
 export type MemberFlowNode = Node<MemberNodeData, 'member'>
@@ -34,6 +38,9 @@ export type FlowUi = {
   dragging: { id: number; valid: ReadonlySet<number>; overId: number | null } | null
   draggable: boolean
   admin: boolean
+  /** Ô này hiển thị dọc (kiểu chung hoặc riêng của ô). */
+  verticalOf: (nodeId: number) => boolean
+  scale: number
   /** Có hiện nút "+" nhanh không, và cho ô nào thì thêm được gì. */
   addOptionsOf: ((nodeId: number) => AddOptions) | null
   /** Số vợ/chồng hiện có của một người thuộc dòng (để biết người tiếp theo đứng bên nào). */
@@ -94,6 +101,8 @@ export function buildFlow(layout: LayoutResult, ui: FlowUi): { nodes: MemberFlow
         add: ui.addOptionsOf ? ui.addOptionsOf(placed.id) : null,
         spouseAddFor: host?.ownerId ?? null,
         spouseAddSide: host?.side ?? null,
+        vertical: ui.verticalOf(placed.id),
+        scale: ui.scale,
       },
     }
   })

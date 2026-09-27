@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { useAuth } from '@/hooks/useAuth'
 import { useDashboard } from '../hooks'
 import type { CalendarOccurrence } from '@/types/api'
+import { daysLabel, dualDateLine } from '@/features/calendar/format'
 
 function EventIcon({ type }: { type: CalendarOccurrence['type'] }) {
   if (type === 'MEMORIAL') return <Flame className="w-5 h-5 text-event-memorial" />
@@ -22,8 +23,7 @@ function EventCard({ event, title }: { event: CalendarOccurrence; title: string 
           <span className="text-16">{event.title}</span>
         </div>
         <div className="text-14 mt-1 opacity-80">
-          Ngày {event.solar.day}/{event.solar.month}/{event.solar.year} dương
-          {event.lunar ? ` (Tương đương ${event.lunar.day}/${event.lunar.month} âm)` : ''}
+          {dualDateLine(event)}
         </div>
       </div>
       <div className="bg-surface/20 rounded-card px-4 py-3 text-center min-w-[120px]">
@@ -140,7 +140,7 @@ export function DashboardPage() {
                       <EventIcon type={event.type} />
                       <div>
                         <div className="font-medium text-16 text-text">{event.title}</div>
-                        <div className="text-14 text-text-muted">Ngày {event.solar.day}/{event.solar.month}</div>
+                        <div className="text-14 text-text-muted">{dualDateLine(event)}</div>
                       </div>
                     </div>
                     <div className="text-14 font-medium tabular-nums text-accent">
@@ -171,11 +171,11 @@ export function DashboardPage() {
                       <EventIcon type={event.type} />
                       <div>
                         <div className="font-medium text-16 text-text">{event.title}</div>
-                        <div className="text-14 text-text-muted">Ngày {event.solar.day}/{event.solar.month}/{event.solar.year}</div>
+                        <div className="text-14 text-text-muted">{dualDateLine(event)}</div>
                       </div>
                     </div>
                     <div className="text-14 text-text-muted tabular-nums">
-                      {event.daysUntil} ngày trước
+                      {daysLabel(event.daysUntil)}
                     </div>
                   </li>
                 ))}

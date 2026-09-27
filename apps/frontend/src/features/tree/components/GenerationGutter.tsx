@@ -1,5 +1,4 @@
 import { useViewport } from '@xyflow/react'
-import { LAYOUT } from '../layout/layoutTree'
 import type { LayoutGeneration } from '../layout/types'
 import { treeStrings as t } from '../strings'
 
@@ -18,7 +17,7 @@ export function GenerationGutter({ generations }: { generations: LayoutGeneratio
         <div
           key={g.row}
           className="absolute inset-x-0 flex items-center justify-center text-sm font-semibold whitespace-nowrap text-text-muted tabular-nums"
-          style={{ top: y + g.y * zoom, height: LAYOUT.nodeHeight * zoom }}
+          style={{ top: y + g.y * zoom, height: g.height * zoom }}
         >
           {t.generation(g.generation)}
         </div>

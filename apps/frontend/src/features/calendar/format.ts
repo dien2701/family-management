@@ -4,7 +4,7 @@ import { calendarStrings } from './strings'
 
 const s = calendarStrings.occurrence
 
-/** "Hôm nay", "Ngày mai", "còn 12 ngày", "đã qua 3 ngày". */
+/** "Hôm nay", "Ngày mai", "còn 12 ngày", "3 ngày trước". */
 export function daysLabel(daysUntil: number): string {
   if (daysUntil === 0) return s.today
   if (daysUntil === 1) return s.tomorrow
@@ -26,3 +26,8 @@ export function occurrenceDateLine(o: Pick<CalendarOccurrence, 'solar' | 'lunar'
 
 /** "17/02" cho tiêu đề tuần. */
 export const shortSolar = (d: SolarDate): string => formatSolar(d).slice(0, 5)
+
+/** "22/09/2026 dương · 12/8 âm": ghi rõ cả hai lịch, dùng ở dashboard. */
+export function dualDateLine(o: Pick<CalendarOccurrence, 'solar' | 'lunar'>): string {
+  return `${formatSolar(o.solar)} dương · ${formatLunarDayMonth(o.lunar)}`
+}

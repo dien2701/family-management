@@ -31,12 +31,22 @@ const writeSession = (email: string | null) => {
   }
 }
 
+// Bản xem thử một file (npm run build:share) đổi vai trò bằng khóa này; mặc định Admin
+const mockRole = (): 'ADMIN' | 'USER' => {
+  try {
+    return localStorage.getItem('giapha.mock.role') === 'USER' ? 'USER' : 'ADMIN'
+  } catch {
+    return 'ADMIN'
+  }
+}
+
 function accountOf(email: string): AccountAdmin {
+  const role = mockRole()
   return {
     id: 1,
     email,
-    fullName: 'Quản trị viên',
-    systemRole: 'ADMIN',
+    fullName: role === 'ADMIN' ? 'Quản trị viên' : 'Người dùng',
+    systemRole: role,
     status: 'ACTIVE',
     approvalStatus: 'APPROVED',
     createdAt: '2026-01-01T00:00:00Z',

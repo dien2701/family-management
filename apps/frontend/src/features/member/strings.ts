@@ -17,14 +17,14 @@ export const memberStrings = {
         generation: 'Đời',
       },
       deceased: {
-        label: 'Tình trạng',
-        all: 'Tất cả',
+        label: 'Trạng thái',
+        all: 'Trạng thái: Tất cả',
         alive: 'Còn sống',
         dead: 'Đã mất',
       },
       onTree: {
-        label: 'Trên cây',
-        all: 'Tất cả',
+        label: 'Cây gia phả',
+        all: 'Cây gia phả: Tất cả',
         yes: 'Đã có',
         no: 'Chưa có',
       },

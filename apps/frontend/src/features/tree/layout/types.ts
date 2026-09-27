@@ -3,6 +3,11 @@ import type { TreeNode } from '@/utils/tree'
 export type Point = { x: number; y: number }
 
 export type LayoutOptions = {
+  /** Cỡ mỗi ô (pixel). Bỏ trống thì 200×72. */
+  nodeWidth?: number
+  nodeHeight?: number
+  /** Cỡ riêng của từng ô (theo id ô), ghi đè cỡ mặc định. */
+  nodeSizes?: ReadonlyMap<number, { width: number; height: number }>
   /** Các ô đang thu gọn: ẩn con cháu (vợ/chồng vẫn hiện). Id của ô vợ/chồng tính là của người thuộc dòng. */
   collapsedIds?: Iterable<number>
   /** Chỉ vẽ nhánh của ô này (ô vợ/chồng thì tính người thuộc dòng). Bỏ trống thì vẽ mọi cây. */
@@ -60,6 +65,8 @@ export type LayoutGeneration = {
   row: number
   /** Tọa độ y của đỉnh hàng (cùng hệ với ô), để đồng bộ cột "Đời" bên trái. */
   y: number
+  /** Chiều cao của hàng (bằng chiều cao ô). */
+  height: number
 }
 
 export type LayoutResult = {

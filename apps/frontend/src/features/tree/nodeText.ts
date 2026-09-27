@@ -12,3 +12,11 @@ export function yearsText(member: TreeMember): string {
   }
   return member.birthYear === null ? '' : String(member.birthYear)
 }
+
+/** Năm sinh–mất tách dòng cho ô dọc: ["1930", "✝ 1990"], ["✝ 1990"] hoặc ["1930"]. */
+export function yearsLines(member: TreeMember): string[] {
+  const lines: string[] = []
+  if (member.birthYear !== null) lines.push(String(member.birthYear))
+  if (member.isDeceased) lines.push(`✝ ${member.deathYear ?? '?'}`)
+  return lines
+}

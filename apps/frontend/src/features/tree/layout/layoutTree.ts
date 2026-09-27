@@ -1,6 +1,7 @@
 // Thuật toán xếp vị trí cây (DECISIONS #34, IDEA §8): hàm thuần, kết quả xác định, không phụ thuộc React Flow.
 //
-// - Mỗi đời một hàng. Đơn vị xếp là ô thuộc dòng cùng các vợ/chồng của nó, đứng thành một hàng ngang:
+// - Mỗi đời một hàng, cao bằng ô cao nhất của hàng; các ô trong hàng căn giữa theo chiều dọc. Ô có thể có cỡ riêng.
+//   Đơn vị xếp là ô thuộc dòng cùng các vợ/chồng của nó, đứng thành một hàng ngang:
 //   vợ/chồng thứ 1, 3, 5… ở bên trái, thứ 2, 4, 6… ở bên phải (càng về sau càng xa người thuộc dòng).
 // - Con đi xuống từ trung điểm của đúng cặp (hai ô kề nhau). Cặp không kề nhau (từ vợ/chồng thứ 3) thì
 //   đường hôn nhân đi vòng dưới các ô và con đi xuống từ giữa đường đó. Con không có cặp đi từ đáy ô cha/mẹ.
@@ -40,20 +41,23 @@ type Box = {
   node: TreeNode
   /** Lệch trái của ô so với mép trái đơn vị. */
   dx: number
+  w: number
+  h: number
   spouseOrder: number | null
-  /** Đường hôn nhân tới ô này, tọa độ theo góc trên trái của đơn vị. */
-  marriage: { points: Point[]; anchor: Point } | null
+  /** Số ô cách người thuộc dòng (0 là chính người thuộc dòng; 1 là kề nhau). */
+  distance: number
 }
 
-/** Một ô thuộc dòng cùng vợ/chồng, và cây con phía dưới. Tọa độ trong đơn vị lấy mép trái đơn vị làm gốc. */
+/** Một ô thuộc dòng cùng vợ/chồng, và cây con phía dưới. Tọa độ x trong đơn vị lấy mép trái đơn vị làm gốc. */
 type Unit = {
   lineage: TreeNode
   depth: number
   boxes: Box[]
   width: number
   lineageCx: number
+  lineageH: number
   /** Điểm con đi xuống theo từng cặp: khóa là id ô vợ/chồng, `null` là một mình cha/mẹ. */
-  sources: Map<number | null, Point>
+  sources: Map<number | null, { x: number; distance: number }>
   children: Unit[]
   /** Cặp của từng con, cùng thứ tự với `children`. */
   childSource: (number | null)[]
@@ -68,8 +72,14 @@ type Unit = {
 const mean = (values: number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
 
 export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): LayoutResult {
-  const { nodeWidth: W, nodeHeight: H, spouseGap, siblingGap, treeGap, rowGap, laneStep, marriageLaneStep } = LAYOUT
-  const pitch = H + rowGap
+  const { spouseGap, siblingGap, treeGap, rowGap, laneStep, marriageLaneStep } = LAYOUT
+  // Cỡ ô mặc định 200×72; giao diện truyền cỡ vừa với tên và cỡ riêng của từng ô (nếu có)
+  const defaultW = options.nodeWidth ?? LAYOUT.nodeWidth
+  const defaultH = options.nodeHeight ?? LAYOUT.nodeHeight
+  const sizeOf = (node: TreeNode) => ({
+    w: options.nodeSizes?.get(node.id)?.width ?? defaultW,
+    h: options.nodeSizes?.get(node.id)?.height ?? defaultH,
+  })
   const index = buildTreeIndex(graph)
   const generations = computeGenerations(index)
 
@@ -94,6 +104,9 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
     }
   }
 
+  // Chiều cao mỗi hàng đời = ô cao nhất của hàng
+  const rowHeights: number[] = []
+
   const buildUnit = (lineage: TreeNode, depth: number, seen: Set<number>): Unit => {
     seen.add(lineage.id)
 
@@ -107,43 +120,32 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
       ...rightSpouses.map((s) => ({ node: s.node, order: s.order as number | null })),
     ]
     const lineageSlot = leftSpouses.length
-    const stride = W + spouseGap
-    const width = slots.length * W + (slots.length - 1) * spouseGap
-    const lineageCx = lineageSlot * stride + W / 2
 
-    const sources = new Map<number | null, Point>([[null, { x: lineageCx, y: H }]])
+    let cursor = 0
     const boxes: Box[] = slots.map((slot, j) => {
-      const dx = j * stride
-      if (j === lineageSlot) return { node: slot.node, dx, spouseOrder: null, marriage: null }
-      const distance = Math.abs(j - lineageSlot)
-      let marriage: Box['marriage']
-      if (distance === 1) {
-        // Kề nhau: đường thẳng qua khe giữa hai ô, con đi xuống từ giữa khe.
-        const from = Math.min(j, lineageSlot) * stride + W
-        const to = Math.max(j, lineageSlot) * stride
-        marriage = {
-          points: [
-            { x: from, y: H / 2 },
-            { x: to, y: H / 2 },
-          ],
-          anchor: { x: (from + to) / 2, y: H / 2 },
-        }
+      const { w, h } = sizeOf(slot.node)
+      const box: Box = { node: slot.node, dx: cursor, w, h, spouseOrder: slot.order, distance: Math.abs(j - lineageSlot) }
+      cursor += w + spouseGap
+      return box
+    })
+    const width = cursor - spouseGap
+    const lineageBox = boxes[lineageSlot] as Box
+    const lineageCx = lineageBox.dx + lineageBox.w / 2
+    rowHeights[depth] = Math.max(rowHeights[depth] ?? 0, ...boxes.map((b) => b.h))
+
+    const sources = new Map<number | null, { x: number; distance: number }>([[null, { x: lineageCx, distance: 0 }]])
+    boxes.forEach((box, j) => {
+      if (box.distance === 0) return
+      let x: number
+      if (box.distance === 1) {
+        // Kề nhau: con đi xuống từ giữa khe giữa hai ô
+        const from = j < lineageSlot ? box.dx + box.w : lineageBox.dx + lineageBox.w
+        const to = j < lineageSlot ? lineageBox.dx : box.dx
+        x = (from + to) / 2
       } else {
-        // Không kề: đi vòng dưới các ô ở giữa.
-        const cx = dx + W / 2
-        const laneY = H + marriageLaneStep * (distance - 1)
-        marriage = {
-          points: [
-            { x: lineageCx, y: H },
-            { x: lineageCx, y: laneY },
-            { x: cx, y: laneY },
-            { x: cx, y: H },
-          ],
-          anchor: { x: (lineageCx + cx) / 2, y: laneY },
-        }
+        x = (lineageCx + box.dx + box.w / 2) / 2
       }
-      sources.set(slot.node.id, marriage.anchor)
-      return { node: slot.node, dx, spouseOrder: slot.order, marriage }
+      sources.set(box.node.id, { x, distance: box.distance })
     })
 
     const allChildren = index.childrenOf.get(lineage.id) ?? []
@@ -198,6 +200,7 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
       boxes,
       width,
       lineageCx,
+      lineageH: lineageBox.h,
       sources,
       children,
       childSource,
@@ -211,13 +214,25 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
   const visited = new Set<number>()
   const trees = viewRoots.map((r) => buildUnit(r, 0, visited))
 
+  // Đỉnh từng hàng đời
+  const rowTops: number[] = []
+  rowHeights.reduce((top, h, row) => {
+    rowTops[row] = top
+    return top + h + rowGap
+  }, 0)
+
   const nodes: PlacedNode[] = []
   const edges: LayoutEdge[] = []
 
   const emit = (unit: Unit, left: number) => {
-    const top = unit.depth * pitch
-    const at = (p: Point): Point => ({ x: left + p.x, y: top + p.y })
+    const top = rowTops[unit.depth] ?? 0
+    const rowH = rowHeights[unit.depth] ?? defaultH
+    const cy = top + rowH / 2
+    const boxTop = (h: number) => top + (rowH - h) / 2
     const generation = generations.get(unit.lineage.id) ?? unit.depth + 1
+    const lineageBox = unit.boxes.find((b) => b.node.id === unit.lineage.id) as Box
+    const lineageCxAbs = left + unit.lineageCx
+    const lineageBottom = boxTop(lineageBox.h) + lineageBox.h
 
     for (const box of unit.boxes) {
       const isLineage = box.node.id === unit.lineage.id
@@ -225,9 +240,9 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
         id: box.node.id,
         node: box.node,
         x: left + box.dx,
-        y: top,
-        width: W,
-        height: H,
+        y: boxTop(box.h),
+        width: box.w,
+        height: box.h,
         generation,
         row: unit.depth,
         kind: isLineage ? 'lineage' : 'spouse',
@@ -237,18 +252,41 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
         childCount: isLineage ? unit.childCount : 0,
         hiddenChildCount: isLineage ? unit.hiddenChildCount : 0,
       })
-      if (box.marriage) {
-        edges.push({
-          id: `m-${unit.lineage.id}-${box.node.id}`,
-          kind: 'marriage',
-          fromNodeId: unit.lineage.id,
-          toNodeId: box.node.id,
-          coParentNodeId: null,
-          order: box.spouseOrder,
-          points: box.marriage.points.map(at),
-          anchor: at(box.marriage.anchor),
-        })
+      if (box.distance === 0) continue
+      const onLeft = box.dx < lineageBox.dx
+      let points: Point[]
+      let anchor: Point
+      if (box.distance === 1) {
+        // Kề nhau: đường thẳng qua khe giữa hai ô ở giữa hàng
+        const from = left + (onLeft ? box.dx + box.w : lineageBox.dx + lineageBox.w)
+        const to = left + (onLeft ? lineageBox.dx : box.dx)
+        points = [
+          { x: from, y: cy },
+          { x: to, y: cy },
+        ]
+        anchor = { x: (from + to) / 2, y: cy }
+      } else {
+        // Không kề: đi vòng dưới các ô ở giữa
+        const cx = left + box.dx + box.w / 2
+        const laneY = top + rowH + marriageLaneStep * (box.distance - 1)
+        points = [
+          { x: lineageCxAbs, y: lineageBottom },
+          { x: lineageCxAbs, y: laneY },
+          { x: cx, y: laneY },
+          { x: cx, y: boxTop(box.h) + box.h },
+        ]
+        anchor = { x: (lineageCxAbs + cx) / 2, y: laneY }
       }
+      edges.push({
+        id: `m-${unit.lineage.id}-${box.node.id}`,
+        kind: 'marriage',
+        fromNodeId: unit.lineage.id,
+        toNodeId: box.node.id,
+        coParentNodeId: null,
+        order: box.spouseOrder,
+        points,
+        anchor,
+      })
     }
 
     // Mỗi cặp một "làn" ngang riêng để đường nối của các cặp khác nhau không chập vào nhau.
@@ -258,10 +296,19 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
     unit.children.forEach((child, i) => {
       const childLeft = left + (unit.childDx[i] ?? 0)
       const key = unit.childSource[i] ?? null
-      const from = at(unit.sources.get(key) ?? { x: unit.lineageCx, y: H })
+      const source = unit.sources.get(key) ?? { x: unit.lineageCx, distance: 0 }
+      const fromY =
+        source.distance === 0
+          ? lineageBottom
+          : source.distance === 1
+            ? cy
+            : top + rowH + marriageLaneStep * (source.distance - 1)
+      const from: Point = { x: left + source.x, y: fromY }
+      const childTop = rowTops[child.depth] ?? 0
+      const childRowH = rowHeights[child.depth] ?? defaultH
       const toX = childLeft + child.lineageCx
-      const toY = child.depth * pitch
-      const busY = toY - rowGap / 2 + (lanes.indexOf(key) - (lanes.length - 1) / 2) * laneStep
+      const toY = childTop + (childRowH - child.lineageH) / 2
+      const busY = childTop - rowGap / 2 + (lanes.indexOf(key) - (lanes.length - 1) / 2) * laneStep
       edges.push({
         id: `c-${child.lineage.id}`,
         kind: key === null ? 'single-child' : 'pair-child',
@@ -291,7 +338,7 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
 
   nodes.sort((a, b) => a.y - b.y || a.x - b.x || a.id - b.id)
 
-  const rows = nodes.reduce((max, n) => Math.max(max, n.row + 1), 0)
+  const rows = rowHeights.length
   const firstGeneration = nodes.find((n) => n.row === 0)?.generation ?? 1
   return {
     nodes,
@@ -299,9 +346,10 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
     generations: Array.from({ length: rows }, (_, row) => ({
       generation: firstGeneration + row,
       row,
-      y: row * pitch,
+      y: rowTops[row] ?? 0,
+      height: rowHeights[row] ?? defaultH,
     })),
     width: nodes.reduce((max, n) => Math.max(max, n.x + n.width), 0),
-    height: rows > 0 ? rows * pitch - rowGap : 0,
+    height: rows > 0 ? (rowTops[rows - 1] ?? 0) + (rowHeights[rows - 1] ?? 0) : 0,
   }
 }

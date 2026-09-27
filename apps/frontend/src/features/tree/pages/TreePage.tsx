@@ -1,5 +1,5 @@
 import { Loader2, Network, Plus, X } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { Alert } from '@/components/shared/Alert'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -22,14 +22,16 @@ import { MoveDialog } from '../components/MoveDialog'
 import { DeleteSlotDialog, RemoveMemberDialog } from '../components/NodeConfirmDialogs'
 import { NodeMenuDialog, type MenuAction } from '../components/NodeMenuDialog'
 import { PairDialog } from '../components/PairDialog'
-import { PrintTreeDialog } from '../components/PrintTreeDialog'
 import { ReorderDialog } from '../components/ReorderDialog'
 import { TreeCanvas, type ViewRequest } from '../components/TreeCanvas'
+import { TreePreviewScreen } from '../components/TreePreviewScreen'
 import { TreeToolbar, type ViewStatus } from '../components/TreeToolbar'
 import { layoutTree } from '../layout/layoutTree'
+import { fitNodeSizes, SIZE_SCALE } from '../nodeSize'
 import { nodeName } from '../nodeText'
 import { treeStrings as t } from '../strings'
 import { TreeActionsContext, type QuickAddKind, type TreeActions } from '../treeActions'
+import { useTreeViewPrefs } from '../useTreeViewPrefs'
 
 /** Số đời hiện mặc định trên điện thoại (quanh người được chọn); chạm "+N con" để mở thêm. */
 const PHONE_DEPTH = 3
@@ -137,17 +139,54 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
   // Đang xem tổ tiên là một phần của cây nên không chỉnh sửa ở chế độ này
   const editing = isAdmin && ancestorsOf === null
 
+  const { prefs, nodes: overrides, setPrefs, setNode, resetNodes } = useTreeViewPrefs()
+  // Font tải xong thì đo lại cỡ ô cho đúng
+  const [fontsReady, setFontsReady] = useState(0)
+  useEffect(() => {
+    let alive = true
+    void document.fonts?.ready.then(() => alive && setFontsReady((n) => n + 1))
+    return () => {
+      alive = false
+    }
+  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `fontsReady` chỉ để đo lại sau khi font tải xong
+  const fitted = useMemo(() => fitNodeSizes(graph.nodes, prefs.size), [graph.nodes, prefs.size, fontsReady])
+
+  // Kiểu dọc/ngang của từng ô: riêng của ô nếu có, không thì kiểu chung
+  const verticalOf = useCallback((id: number) => overrides[id]?.vertical ?? prefs.vertical, [overrides, prefs.vertical])
+
+  const layoutOptions = useMemo(() => {
+    const base = prefs.vertical ? fitted.vertical : fitted.horizontal
+    const nodeSizes = new Map<number, { width: number; height: number }>()
+    for (const [key, o] of Object.entries(overrides)) {
+      const id = Number(key)
+      if (!graph.nodes.some((n) => n.id === id)) continue
+      const fit = (o.vertical ?? prefs.vertical) ? fitted.vertical : fitted.horizontal
+      nodeSizes.set(id, { width: o.width ?? fit.width, height: o.height ?? fit.height })
+    }
+    return { nodeWidth: base.width, nodeHeight: base.height, nodeSizes }
+  }, [fitted, overrides, prefs.vertical, graph.nodes])
+
   const layout = useMemo(
     () =>
       ancestorsOf === null
-        ? layoutTree(graph, { collapsedIds: collapsed, rootNodeId: viewRootId, maxDepth: depthLimit, focusNodeId: focusId })
-        : layoutTree(ancestorGraph(graph, ancestorsOf)),
-    [graph, ancestorsOf, collapsed, viewRootId, depthLimit, focusId],
+        ? layoutTree(graph, { ...layoutOptions, collapsedIds: collapsed, rootNodeId: viewRootId, maxDepth: depthLimit, focusNodeId: focusId })
+        : layoutTree(ancestorGraph(graph, ancestorsOf), layoutOptions),
+    [graph, layoutOptions, ancestorsOf, collapsed, viewRootId, depthLimit, focusId],
   )
 
   // ---- Điều khiển khung nhìn ----
 
   const requestView = (nodeId: number | null) => setView((v) => ({ tick: v.tick + 1, nodeId }))
+
+  // Đổi dọc/ngang hoặc cỡ ô thì kích thước cây đổi nhiều: đưa khung nhìn về vừa cả cây
+  const prefsSeen = useRef(prefs)
+  useEffect(() => {
+    if (prefsSeen.current === prefs) return
+    prefsSeen.current = prefs
+    requestView(null)
+  }, [prefs])
+
 
   // Làm nổi bật rồi tự tắt sau vài giây
   const highlight = (nodeId: number) => {
@@ -248,13 +287,11 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
   }
   const closeFlow = () => setFlow(null)
 
+  // Bấm vào ô nào (kể cả ô trống) cũng mở bảng thao tác của ô đó; ô trống có mục "Chọn người điền vào ô"
   const openNode = (nodeId: number) => {
     setSelectedId(nodeId)
     setNotice(null)
-    const empty = index.nodes.get(nodeId)?.memberId === null
-    // Ô trống: Admin bấm vào là chọn người điền ngay (IDEA §8); người khác chỉ có menu xem
-    if (empty && editing) openFlow({ kind: 'add', mode: { kind: 'fill', nodeId } })
-    else openFlow({ kind: 'menu', nodeId })
+    openFlow({ kind: 'menu', nodeId })
   }
 
   const actions: TreeActions = {
@@ -268,6 +305,7 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
       openFlow({ kind: 'add', mode: { kind, nodeId } })
     },
     expandHidden,
+    resize: (nodeId, width, height) => setNode(nodeId, { width, height }),
   }
 
   const menuNode = flow?.kind === 'menu' ? index.nodes.get(flow.nodeId) : undefined
@@ -287,6 +325,17 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
       case 'toggleCollapse':
         closeFlow()
         toggleCollapse(nodeId)
+        break
+      case 'rotate':
+        // Đổi kiểu thì bỏ cỡ kéo tay của ô để ô vừa lại với tên ở kiểu mới
+        setNode(nodeId, null)
+        setNode(nodeId, { vertical: !verticalOf(nodeId) })
+        closeFlow()
+        requestView(nodeId)
+        break
+      case 'resetNode':
+        setNode(nodeId, null)
+        closeFlow()
         break
       case 'fill':
         openFlow({ kind: 'add', mode: { kind: 'fill', nodeId } })
@@ -360,11 +409,13 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
       meNodeId: myNodeId,
       draggable: editing && isDesktop,
       admin: editing,
+      verticalOf,
+      scale: SIZE_SCALE[prefs.size],
       // Nút "+" nhỏ trên ô chỉ dùng được với chuột; điện thoại thêm qua menu của ô
       addOptionsOf: editing && isDesktop ? (id: number) => getAddOptions(index, id) : null,
       spouseCountOf: (id: number) => index.spousesOf.get(id)?.length ?? 0,
     }),
-    [selectedId, highlightId, myNodeId, editing, isDesktop, index],
+    [selectedId, highlightId, myNodeId, editing, isDesktop, index, prefs.size, verticalOf],
   )
 
   const viewRootNode = viewRootId === null ? undefined : index.nodes.get(viewRootId)
@@ -391,6 +442,10 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
           isAdmin={editing}
           status={status}
           canShowMoreDepth={canShowMoreDepth}
+          prefs={prefs}
+          onPrefsChange={setPrefs}
+          hasNodeOverrides={Object.keys(overrides).length > 0}
+          onResetNodes={resetNodes}
           onAddRoot={() => openFlow({ kind: 'add', mode: { kind: 'root' } })}
           onPick={(nodeId) => {
             setNotice(null)
@@ -434,12 +489,14 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
         </div>
       </div>
 
-      <PrintTreeDialog
+      <TreePreviewScreen
         open={printOpen}
         graph={graph}
         index={index}
         generations={generations}
         defaultRootId={viewRootId}
+        layoutOptions={layoutOptions}
+        verticalOf={verticalOf}
         onClose={() => setPrintOpen(false)}
       />
       <NodeMenuDialog
@@ -449,6 +506,8 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
         generation={menuNode ? (generations.get(menuNode.id) ?? null) : null}
         isAdmin={editing}
         collapsed={menuNode ? collapsed.has(lineageIdOf(index, menuNode.id)) : false}
+        vertical={menuNode ? verticalOf(menuNode.id) : false}
+        customized={menuNode ? overrides[menuNode.id] !== undefined : false}
         onAction={onMenuAction}
         onClose={closeFlow}
       />

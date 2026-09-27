@@ -1,14 +1,21 @@
-import { ChevronsDown, ListTree, Maximize2, Plus, Printer, Search, UserRound } from 'lucide-react'
+import { ChevronsDown, ListTree, Maximize2, Plus, Printer, RectangleHorizontal, RectangleVertical, RotateCcw, Search, UserRound } from 'lucide-react'
 import { useId, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { cn } from '@/utils/cn'
 import { toSearchName } from '@/utils/text'
 import type { TreeIndex } from '@/utils/tree'
+import type { TreeSize, TreeViewPrefs } from '../nodeSize'
 import { nodeName, yearsText } from '../nodeText'
 import { treeStrings } from '../strings'
 
 const s = treeStrings.toolbar
 const MAX_RESULTS = 8
+const SIZE_OPTIONS: { value: TreeSize; label: string }[] = [
+  { value: 'small', label: s.sizeSmall },
+  { value: 'medium', label: s.sizeMedium },
+  { value: 'large', label: s.sizeLarge },
+]
 
 export type ViewStatus =
   | { kind: 'ancestors' }
@@ -21,6 +28,11 @@ type TreeToolbarProps = {
   isAdmin: boolean
   status: ViewStatus | null
   canShowMoreDepth: boolean
+  prefs: TreeViewPrefs
+  onPrefsChange: (change: Partial<TreeViewPrefs>) => void
+  /** Có ô nào đã chỉnh riêng cỡ/kiểu không, và nút đặt lại tất cả. */
+  hasNodeOverrides: boolean
+  onResetNodes: () => void
   onAddRoot: () => void
   onPick: (nodeId: number) => void
   onMyAncestors: () => void
@@ -47,6 +59,10 @@ export function TreeToolbar({
   isAdmin,
   status,
   canShowMoreDepth,
+  prefs,
+  onPrefsChange,
+  hasNodeOverrides,
+  onResetNodes,
   onAddRoot,
   onPick,
   onMyAncestors,
@@ -145,6 +161,38 @@ export function TreeToolbar({
             <Printer aria-hidden="true" />
             {s.print}
           </Button>
+          <Button
+            variant="secondary"
+            aria-pressed={prefs.vertical}
+            onClick={() => onPrefsChange({ vertical: !prefs.vertical })}
+          >
+            {prefs.vertical ? <RectangleHorizontal aria-hidden="true" /> : <RectangleVertical aria-hidden="true" />}
+            {prefs.vertical ? s.horizontalView : s.verticalView}
+          </Button>
+          <div role="group" aria-label={s.sizeGroup} className="flex items-center gap-1 rounded-button bg-secondary p-1">
+            {SIZE_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                aria-pressed={prefs.size === option.value}
+                onClick={() => onPrefsChange({ size: option.value })}
+                className={cn(
+                  'min-h-9 min-w-11 cursor-pointer rounded-button px-3 text-base font-semibold transition-colors duration-200 ease-out',
+                  prefs.size === option.value
+                    ? 'bg-primary text-primary-fg'
+                    : 'text-secondary-fg hover:bg-secondary-hover',
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          {hasNodeOverrides && (
+            <Button variant="ghost" onClick={onResetNodes}>
+              <RotateCcw aria-hidden="true" />
+              {s.resetNodes}
+            </Button>
+          )}
           {isAdmin && (
             <Button onClick={onAddRoot}>
               <Plus aria-hidden="true" />

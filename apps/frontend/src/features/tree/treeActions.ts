@@ -11,6 +11,8 @@ export type TreeActions = {
   quickAdd: (kind: QuickAddKind, nodeId: number) => void
   /** Bấm "+N con": mở nhánh đang ẩn. */
   expandHidden: (nodeId: number) => void
+  /** Kéo góc ô xong: lưu cỡ riêng của ô (chỉ trên máy này). */
+  resize: (nodeId: number, width: number, height: number) => void
 }
 
 const noop = () => {}
@@ -20,6 +22,7 @@ export const TreeActionsContext = createContext<TreeActions>({
   openMenu: noop,
   quickAdd: noop,
   expandHidden: noop,
+  resize: noop,
 })
 
 export const useTreeActions = () => useContext(TreeActionsContext)

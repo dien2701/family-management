@@ -2,9 +2,9 @@
 // chỉ đưa vào SVG của trang những mục giao với trang đó. Mọi thuộc tính vẽ đặt thẳng vào phần tử (không dùng class)
 // vì svg2pdf và ảnh SVG không đọc được CSS của trang.
 import type { TreeMember } from '@/types/api'
+import { yearsLines } from '../nodeText'
 import { initialOf } from '@/utils/text'
 import { treeStrings } from '../strings'
-import { LAYOUT } from '../layout/layoutTree'
 import type { LayoutEdge, LayoutResult, PlacedNode } from '../layout/types'
 import { yieldToBrowser } from './async'
 import { PRINT_FONT, toBase64, type PrintFonts } from './fonts'
@@ -51,6 +51,8 @@ export type SceneInput = {
   colors: PrintColors
   /** URL ảnh gốc → ảnh đã xử lý; bỏ trống thì không in ảnh đại diện. */
   photos: Map<string, string> | null
+  /** Ô nào hiển thị dọc (mỗi từ của tên một dòng) như trên màn hình. */
+  verticalOf: (nodeId: number) => boolean
   title: string
   subtitle: string
   signal: AbortSignal
@@ -152,6 +154,49 @@ function yearsSvg(member: TreeMember, x: number, baseline: number, colors: Print
 const AVATAR = 40
 const AVATAR_PAD = 8
 
+/** Năm ở giữa ô dọc; ✝ vẽ bằng nét như `yearsSvg`. */
+function centeredYear(line: string, cx: number, baseline: number, colors: PrintColors): string {
+  if (!line.startsWith('✝')) return textEl(cx, baseline, line, 14, false, colors.textMuted, 'middle')
+  const text = line.slice(1).trim()
+  const width = CROSS_W + 3 + measure(text, 14, false)
+  const start = cx - width / 2
+  return (
+    `<path${attrs({
+      d: `M${num(start + CROSS_W / 2)} ${num(baseline - 12)}V${num(baseline)}M${num(start + 1)} ${num(baseline - 8)}H${num(start + CROSS_W - 1)}`,
+      fill: 'none',
+      stroke: colors.textMuted,
+      'stroke-width': 1.6,
+    })}/>` + textEl(start + CROSS_W + 3, baseline, text, 14, false, colors.textMuted)
+  )
+}
+
+/** Ô dọc: mỗi từ của tên một dòng, chữ đứng thẳng, năm sinh–mất ở cuối ô; không ảnh đại diện. */
+function verticalNodeContent(placed: PlacedNode, member: TreeMember, x: number, y: number, input: SceneInput): string {
+  const { colors } = input
+  const { width: W, height: H } = placed
+  const cx = x + W / 2
+  let out = ''
+  member.fullName
+    .split(/\s+/)
+    .filter(Boolean)
+    .forEach((word, i) => {
+      out += textEl(cx, y + 14 + 15 + i * 19, fit(word, W - 8, 16, true), 16, true, colors.text, 'middle')
+    })
+  const years = yearsLines(member)
+  years.forEach((line, i) => {
+    out += centeredYear(line, cx, y + H - 10 - (years.length - 1 - i) * 18, colors)
+  })
+  const firstLabel = member.labels[0]
+  if (firstLabel) {
+    const label = fit(member.labels.length > 1 ? `${firstLabel} +${member.labels.length - 1}` : firstLabel, Math.max(40, W - 16), 13, true)
+    const w = measure(label, 13, true) + 16
+    const px = x + W / 2 - w / 2
+    out += `<rect${attrs({ x: px, y: y - 9, width: w, height: 18, rx: 9, fill: colors.warningBg })}/>`
+    out += textEl(px + w / 2, y + 4, label, 13, true, colors.warning, 'middle')
+  }
+  return out
+}
+
 function nodeSvg(placed: PlacedNode, ox: number, oy: number, input: SceneInput): string {
   const { colors, photos } = input
   const { width: W, height: H } = placed
@@ -173,6 +218,8 @@ function nodeSvg(placed: PlacedNode, ox: number, oy: number, input: SceneInput):
   })}/>`
 
   if (empty) return out + textEl(x + W / 2, y + H / 2 + 5, treeStrings.emptySlot, 16, false, colors.textMuted, 'middle')
+
+  if (input.verticalOf(placed.id)) return out + verticalNodeContent(placed, member, x, y, input)
 
   const withPhotos = photos !== null
   const textX = withPhotos ? x + AVATAR_PAD + AVATAR + 8 : x + 12
@@ -234,10 +281,9 @@ export async function buildScene(input: SceneInput): Promise<Scene> {
   const sheet = sheetGeometry(layout)
   const { originX: ox, originY: oy } = sheet
   const items: SceneItem[] = []
-  const H = LAYOUT.nodeHeight
 
   const rowGuides: SceneItem[] = layout.generations.map((g) => {
-    const y = oy + g.y + H / 2
+    const y = oy + g.y + g.height / 2
     const x0 = SHEET.margin + SHEET.gutter - 8
     const x1 = sheet.width - SHEET.margin
     return {
@@ -317,7 +363,7 @@ export async function buildScene(input: SceneInput): Promise<Scene> {
     items,
     generations: layout.generations.map((g) => {
       const label = s.generationLabel(g.generation)
-      return { label, cy: oy + g.y + H / 2, labelWidth: measure(label, 14, true) }
+      return { label, cy: oy + g.y + g.height / 2, labelWidth: measure(label, 14, true) }
     }),
   }
 }

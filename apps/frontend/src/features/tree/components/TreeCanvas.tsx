@@ -18,7 +18,7 @@ const FIT = { padding: 0.15, minZoom: 0.3, maxZoom: 1 } as const
 /** Yêu cầu đưa khung nhìn về một chỗ; `tick` tăng lên mỗi lần yêu cầu để canvas biết đã có yêu cầu mới. */
 export type ViewRequest = { tick: number; nodeId: number | null }
 
-type CanvasUi = Pick<FlowUi, 'selectedId' | 'highlightId' | 'meNodeId' | 'draggable' | 'admin' | 'addOptionsOf' | 'spouseCountOf'>
+type CanvasUi = Pick<FlowUi, 'selectedId' | 'highlightId' | 'meNodeId' | 'draggable' | 'admin' | 'verticalOf' | 'scale' | 'addOptionsOf' | 'spouseCountOf'>
 
 type TreeCanvasProps = {
   layout: LayoutResult
@@ -167,6 +167,9 @@ function TreeCanvasInner({
               }, 0)
             }}
             onPaneClick={onPaneClick}
+            // Ô không kéo được (vợ/chồng, hoặc người không phải Admin) mà không có onClick thì React Flow đặt
+            // pointer-events: none cho cả ô nên bấm không ăn; bấm thật do nút trong ô xử lý
+            onNodeClick={() => undefined}
             nodesDraggable={ui.draggable}
             nodesConnectable={false}
             nodesFocusable={false}

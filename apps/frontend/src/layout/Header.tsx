@@ -1,18 +1,17 @@
-import { ArrowLeft, Bell, Search } from 'lucide-react'
+import { ArrowLeft, Bell } from 'lucide-react'
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/hooks/useAuth'
 import { useRouteTitle } from '@/hooks/useRouteTitle'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
-import { initialOf } from '@/utils/text'
 import { useUnreadCount } from '@/features/notification/hooks'
+import { ThemeToggle } from './ThemeToggle'
+import { UserMenu } from './UserMenu'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
 
-// Ô tìm kiếm và chuông chỉ là khung giữ chỗ: chức năng làm ở các đợt sau (tìm kiếm Đợt 11).
+// Header gọn: quay lại + tiêu đề trang; bên phải là giao diện sáng/tối, chuông, menu tài khoản.
 export function Header() {
   const title = useRouteTitle()
-  const { user } = useAuth()
   const navigate = useNavigate()
   // key='default' nghĩa là trang đầu tiên của phiên, chưa có gì để quay lại trong app
   const canGoBack = useLocation().key !== 'default'
@@ -36,30 +35,9 @@ export function Header() {
           </Button>
         )}
 
-        <div className="min-w-0 flex-1">
-          <nav aria-label="Vị trí hiện tại" className="hidden lg:block">
-            <ol className="flex items-center gap-1.5 text-sm text-text-muted">
-              <li>Tộc Phả</li>
-              <li aria-hidden="true">/</li>
-              <li aria-current="page">{title}</li>
-            </ol>
-          </nav>
-          <h1 className="truncate text-xl leading-tight font-bold md:text-2xl">{title}</h1>
-        </div>
+        <h1 className="min-w-0 flex-1 truncate text-xl leading-tight font-bold md:text-2xl">{title}</h1>
 
-        <div className="relative hidden w-72 lg:block">
-          <Search
-            className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-text-muted"
-            aria-hidden="true"
-          />
-          <input
-            type="search"
-            disabled
-            aria-label="Tìm kiếm"
-            placeholder="Tìm kiếm (sắp có)"
-            className="min-h-11 w-full rounded-field border border-border bg-surface-muted pr-3 pl-10 text-base placeholder:text-text-muted disabled:cursor-not-allowed"
-          />
-        </div>
+        <ThemeToggle />
 
         <div className="relative">
           <Button 
@@ -68,7 +46,7 @@ export function Header() {
             aria-label="Thông báo" 
             onClick={() => {
               if (wide) setShowDropdown(!showDropdown)
-              else navigate('/notifications')
+              else navigate('/thong-bao')
             }}
           >
             <Bell />
@@ -83,14 +61,7 @@ export function Header() {
           )}
         </div>
 
-        <span
-          role="img"
-          aria-label={user?.fullName ? `Tài khoản: ${user.fullName}` : 'Tài khoản'}
-          title={user?.fullName}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-base font-semibold text-secondary-fg"
-        >
-          {initialOf(user?.fullName)}
-        </span>
+        <UserMenu />
       </div>
     </header>
   )

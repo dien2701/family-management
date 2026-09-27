@@ -23,6 +23,10 @@ export function useVerifyOtp() {
   return useMutation({ mutationFn: authApi.verifyOtp, onSuccess: setSession })
 }
 
+export function useChangePassword() {
+  return useMutation({ mutationFn: authApi.changePassword })
+}
+
 export function useLogin() {
   const { setSession } = useAuth()
   return useMutation({ mutationFn: authApi.login, onSuccess: setSession })
