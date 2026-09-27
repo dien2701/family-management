@@ -41,6 +41,13 @@ public interface UserAccountRepository
               and u.approvalStatus = vn.giapha.auth.entity.ApprovalStatus.APPROVED""")
     List<Long> findUsableAdminIds();
 
+    /** Id mọi tài khoản ACTIVE và đã duyệt (Admin lẫn User); dùng cho job gộp bản tin theo giờ (Đợt 35). */
+    @Query("""
+            select u.id from UserAccount u
+            where u.status = vn.giapha.auth.entity.AccountStatus.ACTIVE
+              and u.approvalStatus = vn.giapha.auth.entity.ApprovalStatus.APPROVED""")
+    List<Long> findUsableAccountIds();
+
     /** Khóa dòng tài khoản để các thao tác duyệt/khóa/đổi vai trò trên cùng một người chạy tuần tự. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from UserAccount u where u.id = :id")

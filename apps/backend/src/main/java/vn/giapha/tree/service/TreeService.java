@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -116,6 +118,41 @@ public class TreeService {
                 .generationsByMember();
         int maxGeneration = generations.values().stream().mapToInt(Integer::intValue).max().orElse(0);
         return new TreeStats(generations.size(), maxGeneration);
+    }
+
+    /** Cha/mẹ, vợ/chồng và con theo cây của một thành viên, cho AI (tool {@code getRelatives}, IDEA §10). */
+    public record FamilyMemberIds(List<Long> parents, List<Long> spouses, List<Long> children) {
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<FamilyMemberIds> familyMemberIdsOf(Long memberId) {
+        TreeIndex index = new TreeIndex(nodes.findAllOrdered(), spouses.findAllOrdered());
+        Long nodeId = index.nodeOfMember(memberId);
+        if (nodeId == null) {
+            return Optional.empty();
+        }
+        TreeIndex.FamilyLinks links = index.familyOf(nodeId);
+        return Optional.of(new FamilyMemberIds(memberIdsOf(links.parents()), memberIdsOf(links.spouses()),
+                memberIdsOf(links.children())));
+    }
+
+    /** Tổ tiên và con cháu trên cây của một thành viên, cho AI (tool {@code getTreePath}, IDEA §10). */
+    public record LineageMemberIds(List<Long> ancestors, List<Long> descendants) {
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<LineageMemberIds> lineageMemberIdsOf(Long memberId) {
+        TreeIndex index = new TreeIndex(nodes.findAllOrdered(), spouses.findAllOrdered());
+        Long nodeId = index.nodeOfMember(memberId);
+        if (nodeId == null) {
+            return Optional.empty();
+        }
+        TreeIndex.Lineage lineage = index.lineageOf(nodeId);
+        return Optional.of(new LineageMemberIds(memberIdsOf(lineage.ancestors()), memberIdsOf(lineage.descendants())));
+    }
+
+    private static List<Long> memberIdsOf(List<TreeNode> nodeList) {
+        return nodeList.stream().map(TreeNode::getMemberId).filter(Objects::nonNull).toList();
     }
 
     // ---------- Ghi ----------

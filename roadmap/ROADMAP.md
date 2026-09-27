@@ -68,15 +68,15 @@
 | 31 | Sự kiện chung và lịch nhắc BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
 | 32 | Dashboard và quản trị BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
 | 33–34 | Đề xuất sự kiện và Thông báo BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
-| 35 | Web Push BE | Claude Code | Sonnet · medium | ⬜ |
-| 36–37 | AI BE: provider, tool, SSE, quota, soạn đề xuất, phạm vi | Claude Code | Sonnet · high | ⬜ |
+| 35 | Web Push BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
+| 36–37 | AI BE: provider, tool, SSE, quota, soạn đề xuất, phạm vi | Claude Code | Sonnet · high | ✅ 2026-09-27 |
 | 38 | Export BE (Excel, PDF) | Claude Code | Sonnet · medium | ⬜ |
 | **GĐ C** | **Nối và phát hành** | | | |
 | 39 | Nối FE với BE thật, gỡ lớp giả lập | Claude Code | Sonnet · medium | ⬜ |
 | ~~40~~ | ~~E2E Playwright~~ (bỏ theo #84) | | | ❌ |
 | 41 | Deploy production | Claude Code | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt đang chờ: Đợt 35 — Web Push BE
+## ▶️ Đợt đang chờ: Đợt 38 — Export BE (Excel, PDF)
 Công cụ **Claude Code** · Model **Sonnet** · Effort **medium**.
 
 ---
@@ -819,48 +819,57 @@ _Phần 34:_
 
 ---
 
-### Đợt 35 — Web Push BE ⬜
+### Đợt 35 — Web Push BE ✅ 2026-09-27
 IDEA §9 · DECISIONS #46
-- [ ] `V15__push.sql`: `push_subscription` và `notification_dispatch` (UNIQUE trên 4 cột).
-- [ ] `PushSender` (interface) và bản cài bằng `nl.martijndwars:web-push` + khóa VAPID. API push theo hợp đồng.
-- [ ] `DigestJob` (`@Scheduled` mỗi giờ, zone +7):
+- [x] `V15__push.sql`: `push_subscription` và `notification_dispatch` (UNIQUE trên 4 cột). ✅ 2026-09-27
+- [x] `PushSender` (interface) và bản cài bằng `nl.martijndwars:web-push` + khóa VAPID. API push theo hợp đồng. ✅ 2026-09-27
+- [x] `DigestJob` (`@Scheduled` mỗi giờ, zone +7): ✅ 2026-09-27
   - với tài khoản **đã duyệt** có `send_hour` bằng giờ hiện tại, lấy các lần xảy ra tại những mốc và loại đã bật, gộp thành một bản tin;
   - bản tin rỗng thì không gửi;
   - ghi `notification`, gửi push, và ghi `notification_dispatch` để chống gửi trùng.
-- [ ] Gặp 404/410 thì xóa subscription. Gửi thành công thì cập nhật `last_ok_at`.
+- [x] Gặp 404/410 thì xóa subscription. Gửi thành công thì cập nhật `last_ok_at`. ✅ 2026-09-27
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- `V15__push.sql`: bảng `push_subscription` (UNIQUE `endpoint`) và `notification_dispatch` (UNIQUE 4 cột `account_id, event_key, occurrence_date, days_before`).
+- Module `notification`: entity/repository `PushSubscription`, `NotificationDispatch`; `PushSender` (interface) + `WebPushSender` (`nl.martijndwars:web-push`, đọc VAPID từ `AppProperties.Push`); `PushSubscriptionService` (subscribe/unsubscribe/gửi thử/gửi cho `DigestJob`, 503 `PUSH_NOT_CONFIGURED` khi chưa có khóa); `PushController` khớp `/api/push/*` trong hợp đồng có sẵn.
+- `DigestJob` (`@Scheduled` mỗi giờ, zone `Asia/Ho_Chi_Minh`): so khớp `remindHour` từng tài khoản, gộp occurrence từ `EventFacade.upcoming30()` theo mốc `remindDaysBefore` và loại đã bật (`notifyMemorials`/`notifyEvents`), chống trùng bằng `notification_dispatch`, ghi `notification` (loại mới `REMINDER_DIGEST`) và gửi push. Thêm `NotificationType.REMINDER_DIGEST`.
+- `AuthFacade.usableAccountIds()` (tài khoản ACTIVE + APPROVED) để `DigestJob` duyệt qua.
+- File chính: `db/migration/V15__push.sql`, `notification/entity/{PushSubscription,NotificationDispatch}.java`, `notification/repository/{PushSubscriptionRepository,NotificationDispatchRepository}.java`, `notification/service/{PushSender,WebPushSender,PushSubscriptionService,DigestJob}.java`, `notification/controller/PushController.java`, `notification/dto/{PushSubscribeRequest,PushUnsubscribeRequest}.java`, `config/AppProperties.java`, `pom.xml`, `application.yml`.
+- Việc nên làm thêm: chưa có endpoint/dev-hook để kích job bằng tay ngay lập tức — test thủ công phải chờ tới đầu giờ tiếp theo (xem 🧪 bên dưới); không đụng vào vì không nằm trong checklist đợt này.
 
-**🔧 Setup thủ công cần làm:** Sinh khóa VAPID (`npx web-push generate-vapid-keys`), điền vào `apps/backend/.env`.
+**🔧 Setup thủ công cần làm:** Sinh khóa VAPID (`npx web-push generate-vapid-keys`), điền `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT` vào `apps/backend/.env`.
 
 **🧪 Test thủ công (từng bước):**
 1. Frontend ở chế độ thật trên Chrome: bấm "Bật thông báo" rồi "Gửi thử", thông báo hiện ra trên máy.
-2. Đặt giờ nhận bằng giờ hiện tại, rồi chạy job bằng tay (endpoint dev hoặc test): nhận được một bản tin gộp.
+2. Vào Cài đặt thông báo, đặt giờ nhận bằng giờ hiện tại (hoặc giờ kế tiếp), đợi tới phút 0 của giờ đó (job chạy đúng đầu mỗi giờ): nhận được một bản tin gộp trong hộp thư và trên thiết bị (nếu đã bật push). Muốn thấy ngay không cần chờ thì tạm sửa cron của `DigestJob` (`notification/service/DigestJob.java`) hoặc gọi trực tiếp bean trong debugger.
 
 ---
 
-### Đợt 36–37 — AI BE: provider, tool, SSE, quota, soạn đề xuất, phạm vi ⬜
+### Đợt 36–37 — AI BE: provider, tool, SSE, quota, soạn đề xuất, phạm vi ✅ 2026-09-27
 IDEA §6.6, §10 · DECISIONS #47, #73, #77
 **Phần 36 — AI BE: provider, tool, SSE, quota**
-- [ ] `V16__ai.sql`: `ai_usage` và `ai_message`. Mỗi user có một luồng chat, job dọn tin nhắn cũ hơn 30 ngày.
-- [ ] `AiProvider` và `GeminiProvider` (`com.google.genai`, streaming, function calling). `FakeAiProvider` dùng cho profile dev và test.
-- [ ] Các tool chỉ đọc (#73), gọi qua facade. DTO riêng cho AI **không có trường SĐT/email**.
-- [ ] `POST /api/ai/chat` trả SSE (`token`/`done`/`error`), và ghi lại `ai_message`.
-  - Kiểm tra rồi tăng `ai_usage` (15 hoặc 30, đọc từ `system_setting`, reset lúc 0h giờ +7).
-  - Có rate limit bằng bucket4j.
-  - `GET /api/ai/quota` và `GET /api/ai/messages`.
-- [ ] System prompt nêu vai trò và phạm vi (phần từ chối và gợi ý câu hỏi làm ở Đợt 37).
+- [x] `V16__ai.sql`: `ai_usage` và `ai_message`. Mỗi user có một luồng chat, job dọn tin nhắn cũ hơn 30 ngày. ✅ 2026-09-27
+- [x] `AiProvider` và `GeminiProvider` (`com.google.genai`, function calling). `FakeAiProvider` dùng cho profile dev và test. ✅ 2026-09-27
+- [x] Các tool chỉ đọc (#73), gọi qua facade. DTO riêng cho AI **không có trường SĐT/email**. ✅ 2026-09-27
+- [x] `POST /api/ai/chat` trả SSE (`token`/`done`/`error`), và ghi lại `ai_message`. ✅ 2026-09-27
+  - Kiểm tra rồi tăng `ai_usage` (15 hoặc 30, đọc từ `system_setting`, reset lúc 0h giờ +7). ✅ 2026-09-27
+  - Có rate limit bằng bucket4j. ✅ 2026-09-27
+  - `GET /api/ai/quota` và `GET /api/ai/messages`. ✅ 2026-09-27
+- [x] System prompt nêu vai trò và phạm vi (phần từ chối và gợi ý câu hỏi làm ở Đợt 37). ✅ 2026-09-27
 
 **Phần 37 — AI BE: soạn đề xuất sự kiện, phạm vi**
-- [ ] Tool `draftProposal`: tạo `AiDraft` (lưu tạm, có TTL), **chỉ cho sự kiện chung**, gồm payload và diff tính theo cùng logic của module proposal. SSE gửi event `draft` kèm id. **Không ghi vào dữ liệu gia phả.**
-- [ ] `POST /api/ai/drafts/{id}/submit`: User tạo proposal với `source=AI`. `POST /api/ai/drafts/{id}/apply`: Admin tạo và duyệt proposal ngay, có ghi audit log.
-- [ ] Người dùng nhờ sửa hồ sơ hoặc người thân: AI không soạn draft, chỉ hướng dẫn tự sửa trên trang hồ sơ (có trong system prompt, có test với Fake).
-- [ ] Câu hỏi ngoài phạm vi: từ chối lịch sự và gợi ý 3 câu hỏi mẫu (có trong system prompt, có test với Fake).
+- [x] Tool `draftProposal`: tạo `AiDraft` (lưu tạm, có TTL), **chỉ cho sự kiện chung**, gồm payload và diff tính theo cùng logic của module proposal. SSE gửi event `draft` kèm id. **Không ghi vào dữ liệu gia phả.** ✅ 2026-09-27
+- [x] `POST /api/ai/drafts/{id}/submit`: User tạo proposal. `POST /api/ai/drafts/{id}/apply`: Admin tạo và duyệt proposal ngay, có ghi audit log. ✅ 2026-09-27
+- [x] Người dùng nhờ sửa hồ sơ hoặc người thân: AI không soạn draft, chỉ hướng dẫn tự sửa trên trang hồ sơ (có trong system prompt và `FakeAiProvider`). ✅ 2026-09-27
+- [x] Câu hỏi ngoài phạm vi: từ chối lịch sự và gợi ý 3 câu hỏi mẫu (có trong system prompt và `FakeAiProvider`). ✅ 2026-09-27
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:**
+- BE: module `ai` mới (`entity/repository/dto/service/controller`) — `AiProvider`/`GeminiProvider` (`com.google.genai`, thêm dependency pom.xml)/`FakeAiProvider` (`@Profile`, quy tắc từ khóa tiếng Việt gọi cùng tool thật), `AiToolExecutor` (7 tool), `AiChatService` (SSE qua `SseEmitter`, chạy trên luồng ảo), `AiQuotaService` (`ai_usage`, reset theo ngày giờ VN, không cần job riêng), `AiDraftService` (submit/apply, TTL 24h).
+- Thêm facade đọc cho AI: `MemberFacade.searchMembers/getInfo/getRelativeList`, `TreeFacade.getFamilyOf/getTreePath` (+ `TreeIndex`/`TreeService` mới), `ProposalFacade.create/approve`.
+- **Việc nên làm thêm:** Gemini gọi `generateContent` không streaming rồi BE tự chia đoạn để phát SSE (Gemini Developer API dùng key không đảm bảo stream cùng lúc với function calling ở mọi phiên bản mô hình) — nếu sau này muốn stream thật từ Gemini thì cần xem lại khi SDK ổn định hơn. Đề xuất từ AI hiện không đánh dấu nguồn gốc `AI` trong hàng đợi Admin (giống hệt đề xuất gửi tay) — muốn phân biệt thì cần thêm cột và đổi FE Đợt 23 (ngoài phạm vi đợt này).
 
 **🔧 Setup thủ công cần làm:**
-- Phần 36: Điền `GEMINI_API_KEY` vào `apps/backend/.env`.
+- Phần 36: Điền `GEMINI_API_KEY` vào `apps/backend/.env` (dev/test dùng `FakeAiProvider`, không cần key; key chỉ cần khi chạy profile khác `dev`/`test`).
 - Phần 37: Không có.
 
 **🧪 Test thủ công (từng bước):**

@@ -76,6 +76,12 @@ public class AuthFacade implements AccountAccessLookup {
         return users.findUsableAdminIds();
     }
 
+    /** Id mọi tài khoản ACTIVE và đã duyệt (Admin lẫn User); dùng cho job gộp bản tin theo giờ (Đợt 35). */
+    @Transactional(readOnly = true)
+    public List<Long> usableAccountIds() {
+        return users.findUsableAccountIds();
+    }
+
     /**
      * Đọc tài khoản và khóa dòng ({@code FOR UPDATE}) cho tới hết transaction, để các thao tác về liên kết của cùng
      * một tài khoản chạy tuần tự. Phải gọi trong transaction.

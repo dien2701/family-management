@@ -13,6 +13,8 @@ public record AppProperties(
         @DefaultValue Google google,
         @DefaultValue Mail mail,
         @DefaultValue File file,
+        @DefaultValue Push push,
+        @DefaultValue Ai ai,
         // Email của Admin gốc (DECISIONS #55); rỗng nghĩa là không có Admin gốc
         @DefaultValue("") String rootAdminEmail) {
 
@@ -50,5 +52,18 @@ public record AppProperties(
     }
 
     public record Mail(@DefaultValue("no-reply@giapha.local") String from) {
+    }
+
+    /** VAPID cho Web Push (IDEA §9, DECISIONS #46). Khóa rỗng nghĩa là chưa cấu hình: API push trả 503. */
+    public record Push(
+            @DefaultValue("") String vapidPublicKey,
+            @DefaultValue("") String vapidPrivateKey,
+            @DefaultValue("mailto:admin@example.com") String vapidSubject) {
+    }
+
+    /** Gemini (IDEA §10, DECISIONS #47). Khóa rỗng nghĩa là chưa cấu hình: {@code GeminiProvider} trả 503. */
+    public record Ai(
+            @DefaultValue("") String geminiApiKey,
+            @DefaultValue("gemini-2.5-flash") String model) {
     }
 }

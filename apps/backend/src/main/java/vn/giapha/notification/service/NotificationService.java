@@ -102,6 +102,18 @@ public class NotificationService {
                 pref.isNotifyProposals(), days, pref.getRemindHour());
     }
 
+    // ---------- Đọc tùy chọn cho DigestJob (Đợt 35) ----------
+
+    /** Tùy chọn thô (tạo lười nếu chưa có) để {@link DigestJob} đọc mốc nhắc, giờ nhận và loại đã bật. */
+    @Transactional
+    NotificationPref preference(Long accountId) {
+        return ensurePref(accountId);
+    }
+
+    List<Integer> parseRemindDays(String remindDaysBeforeJson) {
+        return List.of(json.readValue(remindDaysBeforeJson, Integer[].class));
+    }
+
     // ---------- Tạo thông báo (nội bộ module, gọi từ các listener) ----------
 
     /** {@code notifyProposals = false} thì bỏ qua thông báo về đề xuất; các loại khác luôn gửi. */

@@ -109,6 +109,11 @@ final class TreeIndex {
         return nodeOfMember.containsKey(memberId);
     }
 
+    /** Ô của một thành viên trên cây; {@code null} nếu chưa có. */
+    Long nodeOfMember(Long memberId) {
+        return nodeOfMember.get(memberId);
+    }
+
     /** Ô thuộc dòng của một ô: chính nó, hoặc người mà nó là vợ/chồng. */
     Long lineageIdOf(Long nodeId) {
         Long owner = ownerOf.get(nodeId);
@@ -187,5 +192,63 @@ final class TreeIndex {
         return node.getParentNodeId() != null && nodes.containsKey(node.getParentNodeId())
                 ? childrenOf(node.getParentNodeId())
                 : roots;
+    }
+
+    /** Cha/mẹ, vợ/chồng và con của một ô, kể cả khi ô đó chính là ô vợ/chồng (dùng cho AI, tool {@code getRelatives}). */
+    record FamilyLinks(List<TreeNode> parents, List<TreeNode> spouses, List<TreeNode> children) {
+    }
+
+    FamilyLinks familyOf(Long nodeId) {
+        TreeNode node = nodes.get(nodeId);
+        if (node == null) {
+            return new FamilyLinks(List.of(), List.of(), List.of());
+        }
+        List<TreeNode> parents = new ArrayList<>();
+        addIfPresent(parents, node.getParentNodeId());
+        addIfPresent(parents, node.getCoParentNodeId());
+        Long owner = ownerOf.get(nodeId);
+        List<TreeNode> spouses;
+        List<TreeNode> children;
+        if (owner != null) {
+            spouses = new ArrayList<>();
+            addIfPresent(spouses, owner);
+            children = childrenOf(owner).stream().filter(c -> nodeId.equals(c.getCoParentNodeId())).toList();
+        } else {
+            spouses = spousesOf(nodeId).stream().map(SpouseEntry::node).toList();
+            children = childrenOf(nodeId);
+        }
+        return new FamilyLinks(parents, spouses, children);
+    }
+
+    /** Tổ tiên (gần tới xa) và con cháu (mọi đời) theo dòng máu của một ô (dùng cho AI, tool {@code getTreePath}). */
+    record Lineage(List<TreeNode> ancestors, List<TreeNode> descendants) {
+    }
+
+    Lineage lineageOf(Long nodeId) {
+        Long lineageId = lineageIdOf(nodeId);
+        TreeNode start = nodes.get(lineageId);
+        List<TreeNode> ancestors = new ArrayList<>();
+        if (start != null) {
+            Long cur = start.getParentNodeId();
+            while (cur != null && nodes.containsKey(cur)) {
+                TreeNode p = nodes.get(cur);
+                ancestors.add(p);
+                cur = p.getParentNodeId();
+            }
+        }
+        List<TreeNode> descendants = new ArrayList<>();
+        ArrayDeque<TreeNode> queue = new ArrayDeque<>(childrenOf(lineageId));
+        while (!queue.isEmpty()) {
+            TreeNode n = queue.poll();
+            descendants.add(n);
+            queue.addAll(childrenOf(n.getId()));
+        }
+        return new Lineage(ancestors, descendants);
+    }
+
+    private void addIfPresent(List<TreeNode> list, Long id) {
+        if (id != null && nodes.containsKey(id)) {
+            list.add(nodes.get(id));
+        }
     }
 }

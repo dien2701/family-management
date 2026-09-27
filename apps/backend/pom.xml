@@ -23,6 +23,9 @@
         <springdoc.version>3.1.1</springdoc.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <bucket4j.version>8.20.0</bucket4j.version>
+        <!-- DECISIONS #46: cố định phiên bản để BouncyCastle không trôi theo transitive khác -->
+        <web-push.version>5.1.1</web-push.version>
+        <google-genai.version>1.73.0</google-genai.version>
     </properties>
 
     <dependencyManagement>
@@ -101,6 +104,16 @@
             <groupId>com.bucket4j</groupId>
             <artifactId>bucket4j_jdk17-core</artifactId>
             <version>${bucket4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>nl.martijndwars</groupId>
+            <artifactId>web-push</artifactId>
+            <version>${web-push.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.genai</groupId>
+            <artifactId>google-genai</artifactId>
+            <version>${google-genai.version}</version>
         </dependency>
 
         <!-- test -->

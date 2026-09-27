@@ -6,17 +6,22 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.json.JsonMapper;
 
 import vn.giapha.common.exception.BusinessException;
+import vn.giapha.common.util.SearchText;
 import vn.giapha.member.entity.BirthCalendar;
 import vn.giapha.member.entity.LinkRequestStatus;
 import vn.giapha.member.entity.Member;
 import vn.giapha.member.repository.MemberLinkRequestRepository;
 import vn.giapha.member.repository.MemberRepository;
+import vn.giapha.member.service.RelativeService;
 
 /**
  * API công khai của module member cho module khác (người thân, cây, tệp, sự kiện, AI). Chỉ trả bản sao chỉ-đọc, không
@@ -55,15 +60,29 @@ public class MemberFacade {
     public record MemberStats(int total, int living, int deceased) {
     }
 
+    /** Đủ dữ liệu để AI trả lời (tool {@code getMember}, IDEA §10; DECISIONS #73): không bao giờ có SĐT hay email. */
+    public record MemberInfo(Long id, String fullName, String tabooName, String gender, boolean deceased,
+            Integer birthYear, Integer birthMonth, Integer birthDay, boolean birthLunar,
+            Integer deathSolarYear, Integer deathSolarMonth, Integer deathSolarDay,
+            Integer deathLunarYear, Integer deathLunarMonth, Integer deathLunarDay,
+            String biography, List<String> labels) {
+    }
+
+    /** Một dòng người thân trong hồ sơ, cho AI (tool {@code getRelatives}, IDEA §10): không có SĐT hay email. */
+    public record RelativeRef(Long memberId, String fullName, String label) {
+    }
+
     private final MemberRepository repository;
     private final MemberLinkRequestRepository linkRequests;
+    private final RelativeService relatives;
     private final JsonMapper json;
     private final Clock clock;
 
-    MemberFacade(MemberRepository repository, MemberLinkRequestRepository linkRequests, JsonMapper json,
-            Clock clock) {
+    MemberFacade(MemberRepository repository, MemberLinkRequestRepository linkRequests, RelativeService relatives,
+            JsonMapper json, Clock clock) {
         this.repository = repository;
         this.linkRequests = linkRequests;
+        this.relatives = relatives;
         this.json = json;
         this.clock = clock;
     }
@@ -110,6 +129,34 @@ public class MemberFacade {
         return repository.findAllById(memberIds).stream().map(this::toCard).toList();
     }
 
+    /** Tìm theo họ tên, không cần gõ dấu (tool {@code searchMembers}, IDEA §10); rỗng thì trả danh sách rỗng. */
+    @Transactional(readOnly = true)
+    public List<MemberRef> searchMembers(String query, int limit) {
+        String needle = SearchText.normalize(query);
+        if (needle.isEmpty()) {
+            return List.of();
+        }
+        String escaped = needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
+        Specification<Member> spec = (root, cq, cb) -> cb.like(root.<String>get("searchName"), "%" + escaped + "%",
+                '\\');
+        return repository.findAll(spec, PageRequest.of(0, limit, Sort.by("fullName"))).stream()
+                .map(MemberFacade::toRef).toList();
+    }
+
+    /** Chi tiết một thành viên cho AI (tool {@code getMember}, IDEA §10). */
+    @Transactional(readOnly = true)
+    public Optional<MemberInfo> getInfo(Long memberId) {
+        return repository.findById(memberId).map(this::toInfo);
+    }
+
+    /** Người thân trong hồ sơ (tool {@code getRelatives}, IDEA §10). */
+    @Transactional(readOnly = true)
+    public List<RelativeRef> getRelativeList(Long memberId) {
+        return relatives.list(memberId).stream()
+                .map(r -> new RelativeRef(r.relative().id(), r.relative().fullName(), r.label()))
+                .toList();
+    }
+
     /**
      * Đặt hoặc gỡ ảnh đại diện. Chỉ module file gọi, sau khi đã kiểm quyền và kiểm tệp; chạy trong transaction của
      * người gọi để ảnh và dòng đính kèm cùng commit.
@@ -119,6 +166,16 @@ public class MemberFacade {
         Member member = repository.findById(memberId).orElseThrow(
                 () -> new BusinessException(HttpStatus.NOT_FOUND, "MEMBER_NOT_FOUND", "Không tìm thấy thành viên."));
         member.changeAvatar(url, Instant.now(clock));
+    }
+
+    private MemberInfo toInfo(Member m) {
+        List<String> labels = m.getLabels() == null ? List.of() : List.of(json.readValue(m.getLabels(), String[].class));
+        return new MemberInfo(m.getId(), m.getFullName(), m.getTabooName(),
+                m.getGender() == null ? null : m.getGender().name(), m.isDeceased(),
+                m.getBirthYear(), m.getBirthMonth(), m.getBirthDay(), m.getBirthdayCalendar() == BirthCalendar.LUNAR,
+                m.getDeathYear(), m.getDeathMonth(), m.getDeathDay(),
+                m.getDeathLunarYear(), m.getDeathLunarMonth(), m.getDeathLunarDay(),
+                m.getBiography(), labels);
     }
 
     private MemberCard toCard(Member m) {
