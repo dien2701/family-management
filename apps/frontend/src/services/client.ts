@@ -138,7 +138,8 @@ async function request<T>(
     response = await fetch(buildUrl(path, options.query), {
       method,
       headers: {
-        Accept: 'application/json',
+        // Endpoint chỉ trả text/plain (khóa VAPID) mà nhận Accept: application/json thì BE trả 406
+        Accept: options.responseType === 'text' ? 'text/plain' : 'application/json',
         ...(options.body !== undefined && { 'Content-Type': 'application/json' }),
         ...(sentToken && { Authorization: `Bearer ${sentToken}` }),
       },
@@ -169,8 +170,10 @@ async function request<T>(
 
   if (!response.ok) throw new ApiError(response.status, await parseProblem(response))
   if (response.status === 204) return undefined as T
-  if (options.responseType === 'text') return (await response.text()) as T
-  return (await response.json()) as T
+  const body = await response.text()
+  if (options.responseType === 'text') return body as T
+  // Endpoint kiểu void của BE trả 200 không có thân (không phải 204): đừng parse JSON rỗng
+  return (body === '' ? undefined : JSON.parse(body)) as T
 }
 
 /** Cho lớp giả lập gọi backend thật (ví dụ `/me` để biết vai trò), không qua handler giả lập. */

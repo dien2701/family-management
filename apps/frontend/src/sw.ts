@@ -46,27 +46,40 @@ registerRoute(
   })
 )
 
-// Handle push notifications (for Phase 21)
+// Thông báo đẩy: phải luôn gọi showNotification (userVisibleOnly), nếu không Chrome hiện "trang đã được cập nhật ở nền" rồi có thể thu hồi quyền
 self.addEventListener('push', (event) => {
-  const data = event.data?.json() ?? {}
-  const title = data.title || 'Tộc Phả'
-  
+  let data: { title?: string; body?: string; tag?: string; url?: string | null }
+  try {
+    data = event.data?.json() ?? {}
+  } catch {
+    data = { body: event.data?.text() }
+  }
+
   event.waitUntil(
-    self.registration.showNotification(title, {
+    self.registration.showNotification(data.title || 'Tộc Phả', {
       body: data.body,
       icon: '/pwa-192x192.png',
       badge: '/pwa-192x192.png',
-      tag: data.tag,
-      data: data.url
-    })
+      // Mỗi bản tin một thẻ riêng: dùng chung thẻ "digest" thì bản mới đè bản cũ chưa đọc và không kêu lại
+      tag: data.tag ? `${data.tag}-${Date.now()}` : undefined,
+      data: { url: data.url || '/' },
+    }),
   )
 })
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  if (event.notification.data) {
-    event.waitUntil(
-      self.clients.openWindow(event.notification.data)
-    )
-  }
+  const url = new URL((event.notification.data as { url?: string } | null)?.url || '/', self.location.origin).href
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      const open = windows.find((w) => 'focus' in w)
+      if (open) {
+        await open.focus()
+        if ('navigate' in open) await open.navigate(url)
+      } else {
+        await self.clients.openWindow(url)
+      }
+    })(),
+  )
 })

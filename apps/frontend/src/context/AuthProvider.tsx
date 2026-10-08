@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { api, configureSession, refreshSession, setAccessToken } from '@/services/client'
 import type { AuthResponse, Me } from '@/types/api'
+import { disablePush } from '@/features/notification/push'
 import { AuthContext, type AuthContextValue, type AuthStatus } from './authContext'
 
 type Session = { status: AuthStatus; user: Me | null; loggedOut?: boolean }
@@ -67,6 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(async () => {
+    // Hủy push của thiết bị trước khi mất token: không thì người dùng cũ vẫn nhận thông báo trên máy dùng chung
+    await disablePush().catch(() => undefined)
     // Refresh cookie chỉ bị thu hồi khi server nhận được lời gọi này, nên lỗi thì không xóa phiên phía trình duyệt
     await api.post('/auth/logout')
     setAccessToken(null)

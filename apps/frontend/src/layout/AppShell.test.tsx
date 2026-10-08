@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { describe, expect, it } from 'vitest'
@@ -24,9 +25,11 @@ const auth: AuthContextValue = {
 function renderAt(path: string) {
   const router = createMemoryRouter(routes, { initialEntries: [path] })
   render(
-    <AuthContext value={auth}>
-      <RouterProvider router={router} />
-    </AuthContext>,
+    <QueryClientProvider client={new QueryClient()}>
+      <AuthContext value={auth}>
+        <RouterProvider router={router} />
+      </AuthContext>
+    </QueryClientProvider>,
   )
   return router
 }
@@ -38,7 +41,7 @@ describe('BottomNav', () => {
     const labels = within(nav)
       .getAllByRole('link')
       .map((a) => a.textContent)
-    expect(labels).toEqual(['Tổng quan', 'Cây gia phả', 'Thành viên', 'Lịch', 'Thêm'])
+    expect(labels).toEqual(['Tổng quan', 'Cây gia phả', 'Thành viên', 'Sự kiện', 'Thêm'])
   })
 
   it('đánh dấu mục đang chọn bằng aria-current', () => {
@@ -54,10 +57,10 @@ describe('BottomNav', () => {
   it('bấm một mục thì đổi URL và tiêu đề trang', async () => {
     const router = renderAt('/')
     const nav = screen.getByRole('navigation', { name: 'Điều hướng dưới' })
-    await userEvent.click(within(nav).getByRole('link', { name: 'Lịch' }))
+    await userEvent.click(within(nav).getByRole('link', { name: 'Sự kiện' }))
     expect(router.state.location.pathname).toBe('/lich')
-    expect(screen.getByRole('heading', { level: 1, name: 'Lịch' })).toBeInTheDocument()
-    expect(document.title).toBe('Lịch · Tộc Phả')
+    expect(screen.getByRole('heading', { level: 1, name: 'Sự kiện' })).toBeInTheDocument()
+    expect(document.title).toBe('Sự kiện · Tộc Phả')
   })
 })
 
@@ -65,7 +68,7 @@ describe('AppShell', () => {
   it('có Sidebar với cùng 5 mục và nội dung chính', () => {
     renderAt('/cay')
     const sidebar = screen.getByRole('navigation', { name: 'Điều hướng chính' })
-    expect(within(sidebar).getAllByRole('link')).toHaveLength(5)
+    expect(within(sidebar).getAllByRole('link')).toHaveLength(6)
     expect(within(sidebar).getByRole('link', { name: 'Cây gia phả' })).toHaveAttribute(
       'aria-current',
       'page',

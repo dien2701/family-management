@@ -94,8 +94,8 @@ export function TreeToolbar({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3 md:flex-row md:items-end">
-        <div className="relative flex flex-col gap-1.5 md:max-w-sm md:flex-1">
-          <label htmlFor={searchId} className="text-base font-medium">
+        <div className="relative flex flex-col gap-1.5 md:w-72 md:shrink-0">
+          <label htmlFor={searchId} className="text-base font-medium whitespace-nowrap">
             {s.search}
           </label>
           <div className="relative">
@@ -152,7 +152,7 @@ export function TreeToolbar({
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-1 md:flex-wrap md:overflow-visible md:px-0 md:pb-0 [&>*]:shrink-0">
           <Button variant="secondary" onClick={onMyAncestors}>
             <UserRound aria-hidden="true" />
             {s.myAncestors}

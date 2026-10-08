@@ -71,7 +71,11 @@ public class PushSubscriptionService {
         }
         String payload = json.writeValueAsString(
                 new Payload("Thử thông báo", "Thông báo đẩy đang hoạt động trên thiết bị này.", "test", null));
-        dispatchAll(subs, payload);
+        if (dispatchAll(subs, payload) == 0) {
+            // Trước đây luôn trả 200 dù không gửi được, nên nút "Gửi thử" báo thành công giả
+            throw new BusinessException(HttpStatus.BAD_GATEWAY, "PUSH_DELIVERY_FAILED",
+                    "Không gửi được thông báo tới thiết bị. Hãy bật lại thông báo trên thiết bị này rồi thử lại.");
+        }
     }
 
     /** Gọi từ {@link DigestJob}; không báo lỗi nếu tài khoản chưa đăng ký thiết bị nào. */
@@ -84,19 +88,27 @@ public class PushSubscriptionService {
         dispatchAll(subs, payload);
     }
 
-    private void dispatchAll(List<PushSubscription> subs, String payload) {
+    /** Trả số thiết bị nhận được. */
+    private int dispatchAll(List<PushSubscription> subs, String payload) {
         Instant now = Instant.now(clock);
+        int delivered = 0;
         for (PushSubscription sub : subs) {
             PushSender.Result result = sender
                     .send(new PushSender.Target(sub.getEndpoint(), sub.getP256dh(), sub.getAuthKey()), payload);
             switch (result) {
-                case OK -> sub.markOk(now);
+                case OK -> {
+                    sub.markOk(now);
+                    // sendToAccount (gọi từ DigestJob) không nằm trong transaction nên phải lưu rõ ràng
+                    subscriptions.save(sub);
+                    delivered++;
+                }
                 case GONE -> subscriptions.delete(sub);
                 case ERROR -> {
                     // Lỗi tạm thời (mạng, quota...): giữ subscription, thử lại ở lần gửi sau.
                 }
             }
         }
+        return delivered;
     }
 
     private void requireConfigured() {

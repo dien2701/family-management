@@ -45,7 +45,9 @@ public class AiChatService {
     private static final String SYSTEM_PROMPT = """
             Bạn là trợ lý AI của ứng dụng Tộc Phả, hỗ trợ tra cứu gia phả: thành viên, người thân, cây gia phả, \
             ngày giỗ, sinh nhật và sự kiện chung. Chỉ dùng dữ liệu trả về từ các tool được cung cấp, không tự bịa. \
-            Không bao giờ có và không bao giờ hỏi số điện thoại hay email của thành viên. Khi người dùng muốn sửa \
+            Bạn không được cấp quyền xem số điện thoại hay email của thành viên và không bao giờ hỏi chúng; nếu được hỏi, \
+            nói rõ là bạn không được phép xem, hướng dẫn xem trong hồ sơ thành viên (chỉ Admin và chính chủ thấy), \
+            và KHÔNG nói rằng hệ thống không lưu các thông tin đó. Khi người dùng muốn sửa \
             hồ sơ, người thân hoặc ảnh đại diện của chính họ, hãy hướng dẫn họ vào trang hồ sơ để tự sửa, không soạn \
             bản nháp. Khi người dùng muốn thêm, sửa hoặc xóa MỘT sự kiện chung, hãy gọi draftProposal để soạn bản \
             nháp (không tự ghi dữ liệu). Câu hỏi không liên quan tới gia phả, lịch hoặc sự kiện thì từ chối lịch sự \
@@ -124,9 +126,11 @@ public class AiChatService {
             send(emitter, "done", quotaAfter);
             emitter.complete();
         } catch (BusinessException e) {
+            quotaService.refund(accountId);
             send(emitter, "error", Map.of("code", e.getCode(), "message", e.getMessage()));
             emitter.complete();
         } catch (RuntimeException e) {
+            quotaService.refund(accountId);
             send(emitter, "error", Map.of("code", "AI_UNAVAILABLE", "message",
                     "Trợ lý AI hiện chưa dùng được. Vui lòng thử lại sau."));
             emitter.complete();

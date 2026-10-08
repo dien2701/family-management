@@ -110,6 +110,12 @@ public class NotificationService {
         return ensurePref(accountId);
     }
 
+    /** Id các tài khoản đã đặt giờ nhắc đúng {@code hhmm}. */
+    @Transactional(readOnly = true)
+    List<Long> accountIdsRemindingAt(String hhmm) {
+        return prefs.findByRemindHour(hhmm).stream().map(NotificationPref::getAccountId).toList();
+    }
+
     List<Integer> parseRemindDays(String remindDaysBeforeJson) {
         return List.of(json.readValue(remindDaysBeforeJson, Integer[].class));
     }

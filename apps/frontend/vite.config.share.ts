@@ -30,7 +30,7 @@ function inlineEverything(): Plugin {
       })
       let scripts = ''
       source = source.replace(/<script type="module"[^>]*src="([^"]+)"[^>]*><\/script>/g, (_m, src: string) => {
-        scripts += `<script type="module">${take(src.replace(/^\.?\//, '')).replace(/<\/script/gi, '<\/script')}</script>`
+        scripts += `<script type="module">${take(src.replace(/^\.?\//, '')).replace(/<\/script/gi, '<\\/script')}</script>`
         return ''
       })
       const icon = readFileSync(path.join(root, 'public/favicon.svg')).toString('base64')

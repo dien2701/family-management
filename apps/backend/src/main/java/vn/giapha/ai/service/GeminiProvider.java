@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -30,6 +32,7 @@ import vn.giapha.config.AppProperties;
 @Profile("!dev & !test")
 class GeminiProvider implements AiProvider {
 
+    private static final Logger log = LoggerFactory.getLogger(GeminiProvider.class);
     private static final int MAX_TOOL_CALLS = 6;
 
     private final AppProperties.Ai config;
@@ -70,7 +73,8 @@ class GeminiProvider implements AiProvider {
                     Map<String, Object> result = tools.execute(name, args);
                     toolResults.add(Part.fromFunctionResponse(name, result));
                 }
-                contents.add(Content.builder().role("function").parts(toolResults).build());
+                // API hiện hành chỉ nhận role user/model; role "function" (kiểu cũ) bị trả 400 INVALID_ARGUMENT
+                contents.add(Content.builder().role("user").parts(toolResults).build());
                 response = client.models.generateContent(config.model(), contents, genConfig);
             }
             String text = response.text();
@@ -81,6 +85,8 @@ class GeminiProvider implements AiProvider {
         } catch (BusinessException e) {
             throw e;
         } catch (RuntimeException e) {
+            // Trước đây nuốt hết nên không biết Gemini từ chối vì sao (khóa sai, hết quota, sai model...)
+            log.warn("Gemini lỗi ({}): {}", e.getClass().getSimpleName(), e.getMessage());
             throw unavailable();
         }
     }

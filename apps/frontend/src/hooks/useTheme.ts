@@ -36,7 +36,8 @@ export const getFontSize = (): FontSize => {
   return isFont(v) ? v : 'normal'
 }
 
-const systemDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches
+const systemDark = () =>
+  typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)').matches
 
 export function resolveDark(mode: ThemeMode): boolean {
   return mode === 'dark' || (mode === 'system' && systemDark())
@@ -56,7 +57,7 @@ function emit() {
 }
 
 // Chế độ "theo máy": đổi giao diện hệ điều hành thì đổi theo
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && typeof window.matchMedia === 'function') {
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (getThemeMode() === 'system') emit()
   })

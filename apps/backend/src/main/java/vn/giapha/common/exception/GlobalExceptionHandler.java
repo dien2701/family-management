@@ -97,8 +97,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
             HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        // Chỉ báo tên trường (không lộ thông điệp nội bộ của Jackson) để client biết trường nào thiếu hoặc sai kiểu
+        List<FieldError> errors = ex.getCause() instanceof tools.jackson.databind.DatabindException de
+                && !de.getPath().isEmpty() && de.getPath().getLast().getPropertyName() != null
+                        ? List.of(new FieldError(de.getPath().getLast().getPropertyName(), "Thiếu hoặc sai kiểu dữ liệu."))
+                        : List.of();
         ProblemDetail body = problem(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST",
-                "Nội dung yêu cầu không đọc được.", List.of());
+                "Nội dung yêu cầu không đọc được.", errors);
         return handleExceptionInternal(ex, body, headers, HttpStatus.BAD_REQUEST, request);
     }
 

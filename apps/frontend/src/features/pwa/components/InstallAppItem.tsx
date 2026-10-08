@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
 
 const detectStandalone = () =>
-  window.matchMedia('(display-mode: standalone)').matches ||
+  (typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches) ||
   (window.navigator as Navigator & { standalone?: boolean }).standalone === true
 
 const detectIOS = () =>

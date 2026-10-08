@@ -2,6 +2,7 @@ package vn.giapha.notification.service;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.nio.charset.StandardCharsets;
 import java.security.Security;
 import java.util.concurrent.ExecutionException;
 
@@ -12,9 +13,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import nl.martijndwars.webpush.Encoding;
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
-import nl.martijndwars.webpush.Subscription;
+import nl.martijndwars.webpush.Urgency;
 
 import vn.giapha.config.AppProperties;
 
@@ -27,6 +29,7 @@ import vn.giapha.config.AppProperties;
 class WebPushSender implements PushSender {
 
     private static final Logger log = LoggerFactory.getLogger(WebPushSender.class);
+    private static final int TTL_SECONDS = 12 * 60 * 60;
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -46,20 +49,36 @@ class WebPushSender implements PushSender {
             return Result.ERROR;
         }
         try {
-            Subscription subscription = new Subscription(target.endpoint(),
-                    new Subscription.Keys(target.p256dh(), target.auth()));
-            HttpResponse response = service.send(new Notification(subscription, payloadJson));
+            // aes128gcm là bản chuẩn RFC 8291, bắt buộc với Safari/iOS (aesgcm cũ bị Apple từ chối).
+            // TTL ngắn: nhắc lịch "hôm nay" mà tới trễ vài ngày sau khi máy bật lại thì sai; urgency cao để máy đang ngủ vẫn nhận.
+            Notification notification = Notification.builder().endpoint(target.endpoint())
+                    .userPublicKey(target.p256dh()).userAuth(target.auth()).payload(payloadJson.getBytes(StandardCharsets.UTF_8))
+                    .ttl(TTL_SECONDS).urgency(Urgency.HIGH).build();
+            HttpResponse response = service.send(notification, Encoding.AES128GCM);
             int status = response.getStatusLine().getStatusCode();
             if (status == 404 || status == 410) {
                 return Result.GONE;
             }
-            return status >= 200 && status < 300 ? Result.OK : Result.ERROR;
+            if (status < 200 || status >= 300) {
+                // 401/403 thường là sai khóa VAPID; không ghi log thì push hỏng mà không ai biết
+                log.warn("Push service từ chối: HTTP {} ({})", status, hostOf(target.endpoint()));
+                return Result.ERROR;
+            }
+            return Result.OK;
         } catch (GeneralSecurityException | IOException | JoseException | ExecutionException e) {
             log.warn("Gửi push thất bại: {}", e.toString());
             return Result.ERROR;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return Result.ERROR;
+        }
+    }
+
+    private static String hostOf(String endpoint) {
+        try {
+            return java.net.URI.create(endpoint).getHost();
+        } catch (IllegalArgumentException e) {
+            return "?";
         }
     }
 

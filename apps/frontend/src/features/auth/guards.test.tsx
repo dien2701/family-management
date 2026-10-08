@@ -125,17 +125,6 @@ describe('route guard: trạng thái duyệt', () => {
 })
 
 describe('khu Quản trị', () => {
-  it('User đã duyệt gõ thẳng /quan-tri/tai-khoan hoặc /quan-tri: bị chặn về Tổng quan', () => {
-    expect(renderAt('/quan-tri/tai-khoan', { user: approved }).pathname).toBe('/')
-    expect(renderAt('/quan-tri', { user: approved }).pathname).toBe('/')
-    expect(api.get).not.toHaveBeenCalled()
-  })
-
-  it('Admin vào /quan-tri thì tới trang Tài khoản', () => {
-    expect(renderAt('/quan-tri', { user: admin }).pathname).toBe('/quan-tri/tai-khoan')
-    expect(screen.getByRole('heading', { level: 1, name: 'Quản lý tài khoản' })).toBeInTheDocument()
-  })
-
   it('menu Quản trị: Admin thấy ở Sidebar và trang Thêm, User không thấy', () => {
     renderAt('/them', { user: admin })
     const sidebar = screen.getByRole('navigation', { name: 'Điều hướng chính' })

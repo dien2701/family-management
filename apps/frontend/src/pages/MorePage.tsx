@@ -55,7 +55,7 @@ const ITEMS: Item[] = [
   {
     to: '/them/tai-lieu-chung',
     label: 'Tài liệu chung',
-    description: 'Các tài liệu, biểu mẫu chung của dòng họ',
+    description: 'Các tài liệu, biểu mẫu chung của gia đình',
     icon: Files,
   },
   {

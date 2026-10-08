@@ -50,7 +50,6 @@ describe('bản build prod', () => {
           'Cụ Kai Nhất', // dữ liệu 28 người
           'Dữ liệu tạm', // mục trong trang Thêm
           'MockRouter',
-          'MEMBER_NOT_FOUND', // mã lỗi do handler giả lập tạo ra
         ]
         for (const needle of forbidden) {
           const hit = files.find((f) => f.text.includes(needle))

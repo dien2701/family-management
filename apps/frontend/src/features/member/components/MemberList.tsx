@@ -39,9 +39,9 @@ function MemberCard({ member }: { member: MemberSummary }) {
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="truncate font-semibold text-text">{member.fullName}</h3>
+            <h3 className="min-w-0 font-semibold text-text [overflow-wrap:anywhere]">{member.fullName}</h3>
             {member.isDeceased && (
-              <Badge tone="warning">Đã mất</Badge>
+              <span className="shrink-0"><Badge tone="warning">Đã mất</Badge></span>
             )}
           </div>
           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-text-muted">

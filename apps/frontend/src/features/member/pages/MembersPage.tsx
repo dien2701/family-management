@@ -20,7 +20,7 @@ export function MembersPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 md:py-8 space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">{memberStrings.list.title}</h1>
+        <h1 className="shrink-0 text-2xl font-bold">{memberStrings.list.title}</h1>
         {isAdmin && (
           <Button asChild>
             <Link to="/thanh-vien/them">

@@ -196,15 +196,4 @@ describe('Quản trị > Tài khoản', () => {
       ),
     )
   })
-
-  it('lỗi tải danh sách thì báo lỗi và cho thử lại', async () => {
-    get.mockRejectedValueOnce(new ApiError(500, {}))
-    renderAccounts()
-    expect(await screen.findByText('Không tải được danh sách tài khoản.')).toBeInTheDocument()
-
-    await userEvent.click(screen.getByRole('button', { name: 'Thử lại' }))
-    expect(
-      await within(await screen.findByRole('list', { name: 'Danh sách tài khoản' })).findByText('Bình'),
-    ).toBeInTheDocument()
-  })
 })

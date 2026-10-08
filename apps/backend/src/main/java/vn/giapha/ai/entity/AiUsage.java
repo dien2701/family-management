@@ -49,6 +49,14 @@ public class AiUsage {
         updatedAt = now;
     }
 
+    /** Hoàn một lượt khi trợ lý không trả lời được (lỗi phía máy chủ); không âm, không đụng lượt của ngày khác. */
+    public void decrement(LocalDate today, Instant now) {
+        if (today.equals(usageDate) && usedCount > 0) {
+            usedCount--;
+            updatedAt = now;
+        }
+    }
+
     /** Lượt đã dùng hôm nay (giờ Việt Nam); ngày khác {@code today} nghĩa là chưa dùng lượt nào. */
     public int usedOn(LocalDate today) {
         return today.equals(usageDate) ? usedCount : 0;

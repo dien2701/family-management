@@ -60,6 +60,15 @@ public class AiQuotaService {
         return new AiQuota(limit, used, Math.max(0, limit - used), resetAt());
     }
 
+    /** Trả lại lượt đã trừ ở {@link #checkAndIncrement} khi Gemini lỗi, để người dùng không mất lượt oan. */
+    @Transactional
+    public void refund(Long accountId) {
+        repository.findByIdForUpdate(accountId).ifPresent(u -> {
+            u.decrement(today(), Instant.now(clock));
+            repository.save(u);
+        });
+    }
+
     private LocalDate today() {
         return LocalDate.now(clock.withZone(VIETNAM));
     }

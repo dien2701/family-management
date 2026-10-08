@@ -2597,9 +2597,12 @@ paths:
         - push
       summary: Gửi thử thông báo push đến thiết bị hiện tại
       operationId: testPush
+      description: 'Lỗi: 404 PUSH_NOT_SUBSCRIBED (chưa đăng ký thiết bị nào), 502 PUSH_DELIVERY_FAILED (không thiết bị nào nhận được).'
       responses:
         '200':
           description: Thành công
+        '502':
+          description: Không gửi được tới thiết bị nào (PUSH_DELIVERY_FAILED)
 
 components:
   securitySchemes:

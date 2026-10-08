@@ -31,7 +31,7 @@ export function NotificationDropdown({ onClose }: Props) {
       <div className="flex items-center justify-between p-3 border-b border-border bg-surface-muted">
         <h3 className="font-semibold text-foreground">Thông báo</h3>
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" onClick={() => { onClose(); navigate('/notifications/settings'); }} title="Cài đặt">
+          <Button variant="ghost" size="icon" onClick={() => { onClose(); navigate('/thong-bao/cai-dat'); }} title="Cài đặt">
             <Settings className="w-4 h-4" />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => void readAll.mutateAsync()} title="Đánh dấu đã đọc tất cả">
@@ -59,7 +59,7 @@ export function NotificationDropdown({ onClose }: Props) {
               }}
             >
               <h4 className={`text-sm ${n.isRead ? 'font-medium text-foreground' : 'font-semibold text-primary'}`}>{n.title}</h4>
-              <p className="text-sm text-text-muted mt-1">{n.body}</p>
+              <p className="mt-1 text-sm whitespace-pre-line text-text-muted">{n.body}</p>
               <p className="text-xs text-text-muted mt-2">{formatDateTime(n.createdAt).slice(0, -5)}</p>
             </div>
           ))
@@ -67,7 +67,7 @@ export function NotificationDropdown({ onClose }: Props) {
       </div>
 
       <div className="p-2 border-t border-border">
-        <Button variant="ghost" className="w-full text-sm" onClick={() => { onClose(); navigate('/notifications'); }}>
+        <Button variant="ghost" className="w-full text-sm" onClick={() => { onClose(); navigate('/thong-bao'); }}>
           Xem tất cả
         </Button>
       </div>

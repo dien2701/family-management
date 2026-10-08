@@ -136,6 +136,7 @@ function PreviewViewport({ svg, width, height, resetKey }: ViewportProps) {
     return () => observer.disconnect()
   }, [])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- đặt lại khung nhìn khi resetKey đổi
   useEffect(() => setView(HOME), [resetKey])
 
   const fit = box.w > 0 && box.h > 0 ? Math.min((box.w * 0.96) / width, (box.h * 0.96) / height) : 1
@@ -282,6 +283,7 @@ function PreviewBody({ graph, index, generations, defaultRootId, layoutOptions, 
   // Dựng lại bản xem trước khi đổi gốc hoặc bật/tắt ảnh (đổi khổ giấy/hướng chỉ tính lại trang, không dựng lại)
   useEffect(() => {
     const abort = new AbortController()
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- báo đang dựng lại trước khi tải bất đồng bộ
     setPrepared({ status: 'loading' })
     void (async () => {
       try {

@@ -10,7 +10,7 @@ export const adminStrings = {
     linkRequests: 'Yêu cầu liên kết',
   },
   accounts: {
-    title: 'Quản lý người dùng',
+    title: 'Người dùng',
     tabsLabel: 'Nhóm tài khoản',
     tabWaiting: 'Chờ duyệt',
     tabAll: 'Tất cả',

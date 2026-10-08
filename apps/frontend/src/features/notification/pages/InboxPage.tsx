@@ -24,13 +24,13 @@ export function InboxPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Thông báo</h1>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => void readAll.mutateAsync()} disabled={isPending || data?.items.length === 0}>
             <Check className="w-4 h-4 mr-2" /> Đã đọc tất cả
           </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate('/notifications/settings')}>
+          <Button variant="outline" size="sm" onClick={() => navigate('/thong-bao/cai-dat')}>
             <Settings className="w-4 h-4 mr-2" /> Cài đặt
           </Button>
         </div>
@@ -60,7 +60,7 @@ export function InboxPage() {
                   <h3 className={`text-base ${n.isRead ? 'font-medium text-foreground' : 'font-semibold text-primary'}`}>{n.title}</h3>
                   <span className="text-xs text-text-muted whitespace-nowrap">{formatDateTime(n.createdAt).slice(0, -5)}</span>
                 </div>
-                <p className="text-sm text-text-muted mt-1">{n.body}</p>
+                <p className="mt-1 text-sm whitespace-pre-line text-text-muted">{n.body}</p>
               </div>
             ))}
           </div>

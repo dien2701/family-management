@@ -48,12 +48,12 @@ export function MemberFilters({ filters, onChange }: MemberFiltersProps) {
         />
       </div>
       
-      <div className="grid grid-cols-2 gap-3 md:flex md:shrink-0">
+      <div className="grid grid-cols-1 gap-3 md:flex md:shrink-0">
         <Select
           value={filters.sort || 'name'}
           onChange={(e) => onChange({ sort: e.target.value as MemberListQuery['sort'] })}
           aria-label={str.filters.sort}
-          className="col-span-2 md:col-span-1 md:w-44"
+          className="md:w-44"
         >
           <option value="name">{str.filters.sortOptions.name}</option>
           <option value="age">{str.filters.sortOptions.age}</option>

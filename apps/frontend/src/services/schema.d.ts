@@ -1572,7 +1572,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Gửi thử thông báo push đến thiết bị hiện tại */
+        /**
+         * Gửi thử thông báo push đến thiết bị hiện tại
+         * @description Lỗi: 404 PUSH_NOT_SUBSCRIBED (chưa đăng ký thiết bị nào), 502 PUSH_DELIVERY_FAILED (không thiết bị nào nhận được).
+         */
         post: operations["testPush"];
         delete?: never;
         options?: never;
@@ -4899,6 +4902,13 @@ export interface operations {
         responses: {
             /** @description Thành công */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Không gửi được tới thiết bị nào (PUSH_DELIVERY_FAILED) */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };
