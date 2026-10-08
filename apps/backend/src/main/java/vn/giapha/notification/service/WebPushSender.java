@@ -5,7 +5,7 @@ import java.security.GeneralSecurityException;
 import java.security.Security;
 import java.util.concurrent.ExecutionException;
 
-import org.apache.hc.core5.http.HttpResponse;
+import org.apache.http.HttpResponse;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.jose4j.lang.JoseException;
 import org.slf4j.Logger;
@@ -49,7 +49,7 @@ class WebPushSender implements PushSender {
             Subscription subscription = new Subscription(target.endpoint(),
                     new Subscription.Keys(target.p256dh(), target.auth()));
             HttpResponse response = service.send(new Notification(subscription, payloadJson));
-            int status = response.getCode();
+            int status = response.getStatusLine().getStatusCode();
             if (status == 404 || status == 410) {
                 return Result.GONE;
             }

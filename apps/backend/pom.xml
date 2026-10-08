@@ -24,6 +24,7 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <bucket4j.version>8.20.0</bucket4j.version>
         <!-- DECISIONS #46: cố định phiên bản để BouncyCastle không trôi theo transitive khác -->
+        <bouncycastle.version>1.78.1</bouncycastle.version>
         <web-push.version>5.1.1</web-push.version>
         <google-genai.version>1.73.0</google-genai.version>
     </properties>
@@ -109,6 +110,11 @@
             <groupId>nl.martijndwars</groupId>
             <artifactId>web-push</artifactId>
             <version>${web-push.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>${bouncycastle.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.genai</groupId>

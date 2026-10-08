@@ -85,11 +85,11 @@ public class AdminAccountService {
         requireAdmin(users.findById(actorId).orElse(null));
         Page<UserAccount> result = users.findAll(specOf(filter),
                 PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))));
-        PageResponse<AccountAdminResponse> page = PageResponse.of(result, mapper::toAdminView);
+        PageResponse<AccountAdminResponse> response = PageResponse.of(result, mapper::toAdminView);
         Map<Long, String> names = members.fullNames(
-                page.items().stream().map(AccountAdminResponse::memberId).filter(Objects::nonNull).toList());
-        return new PageResponse<>(page.items().stream().map(item -> withMember(item, names)).toList(), page.page(),
-                page.size(), page.totalElements(), page.totalPages());
+                response.items().stream().map(AccountAdminResponse::memberId).filter(Objects::nonNull).toList());
+        return new PageResponse<>(response.items().stream().map(item -> withMember(item, names)).toList(), response.page(),
+                response.size(), response.totalElements(), response.totalPages());
     }
 
     // ---------- Duyệt ----------

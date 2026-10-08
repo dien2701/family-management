@@ -1,0 +1,91 @@
+name: giapha
+
+services:
+  # 1. Cơ sở dữ liệu MySQL 8.4 LTS
+  mysql:
+    image: mysql:8.4
+    container_name: giapha-mysql
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_dev}
+      MYSQL_DATABASE: ${DB_NAME:-giapha}
+      MYSQL_USER: ${DB_USERNAME:-giapha}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-giapha_dev}
+      TZ: UTC
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - giapha-net
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # 2. Spring Boot Backend (Java 21)
+  backend:
+    container_name: giapha-backend
+    build:
+      context: ./apps/backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      # Kết nối nội bộ qua service name "mysql"
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-giapha}
+      DB_USERNAME: ${DB_USERNAME:-giapha}
+      DB_PASSWORD: ${DB_PASSWORD:-giapha_dev}
+
+      # Quản trị & bảo mật
+      JWT_SECRET: ${JWT_SECRET:-giapha_default_secret_key_minimum_32_bytes_long_123456}
+      ROOT_ADMIN_EMAIL: ${ROOT_ADMIN_EMAIL:-admin@example.com}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      TZ: UTC
+
+      # Cấu hình dịch vụ bên ngoài (nếu có)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-no-reply@giapha.local}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@example.com}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+    networks:
+      - giapha-net
+
+  # 3. Frontend React + Nginx Proxy
+  frontend:
+    container_name: giapha-frontend
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      # Mở cổng ra ngoài máy chủ để trỏ domain vào (mặc định 80)
+      - "${PORT:-80}:80"
+    networks:
+      - giapha-net
+
+networks:
+  giapha-net:
+    driver: bridge
+
+volumes:
+  mysql_data:
