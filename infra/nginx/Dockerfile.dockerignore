@@ -3,6 +3,6 @@
 **/target
 .git
 apps/backend
-infra
+infra/backup
 docs
 roadmap
