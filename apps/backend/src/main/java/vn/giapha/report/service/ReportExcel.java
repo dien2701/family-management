@@ -35,7 +35,7 @@ final class ReportExcel {
             CellStyle head = wb.createCellStyle();
             head.setFont(bold);
             head.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-            head.setFillPattern(FillPatternType.SOLID);
+            head.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             CellStyle date = wb.createCellStyle();
             date.setDataFormat(wb.getCreationHelper().createDataFormat().getFormat("dd/mm/yyyy"));
             date.setAlignment(HorizontalAlignment.LEFT);
