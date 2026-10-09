@@ -1,0 +1,122 @@
+# Prod trên VPS (DECISIONS #87). Đặt tại /opt/giapha cùng file .env (mẫu: infra/.env.example).
+# Image build ở GitHub Actions và lấy từ GHCR; file này chỉ pull, không build.
+# Biến thiếu thì compose dừng ngay (${VAR:?}) thay vì chạy với mặc định yếu.
+name: giapha
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: giapha-mysql
+    restart: unless-stopped
+    # Không có "ports": chỉ app trong mạng nội bộ nói chuyện được với DB
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --innodb-buffer-pool-size=256M
+      - --max-connections=100
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?đặt DB_ROOT_PASSWORD trong .env}
+      MYSQL_DATABASE: ${DB_NAME:-giapha}
+      MYSQL_USER: ${DB_USERNAME:-giapha}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?đặt DB_PASSWORD trong .env}
+      TZ: UTC
+    volumes:
+      - mysql_data:/var/lib/mysql
+    mem_limit: 768m
+    networks: [giapha-net]
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    image: ghcr.io/${GHCR_OWNER:?đặt GHCR_OWNER (chữ thường) trong .env}/giapha-app:${IMAGE_TAG:-latest}
+    container_name: giapha-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      TZ: UTC
+      JAVA_OPTS: -XX:+UseContainerSupport -XX:MaxRAMPercentage=70.0 -Djava.security.egd=file:/dev/./urandom
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-giapha}
+      DB_USERNAME: ${DB_USERNAME:-giapha}
+      DB_PASSWORD: ${DB_PASSWORD:?đặt DB_PASSWORD trong .env}
+      JWT_SECRET: ${JWT_SECRET:?đặt JWT_SECRET (>= 32 byte) trong .env}
+      ROOT_ADMIN_EMAIL: ${ROOT_ADMIN_EMAIL:?đặt ROOT_ADMIN_EMAIL trong .env}
+      MAIL_HOST: ${MAIL_HOST:?đặt MAIL_HOST trong .env}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:?đặt MAIL_USERNAME trong .env}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:?đặt MAIL_PASSWORD trong .env}
+      MAIL_FROM: ${MAIL_FROM:?đặt MAIL_FROM trong .env}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:?đặt CLOUDINARY_CLOUD_NAME trong .env}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:?đặt CLOUDINARY_API_KEY trong .env}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:?đặt CLOUDINARY_API_SECRET trong .env}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?đặt GEMINI_API_KEY trong .env}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      # Tùy chọn: để trống thì nút Google ẩn / Web Push không gửi
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@giapha.click}
+    mem_limit: 1g
+    networks: [giapha-net]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/actuator/health | grep -q UP"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+
+  nginx:
+    image: ghcr.io/${GHCR_OWNER:?đặt GHCR_OWNER (chữ thường) trong .env}/giapha-web:${IMAGE_TAG:-latest}
+    container_name: giapha-nginx
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # ghi được: lần đầu 40-certs.sh tạo chứng chỉ tạm vào đây
+      - certbot_etc:/etc/letsencrypt
+      - certbot_www:/var/www/certbot:ro
+    mem_limit: 128m
+    networks: [giapha-net]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/healthz | grep -q ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # Gia hạn chứng chỉ mỗi 12 giờ (chỉ gia hạn khi còn < 30 ngày). Lần đầu: xem infra/README.md
+  certbot:
+    image: certbot/certbot
+    container_name: giapha-certbot
+    restart: unless-stopped
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
+    volumes:
+      - certbot_etc:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    mem_limit: 128m
+    networks: [giapha-net]
+    healthcheck:
+      test: ["CMD-SHELL", "test -d /etc/letsencrypt"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+
+networks:
+  giapha-net:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  certbot_etc:
+  certbot_www:

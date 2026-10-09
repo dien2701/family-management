@@ -3,9 +3,6 @@ export const aiStrings = {
   menu: 'Trợ lý',
   menuDescription: 'Hỏi về thành viên, ngày giỗ, sinh nhật và sự kiện',
   title: 'Trợ lý',
-  serverRequired: 'Cần kết nối máy chủ',
-  serverRequiredHint:
-    'Trợ lý trả lời qua máy chủ nên chưa dùng được ở chế độ giả lập. Bạn vẫn xem trước được giao diện.',
   emptyTitle: 'Hỏi Trợ lý về gia phả',
   emptyDescription:
     'Trợ lý chỉ đọc dữ liệu để trả lời, không tự thay đổi gì. Thử một trong các câu sau:',

@@ -10,7 +10,7 @@ PWA quản lý **một gia phả chung** (bản chốt v2, 2026-09-25): thành v
 - Thành viên chỉ bắt buộc họ tên (ghi nguyên văn), không tự đặt giới tính. Mỗi hồ sơ có danh sách **người thân** một chiều (thành viên đã có + nhãn), độc lập với cây. User đã liên kết "Tôi là ai" tự sửa trực tiếp hồ sơ, người thân và ảnh đại diện của mình, trừ các trường về việc đã mất (chỉ Admin). Đề xuất chỉ còn cho sự kiện chung (DECISIONS mục K #75–#78). Dữ liệu ban đầu là 28 thành viên ở `shared/fixtures/seed/members.json` (IDEA Phụ lục A).
 - **Tài khoản ≠ thành viên** (DECISIONS #79–#82): xem mục Thuật ngữ bên dưới. Liên kết 1–1, qua yêu cầu "Tôi là ai" (Admin duyệt) hoặc Admin gán trực tiếp; User tự hủy, Admin hủy được. Khi liên kết, email tài khoản được chép một lần sang hồ sơ nếu ô email đang trống.
 - **Hai công cụ** (DECISIONS #83): các đợt FE nhẹ (11, 18–23) làm bằng **Antigravity** (Gemini, đọc `AGENTS.md`), còn lại làm bằng **Claude Code**. Cột "Công cụ" ở bảng Tiến độ của ROADMAP là nguồn sự thật.
-- **Đang ở GĐ A: làm toàn bộ frontend trước** bằng chế độ giả lập (`VITE_API_MODE=mock`), rồi mới làm backend (GĐ B), cuối cùng nối lại (GĐ C).
+- **Đang ở GĐ C (nối và phát hành):** frontend (GĐ A) và backend (GĐ B) đã xong; Đợt 39 đã gỡ lớp giả lập, frontend gọi backend thật. Còn Đợt 41 (deploy).
 
 ## Thuật ngữ
 | Từ | Nghĩa |
@@ -50,7 +50,7 @@ Nguồn sự thật về phiên bản là `apps/backend/pom.xml` và `apps/front
 | Test FE | Vitest, Testing Library (chỉ test cũ, không viết mới — #84) |
 | Dịch vụ ngoài | Cloudinary (file), Google Identity Services (đăng nhập), Gemini `com.google.genai`, Web Push VAPID `nl.martijndwars:web-push` |
 | Báo cáo | Apache POI (Excel), OpenPDF (PDF, nhúng font Be Vietnam Pro) |
-| Hạ tầng | Docker Compose trên Oracle Cloud ARM (nginx + app + mysql + certbot), DuckDNS + Let's Encrypt, GHCR, GitHub Actions |
+| Hạ tầng | Docker Compose trên VPS Ubuntu x86_64 (nginx + app + mysql + certbot), tên miền `giapha.click` + Let's Encrypt, GHCR (`linux/amd64`), GitHub Actions (DECISIONS #87) |
 
 ## Cấu trúc thư mục
 ```
@@ -64,7 +64,6 @@ apps/
     .env.example
   frontend/                React + Vite
     src/{assets,components/{ui,shared},layout,pages,features/<module>,hooks,context,services,utils,types}
-    src/services/mock/     lớp giả lập của GĐ A (gỡ ở Đợt 39)
 shared/api/openapi.yaml    hợp đồng API viết tay, nguồn sinh kiểu TS và chuẩn để BE khớp
 shared/fixtures/           lunar/ (âm–dương), seed/ (28 thành viên), tree/, occurrences/: dữ liệu đối chiếu dùng chung BE và FE
 infra/                     docker-compose.dev.yml, docker-compose.prod.yml, nginx/, backup/
@@ -90,9 +89,8 @@ docker compose -f infra/docker-compose.dev.yml up -d
 # Frontend (trong apps/frontend)
 npm install
 npm run dev          # http://localhost:5173, proxy /api tới :8080
-npm run dev:mock     # (từ Đợt 9) chế độ giả lập: endpoint có handler chạy ở trình duyệt, còn lại (auth, /me, tài khoản) gọi BE thật
-npm run gen:api      # sinh src/services/schema.d.ts (từ Đợt 9: đọc shared/api/openapi.yaml, không cần BE chạy)
-npm run lint:api     # (từ Đợt 9) kiểm tra openapi.yaml
+npm run gen:api      # sinh src/services/schema.d.ts (đọc shared/api/openapi.yaml, không cần BE chạy)
+npm run lint:api     # kiểm tra openapi.yaml
 npm run lint
 npm run build        # gồm tsc -b
 npm test             # Vitest
@@ -110,7 +108,7 @@ npm test             # Vitest
 - Mỗi đợt một nhánh `dot-NN-<ten>`, rồi mở PR vào `main`. Chỉ commit hoặc push khi người dùng yêu cầu.
 - Đổi schema thì **thêm file Flyway V mới**, không sửa file cũ. Entity phải khớp SQL (`ddl-auto: validate`).
 - **Hợp đồng trước:** mọi API mới hoặc đổi API đều sửa `shared/api/openapi.yaml` trước, rồi `npm run gen:api`. Không viết tay kiểu DTO ở frontend. Backend phải khớp hợp đồng (DECISIONS #70).
-- **Không tạo dữ liệu giả** trong app hay lớp giả lập: chỉ có 28 thành viên thật và dữ liệu người dùng tự nhập. Dữ liệu mẫu chỉ được dùng trong test.
+- **Không tạo dữ liệu giả** trong app: chỉ có 28 thành viên thật và dữ liệu người dùng tự nhập. Dữ liệu mẫu chỉ được dùng trong test.
 - Thời điểm lưu UTC, logic ngày dùng giờ +7. Lịch âm theo thuật toán Hồ Ngọc Đức, bản Java là nguồn chuẩn.
 - **Có bất kỳ điểm nào chưa rõ thì BẮT BUỘC hỏi lại người dùng trước khi làm. Không tự giả định rồi viết luôn.** Hỏi ngắn, nêu rõ điểm chưa rõ và các phương án (kèm khuyến nghị nếu có).
 - Không mở rộng phạm vi ngoài đợt đang làm. Thấy việc cần làm thêm thì ghi vào mục ghi chú của đợt, không tự làm.

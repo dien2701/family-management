@@ -1,5 +1,5 @@
 /**
- * Export và import Excel, PDF.
+ * Export Excel, PDF (không có nhập hàng loạt, IDEA §6.9).
  */
 @ApplicationModule(displayName = "Report")
 package vn.giapha.report;

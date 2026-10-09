@@ -1,5 +1,5 @@
 // Kiểm tra hợp lệ mọi thao tác dựng cây theo DECISIONS #60 và #61.
-// Lớp giả lập dùng để trả ProblemDetail (mã lỗi + HTTP status), giao diện dùng để chỉ hiện nút "+" ở chỗ được phép.
+// Giao diện dùng để chỉ hiện nút "+" ở chỗ được phép.
 import { getBranch, getSiblings } from './graph'
 import type { TreeIndex, TreeNode } from './types'
 

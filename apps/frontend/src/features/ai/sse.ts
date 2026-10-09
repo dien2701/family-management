@@ -1,6 +1,6 @@
 // Đọc Server-Sent Events của `POST /api/ai/chat` bằng fetch + ReadableStream (EventSource không gửi được
 // header Bearer hay body). Gặp 401 thì refresh một lần rồi thử lại, giống `services/client.ts`.
-import { ApiError, api, getAccessToken, refreshSession, type ProblemDetail } from '@/services/client'
+import { ApiError, getAccessToken, refreshSession, type ProblemDetail } from '@/services/client'
 import type { AiDraft, AiQuota } from '@/types/api'
 
 export type ChatHandlers = {
@@ -82,12 +82,6 @@ export async function streamChat(
   handlers: ChatHandlers,
   signal: AbortSignal,
 ): Promise<void> {
-  // Chế độ giả lập: handler trả 503 "Cần kết nối máy chủ" (điều kiện viết trực tiếp để Vite cắt khỏi bản prod)
-  if (import.meta.env.DEV && import.meta.env.VITE_API_MODE === 'mock') {
-    await api.post('/ai/chat', { message }, { signal })
-    return
-  }
-
   const response = await post(message, signal)
   if (!response.ok) {
     let problem: ProblemDetail = {}

@@ -26,4 +26,5 @@ EXPOSE 8080
 # Tối ưu JVM trong môi trường container
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+# exec để JVM nhận SIGTERM khi docker stop (tắt êm, không bị kill sau 10 giây)
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

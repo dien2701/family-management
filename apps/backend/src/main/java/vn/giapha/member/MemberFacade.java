@@ -72,6 +72,17 @@ public class MemberFacade {
     public record RelativeRef(Long memberId, String fullName, String label) {
     }
 
+    /**
+     * Một dòng báo cáo thành viên (Excel, PDF; IDEA §6.9). {@code phone} và {@code email} chỉ có giá trị khi người gọi
+     * xin {@code withContact = true}, nếu không luôn là {@code null}.
+     */
+    public record ReportMember(Long id, String fullName, String tabooName, String gender, boolean deceased,
+            Integer birthYear, Integer birthMonth, Integer birthDay, boolean birthLunar,
+            Integer deathSolarYear, Integer deathSolarMonth, Integer deathSolarDay,
+            Integer deathLunarYear, Integer deathLunarMonth, Integer deathLunarDay, boolean deathLunarLeap,
+            String burialPlace, String phone, String email) {
+    }
+
     private final MemberRepository repository;
     private final MemberLinkRequestRepository linkRequests;
     private final RelativeService relatives;
@@ -121,6 +132,17 @@ public class MemberFacade {
     @Transactional(readOnly = true)
     public List<OccurrenceMember> findAllForOccurrences() {
         return repository.findAll().stream().map(MemberFacade::toOccurrenceMember).toList();
+    }
+
+    /** Toàn bộ thành viên theo họ tên, cho báo cáo. SĐT và email chỉ kèm khi {@code withContact} (người xuất là Admin). */
+    @Transactional(readOnly = true)
+    public List<ReportMember> findAllForReport(boolean withContact) {
+        return repository.findAll(Sort.by("fullName")).stream().map(m -> new ReportMember(m.getId(), m.getFullName(),
+                m.getTabooName(), m.getGender() == null ? null : m.getGender().name(), m.isDeceased(),
+                m.getBirthYear(), m.getBirthMonth(), m.getBirthDay(), m.getBirthdayCalendar() == BirthCalendar.LUNAR,
+                m.getDeathYear(), m.getDeathMonth(), m.getDeathDay(),
+                m.getDeathLunarYear(), m.getDeathLunarMonth(), m.getDeathLunarDay(), m.isDeathLunarLeap(),
+                m.getBurialPlace(), withContact ? m.getPhone() : null, withContact ? m.getEmail() : null)).toList();
     }
 
     /** Thẻ tóm tắt của các thành viên có id trong {@code memberIds} (một truy vấn); id không tồn tại thì bỏ qua. */

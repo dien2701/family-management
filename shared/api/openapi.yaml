@@ -7,8 +7,8 @@ info:
     File này viết tay và là **nguồn sự thật** (DECISIONS #70): frontend sinh kiểu TypeScript từ đây
     (`npm run gen:api`), backend phải khớp (test hợp đồng từ Đợt 26). Muốn đổi API thì sửa file này trước.
 
-    Khởi tạo từ `/v3/api-docs` của backend Đợt 8, đã bỏ `/api/family/**`. Các phần chưa có backend
-    (mọi thứ dưới thẻ `members`) do lớp giả lập của frontend phục vụ cho tới Đợt 26–39.
+    Khởi tạo từ `/v3/api-docs` của backend Đợt 8, đã bỏ `/api/family/**`. Từ Đợt 39 frontend gọi backend thật cho
+    mọi endpoint (đã gỡ lớp giả lập).
 
     Mọi API nghiệp vụ chỉ nhận tài khoản đã được duyệt (403 `ACCOUNT_NOT_APPROVED`). Lỗi luôn là `ProblemDetail`.
   license:
@@ -906,7 +906,7 @@ paths:
       description: |
         Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`).
         Máy chủ kiểm MIME (jpg, png, webp, pdf, docx, xlsx; ảnh đại diện chỉ jpg/png/webp), tối đa 10 MB mỗi tệp và 1 GB toàn hệ thống.
-        Lỗi: 400 `VALIDATION_ERROR` (gồm hết dung lượng: `QUOTA_EXCEEDED`), 403 `FORBIDDEN`, 503 `STORAGE_NOT_CONFIGURED` khi chưa có khóa Cloudinary. Ở chế độ giả lập trả 503 "Cần kết nối máy chủ" (DECISIONS #72).
+        Lỗi: 400 `VALIDATION_ERROR` (gồm hết dung lượng: `QUOTA_EXCEEDED`), 403 `FORBIDDEN`, 503 `STORAGE_NOT_CONFIGURED` khi chưa có khóa Cloudinary.
       operationId: signUpload
       requestBody:
         required: true
@@ -2239,7 +2239,7 @@ paths:
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '503':
-          description: Trợ lý chưa dùng được (`SERVER_REQUIRED` ở chế độ giả lập, `AI_UNAVAILABLE`)
+          description: Trợ lý chưa dùng được (`AI_UNAVAILABLE`)
           content:
             application/problem+json:
               schema:

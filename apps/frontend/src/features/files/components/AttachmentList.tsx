@@ -43,8 +43,9 @@ export function AttachmentList({ attachments, onDeleteSuccess, className }: Atta
 
   const handleDownload = async (attachment: Schemas['Attachment']) => {
     try {
-      // Gọi API tải về, chế độ mock sẽ báo lỗi 503
-      await api.get(`/api/attachments/${attachment.id}/download`)
+      // Máy chủ trả URL tải có chữ ký ngắn hạn
+      const { url } = (await api.get(`/api/attachments/${attachment.id}/download`)) as { url: string }
+      window.open(url, '_blank', 'noopener')
     } catch (err) {
       toast({ 
         variant: 'destructive', 
@@ -135,14 +136,7 @@ export function AttachmentList({ attachments, onDeleteSuccess, className }: Atta
                   <button
                     type="button"
                     className="rounded p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
-                    onClick={() => {
-                      if (doc.mimeType === 'application/pdf') {
-                        // Demo mở tab mới (sẽ bị lỗi nếu URL không hợp lệ do mock)
-                        window.open(doc.url || '#', '_blank')
-                      } else {
-                        handleDownload(doc)
-                      }
-                    }}
+                    onClick={() => handleDownload(doc)}
                     title={doc.mimeType === 'application/pdf' ? 'Mở thẻ mới' : 'Tải về'}
                   >
                     {doc.mimeType === 'application/pdf' ? <FileImage className="h-4 w-4" /> : <Download className="h-4 w-4" />}

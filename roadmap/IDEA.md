@@ -436,10 +436,10 @@ event · proposal · notification(push, inbox, scheduler) · file · ai · repor
   - Đăng nhập và tài khoản luôn gọi backend thật.
 
 **Hạ tầng:**
-- **Server:** Oracle Cloud Always Free (ARM), Docker Compose chạy nginx + app + MySQL 8.4 + certbot.
-- **Tên miền:** DuckDNS, HTTPS bằng Let's Encrypt.
+- **Server:** VPS thuê (Ubuntu x86_64, 4 GB RAM), Docker Compose chạy nginx + app + MySQL 8.4 + certbot (DECISIONS #87).
+- **Tên miền:** `giapha.click` (kèm `www`), HTTPS bằng Let's Encrypt.
 - **Lưu file:** Cloudinary.
-- **Sao lưu:** backup DB hằng ngày.
+- **Sao lưu:** backup DB hằng ngày, lưu trên ổ VPS, giữ 30 ngày.
 
 **Cấu hình bí mật** (biến môi trường): `GEMINI_API_KEY`, khóa VAPID, Cloudinary, Google OAuth, `MAIL_*`, `JWT_SECRET`, mật khẩu DB. Thêm `ROOT_ADMIN_EMAIL` (không phải bí mật, nhưng vẫn cấu hình qua biến môi trường).
 

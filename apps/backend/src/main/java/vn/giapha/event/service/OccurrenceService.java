@@ -59,6 +59,13 @@ public class OccurrenceService {
         return type == null ? all : all.stream().filter(o -> o.type() == type).toList();
     }
 
+    /** Mọi lần xảy ra có ngày dương trong {@code [from, to]}, cho báo cáo; {@code type = null} là cả ba loại. */
+    @Transactional(readOnly = true)
+    public List<CalendarOccurrenceResponse> inRange(LocalDate from, LocalDate to, EventType type) {
+        LocalDate today = today();
+        return between(from, to, type).stream().map(o -> toDto(o, today)).toList();
+    }
+
     @Transactional(readOnly = true)
     public List<CalendarOccurrenceResponse> upcoming(Integer daysParam, String typeParam, String sortParam) {
         List<FieldError> errors = new ArrayList<>();

@@ -7,7 +7,6 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "build:share": "vite build --config vite.config.share.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -15,7 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "gen:api": "openapi-typescript ../../shared/api/openapi.yaml -o src/services/schema.d.ts",
-    "dev:mock": "node scripts/dev-mock.mjs",
+    "import:mock": "node scripts/import-mock-data.ts",
     "lint:api": "redocly lint ../../shared/api/openapi.yaml --config ../../shared/api/redocly.yaml"
   },
   "dependencies": {

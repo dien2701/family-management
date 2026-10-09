@@ -9,7 +9,6 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      disable: process.env.VITE_API_MODE === 'mock',
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
@@ -46,7 +45,7 @@ export default defineConfig({
         ]
       },
       devOptions: {
-        enabled: process.env.VITE_API_MODE !== 'mock',
+        enabled: true,
         type: 'module',
         navigateFallback: 'index.html',
       },
@@ -63,14 +62,10 @@ export default defineConfig({
     port: 5173,
     // Refresh cookie (Path=/api/auth) cần cùng origin nên dev proxy /api sang backend
     proxy: { '/api': { target: 'http://localhost:8080', changeOrigin: false } },
-    // Chế độ giả lập đọc shared/fixtures/seed/members.json nằm ngoài apps/frontend
-    fs: { allow: ['../..'] },
   },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: false,
-    // Test không bao giờ chạy ở chế độ giả lập trừ khi tự bật bằng vi.stubEnv
-    env: { VITE_API_MODE: '' },
   },
 })

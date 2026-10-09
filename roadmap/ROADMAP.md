@@ -70,13 +70,13 @@
 | 33–34 | Đề xuất sự kiện và Thông báo BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
 | 35 | Web Push BE | Claude Code | Sonnet · medium | ✅ 2026-09-27 |
 | 36–37 | AI BE: provider, tool, SSE, quota, soạn đề xuất, phạm vi | Claude Code | Sonnet · high | ✅ 2026-09-27 |
-| 38 | Export BE (Excel, PDF) | Claude Code | Sonnet · medium | ⬜ |
+| 38 | Export BE (Excel, PDF) | Claude Code | Sonnet · medium | ✅ 2026-10-09 |
 | **GĐ C** | **Nối và phát hành** | | | |
-| 39 | Nối FE với BE thật, gỡ lớp giả lập | Claude Code | Sonnet · medium | ⬜ |
+| 39 | Nối FE với BE thật, gỡ lớp giả lập | Claude Code | Sonnet · medium | ✅ 2026-10-09 |
 | ~~40~~ | ~~E2E Playwright~~ (bỏ theo #84) | | | ❌ |
-| 41 | Deploy production | Claude Code | Sonnet · medium | ⬜ |
+| 41 | Deploy production | Claude Code | Sonnet · medium | ✅ 2026-10-09 |
 
-## ▶️ Đợt đang chờ: Đợt 38 — Export BE (Excel, PDF)
+## ▶️ Đợt đang chờ: _(hết đợt; Đợt 41 đã xong)_
 Công cụ **Claude Code** · Model **Sonnet** · Effort **medium**.
 
 ---
@@ -885,13 +885,14 @@ _Phần 37:_
 
 ---
 
-### Đợt 38 — Export BE (Excel, PDF) ⬜
+### Đợt 38 — Export BE (Excel, PDF) ✅ 2026-10-09
 IDEA §6.9 · DECISIONS #48, #66
-- [ ] `GET /api/reports/members.xlsx`: có header, cột ngày dạng date, dòng tiêu đề đông cứng, tự căn độ rộng cột. `GET /api/reports/events.xlsx?year=`.
-- [ ] `GET /api/reports/members.pdf` và `GET /api/reports/memorials.pdf?lunarYear=` (nhóm theo tháng âm, kèm ngày dương tương ứng). Nhúng font Be Vietnam Pro, khổ A4, có số trang.
-- [ ] Cột SĐT/email chỉ có khi người xuất là Admin. Tên file có ngày xuất.
+- [x] `GET /api/reports/members.xlsx`: có header, cột ngày dạng date, dòng tiêu đề đông cứng, tự căn độ rộng cột. `GET /api/reports/events.xlsx?year=`. ✅ 2026-10-09
+- [x] `GET /api/reports/members.pdf` và `GET /api/reports/memorials.pdf?lunarYear=` (nhóm theo tháng âm, kèm ngày dương tương ứng). Nhúng font Be Vietnam Pro, khổ A4, có số trang. ✅ 2026-10-09
+- [x] Cột SĐT/email chỉ có khi người xuất là Admin. Tên file có ngày xuất. ✅ 2026-10-09
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** Module `report` mới (controller, `ReportService`, `ReportExcel` bằng Apache POI, `ReportPdf` bằng OpenPDF); khớp 4 endpoint đã có trong `openapi.yaml`, không đổi hợp đồng. Thêm `poi-ooxml` 5.3.0, `openpdf` 2.0.3 vào `pom.xml` và font `fonts/BeVietnamPro-{Regular,Bold}.ttf` vào `src/main/resources`. Thêm `MemberFacade.findAllForReport(withContact)` (SĐT/email chỉ khi Admin, vai trò đọc từ DB), `EventFacade.occurrencesBetween` + `OccurrenceService.inRange`. Lịch giỗ lấy các lần giỗ trong năm âm, nhóm theo tháng âm (tháng nhuận đứng sau tháng thường cùng số), mỗi dòng kèm ngày dương. Excel tự đo độ rộng cột theo số ký tự (không dùng `autoSizeColumn` vì cần font AWT trên server). Tên file: `thanh-vien_YYYY-MM-DD.xlsx`, `su-kien-<năm>_...xlsx`, `thanh-vien_....pdf`, `lich-gio-am-<năm>_....pdf`.
+- Việc nên làm thêm (Đợt 39): `ExportPage.tsx` đang đặt tên file từ URL (`link.download`), chưa lấy tên có ngày xuất từ header `Content-Disposition`; sửa khi nối BE thật.
 
 **🔧 Setup thủ công cần làm:** Không có.
 
@@ -903,17 +904,20 @@ IDEA §6.9 · DECISIONS #48, #66
 
 # GIAI ĐOẠN C — NỐI VÀ PHÁT HÀNH
 
-### Đợt 39 — Nối FE với BE thật, gỡ lớp giả lập ⬜
+### Đợt 39 — Nối FE với BE thật, gỡ lớp giả lập ✅ 2026-10-09
 DECISIONS #70–72
-- [ ] Chuyển `services/client.ts` sang gọi backend thật cho mọi endpoint. Bạn chạy thử mọi màn hình (Admin, User đã liên kết, User chưa liên kết, tài khoản chờ duyệt) rồi báo chỗ lệch; AI sửa và ghi danh sách vào ✅ Đã làm.
-- [ ] Công cụ **chuyển dữ liệu tạm**: script dev `apps/frontend/scripts/import-mock-data.ts`.
+- [x] Chuyển `services/client.ts` sang gọi backend thật cho mọi endpoint. Bạn chạy thử mọi màn hình (Admin, User đã liên kết, User chưa liên kết, tài khoản chờ duyệt) rồi báo chỗ lệch; AI sửa và ghi danh sách vào ✅ Đã làm. ✅ 2026-10-09
+- [x] Công cụ **chuyển dữ liệu tạm**: script dev `apps/frontend/scripts/import-mock-data.ts`. ✅ 2026-10-09
   - Đọc file JSON đã tải ở mục "Dữ liệu tạm", rồi gọi API thật bằng token Admin để tạo lại: thành viên thêm mới hoặc đã sửa, người thân, cây, sự kiện.
   - Có chế độ chạy thử (dry-run) và báo cáo.
   - Không tạo trùng 28 người đã có sẵn trong seed (khớp theo id seed).
-- [ ] Gỡ `src/services/mock/`, script `dev:mock`, `VITE_API_MODE`, mục "Dữ liệu tạm" và các banner "Cần kết nối máy chủ". Giữ lại `shared/fixtures/seed/members.json` (nguồn của seed).
-- [ ] Cập nhật `CLAUDE.md`, `.claude/rules/frontend.md`, `docs/STRUCTURE.md` và DECISIONS #71 (ghi "đã gỡ ở Đợt 39").
+- [x] Gỡ `src/services/mock/`, script `dev:mock`, `VITE_API_MODE`, mục "Dữ liệu tạm" và các banner "Cần kết nối máy chủ". Giữ lại `shared/fixtures/seed/members.json` (nguồn của seed). ✅ 2026-10-09
+- [x] Cập nhật `CLAUDE.md`, `.claude/rules/frontend.md`, `docs/STRUCTURE.md` và DECISIONS #71 (ghi "đã gỡ ở Đợt 39"). ✅ 2026-10-09
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** `services/client.ts` chỉ còn gọi backend thật (bỏ nhánh giả lập, `skipMock`, `realRequest`). Gỡ `src/services/mock/` (kèm test của nó), `features/mockdata/`, `scripts/dev-mock.mjs`, `VITE_API_MODE`/`VITE_MOCK_AUTH` (env.d.ts, `.env.example`, `vite.config.ts`), mục "Dữ liệu tạm" ở `MorePage`, banner "Cần kết nối máy chủ" (Trợ lý, ảnh đại diện) và nhánh giả lập ở `sse.ts`. Giữ `shared/fixtures/seed/members.json`. Script chuyển dữ liệu: `apps/frontend/scripts/import-mock-data.ts` (chạy `npm run import:mock -- <file.json> [--dry-run]`, cần `ADMIN_TOKEN` hoặc `ADMIN_EMAIL` + `ADMIN_PASSWORD`, `API_BASE` mặc định `http://localhost:8080`): tạo thành viên mới, cập nhật người seed đã sửa (khớp theo id), người thân, sự kiện chung, rồi dựng lại cây (ô trống qua thành viên tạm, trả đúng thứ tự anh em, con đơn thân tạo trước vợ/chồng); chạy lại không tạo trùng; cuối in bảng báo cáo. Cập nhật `CLAUDE.md`, `AGENTS.md`, `.claude/rules/*`, skill `fe-feature`, `docs/STRUCTURE.md`, `shared/fixtures/seed/README.md`, `openapi.yaml` (bỏ chú thích giả lập, đã `gen:api`) và `DECISIONS.md` #71 (đã gỡ), #72 (hết hiệu lực).
+- Nối nốt các màn hình chỉ là bản chờ của Đợt 22 để chạy được với BE thật: `FileUploadDropzone` (ký → tải lên Cloudinary → xác nhận), `AttachmentList` (mở URL tải có chữ ký), `ExportPage` (tải tệp và lấy tên có ngày xuất từ `Content-Disposition`, qua `api.download` mới ở `services/api.ts`).
+- Gỡ luôn bản xem thử một file `npm run build:share` (`vite.config.share.ts`, thư mục `share/`) vì nó chạy hoàn toàn bằng lớp giả lập.
+- Việc nên làm thêm: bạn chạy thử mọi màn hình với 4 loại tài khoản và báo chỗ lệch để sửa tiếp trong phiên này. Script chưa chạy thử trên dữ liệu thật; nếu cây có nhiều vợ/chồng hoặc ô trống, kiểm tra kỹ kết quả sau khi chạy thật.
 
 **🔧 Setup thủ công cần làm:** Nếu đã nhập dữ liệu thật ở chế độ giả lập: vào Thêm > Dữ liệu tạm > "Tải dữ liệu tạm (JSON)" **trước khi** cập nhật lên bản của đợt này.
 
@@ -924,24 +928,31 @@ DECISIONS #70–72
 
 ---
 
-### Đợt 41 — Deploy production ⬜
-IDEA §11 · DECISIONS #39–43
-- [ ] `apps/backend/Dockerfile` (multi-stage, JRE 21, `linux/arm64`, không chạy bằng root). `infra/nginx/Dockerfile` build frontend rồi copy `dist` vào nginx.
-- [ ] `infra/docker-compose.prod.yml`: nginx, app, mysql (có volume, không mở cổng ra ngoài), certbot. Mỗi service có healthcheck.
-- [ ] Cấu hình nginx:
-  - chuyển HTTP sang HTTPS, `/api` proxy tới app, SPA fallback;
-  - gzip, cache dài cho asset có hash, `sw.js` không cache;
-  - header HSTS, CSP, `X-Content-Type-Options`, `Referrer-Policy`.
-  - Backend đặt `forward-headers-strategy` để IP của consent và rate limit là IP thật.
-- [ ] `infra/backup/backup.sh`: `mysqldump`, gzip, đẩy lên Object Storage, xóa bản cũ hơn 30 ngày. Có mẫu dòng cron.
-- [ ] `.github/workflows/deploy.yml`: chạy bằng `workflow_dispatch` hoặc tag `v*`. Build buildx arm64, đẩy GHCR, SSH vào server chạy `docker compose pull && up -d`.
-- [ ] `infra/README.md` (runbook): lần deploy đầu (đặt `ROOT_ADMIN_EMAIL`, seed 28 người tự chạy qua Flyway), gia hạn chứng chỉ, khôi phục từ backup.
+### Đợt 41 — Deploy production ✅ 2026-10-09
+IDEA §11 · DECISIONS #41–42, #87
 
-**✅ Đã làm:** _(điền khi xong)_
+> **Chốt 2026-10-09 (thay Oracle ARM/DuckDNS/Object Storage):** VPS Việt Nam Ubuntu **x86_64 (amd64), 4 GB RAM**, IP `103.77.243.142`; tên miền **`giapha.click`** + `www` (www chuyển về gốc). Build image ở GitHub Actions → GHCR, server chỉ `pull`. HTTPS bằng certbot trong compose. Backup lưu trên ổ VPS (`/opt/giapha/backup`, giữ 30 ngày), người dùng tự tải về. Có SMTP, Cloudinary, Gemini; **chưa có Google OAuth** (để trống, nút Google ẩn). Giữ `docker-compose.yml` gốc của Cuong cho chạy local; bản prod nằm ở `infra/`.
+> **Lỗi đã thấy ở bộ file hiện có (phải sửa):** compose mặc định profile `dev` (OTP không gửi mail, Swagger mở, không forward-headers); không có HTTPS mà cookie refresh `Secure`; `DEPLOYMENT.md` lộ `MAIL_PASSWORD` thật (xóa, người dùng đổi mật khẩu); Dockerfile FE không truyền `VITE_GOOGLE_CLIENT_ID` (build arg); compose có mặc định yếu cho `JWT_SECRET`/mật khẩu DB (prod phải bắt buộc `${VAR:?}`); nginx thiếu header bảo mật và chưa tắt buffering cho SSE `/api/ai/chat`.
 
-**🔧 Setup thủ công cần làm:** Tạo VM Oracle ARM, DuckDNS, secrets GitHub (SSH, GHCR), file `.env` prod trên server.
+- [x] `apps/backend/Dockerfile` (multi-stage, JRE 21, `linux/amd64`, không chạy bằng root — đã có, rà lại). `infra/nginx/Dockerfile` build frontend (nhận build arg `VITE_GOOGLE_CLIENT_ID`) rồi copy `dist` vào nginx. ✅ 2026-10-09
+- [x] `infra/docker-compose.prod.yml`: nginx (80/443), app (`SPRING_PROFILES_ACTIVE=prod`), mysql (có volume, không mở cổng ra ngoài), certbot (tự gia hạn). Image lấy từ GHCR. Mỗi service có healthcheck (app dùng `/actuator/health`). Bí mật bắt buộc `${VAR:?}`. ✅ 2026-10-09
+- [x] Cấu hình nginx `infra/nginx/`: ✅ 2026-10-09
+  - chuyển HTTP sang HTTPS, `www` → gốc, `/api` proxy tới app, SPA fallback, `/.well-known/acme-challenge/` cho certbot;
+  - gzip, cache dài cho asset có hash, `sw.js` không cache; `proxy_buffering off` cho `/api/ai/chat` (SSE);
+  - header HSTS, CSP (cho phép Cloudinary, Google GIS), `X-Content-Type-Options`, `Referrer-Policy`.
+  - Backend đặt `forward-headers-strategy` để IP của consent và rate limit là IP thật (đã có ở `application-prod.yml`).
+- [x] `infra/backup/backup.sh`: `mysqldump` qua `docker exec`, gzip, lưu `/opt/giapha/backup`, xóa bản cũ hơn 30 ngày. Có mẫu dòng cron và lệnh `scp` tải về. ✅ 2026-10-09
+- [x] `.github/workflows/deploy.yml`: chạy bằng `workflow_dispatch` hoặc tag `v*`. Build buildx amd64, đẩy GHCR, SSH vào server chạy `docker compose pull && up -d`. ✅ 2026-10-09
+- [x] `infra/README.md` (runbook): lần deploy đầu (DNS 2 bản ghi A, cài Docker, `.env` prod, lấy chứng chỉ lần đầu, đặt `ROOT_ADMIN_EMAIL`, seed 28 người tự chạy qua Flyway), gia hạn chứng chỉ, khôi phục từ backup. `DEPLOYMENT.md` gốc: xóa mật khẩu lộ, trỏ sang `infra/README.md`. ✅ 2026-10-09
+
+**✅ Đã làm:** Bộ deploy prod ở `infra/`: `docker-compose.prod.yml` (nginx 80/443, app profile `prod`, mysql không mở cổng, certbot gia hạn mỗi 12 giờ; healthcheck mọi service, bí mật bắt buộc `${VAR:?}`, giới hạn RAM), `nginx/` (Dockerfile build FE nhận build arg `VITE_GOOGLE_CLIENT_ID`, `default.conf` HTTP→HTTPS, www→gốc, ACME, SSE không buffer, cache, gzip; `security-headers.conf` HSTS + CSP cho Cloudinary/Google; `40-certs.sh` tạo chứng chỉ tạm để lần đầu nginx lên được), `backup/backup.sh`, `.env.example`, `README.md` (runbook). `.github/workflows/deploy.yml` build amd64 → GHCR → SSH `pull && up -d`.
+Sửa bộ file cũ: `DEPLOYMENT.md` xóa mật khẩu SMTP lộ và trỏ sang `infra/README.md`; `apps/frontend/Dockerfile` + `docker-compose.yml` truyền `VITE_GOOGLE_CLIENT_ID`; `apps/frontend/nginx.conf` tắt buffering `/api/ai/chat`; `apps/backend/Dockerfile` dùng `exec java` (tắt êm); `application-prod.yml` tắt health check mail (SMTP chập chờn không làm app "unhealthy").
+**Việc nên làm thêm:** CSP chưa thử với trình duyệt thật, nếu console báo chặn thì thêm nguồn vào `security-headers.conf`. Chưa có Google OAuth và khóa VAPID (để trống, nút Google ẩn, Web Push không gửi) — có thì điền `.env` + biến GitHub `VITE_GOOGLE_CLIENT_ID` rồi deploy lại.
+
+**🔧 Setup thủ công cần làm:** Commit/push phần Đợt 38–39 trước. DNS A `@` và `www` → `103.77.243.142`. Đổi mật khẩu SMTP đã lộ. Cài Docker trên VPS, mở cổng 22/80/443. Secrets GitHub (SSH host/user/key, GHCR). File `.env` prod trên server.
 
 **🧪 Test thủ công (từng bước):**
-1. Mở `https://<tên miền>`: có HTTPS, cài được PWA.
-2. Đăng ký bằng `ROOT_ADMIN_EMAIL`: thành Admin ngay. Danh sách có 28 thành viên.
-3. Chạy `backup.sh` bằng tay: file backup có trên Object Storage.
+1. Mở `https://giapha.click` (và `www`): có HTTPS, cài được PWA.
+2. Đăng ký bằng `ROOT_ADMIN_EMAIL`: nhận OTP qua email, thành Admin ngay. Danh sách có 28 thành viên. Để quá 15 phút vẫn còn đăng nhập (cookie refresh hoạt động).
+3. Trợ lý AI trả lời chữ chạy dần (SSE không bị buffer); tải ảnh đại diện lên Cloudinary được.
+4. Chạy `backup.sh` bằng tay: có file `.sql.gz` trong `/opt/giapha/backup`.

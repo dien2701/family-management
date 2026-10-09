@@ -1,4 +1,4 @@
-// Xóa một ô mà vẫn giữ nhánh (DECISIONS #85): hàm thuần dùng chung cho lớp giả lập và (sau này) backend.
+// Xóa một ô mà vẫn giữ nhánh (DECISIONS #85): hàm thuần dùng chung cho giao diện và kiểm tra khớp backend.
 import { buildTreeIndex, getSiblings } from './graph'
 import type { TreeGraph, TreeNode } from './types'
 

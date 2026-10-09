@@ -11,7 +11,7 @@ Một feature gom toàn bộ phần FE của một module (API, hook, form, chu�
 
 1. **Bắt buộc gọi skill `ui-ux-pro-max`** qua công cụ Skill và đọc `docs/DESIGN.md`. Không gọi được thì dừng và báo người dùng. Chỉ dùng token, font, bo góc, khoảng cách trong DESIGN.md; không viết hex trong component. Cần token mới thì cập nhật DESIGN.md trước.
 2. **Hợp đồng trước** (DECISIONS #70): endpoint của feature phải có trong `shared/api/openapi.yaml`; chưa có thì viết vào đó theo IDEA/DECISIONS (chưa rõ thì hỏi người dùng), rồi chạy `npm run gen:api`. Kiểu DTO chỉ lấy từ `src/services/schema.d.ts` (`components["schemas"]["..."]`), không viết tay.
-   - GĐ A: thêm handler giả lập ở `src/services/mock/handlers/<module>.ts` (quy tắc nghiệp vụ, phân quyền, `ProblemDetail` như backend; **không tạo dữ liệu giả**; phần cần máy chủ báo "Cần kết nối máy chủ"). Logic dùng chung với UI đặt ở `utils/` dạng hàm thuần.
+   - Frontend luôn gọi backend thật (lớp giả lập đã gỡ ở Đợt 39); **không tạo dữ liệu giả**. Logic nghiệp vụ thuần đặt ở `utils/` dạng hàm thuần.
 3. **Tạo `src/features/<module>/`** (mẫu ở `references/`):
    - `api.ts`: hàm gọi qua `services/client.ts`, không `fetch` trực tiếp.
    - `hooks.ts`: TanStack Query (`useQuery`/`useMutation`), query key theo module, mutation invalidate đúng key.

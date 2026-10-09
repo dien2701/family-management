@@ -1,4 +1,4 @@
-// Mô hình cây thuần (DECISIONS #34, #60): dùng chung cho lớp giả lập và giao diện.
+// Mô hình cây thuần (DECISIONS #34, #60): dùng cho giao diện (backend có bản Java tương ứng).
 import type { SpouseEntry, TreeGraph, TreeIndex, TreeNode } from './types'
 
 const bySortOrder = (a: TreeNode, b: TreeNode) => a.sortOrder - b.sortOrder || a.id - b.id

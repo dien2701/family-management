@@ -1,5 +1,7 @@
 # 🚀 Hướng Dẫn Triển Khai Hệ Thống Tộc Phả Lên Máy Chủ (Server / VPS)
 
+> **Deploy production (giapha.click) xem [`infra/README.md`](infra/README.md).** Tài liệu dưới đây chỉ dành cho chạy thử bằng `docker-compose.yml` ở gốc repo (build tại chỗ, không có HTTPS).
+
 Tài liệu này hướng dẫn chi tiết quy trình đưa ứng dụng **Tộc Phả** lên máy chủ thực tế (VPS / Cloud Server như Oracle Cloud, DigitalOcean, AWS, Linode, v.v.) bằng Docker Compose.
 
 ---
@@ -82,13 +84,13 @@ nano .env
 | `DB_PASSWORD`            | Mật khẩu database (đặt mật khẩu mạnh)            | `MatKhauDbBaoMat!@#123`                      |
 | `DB_ROOT_PASSWORD`       | Mật khẩu root của MySQL                          | `MatKhauRootBaoMat!@#123`                    |
 | `JWT_SECRET`             | Khóa bí mật JWT (>= 32 byte)                     | Tạo bằng lệnh: `openssl rand -base64 48`     |
-| `ROOT_ADMIN_EMAIL`       | Email Admin đầu tiên (tự duyệt quyền Admin)      | `cuongpham2107@gmail.com`                    |
+| `ROOT_ADMIN_EMAIL`       | Email Admin đầu tiên (tự duyệt quyền Admin)      | `admin@example.com`                          |
 | `SPRING_PROFILES_ACTIVE` | Profile chạy backend (bật prod để gửi mail SMTP) | `prod`                                       |
-| `MAIL_HOST`              | Địa chỉ máy chủ SMTP                             | `smtp.office365.com` (hoặc `smtp.gmail.com`) |
+| `MAIL_HOST`              | Địa chỉ máy chủ SMTP                             | `smtp.gmail.com`                             |
 | `MAIL_PORT`              | Cổng máy chủ SMTP                                | `587`                                        |
-| `MAIL_USERNAME`          | Tài khoản gửi mail                               | `system@asg.net.vn`                          |
-| `MAIL_PASSWORD`          | Mật khẩu ứng dụng của mail                       | `ssjmpnhyvlgcksxj`                           |
-| `MAIL_FROM`              | Địa chỉ người gửi (phải khớp với username)       | `system@asg.net.vn`                          |
+| `MAIL_USERNAME`          | Tài khoản gửi mail                               | `<tài khoản SMTP>`                           |
+| `MAIL_PASSWORD`          | Mật khẩu ứng dụng của mail                       | `<mật khẩu ứng dụng, không commit>`          |
+| `MAIL_FROM`              | Địa chỉ người gửi (phải khớp với username)       | `<địa chỉ gửi>`                              |
 
 > 💡 **Mẹo:** Sinh khóa `JWT_SECRET` an toàn bằng lệnh:
 >
@@ -181,7 +183,7 @@ Nếu server của bạn đang có sẵn Nginx để chạy nhiều website khá
 
 1. Truy cập vào địa chỉ website: `http://<IP_hoặc_Domain>`
 2. Bấm vào nút **Đăng ký**:
-   - Nhập đúng email đã khai báo ở `ROOT_ADMIN_EMAIL` (ví dụ: `cuongpham2107@gmail.com`).
+   - Nhập đúng email đã khai báo ở `ROOT_ADMIN_EMAIL` (ví dụ: `admin@example.com`).
    - Đặt mật khẩu cho tài khoản.
 3. Nhận mã OTP:
    - Hệ thống sẽ gửi mã OTP 6 số qua SMTP vào hòm thư email của bạn.

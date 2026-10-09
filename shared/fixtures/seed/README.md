@@ -1,13 +1,12 @@
 # Dữ liệu ban đầu: 28 thành viên
 
-Nguồn duy nhất của dữ liệu ban đầu (DECISIONS #68). Frontend đọc file này ở chế độ giả lập (Đợt 9).
+Nguồn duy nhất của dữ liệu ban đầu (DECISIONS #68). Frontend không còn đọc file này (lớp giả lập đã gỡ ở Đợt 39); script `apps/frontend/scripts/import-mock-data.ts` dùng nó để nhận ra 28 người seed.
 Backend nạp bằng một migration Flyway **sinh từ chính file này** (Đợt 27, `V7__seed_members.sql`).
 
 ## Nguồn
 
 `roadmap/IDEA.md`, Phụ lục A: danh sách viết tay do người dùng cung cấp ngày 2026-09-25 (27 dòng, riêng dòng 27
-tách thành 2 người nên có 28 người). Test `apps/frontend/src/services/mock/seed.test.ts` đọc lại bảng ở Phụ lục A
-và so với file này.
+tách thành 2 người nên có 28 người). 
 
 ## Quy ước
 

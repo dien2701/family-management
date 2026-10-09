@@ -124,7 +124,6 @@ export const memberStrings = {
     change: 'Đổi ảnh',
     clear: 'Bỏ ảnh đã chọn',
     hint: 'JPG, PNG hoặc WebP, tối đa 10 MB.',
-    mockHint: 'Cần kết nối máy chủ: ở chế độ giả lập chưa tải ảnh lên được.',
     badType: 'Chỉ nhận ảnh JPG, PNG hoặc WebP.',
     tooBig: 'Ảnh quá lớn, tối đa 10 MB. Hãy chọn ảnh nhỏ hơn.',
   },

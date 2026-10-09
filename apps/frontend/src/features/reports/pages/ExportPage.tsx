@@ -16,24 +16,21 @@ export function ExportPage() {
   const handleExport = async (type: string, url: string) => {
     setLoading(type)
     try {
-      // Mock API sẽ luôn trả về 503
-      const res = await api.get(url, { as: 'blob' })
-      
-      // Giả lập tải file nếu backend thật
-      if (res) {
-        const downloadUrl = window.URL.createObjectURL(res as Blob)
-        const link = document.createElement('a')
-        link.href = downloadUrl
-        link.download = url.split('/').pop()?.split('?')[0] || 'report'
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-      }
+      const { blob, filename } = await api.download(url)
+      const downloadUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      // Tên tệp có ngày xuất do máy chủ đặt; thiếu header thì lấy theo đường dẫn
+      link.download = filename ?? (url.split('/').pop()?.split('?')[0] || 'report')
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(downloadUrl)
     } catch (err) {
       toast({
         variant: 'destructive',
         title: 'Lỗi xuất dữ liệu',
-        description: (err as Error).message || 'Cần kết nối máy chủ để xuất báo cáo.',
+        description: (err as Error).message || 'Không xuất được báo cáo, vui lòng thử lại.',
       })
     } finally {
       setLoading(null)

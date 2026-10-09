@@ -1,7 +1,7 @@
 # QUYẾT ĐỊNH KỸ THUẬT (chốt 2026-09-25, đổi hướng v2 cùng ngày)
 
 > Bổ sung cho `roadmap/IDEA.md` (bản chốt v2), không thay thế IDEA.md. Nếu có chỗ khác với IDEA.md thì **file này thắng**.
-> **Mục J (#54–#74) là đổi hướng v2** và thắng mọi mục trước nó. **Mục K (#75–#78) là điều chỉnh "hồ sơ tự quản"**, thắng mục J khi mâu thuẫn. **Mục L (#79–#83) là tài khoản ≠ thành viên, liên kết và chia việc Claude Code / Antigravity**, thắng mục K khi mâu thuẫn. **Mục M (#84) là tiết kiệm token: bỏ test mới và review**, thắng mọi mục trước. Quyết định cũ không còn đúng được đánh dấu **❌ Hủy** hoặc **🔁 Thay bằng #N**, giữ lại để tra lịch sử.
+> **Mục J (#54–#74) là đổi hướng v2** và thắng mọi mục trước nó. **Mục K (#75–#78) là điều chỉnh "hồ sơ tự quản"**, thắng mục J khi mâu thuẫn. **Mục L (#79–#83) là tài khoản ≠ thành viên, liên kết và chia việc Claude Code / Antigravity**, thắng mục K khi mâu thuẫn. **Mục M (#84) là tiết kiệm token: bỏ test mới và review**, thắng mọi mục trước. **Mục O (#87) là hạ tầng thật (VPS x86, `giapha.click`)**, thay #39, #40, #43. Quyết định cũ không còn đúng được đánh dấu **❌ Hủy** hoặc **🔁 Thay bằng #N**, giữ lại để tra lịch sử.
 > Cách chốt: người dùng chọn **"lấy toàn bộ khuyến nghị (KN)"** cho 50 câu hỏi làm rõ.
 > Các câu mang nhãn **⏳ Chưa chốt** đang dùng giá trị tạm, đổi được mà không ảnh hưởng kiến trúc.
 
@@ -107,9 +107,9 @@
 
 ## F. Hạ tầng, deploy, CI, test
 
-39. **Deploy**
+39. 🔁 **Thay bằng #87** (VPS x86 thay Oracle ARM). **Deploy**
     → **Chốt:** Docker Compose trên Oracle ARM, gồm `nginx`, `app`, `mysql` và certbot. Frontend build thành file tĩnh, nginx phục vụ cùng domain với `/api`, nên không phải xử lý CORS.
-40. **Build image**
+40. 🔁 **Thay bằng #87** (`linux/amd64`). **Build image**
     → **Chốt:** GitHub Actions build image `linux/arm64`, đẩy lên GHCR, server `docker compose pull`.
 41. **CI/CD**
     → **Chốt:**
@@ -119,7 +119,7 @@
     ⏳ **Quy trình git chưa chốt**, tạm dùng: mỗi đợt một nhánh `dot-NN-<ten>`, PR vào `main`. Remote GitHub là `dien2701`.
 42. **Môi trường**
     → **Chốt:** chỉ có `dev` (máy cá nhân, MySQL chạy bằng Docker) và `prod`, không có staging.
-43. **Sao lưu**
+43. 🔁 **Thay bằng #87** (lưu trên ổ VPS). **Sao lưu**
     → **Chốt:** `mysqldump` chạy bằng cron hằng ngày, đẩy lên Oracle Object Storage, giữ 30 ngày.
 44. 🔁 **Thay bằng #84** (phần test bắt buộc). **Test backend**
     → **Chốt:** JUnit 5 + Testcontainers MySQL 8.4 (máy dev cần Docker), không dùng H2. Không đặt ngưỡng coverage cứng. **Bắt buộc có test cho:** lịch âm, xếp cây (FE), phân quyền. (Cách ly family và khóa nhánh ❌ bỏ, thay bằng #74.)
@@ -244,14 +244,14 @@
     - Mỗi đợt FE viết phần hợp đồng của module mình trước khi làm UI.
     - Backend (GĐ B) phải khớp hợp đồng. Từ Đợt 26 có test hợp đồng so `/v3/api-docs` với `openapi.yaml`: mọi path/method/mã trạng thái và schema của body phải khớp.
     - Đổi API thì sửa `openapi.yaml` trước.
-71. **Lớp giả lập ở frontend**
+71. **Lớp giả lập ở frontend** — ✅ **đã gỡ ở Đợt 39 (2026-10-09)**: `src/services/mock/`, `dev:mock`, `VITE_API_MODE`, mục "Dữ liệu tạm" và bản `build:share` không còn; frontend luôn gọi backend thật. Dữ liệu nhập lúc giả lập được chuyển bằng `apps/frontend/scripts/import-mock-data.ts`. Nội dung dưới đây giữ để tra cứu lịch sử.
     → **Chốt:** bật bằng `VITE_API_MODE=mock`, code nằm ở `src/services/mock/`.
     - Chỉ những endpoint **có handler** mới bị giả lập, còn lại (auth, `/me`, tài khoản, lịch âm) gọi backend thật.
     - Dữ liệu lưu localStorage (key có số phiên bản), khởi tạo từ `members.json`. Có nút "Khôi phục dữ liệu gốc" (chỉ hiện ở chế độ giả lập).
     - Handler áp đúng quy tắc nghiệp vụ và phân quyền (đọc vai trò từ `/api/me` thật) và trả `ProblemDetail` như backend.
     - **Không tạo dữ liệu giả.** Chỉ có 28 thành viên thật và dữ liệu do chính người dùng nhập.
     - Lớp giả lập không được lọt vào bản build prod. Đợt 39 gỡ bỏ lớp này.
-72. **Màn hình cần máy chủ**
+72. **Màn hình cần máy chủ** — 🔁 hết hiệu lực từ Đợt 39: không còn chế độ giả lập nên các banner "Cần kết nối máy chủ" đã gỡ.
     → **Chốt:** ở chế độ giả lập, những phần phụ thuộc máy chủ hiện trạng thái rỗng hoặc thông báo "Cần kết nối máy chủ", và được kiểm thử bằng unit test với dữ liệu test. Các phần đó gồm:
     - trả lời của AI;
     - gửi push;
@@ -360,6 +360,16 @@
     - Kéo góc từng ô để đổi cỡ; menu ô có "Xoay ô sang dọc/ngang" và "Đặt lại cỡ và kiểu ô". Nút "Hiển thị dọc/ngang" chung vẫn còn, ô đã chỉnh riêng giữ lựa chọn của nó.
     - Các tùy chỉnh này chỉ lưu trong `localStorage` của từng người xem (không lên máy chủ, không đổi API). `layoutTree` nhận cỡ riêng từng ô (`nodeSizes`); mỗi hàng đời cao bằng ô cao nhất, ô trong hàng căn giữa.
     - Bấm vào bất kỳ ô nào, kể cả ô trống của Admin, đều mở bảng thao tác của ô (ô trống có mục "Chọn người điền vào ô").
+
+## O. Hạ tầng thật (chốt 2026-10-09, hỏi đáp với người dùng)
+
+87. **Deploy lên VPS thuê thay Oracle Cloud (thay #39, #40, #43 và phần hạ tầng ở IDEA §11)**
+    → **Chốt:**
+    - Server: VPS Việt Nam, Ubuntu **x86_64**, 4 GB RAM, IP `103.77.243.142`. Docker Compose gồm `nginx`, `app`, `mysql`, certbot như #39; giới hạn RAM cho JVM và MySQL.
+    - Tên miền riêng **`giapha.click`**, `www` chuyển về gốc. HTTPS bằng Let's Encrypt qua certbot trong compose. Bỏ DuckDNS.
+    - GitHub Actions build image **`linux/amd64`**, đẩy GHCR, SSH vào server `docker compose pull && up -d` (giữ cách #40, chỉ đổi kiến trúc).
+    - Sao lưu: `mysqldump` gzip bằng cron hằng ngày vào `/opt/giapha/backup` trên VPS, giữ 30 ngày; người dùng định kỳ tải bản sao về máy. Bỏ Oracle Object Storage.
+    - File deploy prod nằm ở `infra/`; `docker-compose.yml` ở gốc giữ cho chạy local.
 
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.

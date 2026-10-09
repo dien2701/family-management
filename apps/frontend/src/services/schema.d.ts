@@ -463,7 +463,7 @@ export interface paths {
          * Xin chữ ký để tải tệp lên Cloudinary
          * @description Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`).
          *     Máy chủ kiểm MIME (jpg, png, webp, pdf, docx, xlsx; ảnh đại diện chỉ jpg/png/webp), tối đa 10 MB mỗi tệp và 1 GB toàn hệ thống.
-         *     Lỗi: 400 `VALIDATION_ERROR` (gồm hết dung lượng: `QUOTA_EXCEEDED`), 403 `FORBIDDEN`, 503 `STORAGE_NOT_CONFIGURED` khi chưa có khóa Cloudinary. Ở chế độ giả lập trả 503 "Cần kết nối máy chủ" (DECISIONS #72).
+         *     Lỗi: 400 `VALIDATION_ERROR` (gồm hết dung lượng: `QUOTA_EXCEEDED`), 403 `FORBIDDEN`, 503 `STORAGE_NOT_CONFIGURED` khi chưa có khóa Cloudinary.
          */
         post: operations["signUpload"];
         delete?: never;
@@ -4454,7 +4454,7 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             429: components["responses"]["TooManyRequests"];
-            /** @description Trợ lý chưa dùng được (`SERVER_REQUIRED` ở chế độ giả lập, `AI_UNAVAILABLE`) */
+            /** @description Trợ lý chưa dùng được (`AI_UNAVAILABLE`) */
             503: {
                 headers: {
                     [name: string]: unknown;

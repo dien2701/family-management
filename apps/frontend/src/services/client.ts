@@ -3,7 +3,6 @@
 // Gặp 401 thì refresh một lần (dùng chung một request cho mọi lời gọi song song) rồi thử lại.
 
 import type { AuthResponse, Schemas } from '@/types/api'
-import type { RealApi } from './mock/context'
 
 const BASE_URL = '/api'
 
@@ -114,21 +113,13 @@ async function parseProblem(response: Response): Promise<ProblemDetail> {
   }
 }
 
-type InternalOptions = RequestOptions & { retryOn401?: boolean; skipMock?: boolean }
+type InternalOptions = RequestOptions & { retryOn401?: boolean }
 
 async function request<T>(
   method: string,
   path: string,
-  { retryOn401 = true, skipMock = false, ...options }: InternalOptions = {},
+  { retryOn401 = true, ...options }: InternalOptions = {},
 ): Promise<T> {
-  // Chế độ giả lập (DECISIONS #71): endpoint có handler thì chạy handler, còn lại rơi xuống backend thật.
-  // Điều kiện viết trực tiếp với `import.meta.env.DEV` để Vite cắt cả nhánh và import động khỏi bản build prod.
-  if (!skipMock && import.meta.env.DEV && import.meta.env.VITE_API_MODE === 'mock') {
-    const { handleMock } = await import('./mock')
-    const result = await handleMock(method, path, options, realRequest)
-    if (result.handled) return result.data as T
-  }
-
   // `/auth/*` trả 401 khi sai mật khẩu hoặc hết phiên: đó là kết quả, không phải token hết hạn
   const canRetry = retryOn401 && !path.startsWith('/auth/')
   const sentToken = accessToken
@@ -158,7 +149,7 @@ async function request<T>(
       accessToken !== sentToken && accessToken !== null ? true : (await refreshSession()) !== null
     if (refreshed) {
       try {
-        return await request<T>(method, path, { ...options, retryOn401: false, skipMock })
+        return await request<T>(method, path, { ...options, retryOn401: false })
       } catch (error) {
         // Vừa refresh xong mà vẫn 401: token không dùng được nữa nên coi như hết phiên
         if (error instanceof ApiError && error.status === 401) expireSession()
@@ -175,10 +166,6 @@ async function request<T>(
   // Endpoint kiểu void của BE trả 200 không có thân (không phải 204): đừng parse JSON rỗng
   return (body === '' ? undefined : JSON.parse(body)) as T
 }
-
-/** Cho lớp giả lập gọi backend thật (ví dụ `/me` để biết vai trò), không qua handler giả lập. */
-const realRequest: RealApi = (method, path, options) =>
-  request(method, path, { ...(options as RequestOptions), skipMock: true })
 
 export const api = {
   get: <T>(path: string, options?: Omit<RequestOptions, 'body'>) =>

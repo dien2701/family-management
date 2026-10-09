@@ -35,9 +35,6 @@ type MemberFormProps = {
   onCancel: () => void
 }
 
-// Ở chế độ giả lập không có máy chủ để nhận ảnh (DECISIONS #72)
-const IS_MOCK = import.meta.env.DEV && import.meta.env.VITE_API_MODE === 'mock'
-
 export function MemberForm({
   member,
   lockDeathFields = false,
@@ -81,7 +78,7 @@ export function MemberForm({
           file={avatar}
           onChange={setAvatar}
           disabled={isSubmitting}
-          hint={IS_MOCK ? memberStrings.avatar.mockHint : memberStrings.avatar.hint}
+          hint={memberStrings.avatar.hint}
           labels={memberStrings.avatar}
         />
         <FormField label={s.fullName} hint={s.fullNameHint} error={errors.fullName?.message}>

@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { UploadCloud, File as FileIcon, AlertCircle, X } from 'lucide-react'
 import { cn } from '@/utils/cn'
-import { useApi } from '@/services/api'
+import { api, ApiError } from '@/services/client'
 import { toast } from '@/components/ui/use-toast'
 import type { Schemas } from '@/types/api'
 
@@ -21,14 +21,12 @@ const ALLOWED_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // xlsx
 ]
 
-export function FileUploadDropzone({ memberId, className }: FileUploadDropzoneProps) {
+export function FileUploadDropzone({ memberId, onUploadSuccess, className }: FileUploadDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  
-  const api = useApi()
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
@@ -76,26 +74,35 @@ export function FileUploadDropzone({ memberId, className }: FileUploadDropzonePr
     setError(null)
 
     try {
-      // 1. Sign
-      await api.post('/api/files/sign', {
-        body: {
-          kind: 'DOCUMENT',
-          memberId,
-          title: file.name,
-          fileName: file.name,
-          mimeType: file.type,
-          sizeBytes: file.size,
-        },
+      // Xin chữ ký → gửi thẳng lên Cloudinary → xác nhận với máy chủ (IDEA §6.7)
+      const sign = await api.post<Schemas['FileSignResponse']>('/files/sign', {
+        kind: 'DOCUMENT',
+        memberId,
+        title: file.name,
+        fileName: file.name,
+        mimeType: file.type,
+        sizeBytes: file.size,
       })
-      // Ở chế độ giả lập sẽ bị ném lỗi 503 tại đây
-      
-      // Nếu có backend thật, phần dưới này sẽ chạy
+      const form = new FormData()
+      for (const [key, value] of Object.entries(sign.fields)) form.append(key, value)
+      form.append('file', file)
+      const uploadRes = await fetch(sign.uploadUrl, { method: 'POST', body: form })
+      if (!uploadRes.ok) {
+        throw new ApiError(uploadRes.status, { title: 'Tải tệp lên không thành công, vui lòng thử lại.' })
+      }
+      const uploaded = (await uploadRes.json()) as { public_id: string }
+      const attachment = await api.post<Schemas['Attachment']>('/files/confirm', {
+        kind: 'DOCUMENT',
+        memberId,
+        title: file.name,
+        publicId: uploaded.public_id,
+        fileName: file.name,
+      })
       toast({
         title: 'Thành công',
         description: 'Tải tệp lên thành công.',
       })
-      
-      // onUploadSuccess(...)
+      onUploadSuccess?.(attachment)
       setFile(null)
     } catch (err) {
       const msg = (err as Error).message || 'Lỗi khi tải tệp lên.'

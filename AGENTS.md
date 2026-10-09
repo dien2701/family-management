@@ -16,9 +16,9 @@
 - Hai khái niệm khác nhau, liên kết 1–1 và không bắt buộc ("Tôi là ai"). Giao diện không dùng lẫn hai từ này.
 
 ## Điều cấm (Claude Code chặn bằng hook, ở đây phải tự giữ)
-- Không đọc, tạo hay sửa file `.env*` (trừ `.env.example`). Không đưa bí mật hay token vào code, lớp giả lập, hay localStorage.
+- Không đọc, tạo hay sửa file `.env*` (trừ `.env.example`). Không đưa bí mật hay token vào code hay localStorage.
 - Không sửa file Flyway `V*.sql` đã có.
-- Không sửa gì trong `apps/backend/`: GĐ A chỉ làm frontend.
+- Không sửa gì trong `apps/backend/` (backend do Claude Code làm).
 - Không sửa tay `apps/frontend/src/services/schema.d.ts`: chỉ sinh bằng `npm run gen:api`.
 - Trong `shared/api/openapi.yaml` chỉ thêm phần của đợt đang làm. Không đổi hợp đồng của đợt khác.
 - **Không tạo dữ liệu giả.** Chỉ có 28 thành viên ở `shared/fixtures/seed/members.json` và dữ liệu người dùng tự nhập. Dữ liệu mẫu chỉ được nằm trong test.

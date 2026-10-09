@@ -12,6 +12,12 @@ springdoc:
 server:
   forward-headers-strategy: framework
 
+# Healthcheck của Docker chỉ kiểm tra app + DB; SMTP chập chờn không được làm container "unhealthy"
+management:
+  health:
+    mail:
+      enabled: false
+
 # SMTP gửi OTP (Gmail App Password hoặc Brevo); dev dùng ConsoleMailSender nên không cần
 spring:
   mail:

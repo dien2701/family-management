@@ -26,7 +26,7 @@ paths:
 
 ## Hợp đồng API
 - `shared/api/openapi.yaml` là nguồn sự thật (DECISIONS #70). Controller, DTO và mã lỗi phải khớp hợp đồng; muốn đổi thì sửa `openapi.yaml` trước (và frontend chạy lại `gen:api`).
-- Hành vi phải giống handler giả lập của frontend (`apps/frontend/src/services/mock/`) và bản TS của quy tắc (`utils/tree`, `utils/occurrences`, seed `shared/fixtures/seed`). Chỗ nào giả lập sai so với IDEA/DECISIONS thì theo IDEA/DECISIONS và ghi lại.
+- Hành vi phải khớp bản TS của quy tắc ở frontend (`utils/tree`, `utils/occurrences`, seed `shared/fixtures/seed`). Chỗ nào lệch IDEA/DECISIONS thì theo IDEA/DECISIONS và ghi lại.
 
 ## Dữ liệu
 - Schema do Flyway quản lý: `src/main/resources/db/migration/V{n}__{snake_case}.sql`. **Không sửa file V đã có.** Hibernate chạy `ddl-auto: validate`.

@@ -78,7 +78,7 @@ Module trước, lớp phẳng trong module (DECISIONS #8, #51). Mỗi module l�
 apps/backend/
 ├── pom.xml                       Phiên bản là nguồn sự thật
 ├── mvnw, mvnw.cmd, .mvn/         Maven Wrapper
-├── Dockerfile                    Multi-stage, arm64
+├── Dockerfile                    Multi-stage, amd64
 ├── .env                          Bí mật (không commit)
 ├── .env.example                  Mẫu các khóa
 ├── README.md
@@ -217,8 +217,7 @@ apps/frontend/
     ├── services/                 Tầng gọi API dùng chung
     │   ├── client.ts                 Wrapper fetch, gắn Bearer, tự refresh khi 401, parse ProblemDetail
     │   ├── queryClient.ts            Cấu hình TanStack Query
-    │   ├── schema.d.ts               Sinh từ shared/api/openapi.yaml bằng `npm run gen:api`, KHÔNG sửa tay
-    │   └── mock/                     Lớp giả lập GĐ A (router, store localStorage, handlers/<module>.ts); gỡ ở Đợt 39
+    │   └── schema.d.ts               Sinh từ shared/api/openapi.yaml bằng `npm run gen:api`, KHÔNG sửa tay
     ├── utils/                    Hàm thuần dùng chung
     │   ├── lunar/                    Bản TS của lịch âm (chạy chung fixture với Java)
     │   ├── tree/                     Mô hình cây thuần: đời, tổ tiên, kiểm tra thao tác (fixture shared/fixtures/tree)
@@ -265,7 +264,7 @@ Không tạo sẵn thư mục rỗng. Mỗi đợt chỉ tạo phần mình cầ
 | `.claude/skills/*`, `.claude/agents/*`, hook, `.mcp.json` | Đợt 0 (viết ngay, dùng từ Đợt 2) |
 | Từng module BE và `features/<module>` | Đợt của module đó |
 | `utils/lunar/`, `shared/fixtures/lunar/` | Đợt 6–7 |
-| `shared/api/openapi.yaml`, `shared/fixtures/seed/`, `services/mock/` | Đợt 9 |
+| `shared/api/openapi.yaml`, `shared/fixtures/seed/` | Đợt 9 |
 | `utils/tree/`, `shared/fixtures/tree/` | Đợt 14 |
 | `utils/occurrences/`, `shared/fixtures/occurrences/` | Đợt 17 |
 | Gỡ `features/family` (FE) / module `family` (BE) | Đợt 10 / Đợt 26 (đã xong) |

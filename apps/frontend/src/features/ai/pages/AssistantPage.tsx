@@ -8,9 +8,6 @@ import { useAiMessages, useAiQuota } from '../hooks'
 import { aiStrings } from '../strings'
 import { useAssistantChat, type ChatItem } from '../useAssistantChat'
 
-// Ở chế độ giả lập, trả lời của AI cần máy chủ (DECISIONS #72) nên hiện banner thay vì giả vờ trả lời
-const IS_MOCK = import.meta.env.DEV && import.meta.env.VITE_API_MODE === 'mock'
-
 const formatResetDate = (iso: string) =>
   new Date(iso).toLocaleDateString('vi-VN', {
     timeZone: 'Asia/Ho_Chi_Minh',
@@ -50,12 +47,6 @@ export function AssistantPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-      {IS_MOCK && (
-        <Alert variant="info">
-          <p className="font-semibold">{aiStrings.serverRequired}</p>
-          <p>{aiStrings.serverRequiredHint}</p>
-        </Alert>
-      )}
       {history.isError && <Alert>{aiStrings.historyError}</Alert>}
 
       <div

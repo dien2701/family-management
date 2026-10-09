@@ -1,5 +1,6 @@
 package vn.giapha.event;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Component;
 import vn.giapha.event.dto.CalendarOccurrenceResponse;
 import vn.giapha.event.dto.CustomEventInput;
 import vn.giapha.event.dto.CustomEventResponse;
+import vn.giapha.event.dto.EventType;
 import vn.giapha.event.entity.EventCalendar;
 import vn.giapha.event.service.EventService;
 import vn.giapha.event.service.OccurrenceService;
@@ -42,6 +44,11 @@ public class EventFacade {
     /** 10 sự kiện vừa diễn ra gần nhất (dashboard, IDEA §6.8). */
     public List<CalendarOccurrenceResponse> recent10() {
         return occurrences.recent(10);
+    }
+
+    /** Giỗ, sinh nhật và sự kiện chung có ngày dương trong {@code [from, to]}; {@code type = null} là cả ba loại (báo cáo). */
+    public List<CalendarOccurrenceResponse> occurrencesBetween(LocalDate from, LocalDate to, EventType type) {
+        return occurrences.inRange(from, to, type);
     }
 
     /** 404 {@code EVENT_NOT_FOUND} khi không có (đề xuất Đợt 33: cần chắc chắn có trước khi ghi nhận). */

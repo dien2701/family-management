@@ -13,4 +13,4 @@
 - Bí mật (`JWT_SECRET`, `GEMINI_API_KEY`, VAPID, Cloudinary, Google OAuth, `MAIL_*`, mật khẩu DB) đặt trong `.env`, **không commit**. Mẫu các khóa nằm ở `apps/backend/.env.example`. Frontend chỉ được biết `VITE_GOOGLE_CLIENT_ID`.
 - Upload lên Cloudinary bằng chữ ký do backend cấp. Backend kiểm tra MIME (jpg, png, webp, pdf, docx, xlsx), giới hạn 10 MB mỗi file và 1 GB cho toàn hệ thống. Chỉ Admin tải lên và xóa, trừ ảnh đại diện (jpg/png/webp) cho hồ sơ của chính User (kiểm `memberId = user.member_id` ở cả sign và confirm).
 - Đồng ý dữ liệu cá nhân theo NĐ 13: lưu `user_consent` kèm `policy_version` khi đăng ký (hoặc lần đầu đăng nhập Google, và khi đổi phiên bản chính sách).
-- Lớp giả lập của frontend (GĐ A) không bao giờ chứa token hay bí mật, và không được lọt vào bản build prod.
+- Script dev `apps/frontend/scripts/import-mock-data.ts` đọc token hoặc mật khẩu Admin từ biến môi trường (`ADMIN_TOKEN`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`), không ghi chúng vào file hay in ra màn hình.
