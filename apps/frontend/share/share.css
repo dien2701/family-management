@@ -1,3 +1,0 @@
-/* Tailwind chỉ quét theo thư mục của file CSS, nên chỉ rõ nguồn ở src */
-@import '../src/index.css';
-@source '../src';
