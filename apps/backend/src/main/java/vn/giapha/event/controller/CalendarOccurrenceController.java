@@ -18,8 +18,7 @@ import vn.giapha.event.dto.CalendarOccurrenceResponse;
 import vn.giapha.event.service.OccurrenceService;
 
 /**
- * Giỗ, sinh nhật và sự kiện chung theo lịch (IDEA §6.5, §7). Mọi tài khoản đã duyệt xem được (cổng duyệt do
- * {@code ApprovalGateFilter} chặn).
+ * Giỗ, sinh nhật và sự kiện chung theo lịch (IDEA §6.5, §7). Xem được không cần đăng nhập (DECISIONS #88).
  */
 @RestController
 @RequestMapping("/api/calendar")
@@ -37,8 +36,6 @@ class CalendarOccurrenceController {
                     + "nay + days ngày. Xếp theo ngày dương, cùng ngày thì Giỗ, Sinh nhật, Sự kiện chung rồi theo tên.")
     @ApiResponse(responseCode = "200", description = "Thành công")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
-    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
-    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
     @GetMapping("/upcoming")
     List<CalendarOccurrenceResponse> upcoming(
             @RequestParam(required = false) Integer days,
@@ -54,8 +51,6 @@ class CalendarOccurrenceController {
                     + "tháng nhuận), các ngày đi từ mùng 1 đến hết tháng âm đó, mỗi ngày kèm ngày dương.")
     @ApiResponse(responseCode = "200", description = "Thành công")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
-    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
-    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
     @GetMapping("/month")
     CalendarMonthResponse month(
             @RequestParam int year,
@@ -71,8 +66,6 @@ class CalendarOccurrenceController {
                     + "(daysUntil âm). Dùng cho dashboard.")
     @ApiResponse(responseCode = "200", description = "Thành công")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
-    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
-    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
     @GetMapping("/recent")
     List<CalendarOccurrenceResponse> recent(@RequestParam(required = false) Integer limit) {
         return service.recent(limit);

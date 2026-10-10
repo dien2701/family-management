@@ -19,10 +19,10 @@ paths:
 
 ## Phân quyền và duyệt tài khoản (bản v2, DECISIONS #54–#56, #74)
 - **Không có tenant**: không có `family_id`, không lọc theo family, không có cột/bộ lọc `locked` (module `family` cũ gỡ ở Đợt 26, đừng viết code mới dựa vào nó).
-- Mọi API nghiệp vụ chỉ cho tài khoản `approval_status = APPROVED` (403 `ACCOUNT_NOT_APPROVED`). Ngoại lệ: `/api/auth/**`, `GET /api/me`, `POST /api/me/consent`.
+- Mọi API nghiệp vụ chỉ cho tài khoản `approval_status = APPROVED` (403 `ACCOUNT_NOT_APPROVED`). Ngoại lệ: `/api/auth/**`, `GET /api/me`, `POST /api/me/consent` và các GET xem công khai trong `common/security/PublicReadPaths` (DECISIONS #88, khách cũng gọi được; service nhận người gọi `null`).
 - Quyền Admin kiểm tra ở Service hoặc `@PreAuthorize`, không chỉ ở giao diện. Thao tác ghi kiểm trạng thái/vai trò **từ DB**, không chỉ tin claim (claim có thể cũ 15 phút).
 - Quyền tự quản hồ sơ của User (#75, #76, #78) và phạm vi đề xuất chỉ EVENT (#77) kiểm tra ở backend. SĐT/email của thành viên chỉ trả cho Admin và chính chủ (`user.member_id`).
-- Mỗi endpoint mới phải chặn: chưa đăng nhập → 401, chưa duyệt → 403 `ACCOUNT_NOT_APPROVED`, User gọi API của Admin → 403 (không cần viết test, #84).
+- Mỗi endpoint mới (không nằm trong `PublicReadPaths`) phải chặn: chưa đăng nhập → 401, chưa duyệt → 403 `ACCOUNT_NOT_APPROVED`, User gọi API của Admin → 403 (không cần viết test, #84).
 
 ## Hợp đồng API
 - `shared/api/openapi.yaml` là nguồn sự thật (DECISIONS #70). Controller, DTO và mã lỗi phải khớp hợp đồng; muốn đổi thì sửa `openapi.yaml` trước (và frontend chạy lại `gen:api`).

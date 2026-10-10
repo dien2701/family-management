@@ -23,6 +23,9 @@ export function homePathFor(user: Me): string {
 
 export const isAdmin = (user: Me | null): boolean => user?.systemRole === 'ADMIN'
 
+/** Đã đăng nhập và đã được duyệt: khách và tài khoản chưa duyệt chỉ xem được các trang công khai (DECISIONS #88). */
+export const isApproved = (user: Me | null): boolean => user !== null && approvalAreaOf(user) === 'app'
+
 /**
  * Lấy `from` (trang định vào trước khi bị chuyển tới đăng nhập) từ state của trang hiện tại để mang theo
  * sang đăng nhập/đăng ký/xác thực OTP, nhờ vậy link sâu không bị mất giữa chừng.

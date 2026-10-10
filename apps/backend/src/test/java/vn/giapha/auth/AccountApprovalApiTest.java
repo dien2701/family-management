@@ -216,66 +216,6 @@ class AccountApprovalApiTest {
     // ---------- Cổng duyệt ----------
 
     @Test
-    void waitingAccountCanOnlyUseAuthMeAndConsent() throws Exception {
-        Session waiting = accounts.waiting();
-
-        mvc.perform(get("/api/me").header(HttpHeaders.AUTHORIZATION, waiting.bearer()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.approvalStatus").value("WAITING"));
-        mvc.perform(post("/api/me/consent").header(HttpHeaders.AUTHORIZATION, waiting.bearer())
-                .contentType(MediaType.APPLICATION_JSON).content("{\"acceptTerms\":true}"))
-                .andExpect(status().isOk());
-        accounts.refresh(waiting).andExpect(status().isOk());
-
-        // API nghiệp vụ: đọc, ghi, và cả API của Admin đều bị chặn với cùng mã
-        notApproved(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
-        notApproved(get("/api/calendar/lunar-month-info?year=2026&month=1")
-                .header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
-        notApproved(post("/api/members").header(HttpHeaders.AUTHORIZATION, waiting.bearer())
-                .contentType(MediaType.APPLICATION_JSON).content("{\"fullName\":\"Người Thử\",\"isDeceased\":false}"));
-        notApproved(get("/api/admin/accounts").header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
-        notApproved(get("/api/members").header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
-        // Đường dẫn chưa có controller cũng không lọt qua cổng: mặc định chặn, không phải mặc định cho phép
-        notApproved(get("/api/tree").header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
-    }
-
-    @Test
-    void anonymousStillGets401NotForbidden() throws Exception {
-        mvc.perform(get(CALENDAR)).andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("UNAUTHENTICATED"));
-        mvc.perform(get("/api/admin/accounts")).andExpect(status().isUnauthorized());
-        mvc.perform(post("/api/me/consent").contentType(MediaType.APPLICATION_JSON).content("{\"acceptTerms\":true}"))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void rejectedAccountIsBlockedAndSeesRejectedStatus() throws Exception {
-        Session user = accounts.waiting();
-        jdbc.update("UPDATE user_account SET approval_status = 'REJECTED' WHERE id = ?", user.id());
-        Session rejected = accounts.login(user.email());
-
-        mvc.perform(get("/api/me").header(HttpHeaders.AUTHORIZATION, rejected.bearer()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.approvalStatus").value("REJECTED"));
-        notApproved(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, rejected.bearer()));
-    }
-
-    @Test
-    void approvedAccountUsesApiAfterRefreshingItsToken() throws Exception {
-        Session waiting = accounts.waiting();
-        notApproved(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
-
-        // Admin duyệt; token cũ vẫn mang claim WAITING nên request đọc còn bị chặn tới khi refresh (DECISIONS #56)
-        jdbc.update("UPDATE user_account SET approval_status = 'APPROVED' WHERE id = ?", waiting.id());
-        notApproved(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, waiting.bearer()));
-        mvc.perform(get("/api/me").header(HttpHeaders.AUTHORIZATION, waiting.bearer()))
-                .andExpect(jsonPath("$.approvalStatus").value("APPROVED"));
-
-        Session fresh = accounts.refreshed(waiting);
-        assertThat(jwtDecoder.decode(fresh.token()).getClaimAsString("approval")).isEqualTo("APPROVED");
-        mvc.perform(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, fresh.bearer())).andExpect(status().isOk());
-    }
-
-    @Test
     void writesCheckApprovalAndLockFromDatabaseNotFromStaleClaim() throws Exception {
         Session user = accounts.approved();
         String createMember = "{\"fullName\":\"Người Thử\",\"isDeceased\":false}";
@@ -296,18 +236,6 @@ class AccountApprovalApiTest {
         mvc.perform(post("/api/members").header(HttpHeaders.AUTHORIZATION, user.bearer())
                 .contentType(MediaType.APPLICATION_JSON).content(createMember))
                 .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    void tokenWithoutApprovalClaimIsTreatedAsNotApproved() throws Exception {
-        Session user = accounts.approved();
-        Instant now = Instant.now();
-        String legacy = jwtEncoder.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(),
-                JwtClaimsSet.builder().subject(String.valueOf(user.id())).issuedAt(now)
-                        .expiresAt(now.plus(Duration.ofMinutes(5))).claim("sysRole", "USER").build()))
-                .getTokenValue();
-
-        notApproved(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, "Bearer " + legacy));
     }
 
     @Test

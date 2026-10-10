@@ -1,10 +1,14 @@
 import { Outlet } from 'react-router'
+import { isApproved } from '@/features/auth/routing'
 import { PushPrompt } from '@/features/notification/components/PushPrompt'
+import { useAuth } from '@/hooks/useAuth'
+import { AccessBanner } from './AccessBanner'
 import { BottomNav } from './BottomNav'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 
 export function AppShell() {
+  const { user } = useAuth()
   return (
     <div className="min-h-dvh md:flex">
       <a
@@ -21,7 +25,9 @@ export function AppShell() {
           tabIndex={-1}
           className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:py-6 md:pb-6"
         >
-          <PushPrompt />
+          <AccessBanner />
+          {/* Thông báo đẩy cần đăng nhập và đã duyệt */}
+          {isApproved(user) && <PushPrompt />}
           <Outlet />
         </main>
       </div>

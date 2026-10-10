@@ -10,7 +10,9 @@ info:
     Khởi tạo từ `/v3/api-docs` của backend Đợt 8, đã bỏ `/api/family/**`. Từ Đợt 39 frontend gọi backend thật cho
     mọi endpoint (đã gỡ lớp giả lập).
 
-    Mọi API nghiệp vụ chỉ nhận tài khoản đã được duyệt (403 `ACCOUNT_NOT_APPROVED`). Lỗi luôn là `ProblemDetail`.
+    Mọi API nghiệp vụ chỉ nhận tài khoản đã được duyệt (403 `ACCOUNT_NOT_APPROVED`), **trừ** các GET xem công khai
+    (thành viên, người thân, cây, sự kiện, lịch, tổng quan; DECISIONS #88): khách và tài khoản chưa duyệt cũng gọi được,
+    được đánh dấu `security: [{}, {bearerAuth: []}]`. Lỗi luôn là `ProblemDetail`.
   license:
     name: Proprietary
     identifier: LicenseRef-Proprietary
@@ -519,6 +521,9 @@ paths:
         - calendar
       summary: Thông tin một tháng âm
       operationId: lunarMonthInfo
+      security:
+        - {}
+        - bearerAuth: []
       description: Số ngày (29/30), ngày dương đầu và cuối của một tháng âm, kèm tháng nhuận của năm
       parameters:
         - name: year
@@ -548,16 +553,15 @@ paths:
                 $ref: '#/components/schemas/LunarMonthInfoResponse'
         '400':
           $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
   /api/calendar/convert:
     get:
       tags:
         - calendar
       summary: Đổi ngày dương và âm
       operationId: convert
+      security:
+        - {}
+        - bearerAuth: []
       description: Đổi ngày dương sang âm (truyền solar) hoặc âm sang dương (truyền lunarYear, lunarMonth, lunarDay, leap)
       parameters:
         - name: solar
@@ -601,10 +605,6 @@ paths:
                 $ref: '#/components/schemas/ConvertResponse'
         '400':
           $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
   /api/admin/accounts:
     get:
       tags:
@@ -680,11 +680,14 @@ paths:
         - members
       summary: Danh sách thành viên
       description: |
-        Mọi tài khoản đã duyệt xem được. Tìm theo tên **không cần gõ dấu**. Các bộ lọc kết hợp bằng AND.
+        Không cần đăng nhập (khách và tài khoản chưa duyệt cũng xem được, DECISIONS #88). Tìm theo tên **không cần gõ dấu**. Các bộ lọc kết hợp bằng AND.
         `ageMin`/`ageMax` tính theo năm (còn sống: đến năm hiện tại; đã mất: đến năm mất dương). Người chưa rõ
         năm sinh, hoặc đã mất mà chưa rõ năm mất, không tính được tuổi nên bị loại khi có một trong hai tham số. `generation` và `onTree` lấy từ cây gia phả (cây trống thì
         không ai có đời và mọi người đều `onTree=false`).
       operationId: listMembers
+      security:
+        - {}
+        - bearerAuth: []
       parameters:
         - name: q
           in: query
@@ -769,10 +772,6 @@ paths:
                 $ref: '#/components/schemas/MemberPage'
         '400':
           $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
     post:
       tags:
         - members
@@ -808,9 +807,12 @@ paths:
         - members
       summary: Chi tiết thành viên
       description: |
-        Mọi tài khoản đã duyệt xem được. `phone` và `email` chỉ có trong body khi người gọi là Admin
+        Không cần đăng nhập (khách và tài khoản chưa duyệt cũng xem được, DECISIONS #88). `phone` và `email` chỉ có trong body khi người gọi là Admin
         hoặc chính chủ hồ sơ (`user.member_id`); với người khác hai trường này **không xuất hiện**.
       operationId: getMember
+      security:
+        - {}
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -826,10 +828,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MemberDetail'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
     put:
@@ -1160,9 +1158,12 @@ paths:
         - relatives
       summary: Danh sách người thân của một hồ sơ
       description: |
-        Mọi tài khoản đã duyệt xem được. Một chiều: chỉ có các dòng do chủ hồ sơ hoặc Admin khai trong hồ sơ này,
+        Không cần đăng nhập (khách và tài khoản chưa duyệt cũng xem được, DECISIONS #88). Một chiều: chỉ có các dòng do chủ hồ sơ hoặc Admin khai trong hồ sơ này,
         hồ sơ bên kia không tự có dòng ngược lại. Sắp theo thời điểm thêm.
       operationId: listRelatives
+      security:
+        - {}
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/MemberId'
       responses:
@@ -1174,10 +1175,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Relative'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
     post:
@@ -1477,7 +1474,7 @@ paths:
         - tree
       summary: Toàn bộ cây gia phả
       description: |
-        Mọi tài khoản đã duyệt xem được. Trả toàn bộ đồ thị (nút và cạnh); **đời không nằm trong response**,
+        Không cần đăng nhập (khách và tài khoản chưa duyệt cũng xem được, DECISIONS #88). Trả toàn bộ đồ thị (nút và cạnh); **đời không nằm trong response**,
         frontend tự tính theo độ sâu (DECISIONS #34, #60). Cây trống thì cả hai mảng rỗng.
 
         Quy ước của đồ thị:
@@ -1489,6 +1486,9 @@ paths:
         - `memberId = null` là ô trống (đã gỡ người ra khỏi cây); ô trống vẫn có thể có con và vợ/chồng.
         - Anh em (cùng `parentNodeId`, hoặc cùng là gốc) xếp theo `sortOrder` tăng dần, rồi theo `id`.
       operationId: getTree
+      security:
+        - {}
+        - bearerAuth: []
       responses:
         '200':
           description: Thành công
@@ -1496,10 +1496,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TreeResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
   /api/tree/roots:
     post:
       tags:
@@ -1833,8 +1829,11 @@ paths:
       tags:
         - events
       summary: Danh sách sự kiện chung
-      description: Mọi tài khoản đã duyệt xem được. Xếp theo `id` tăng dần. Chỉ gồm **sự kiện chung**; giỗ và sinh nhật do `/api/calendar/*` tự sinh từ hồ sơ thành viên.
+      description: 'Không cần đăng nhập (khách và tài khoản chưa duyệt cũng xem được, DECISIONS #88). Xếp theo `id` tăng dần. Chỉ gồm **sự kiện chung**; giỗ và sinh nhật do `/api/calendar/*` tự sinh từ hồ sơ thành viên.'
       operationId: listEvents
+      security:
+        - {}
+        - bearerAuth: []
       responses:
         '200':
           description: Thành công
@@ -1844,10 +1843,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/CustomEvent'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
     post:
       tags:
         - events
@@ -1880,6 +1875,9 @@ paths:
       summary: Chi tiết một sự kiện chung
       description: 'Lỗi: 404 `EVENT_NOT_FOUND`.'
       operationId: getEvent
+      security:
+        - {}
+        - bearerAuth: []
       parameters:
         - $ref: '#/components/parameters/EventId'
       responses:
@@ -1889,10 +1887,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CustomEvent'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
     put:
@@ -1950,6 +1944,9 @@ paths:
         Giỗ, sinh nhật và sự kiện chung có ngày dương từ **hôm nay** (giờ +7, `daysUntil = 0`) đến hôm nay + `days` ngày.
         Ngày cúng theo quy tắc IDEA §7 (ngày ghi đè, tháng nhuận, tháng thiếu). Xếp theo ngày dương, cùng ngày thì Giỗ, Sinh nhật, Sự kiện chung rồi theo tên.
       operationId: upcomingOccurrences
+      security:
+        - {}
+        - bearerAuth: []
       parameters:
         - name: days
           in: query
@@ -1991,10 +1988,6 @@ paths:
                   $ref: '#/components/schemas/CalendarOccurrence'
         '400':
           $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
   /api/calendar/month:
     get:
       tags:
@@ -2004,6 +1997,9 @@ paths:
         Từng ngày của một tháng kèm sự kiện của ngày đó. `mode = solar`: `year`/`month` là tháng dương. `mode = lunar`:
         là tháng âm (`leap = true` cho tháng nhuận), các ngày đi từ mùng 1 đến hết tháng âm đó, mỗi ngày kèm ngày dương.
       operationId: calendarMonth
+      security:
+        - {}
+        - bearerAuth: []
       parameters:
         - name: year
           in: query
@@ -2044,10 +2040,6 @@ paths:
                 $ref: '#/components/schemas/CalendarMonth'
         '400':
           $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
   /api/calendar/recent:
     get:
       tags:
@@ -2055,6 +2047,9 @@ paths:
       summary: Các sự kiện vừa diễn ra
       description: Các sự kiện có ngày dương **trước hôm nay** (trong vòng một năm), gần nhất trước (`daysUntil` âm). Dùng cho dashboard.
       operationId: recentOccurrences
+      security:
+        - {}
+        - bearerAuth: []
       parameters:
         - name: limit
           in: query
@@ -2076,10 +2071,6 @@ paths:
                   $ref: '#/components/schemas/CalendarOccurrence'
         '400':
           $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
   /api/admin/settings:
     get:
       tags:
@@ -2190,8 +2181,12 @@ paths:
       description: |
         Thẻ số liệu, sự kiện gần nhất sắp tới, 10 sự kiện vừa diễn ra, sự kiện trong 30 ngày tới (IDEA §6.8).
         Admin thấy thêm `pendingAccounts`, `pendingProposals`, `pendingLinkRequests` (`pendingProposals` luôn 0
-        cho tới khi có module đề xuất).
+        cho tới khi có module đề xuất). Không cần đăng nhập (DECISIONS #88): khách và tài khoản chưa duyệt vẫn xem
+        được, ba số chờ duyệt là `null`.
       operationId: getDashboard
+      security:
+        - {}
+        - bearerAuth: []
       responses:
         '200':
           description: Thành công
@@ -2199,10 +2194,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DashboardResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
   /api/ai/chat:
     post:
       tags:

@@ -3,6 +3,16 @@ import { FullPageSpinner } from '@/components/shared/FullPageSpinner'
 import { useAuth } from '@/hooks/useAuth'
 import { approvalAreaOf, homePathFor, isAdmin, safeInternalPath, type ApprovalArea } from '../routing'
 
+/**
+ * Chờ khôi phục phiên rồi mới vẽ trang. Các trang xem công khai (DECISIONS #88) không bắt đăng nhập nên phải đợi
+ * biết đã đăng nhập hay chưa trước khi gọi API, nếu không sẽ lấy về bản dữ liệu của khách (thiếu SĐT/email).
+ */
+export function SessionReady() {
+  const { status } = useAuth()
+  if (status === 'loading') return <FullPageSpinner />
+  return <Outlet />
+}
+
 /** Chỉ cho người đã đăng nhập; chưa đăng nhập thì chuyển tới trang đăng nhập và nhớ trang định vào. */
 export function RequireAuth() {
   const { status, loggedOut } = useAuth()

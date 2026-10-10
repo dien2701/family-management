@@ -1,20 +1,18 @@
 import { TreeDeciduous } from 'lucide-react'
 import { NavLink } from 'react-router'
-import { isAdmin } from '@/features/auth/routing'
+import { isAdmin, isApproved } from '@/features/auth/routing'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/utils/cn'
-import { ADMIN_NAV_ITEM, AI_NAV_ITEM, NAV_ITEMS, type NavItem } from './navItems'
+import { ADMIN_NAV_ITEM, AI_NAV_ITEM, navItemsFor, type NavItem } from './navItems'
 
 // ≥1024px: sidebar 240px có chữ; 768–1023px: rail 72px chỉ icon (DESIGN §4, §6)
 export function Sidebar() {
   const { user } = useAuth()
-  // Mục Quản trị chỉ hiện cho Admin; chèn trước "Thêm" để "Thêm" luôn là mục cuối
-  const items: readonly NavItem[] = [
-    ...NAV_ITEMS.slice(0, -1),
-    AI_NAV_ITEM,
-    ...(isAdmin(user) ? [ADMIN_NAV_ITEM] : []),
-    ...NAV_ITEMS.slice(-1),
-  ]
+  const base = navItemsFor(user)
+  // Trợ lý và Quản trị cần đăng nhập và đã duyệt; Quản trị chỉ Admin. Chèn trước mục cuối để mục cuối giữ nguyên chỗ
+  const items: readonly NavItem[] = isApproved(user)
+    ? [...base.slice(0, -1), AI_NAV_ITEM, ...(isAdmin(user) ? [ADMIN_NAV_ITEM] : []), ...base.slice(-1)]
+    : base
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-[72px] shrink-0 flex-col border-r border-border bg-surface md:flex lg:w-60">

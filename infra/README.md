@@ -60,7 +60,11 @@ docker compose -f docker-compose.prod.yml logs certbot
 ```
 
 ## 3. Cập nhật và quay lui
-- Cập nhật: chạy lại workflow **Deploy**.
+- Cập nhật: merge PR vào `main`, rồi `git tag v1.1.0 && git push origin v1.1.0` (hoặc chạy workflow **Deploy** bằng tay: `workflow_dispatch`). Số phiên bản tăng dần theo `v1.x.y`.
+- Kiểm tra sau deploy (DECISIONS #88):
+  - Mở tab ẩn danh `https://giapha.click`: xem được Trang chủ, Thành viên, Cây, Sự kiện, không có nút sửa/thêm, header có "Đăng nhập".
+  - `curl -s -o /dev/null -w "%{http_code}\n" https://giapha.click/api/members` → `200`; `.../api/ai/quota` và `.../api/reports/members.xlsx` → `401`.
+  - `curl -I https://giapha.click` có `X-Robots-Tag: noindex, nofollow`; `https://giapha.click/robots.txt` trả `Disallow: /`.
 - Quay về bản cũ: đặt `IMAGE_TAG=<mã commit đầy đủ>` trong `.env`, rồi `docker compose -f docker-compose.prod.yml up -d`.
 - Xem log: `docker compose -f docker-compose.prod.yml logs -f app`.
 - Đổi `VITE_GOOGLE_CLIENT_ID` hay `.env` của app: biến FE nằm trong image nên phải deploy lại; biến BE chỉ cần `up -d`.

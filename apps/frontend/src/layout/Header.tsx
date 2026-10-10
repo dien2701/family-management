@@ -1,7 +1,9 @@
-import { ArrowLeft, Bell } from 'lucide-react'
+import { ArrowLeft, Bell, LogIn } from 'lucide-react'
 import { useState } from 'react'
-import { useLocation, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
+import { isApproved } from '@/features/auth/routing'
+import { useAuth } from '@/hooks/useAuth'
 import { useRouteTitle } from '@/hooks/useRouteTitle'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useUnreadCount } from '@/features/notification/hooks'
@@ -9,16 +11,45 @@ import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
 import { NotificationDropdown } from '@/features/notification/components/NotificationDropdown'
 
-// Header gọn: quay lại + tiêu đề trang; bên phải là giao diện sáng/tối, chuông, menu tài khoản.
+// Chuông chỉ vẽ cho tài khoản đã duyệt: thông báo cần đăng nhập, khách gọi sẽ 401
+function NotificationBell() {
+  const navigate = useNavigate()
+  const wide = useMediaQuery('(min-width: 1024px)')
+  const [showDropdown, setShowDropdown] = useState(false)
+  const unreadCount = useUnreadCount().data ?? 0
+
+  return (
+    <div className="relative">
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Thông báo"
+        onClick={() => {
+          if (wide) setShowDropdown(!showDropdown)
+          else navigate('/thong-bao')
+        }}
+      >
+        <Bell />
+        {unreadCount > 0 && (
+          <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-danger-fg">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+      </Button>
+      {showDropdown && wide && <NotificationDropdown onClose={() => setShowDropdown(false)} />}
+    </div>
+  )
+}
+
+// Header gọn: quay lại + tiêu đề trang; bên phải là giao diện sáng/tối, rồi chuông + menu tài khoản
+// (đã duyệt) hoặc nút Đăng nhập (khách, DECISIONS #88). Tài khoản chưa duyệt chỉ có nút giao diện, đã có banner ở trên nội dung.
 export function Header() {
   const title = useRouteTitle()
   const navigate = useNavigate()
+  const location = useLocation()
+  const { user } = useAuth()
   // key='default' nghĩa là trang đầu tiên của phiên, chưa có gì để quay lại trong app
-  const canGoBack = useLocation().key !== 'default'
-  const wide = useMediaQuery('(min-width: 1024px)')
-  const [showDropdown, setShowDropdown] = useState(false)
-  const unreadQuery = useUnreadCount()
-  const unreadCount = unreadQuery.data ?? 0
+  const canGoBack = location.key !== 'default'
 
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-surface">
@@ -39,29 +70,21 @@ export function Header() {
 
         <ThemeToggle />
 
-        <div className="relative">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            aria-label="Thông báo" 
-            onClick={() => {
-              if (wide) setShowDropdown(!showDropdown)
-              else navigate('/thong-bao')
-            }}
-          >
-            <Bell />
-            {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-danger text-[10px] font-bold text-danger-fg">
-                {unreadCount > 99 ? '99+' : unreadCount}
-              </span>
-            )}
+        {isApproved(user) && (
+          <>
+            <NotificationBell />
+            <UserMenu />
+          </>
+        )}
+        {!user && (
+          <Button asChild>
+            {/* Nhớ trang đang xem để đăng nhập xong quay lại đúng chỗ */}
+            <Link to="/dang-nhap" state={{ from: `${location.pathname}${location.search}` }}>
+              <LogIn aria-hidden="true" />
+              Đăng nhập
+            </Link>
           </Button>
-          {showDropdown && wide && (
-            <NotificationDropdown onClose={() => setShowDropdown(false)} />
-          )}
-        </div>
-
-        <UserMenu />
+        )}
       </div>
     </header>
   )

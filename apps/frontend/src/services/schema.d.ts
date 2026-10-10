@@ -396,7 +396,7 @@ export interface paths {
         };
         /**
          * Danh sách thành viên
-         * @description Mọi tài khoản đã duyệt xem được. Tìm theo tên **không cần gõ dấu**. Các bộ lọc kết hợp bằng AND.
+         * @description Không cần đăng nhập (khách và tài khoản chưa duyệt cũng xem được, DECISIONS #88). Tìm theo tên **không cần gõ dấu**. Các bộ lọc kết hợp bằng AND.
          *     `ageMin`/`ageMax` tính theo năm (còn sống: đến năm hiện tại; đã mất: đến năm mất dương). Người chưa rõ
          *     năm sinh, hoặc đã mất mà chưa rõ năm mất, không tính được tuổi nên bị loại khi có một trong hai tham số. `generation` và `onTree` lấy từ cây gia phả (cây trống thì
          *     không ai có đời và mọi người đều `onTree=false`).
@@ -426,7 +426,7 @@ export interface paths {
         };
         /**
          * Chi tiết thành viên
-         * @description Mọi tài khoản đã duyệt xem được. `phone` và `email` chỉ có trong body khi người gọi là Admin
+         * @description Không cần đăng nhập (khách và tài khoản chưa duyệt cũng xem được, DECISIONS #88). `phone` và `email` chỉ có trong body khi người gọi là Admin
          *     hoặc chính chủ hồ sơ (`user.member_id`); với người khác hai trường này **không xuất hiện**.
          */
         get: operations["getMember"];
@@ -662,7 +662,7 @@ export interface paths {
         };
         /**
          * Danh sách người thân của một hồ sơ
-         * @description Mọi tài khoản đã duyệt xem được. Một chiều: chỉ có các dòng do chủ hồ sơ hoặc Admin khai trong hồ sơ này,
+         * @description Không cần đăng nhập (khách và tài khoản chưa duyệt cũng xem được, DECISIONS #88). Một chiều: chỉ có các dòng do chủ hồ sơ hoặc Admin khai trong hồ sơ này,
          *     hồ sơ bên kia không tự có dòng ngược lại. Sắp theo thời điểm thêm.
          */
         get: operations["listRelatives"];
@@ -848,7 +848,7 @@ export interface paths {
         };
         /**
          * Toàn bộ cây gia phả
-         * @description Mọi tài khoản đã duyệt xem được. Trả toàn bộ đồ thị (nút và cạnh); **đời không nằm trong response**,
+         * @description Không cần đăng nhập (khách và tài khoản chưa duyệt cũng xem được, DECISIONS #88). Trả toàn bộ đồ thị (nút và cạnh); **đời không nằm trong response**,
          *     frontend tự tính theo độ sâu (DECISIONS #34, #60). Cây trống thì cả hai mảng rỗng.
          *
          *     Quy ước của đồ thị:
@@ -1083,7 +1083,7 @@ export interface paths {
         };
         /**
          * Danh sách sự kiện chung
-         * @description Mọi tài khoản đã duyệt xem được. Xếp theo `id` tăng dần. Chỉ gồm **sự kiện chung**; giỗ và sinh nhật do `/api/calendar/*` tự sinh từ hồ sơ thành viên.
+         * @description Không cần đăng nhập (khách và tài khoản chưa duyệt cũng xem được, DECISIONS #88). Xếp theo `id` tăng dần. Chỉ gồm **sự kiện chung**; giỗ và sinh nhật do `/api/calendar/*` tự sinh từ hồ sơ thành viên.
          */
         get: operations["listEvents"];
         put?: never;
@@ -1251,7 +1251,8 @@ export interface paths {
          * Tổng quan
          * @description Thẻ số liệu, sự kiện gần nhất sắp tới, 10 sự kiện vừa diễn ra, sự kiện trong 30 ngày tới (IDEA §6.8).
          *     Admin thấy thêm `pendingAccounts`, `pendingProposals`, `pendingLinkRequests` (`pendingProposals` luôn 0
-         *     cho tới khi có module đề xuất).
+         *     cho tới khi có module đề xuất). Không cần đăng nhập (DECISIONS #88): khách và tài khoản chưa duyệt vẫn xem
+         *     được, ba số chờ duyệt là `null`.
          */
         get: operations["getDashboard"];
         put?: never;
@@ -2967,8 +2968,6 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
         };
     };
     convert: {
@@ -3001,8 +3000,6 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
         };
     };
     list: {
@@ -3073,8 +3070,6 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
         };
     };
     createMember: {
@@ -3124,8 +3119,6 @@ export interface operations {
                     "application/json": components["schemas"]["MemberDetail"];
                 };
             };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -3468,8 +3461,6 @@ export interface operations {
                     "application/json": components["schemas"]["Relative"][];
                 };
             };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -3785,8 +3776,6 @@ export interface operations {
                     "application/json": components["schemas"]["TreeResponse"];
                 };
             };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
         };
     };
     addTreeRoot: {
@@ -4112,8 +4101,6 @@ export interface operations {
                     "application/json": components["schemas"]["CustomEvent"][];
                 };
             };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
         };
     };
     createEvent: {
@@ -4164,8 +4151,6 @@ export interface operations {
                     "application/json": components["schemas"]["CustomEvent"];
                 };
             };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
         };
     };
@@ -4249,8 +4234,6 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
         };
     };
     calendarMonth: {
@@ -4278,8 +4261,6 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
         };
     };
     recentOccurrences: {
@@ -4303,8 +4284,6 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
         };
     };
     getSettings: {
@@ -4424,8 +4403,6 @@ export interface operations {
                     "application/json": components["schemas"]["DashboardResponse"];
                 };
             };
-            401: components["responses"]["Unauthorized"];
-            403: components["responses"]["Forbidden"];
         };
     };
     aiChat: {

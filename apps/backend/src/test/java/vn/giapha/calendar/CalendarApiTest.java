@@ -135,16 +135,6 @@ class CalendarApiTest {
                 .andExpect(jsonPath("$.code").value("LUNAR_DATE_INVALID"));
     }
 
-    // ---------- Bảo mật ----------
-
-    @Test
-    void requiresAuthentication() throws Exception {
-        mvc.perform(get("/api/calendar/convert").param("solar", "2026-02-17"))
-                .andExpect(status().isUnauthorized());
-        mvc.perform(get("/api/calendar/lunar-month-info").param("year", "2026").param("month", "1"))
-                .andExpect(status().isUnauthorized());
-    }
-
     // ---------- Facade cho module khác ----------
 
     @Test

@@ -28,7 +28,7 @@ Phụ thuộc theo chiều `pages → features → components/services/hooks/uti
 - **Hợp đồng trước (DECISIONS #70):** API mới thì viết vào `shared/api/openapi.yaml` trước, rồi `npm run gen:api` (`npm run lint:api` do người dùng tự chạy). Kiểu DTO **chỉ** lấy từ `schema.d.ts`. Không viết tay kiểu trùng với API.
 - **Luôn gọi backend thật** (lớp giả lập đã gỡ ở Đợt 39, DECISIONS #71). Dev chạy `npm run dev` cùng BE ở `:8080`. **Không tạo dữ liệu giả** trong app: chỉ có 28 thành viên seed của BE và dữ liệu người dùng nhập.
 - Logic nghiệp vụ thuần (quy tắc cây, lịch nhắc) đặt ở `utils/` dạng hàm thuần; backend có bản Java tương ứng và hai bên phải cho cùng kết quả.
-- Vai trò chỉ có Admin và User; tài khoản chưa duyệt chỉ vào được `/cho-duyet`. Menu và route Quản trị chỉ cho Admin, nhưng quyền thật do backend quyết định.
+- Vai trò chỉ có Admin và User; khách và tài khoản chưa duyệt xem được các trang công khai (`/`, `cay`, `thanh-vien`, `thanh-vien/:id`, `lich`, `them/doi-lich`, DECISIONS #88) và không có nút ghi nào, trang cần duyệt thì về `/cho-duyet`. Hook gọi API cần đăng nhập (`useMe`...) phải tắt khi là khách. Menu và route Quản trị chỉ cho Admin, nhưng quyền thật do backend quyết định.
 - Form dùng React Hook Form + Zod. Lỗi từ `ProblemDetail.errors` được gán vào đúng trường qua `setError`.
 - Access token chỉ giữ trong bộ nhớ (context), không bao giờ ghi vào `localStorage`/`sessionStorage`.- Chuỗi UI viết thẳng tiếng Việt, gom trong `features/<module>/strings.ts`. Tên component dùng PascalCase, file hook và tiện ích dùng camelCase.
 - Không dùng Redux, không dùng thư viện UI khác ngoài shadcn/ui.

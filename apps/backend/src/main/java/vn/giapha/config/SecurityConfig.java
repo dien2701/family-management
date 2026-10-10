@@ -12,6 +12,7 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -36,10 +37,12 @@ import vn.giapha.common.security.AccountAccessLookup;
 import vn.giapha.common.security.ApprovalGateFilter;
 import vn.giapha.common.security.CurrentUser;
 import vn.giapha.common.security.ProblemDetailSecurityHandlers;
+import vn.giapha.common.security.PublicReadPaths;
 
 /**
  * Stateless, JWT HS256 (Spring Security OAuth2 Resource Server + Nimbus, DECISIONS #18).
- * {@code /api/auth/**} mở cho người chưa đăng nhập; mọi đường dẫn khác bắt buộc có access token.
+ * {@code /api/auth/**} và các GET trong {@link PublicReadPaths} mở cho người chưa đăng nhập; mọi đường dẫn khác bắt
+ * buộc có access token.
  */
 @Configuration
 @EnableMethodSecurity
@@ -64,6 +67,8 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Xem công khai (DECISIONS #88): chỉ GET, danh sách tường minh; còn lại mặc định bắt đăng nhập
+                        .requestMatchers(HttpMethod.GET, PublicReadPaths.GET_PATHS).permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationEntryPoint(handlers)

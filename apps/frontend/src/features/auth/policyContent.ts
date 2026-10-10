@@ -28,15 +28,15 @@ export const policySections: PolicySection[] = [
     title: '2. Một gia phả chung và việc duyệt tài khoản',
     items: [
       'Hệ thống chỉ có một gia phả chung cho tất cả tài khoản.',
-      'Tài khoản mới phải được Admin duyệt mới xem được dữ liệu. Trong lúc chờ duyệt, bạn chỉ thấy trang thông báo chờ duyệt.',
-      'Admin có thể từ chối hoặc khóa tài khoản. Khi đó bạn không đăng nhập hay xem được dữ liệu gia phả.',
+      'Tài khoản mới phải được Admin duyệt mới dùng được các chức năng như trợ lý AI, xuất dữ liệu, tệp đính kèm, đề xuất và thông báo. Trong lúc chờ duyệt, bạn chỉ xem được thông tin chung của gia phả.',
+      'Admin có thể từ chối hoặc khóa tài khoản. Khi đó bạn không đăng nhập hay dùng được các chức năng trên.',
     ],
   },
   {
     id: 'policy-viewers',
     title: '3. Ai được xem dữ liệu',
     items: [
-      'Mọi tài khoản đã được duyệt xem được danh sách thành viên, cây gia phả và lịch.',
+      'Thông tin gia phả (danh sách thành viên, hồ sơ, người thân, cây gia phả, sự kiện và lịch), trừ số điện thoại và email, hiển thị công khai cho bất kỳ ai có đường dẫn, kể cả người chưa đăng nhập. Chúng tôi chặn công cụ tìm kiếm lập chỉ mục trang này.',
       'Số điện thoại và email của thành viên chỉ hiển thị cho Admin và chính chủ (thành viên đã liên kết với tài khoản của họ).',
       'Admin chỉ truy cập dữ liệu để vận hành, hỗ trợ và xử lý sự cố.',
       'Chúng tôi không bán và không chia sẻ dữ liệu cá nhân cho bên thứ ba vì mục đích quảng cáo.',

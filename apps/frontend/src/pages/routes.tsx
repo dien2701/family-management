@@ -16,6 +16,7 @@ import {
   GuestOnly,
   RequireAdmin,
   RequireAuth,
+  SessionReady,
 } from '@/features/auth/components/guards'
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
@@ -70,7 +71,7 @@ export const routes: RouteObject[] = [
   },
   // Trang tĩnh công khai, ai cũng đọc được
   { path: 'chinh-sach-bao-mat', element: <PolicyPage />, handle: handle('Chính sách bảo mật') },
-  // Cần đăng nhập, rồi chia theo trạng thái duyệt: chờ duyệt, không được duyệt, hoặc vào app (DECISIONS #56)
+  // Chờ duyệt và không được duyệt: cần đăng nhập, mỗi trạng thái chỉ ở đúng khu của mình (DECISIONS #56)
   {
     element: <RequireAuth />,
     children: [
@@ -98,94 +99,102 @@ export const routes: RouteObject[] = [
           },
         ],
       },
+    ],
+  },
+  // Khu có layout chính. Khách và tài khoản chưa duyệt xem được các trang công khai (DECISIONS #88);
+  // các trang còn lại cần đăng nhập và đã duyệt.
+  {
+    element: <SessionReady />,
+    children: [
       {
-        element: <ApprovalGuard area="app" />,
+        element: <AppShell />,
         children: [
+          { index: true, element: <DashboardPage />, handle: handle('Tổng quan') },
+          { path: 'cay', element: <TreePage />, handle: handle('Cây gia phả') },
+          { path: 'thanh-vien', element: <MembersPage />, handle: handle('Thành viên') },
+          { path: 'thanh-vien/:id', element: <MemberDetailPage />, handle: handle('Hồ sơ thành viên') },
+          { path: 'lich', element: <CalendarPage />, handle: handle('Sự kiện') },
+          { path: 'them/doi-lich', element: <LunarConverterPage />, handle: handle('Đổi lịch âm – dương') },
           {
-            element: <AppShell />,
+            element: <RequireAuth />,
             children: [
-              { index: true, element: <DashboardPage />, handle: handle('Tổng quan') },
-              { path: 'cay', element: <TreePage />, handle: handle('Cây gia phả') },
-              { path: 'thanh-vien', element: <MembersPage />, handle: handle('Thành viên') },
-              { path: 'thanh-vien/:id', element: <MemberDetailPage />, handle: handle('Hồ sơ thành viên') },
-              // Thêm thành viên: chỉ Admin
               {
-                element: <RequireAdmin />,
+                element: <ApprovalGuard area="app" />,
                 children: [
-                  { path: 'thanh-vien/them', element: <MemberFormPage />, handle: handle('Thêm thành viên') },
-                ],
-              },
-              // Sửa hồ sơ: Admin sửa mọi hồ sơ, User chỉ sửa hồ sơ của mình (trang tự kiểm; quyền thật do máy chủ)
-              { path: 'thanh-vien/:id/sua', element: <MemberFormPage />, handle: handle('Sửa hồ sơ') },
-              { path: 'lich', element: <CalendarPage />, handle: handle('Sự kiện') },
-              { path: 'ho-so', element: <ProfilePage />, handle: handle('Hồ sơ cá nhân') },
-              { path: 'cai-dat', element: <AppSettingsPage />, handle: handle('Cài đặt') },
-              { path: 'them', element: <MorePage />, handle: handle('Thêm') },
-              {
-                path: 'them/toi-la-ai',
-                element: <MyIdentityPage />,
-                handle: handle(linkStrings.menu),
-              },
-              {
-                path: 'them/doi-lich',
-                element: <LunarConverterPage />,
-                handle: handle('Đổi lịch âm – dương'),
-              },
-              {
-                path: 'them/tai-lieu-chung',
-                element: <CommonDocumentsPage />,
-                handle: handle('Tài liệu chung'),
-              },
-              {
-                path: 'them/xuat-du-lieu',
-                element: <ExportPage />,
-                handle: handle('Xuất dữ liệu'),
-              },
-              { path: 'tro-ly', element: <AssistantPage />, handle: handle(aiStrings.title) },
-              { path: 'de-xuat', element: <MyProposalsPage />, handle: handle('Đề xuất của tôi') },
-              { path: 'thong-bao', element: <InboxPage />, handle: handle('Thông báo') },
-              { path: 'thong-bao/cai-dat', element: <SettingsPage />, handle: handle('Cài đặt thông báo') },
-              // Khu Quản trị dùng chung AppShell, chỉ Admin vào được
-              {
-                path: 'quan-tri',
-                element: <RequireAdmin />,
-                children: [
+                  // Thêm thành viên: chỉ Admin
                   {
-                    element: <AdminLayout />,
+                    element: <RequireAdmin />,
                     children: [
-                      { index: true, element: <Navigate to="/quan-tri/tai-khoan" replace /> },
+                      { path: 'thanh-vien/them', element: <MemberFormPage />, handle: handle('Thêm thành viên') },
+                    ],
+                  },
+                  // Sửa hồ sơ: Admin sửa mọi hồ sơ, User chỉ sửa hồ sơ của mình (trang tự kiểm; quyền thật do máy chủ)
+                  { path: 'thanh-vien/:id/sua', element: <MemberFormPage />, handle: handle('Sửa hồ sơ') },
+                  { path: 'ho-so', element: <ProfilePage />, handle: handle('Hồ sơ cá nhân') },
+                  { path: 'cai-dat', element: <AppSettingsPage />, handle: handle('Cài đặt') },
+                  { path: 'them', element: <MorePage />, handle: handle('Thêm') },
+                  {
+                    path: 'them/toi-la-ai',
+                    element: <MyIdentityPage />,
+                    handle: handle(linkStrings.menu),
+                  },
+                  {
+                    path: 'them/tai-lieu-chung',
+                    element: <CommonDocumentsPage />,
+                    handle: handle('Tài liệu chung'),
+                  },
+                  {
+                    path: 'them/xuat-du-lieu',
+                    element: <ExportPage />,
+                    handle: handle('Xuất dữ liệu'),
+                  },
+                  { path: 'tro-ly', element: <AssistantPage />, handle: handle(aiStrings.title) },
+                  { path: 'de-xuat', element: <MyProposalsPage />, handle: handle('Đề xuất của tôi') },
+                  { path: 'thong-bao', element: <InboxPage />, handle: handle('Thông báo') },
+                  { path: 'thong-bao/cai-dat', element: <SettingsPage />, handle: handle('Cài đặt thông báo') },
+                  // Khu Quản trị dùng chung AppShell, chỉ Admin vào được
+                  {
+                    path: 'quan-tri',
+                    element: <RequireAdmin />,
+                    children: [
                       {
-                        path: 'tai-khoan',
-                        element: <AccountsPage />,
-                        handle: handle(adminStrings.accounts.title),
-                      },
-                      {
-                        path: 'yeu-cau-lien-ket',
-                        element: <LinkRequestsPage />,
-                        handle: handle(adminStrings.linkRequests.title),
-                      },
-                      {
-                        path: 'de-xuat',
-                        element: <AdminProposalsPage />,
-                        handle: handle('Duyệt đề xuất'),
-                      },
-                      {
-                        path: 'da-xoa',
-                        element: <DeletedMembersPage />,
-                        handle: handle('Thành viên đã xóa'),
-                      },
-                      {
-                        path: 'cau-hinh',
-                        element: <AdminSettingsPage />,
-                        handle: handle('Cấu hình hệ thống'),
+                        element: <AdminLayout />,
+                        children: [
+                          { index: true, element: <Navigate to="/quan-tri/tai-khoan" replace /> },
+                          {
+                            path: 'tai-khoan',
+                            element: <AccountsPage />,
+                            handle: handle(adminStrings.accounts.title),
+                          },
+                          {
+                            path: 'yeu-cau-lien-ket',
+                            element: <LinkRequestsPage />,
+                            handle: handle(adminStrings.linkRequests.title),
+                          },
+                          {
+                            path: 'de-xuat',
+                            element: <AdminProposalsPage />,
+                            handle: handle('Duyệt đề xuất'),
+                          },
+                          {
+                            path: 'da-xoa',
+                            element: <DeletedMembersPage />,
+                            handle: handle('Thành viên đã xóa'),
+                          },
+                          {
+                            path: 'cau-hinh',
+                            element: <AdminSettingsPage />,
+                            handle: handle('Cấu hình hệ thống'),
+                          },
+                        ],
                       },
                     ],
                   },
                 ],
               },
-              { path: '*', element: <NotFoundPage />, handle: handle('Lỗi 404') },
             ],
           },
+          { path: '*', element: <NotFoundPage />, handle: handle('Lỗi 404') },
         ],
       },
     ],

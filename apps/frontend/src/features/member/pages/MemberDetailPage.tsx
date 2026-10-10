@@ -6,6 +6,7 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { FullPageSpinner } from '@/components/shared/FullPageSpinner'
 import { Button } from '@/components/ui/button'
+import { isApproved } from '@/features/auth/routing'
 import { useAuth } from '@/hooks/useAuth'
 import { useMe } from '@/hooks/useMe'
 import { ApiError } from '@/services/client'
@@ -22,7 +23,8 @@ export function MemberDetailPage() {
   const navigate = useNavigate()
   const { data: member, isLoading, isError } = useMemberDetail(memberId)
   const deleteMember = useDeleteMember()
-  const isAdmin = useAuth().user?.systemRole === 'ADMIN'
+  const { user } = useAuth()
+  const isAdmin = user?.systemRole === 'ADMIN'
   // Hồ sơ của chính mình: tài khoản đã liên kết "Tôi là ai" với thành viên này (DECISIONS #76)
   const isSelf = useMe().data?.memberId === memberId
   const [confirming, setConfirming] = useState(false)
@@ -101,7 +103,8 @@ export function MemberDetailPage() {
 
       <TreeSection memberId={member.id} isAdmin={isAdmin} />
 
-      <AttachmentsSection memberId={member.id} canEdit={isAdmin || isSelf} />
+      {/* Tệp đính kèm cần đăng nhập và đã duyệt; khách chỉ xem phần hồ sơ (DECISIONS #88) */}
+      {isApproved(user) && <AttachmentsSection memberId={member.id} canEdit={isAdmin || isSelf} />}
 
 
 

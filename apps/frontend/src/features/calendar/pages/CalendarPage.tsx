@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/button'
+import { isApproved } from '@/features/auth/routing'
 import { useAuth } from '@/hooks/useAuth'
 import type { DualDateValue } from '@/utils/lunar'
 import { EventFormDialog, prefillDate } from '../components/EventFormDialog'
@@ -19,9 +20,14 @@ const TABS: { value: Tab; label: string }[] = [
 
 type FormState = { open: boolean; eventId: number | null; initialDate?: DualDateValue }
 
-/** Trang Lịch: tab "Sắp tới" và "Lịch tháng". Admin thêm, sửa, xóa sự kiện chung; mọi tài khoản đã duyệt được xem. */
+/**
+ * Trang Lịch: tab "Sắp tới" và "Lịch tháng". Ai cũng xem được, kể cả khách (DECISIONS #88). Admin thêm, sửa, xóa
+ * sự kiện chung; User đã duyệt gửi đề xuất; khách và tài khoản chưa duyệt không có nút nào.
+ */
 export function CalendarPage() {
-  const isAdmin = useAuth().user?.systemRole === 'ADMIN'
+  const { user } = useAuth()
+  const isAdmin = user?.systemRole === 'ADMIN'
+  const canWrite = isApproved(user)
   const [params, setParams] = useSearchParams()
   const tab: Tab = params.get('tab') === 'thang' ? 'thang' : 'sap-toi'
   const [form, setForm] = useState<FormState>({ open: false, eventId: null })
@@ -60,10 +66,12 @@ export function CalendarPage() {
             </button>
           ))}
         </div>
-        <Button onClick={() => openCreate()}>
-          <Plus aria-hidden="true" />
-          {isAdmin ? s.addEvent : s.proposeEvent}
-        </Button>
+        {canWrite && (
+          <Button onClick={() => openCreate()}>
+            <Plus aria-hidden="true" />
+            {isAdmin ? s.addEvent : s.proposeEvent}
+          </Button>
+        )}
       </div>
 
       <div role="tabpanel" id="calendar-panel" aria-labelledby={`calendar-tab-${tab}`}>
@@ -73,20 +81,24 @@ export function CalendarPage() {
           <MonthTab
             isAdmin={isAdmin}
             onEdit={openEdit}
-            onAdd={(day, mode) =>
-              openCreate(prefillDate(mode, mode === 'lunar' ? day.lunar : day.solar))
+            onAdd={
+              canWrite
+                ? (day, mode) => openCreate(prefillDate(mode, mode === 'lunar' ? day.lunar : day.solar))
+                : undefined
             }
           />
         )}
       </div>
 
-      <EventFormDialog
-        open={form.open}
-        eventId={form.eventId}
-        initialDate={form.initialDate}
-        mode={isAdmin ? 'direct' : 'proposal'}
-        onClose={closeForm}
-      />
+      {canWrite && (
+        <EventFormDialog
+          open={form.open}
+          eventId={form.eventId}
+          initialDate={form.initialDate}
+          mode={isAdmin ? 'direct' : 'proposal'}
+          onClose={closeForm}
+        />
+      )}
     </div>
   )
 }

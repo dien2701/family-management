@@ -18,7 +18,7 @@ import vn.giapha.calendar.dto.LunarMonthInfoResponse;
 import vn.giapha.calendar.service.CalendarService;
 import vn.giapha.common.web.ApiRefs;
 
-/** Đổi lịch âm–dương. Không đọc dữ liệu gia phả nên chỉ cần đăng nhập. */
+/** Đổi lịch âm–dương. Không đọc dữ liệu gia phả, xem được không cần đăng nhập (DECISIONS #88). */
 @RestController
 @RequestMapping("/api/calendar")
 @Tag(name = "calendar")
@@ -33,8 +33,6 @@ class CalendarController {
     @Operation(operationId = "convert", summary = "Đổi ngày dương và âm", description = "Đổi ngày dương sang âm (truyền solar) hoặc âm sang dương (truyền lunarYear, lunarMonth, lunarDay, leap)")
     @ApiResponse(responseCode = "200", description = "Thành công")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
-    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
-    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
     @GetMapping("/convert")
     ConvertResponse convert(
             @Parameter(description = "Ngày dương, dạng yyyy-MM-dd", example = "2026-02-17")
@@ -49,8 +47,6 @@ class CalendarController {
     @Operation(operationId = "lunarMonthInfo", summary = "Thông tin một tháng âm", description = "Số ngày (29/30), ngày dương đầu và cuối của một tháng âm, kèm tháng nhuận của năm")
     @ApiResponse(responseCode = "200", description = "Thành công")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
-    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
-    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
     @GetMapping("/lunar-month-info")
     LunarMonthInfoResponse lunarMonthInfo(@RequestParam int year, @RequestParam int month,
             @RequestParam(defaultValue = "false") boolean leap) {

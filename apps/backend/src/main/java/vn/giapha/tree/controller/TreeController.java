@@ -28,7 +28,7 @@ import vn.giapha.tree.dto.TreeResponse;
 import vn.giapha.tree.service.TreeService;
 
 /**
- * Cây gia phả. Mọi tài khoản đã duyệt xem được (cổng duyệt do {@code ApprovalGateFilter} chặn); các thao tác dựng cây
+ * Cây gia phả. GET xem được không cần đăng nhập (DECISIONS #88); các thao tác dựng cây phải đăng nhập, đã duyệt và
  * do {@link TreeService} kiểm lại vai trò Admin từ DB. Mã lỗi nghiệp vụ {@code TREE_*} xem {@code TreeError}.
  */
 @RestController
@@ -43,11 +43,9 @@ class TreeController {
     }
 
     @Operation(operationId = "getTree", summary = "Toàn bộ cây gia phả",
-            description = "Mọi tài khoản đã duyệt xem được. Trả toàn bộ đồ thị (nút và cạnh); đời không nằm trong "
+            description = "Không cần đăng nhập (DECISIONS #88). Trả toàn bộ đồ thị (nút và cạnh); đời không nằm trong "
                     + "response, frontend tự tính theo độ sâu. Cây trống thì cả hai mảng rỗng.")
     @ApiResponse(responseCode = "200", description = "Thành công")
-    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
-    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
     @GetMapping
     TreeResponse get() {
         return service.get();

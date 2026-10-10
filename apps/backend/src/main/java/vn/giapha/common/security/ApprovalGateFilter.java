@@ -19,7 +19,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
  * Chặn mọi API với tài khoản chưa được duyệt (403 {@code ACCOUNT_NOT_APPROVED}, DECISIONS #56).
- * Chỉ {@code /api/auth/**}, {@code GET /api/me} và {@code POST /api/me/consent} được miễn; đường dẫn mới mặc định bị chặn.
+ * Chỉ {@code /api/auth/**}, {@code GET /api/me}, {@code POST /api/me/consent} và các GET trong {@link PublicReadPaths}
+ * được miễn; đường dẫn mới mặc định bị chặn.
  *
  * <p>Request đọc tin claim {@code approval} của access token (tối đa 15 phút cũ). Request ghi kiểm lại từ DB,
  * nên tài khoản vừa bị từ chối hoặc khóa không ghi được nữa dù token còn hạn.
@@ -39,7 +40,10 @@ public class ApprovalGateFilter extends OncePerRequestFilter {
         RequestMatcher auth = paths.matcher("/api/auth/**");
         RequestMatcher me = paths.matcher(HttpMethod.GET, "/api/me");
         RequestMatcher consent = paths.matcher(HttpMethod.POST, "/api/me/consent");
-        this.exempt = request -> auth.matches(request) || me.matches(request) || consent.matches(request);
+        // GET xem công khai (DECISIONS #88): tài khoản chưa duyệt đi qua như khách, cùng danh sách với SecurityConfig
+        RequestMatcher publicRead = PublicReadPaths.matcher();
+        this.exempt = request -> auth.matches(request) || me.matches(request) || consent.matches(request)
+                || publicRead.matches(request);
     }
 
     @Override

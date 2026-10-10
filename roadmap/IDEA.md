@@ -35,7 +35,7 @@
 | **Người thân** | Danh sách trong hồ sơ của một thành viên. Mỗi dòng gồm một thành viên đã có cùng nhãn tự nhập, ví dụ "cha", "vợ", "chú họ". **Một chiều**: dòng trong hồ sơ B không tự hiện ở hồ sơ A. Chủ hồ sơ và Admin quản lý. Tách hẳn khỏi cây |
 | **Cây gia phả** | Cấu trúc do Admin **dựng tay** bằng các nút "+". Chỉ những thành viên được đưa vào mới có trên cây. Hệ thống không tự sinh cây từ danh sách người thân |
 | **Ô trên cây (node)** | Một vị trí trên cây. Ô có thể đang chứa một thành viên, hoặc là **ô trống** sau khi người trong ô bị gỡ ra |
-| **UserAccount (Tài khoản)** | Người đăng ký và đăng nhập vào hệ thống. Phải được Admin duyệt mới xem được gia phả. **Có thể** liên kết với **một** Member ("Tôi là ai", §6.3); mỗi Member cũng chỉ liên kết với tối đa một tài khoản |
+| **UserAccount (Tài khoản)** | Người đăng ký và đăng nhập vào hệ thống. Phải được Admin duyệt mới dùng đầy đủ (xem chỉ-đọc công khai: DECISIONS #88). **Có thể** liên kết với **một** Member ("Tôi là ai", §6.3); mỗi Member cũng chỉ liên kết với tối đa một tài khoản |
 | **Proposal (Đề xuất)** | Thay đổi **sự kiện chung** do User đề xuất (tự soạn hoặc nhờ AI soạn), chờ Admin duyệt |
 
 **Thuật ngữ (DECISIONS #79):** **tài khoản ≠ thành viên.**

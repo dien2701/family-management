@@ -19,8 +19,8 @@ const s = calendarStrings.month
 type MonthTabProps = {
   isAdmin: boolean
   onEdit: (eventId: number) => void
-  /** Thêm sự kiện vào ngày đã chọn; `mode` là lịch đang xem để điền sẵn đúng lịch. */
-  onAdd: (day: CalendarDay, mode: CalendarMode) => void
+  /** Thêm sự kiện vào ngày đã chọn; `mode` là lịch đang xem để điền sẵn đúng lịch. Không truyền thì chỉ xem. */
+  onAdd?: (day: CalendarDay, mode: CalendarMode) => void
 }
 
 /** Tab "Lịch tháng": lưới từ 768px, danh sách theo tuần bên dưới; nút gạt "Xem theo âm" (IDEA §6.5). */
@@ -113,10 +113,13 @@ export function MonthTab({ isAdmin, onEdit, onAdd }: MonthTabProps) {
           setSelected(null)
           onEdit(id)
         }}
-        onAdd={(d) => {
-          setSelected(null)
-          onAdd(d, mode)
-        }}
+        onAdd={
+          onAdd &&
+          ((d) => {
+            setSelected(null)
+            onAdd(d, mode)
+          })
+        }
       />
     </div>
   )

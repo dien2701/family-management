@@ -26,8 +26,8 @@ import vn.giapha.event.dto.CustomEventResponse;
 import vn.giapha.event.service.EventService;
 
 /**
- * Sự kiện chung. Mọi tài khoản đã duyệt xem được (cổng duyệt do {@code ApprovalGateFilter} chặn); thêm, sửa, xóa
- * chỉ Admin, do {@link EventService} kiểm lại từ DB.
+ * Sự kiện chung. GET xem được không cần đăng nhập (DECISIONS #88); thêm, sửa, xóa phải đăng nhập, đã duyệt và chỉ
+ * Admin, do {@link EventService} kiểm lại từ DB.
  */
 @RestController
 @RequestMapping("/api/events")
@@ -41,11 +41,9 @@ class EventController {
     }
 
     @Operation(operationId = "listEvents", summary = "Danh sách sự kiện chung",
-            description = "Mọi tài khoản đã duyệt xem được. Xếp theo id tăng dần. Chỉ gồm sự kiện chung; giỗ và "
+            description = "Không cần đăng nhập (DECISIONS #88). Xếp theo id tăng dần. Chỉ gồm sự kiện chung; giỗ và "
                     + "sinh nhật do /api/calendar/* tự sinh từ hồ sơ thành viên.")
     @ApiResponse(responseCode = "200", description = "Thành công")
-    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
-    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
     @GetMapping
     List<CustomEventResponse> list() {
         return service.list();
@@ -68,8 +66,6 @@ class EventController {
     @Operation(operationId = "getEvent", summary = "Chi tiết một sự kiện chung",
             description = "Lỗi: 404 EVENT_NOT_FOUND.")
     @ApiResponse(responseCode = "200", description = "Thành công")
-    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
-    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
     @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
     @GetMapping("/{id}")
     CustomEventResponse get(@PathVariable Long id) {

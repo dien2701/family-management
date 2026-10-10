@@ -31,8 +31,8 @@ import vn.giapha.member.dto.MemberPage;
 import vn.giapha.member.service.MemberService;
 
 /**
- * Thành viên gia phả. Mọi tài khoản đã duyệt xem được (cổng duyệt do {@code ApprovalGateFilter} chặn); thêm, sửa, xóa
- * do {@link MemberService} kiểm lại vai trò Admin từ DB.
+ * Thành viên gia phả. Hai GET xem được không cần đăng nhập (DECISIONS #88); thêm, sửa, xóa phải đăng nhập, đã duyệt
+ * và do {@link MemberService} kiểm lại vai trò Admin từ DB.
  */
 @RestController
 @RequestMapping("/api/members")
@@ -46,11 +46,9 @@ class MemberController {
     }
 
     @Operation(operationId = "listMembers", summary = "Danh sách thành viên",
-            description = "Mọi tài khoản đã duyệt xem được. Tìm theo tên không cần gõ dấu. Các bộ lọc kết hợp bằng AND.")
+            description = "Không cần đăng nhập (DECISIONS #88). Tìm theo tên không cần gõ dấu. Các bộ lọc kết hợp bằng AND.")
     @ApiResponse(responseCode = "200", description = "Thành công")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
-    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
-    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
     @GetMapping
     MemberPage list(
             @Parameter(description = "Tìm theo họ tên, không phân biệt hoa thường và dấu")
@@ -91,15 +89,13 @@ class MemberController {
     }
 
     @Operation(operationId = "getMember", summary = "Chi tiết thành viên",
-            description = "Mọi tài khoản đã duyệt xem được. phone và email chỉ có khi người gọi là Admin hoặc chính chủ hồ sơ.")
+            description = "Không cần đăng nhập (DECISIONS #88). phone và email chỉ có khi người gọi là Admin hoặc chính chủ hồ sơ.")
     @ApiResponse(responseCode = "200", description = "Thành công")
-    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
-    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
     @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
     @GetMapping("/{id}")
-    MemberDetail get(@Parameter(hidden = true) CurrentUser current,
-            @PathVariable Long id) {
-        return service.get(current.userId(), id);
+    MemberDetail get(@PathVariable Long id) {
+        // Khách (chưa đăng nhập) là viewer null: không phải Admin, không phải chính chủ nên không thấy SĐT/email
+        return service.get(CurrentUser.idOrNull(), id);
     }
 
     @Operation(operationId = "updateMember", summary = "Sửa thành viên",

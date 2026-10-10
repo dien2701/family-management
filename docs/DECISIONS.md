@@ -1,7 +1,7 @@
 # QUYẾT ĐỊNH KỸ THUẬT (chốt 2026-09-25, đổi hướng v2 cùng ngày)
 
 > Bổ sung cho `roadmap/IDEA.md` (bản chốt v2), không thay thế IDEA.md. Nếu có chỗ khác với IDEA.md thì **file này thắng**.
-> **Mục J (#54–#74) là đổi hướng v2** và thắng mọi mục trước nó. **Mục K (#75–#78) là điều chỉnh "hồ sơ tự quản"**, thắng mục J khi mâu thuẫn. **Mục L (#79–#83) là tài khoản ≠ thành viên, liên kết và chia việc Claude Code / Antigravity**, thắng mục K khi mâu thuẫn. **Mục M (#84) là tiết kiệm token: bỏ test mới và review**, thắng mọi mục trước. **Mục O (#87) là hạ tầng thật (VPS x86, `giapha.click`)**, thay #39, #40, #43. Quyết định cũ không còn đúng được đánh dấu **❌ Hủy** hoặc **🔁 Thay bằng #N**, giữ lại để tra lịch sử.
+> **Mục J (#54–#74) là đổi hướng v2** và thắng mọi mục trước nó. **Mục K (#75–#78) là điều chỉnh "hồ sơ tự quản"**, thắng mục J khi mâu thuẫn. **Mục L (#79–#83) là tài khoản ≠ thành viên, liên kết và chia việc Claude Code / Antigravity**, thắng mục K khi mâu thuẫn. **Mục M (#84) là tiết kiệm token: bỏ test mới và review**, thắng mọi mục trước. **Mục O (#87, #88) là hạ tầng thật (VPS x86, `giapha.click`) và xem công khai**; #87 thay #39, #40, #43, #88 thay phần "chưa duyệt không đọc được" của #56. Quyết định cũ không còn đúng được đánh dấu **❌ Hủy** hoặc **🔁 Thay bằng #N**, giữ lại để tra lịch sử.
 > Cách chốt: người dùng chọn **"lấy toàn bộ khuyến nghị (KN)"** cho 50 câu hỏi làm rõ.
 > Các câu mang nhãn **⏳ Chưa chốt** đang dùng giá trị tạm, đổi được mà không ảnh hưởng kiến trúc.
 
@@ -370,6 +370,16 @@
     - GitHub Actions build image **`linux/amd64`**, đẩy GHCR, SSH vào server `docker compose pull && up -d` (giữ cách #40, chỉ đổi kiến trúc).
     - Sao lưu: `mysqldump` gzip bằng cron hằng ngày vào `/opt/giapha/backup` trên VPS, giữ 30 ngày; người dùng định kỳ tải bản sao về máy. Bỏ Oracle Object Storage.
     - File deploy prod nằm ở `infra/`; `docker-compose.yml` ở gốc giữ cho chạy local.
+
+88. **Xem công khai không cần đăng nhập, chặn công cụ tìm kiếm (thay phần đọc của #56; chốt 2026-10-10, hỏi đáp với người dùng)**
+    → **Chốt:**
+    - **Khách** (chưa đăng nhập) và **tài khoản chưa duyệt** (WAITING lẫn REJECTED) xem **chỉ-đọc**: Trang chủ (`GET /api/dashboard`), Thành viên (danh sách, chi tiết, người thân), Cây gia phả, Sự kiện (lịch, sự kiện chung) và trang Đổi lịch âm – dương. Thấy **giống User đã duyệt**: SĐT/email thành viên vẫn chỉ Admin và chính chủ.
+    - Backend: danh sách GET công khai nằm **một nơi** (`PublicReadPaths`), dùng chung cho `SecurityConfig` (permitAll) và `ApprovalGateFilter` (bỏ cổng duyệt). Liệt kê tường minh; đường dẫn mới mặc định vẫn bắt đăng nhập và duyệt. Service nhận người gọi `null` thì coi là không phải Admin, không phải chính chủ; dashboard của khách không có số chờ duyệt.
+    - Vẫn bắt đăng nhập **và** đã duyệt: Trợ lý AI, Xuất dữ liệu, tệp đính kèm, Thông báo/Web Push, Đề xuất, "Tôi là ai", Hồ sơ cá nhân, Quản trị và **mọi thao tác ghi**.
+    - Ảnh đại diện là `upload` công khai của Cloudinary nên khách xem được; tệp đính kèm (`authenticated`) vẫn cần link ký.
+    - **Chặn lập chỉ mục:** `robots.txt` (`Disallow: /`) và header `X-Robots-Tag: noindex, nofollow`. Ai có link mới xem được.
+    - **Tìm kiếm ở trang Sự kiện** (chỉ FE, không đổi API): tìm theo tên không dấu (có từ khóa thì lấy `days=365`) và lọc giỗ theo tháng/ngày âm, giữ trên URL. Hạn chế: lọc ngày âm chỉ nhìn trong 365 ngày tới nên năm âm nhuận (384 ngày) có thể thiếu một số giỗ vừa qua ngày.
+    - Chọn tạm: tài khoản REJECTED cũng xem được trang công khai (như khách); với khách, mục cuối của thanh điều hướng là "Đăng nhập" thay cho "Thêm".
 
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.

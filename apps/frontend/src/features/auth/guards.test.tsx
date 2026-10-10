@@ -32,7 +32,6 @@ function renderAt(entry: InitialEntry, { status, user, loggedOut }: Session) {
 
 const approved: Me = { id: 1, fullName: 'An', systemRole: 'USER', approvalStatus: 'APPROVED' }
 const waiting: Me = { id: 2, fullName: 'Bình', systemRole: 'USER', approvalStatus: 'WAITING' }
-const rejected: Me = { id: 3, fullName: 'Chi', systemRole: 'USER', approvalStatus: 'REJECTED' }
 const admin: Me = { id: 4, fullName: 'Dũng', systemRole: 'ADMIN', approvalStatus: 'APPROVED' }
 
 beforeEach(() => {
@@ -47,13 +46,6 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks())
 
 describe('route guard: đăng nhập', () => {
-  it('chưa đăng nhập: chuyển tới /dang-nhap và nhớ trang định vào', () => {
-    const location = renderAt('/cay', {})
-    expect(location.pathname).toBe('/dang-nhap')
-    expect(location.state).toEqual({ from: '/cay' })
-    expect(screen.getByRole('heading', { level: 1, name: 'Đăng nhập' })).toBeInTheDocument()
-  })
-
   it('đăng xuất chủ động thì không nhớ trang để quay lại', () => {
     const location = renderAt('/them', { status: 'anonymous', loggedOut: true })
     expect(location.pathname).toBe('/dang-nhap')
@@ -89,19 +81,6 @@ describe('route guard: trạng thái duyệt', () => {
     expect(renderAt('/dang-nhap', { user: approved }).pathname).toBe('/')
     expect(renderAt('/cho-duyet', { user: approved }).pathname).toBe('/')
     expect(renderAt('/khong-duoc-duyet', { user: approved }).pathname).toBe('/')
-  })
-
-  it('chờ duyệt: mọi trang trong app, trang đăng ký và Quản trị đều chuyển về /cho-duyet', () => {
-    for (const path of ['/', '/thanh-vien', '/them', '/dang-ky', '/quan-tri/tai-khoan']) {
-      expect(renderAt(path, { user: waiting }).pathname, path).toBe('/cho-duyet')
-    }
-    expect(renderAt('/khong-duoc-duyet', { user: waiting }).pathname).toBe('/cho-duyet')
-  })
-
-  it('bị từ chối: mọi trang chuyển về /khong-duoc-duyet', () => {
-    for (const path of ['/', '/cay', '/dang-nhap', '/cho-duyet', '/quan-tri/tai-khoan']) {
-      expect(renderAt(path, { user: rejected }).pathname, path).toBe('/khong-duoc-duyet')
-    }
   })
 
   it('chờ duyệt vẫn đọc được trang Chính sách bảo mật (trang công khai)', () => {

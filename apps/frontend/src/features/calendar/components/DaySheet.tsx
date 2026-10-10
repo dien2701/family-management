@@ -13,7 +13,8 @@ type DaySheetProps = {
   day: CalendarDay | null
   isAdmin: boolean
   onEdit: (eventId: number) => void
-  onAdd: (day: CalendarDay) => void
+  /** Không truyền thì không có nút thêm (khách và tài khoản chưa duyệt chỉ xem). */
+  onAdd?: (day: CalendarDay) => void
   onClose: () => void
 }
 
@@ -42,10 +43,12 @@ export function DaySheet({ day, isAdmin, onEdit, onAdd, onClose }: DaySheetProps
               ))}
             </ul>
           )}
-          <Button variant="secondary" onClick={() => onAdd(day)}>
-            <Plus aria-hidden="true" />
-            {isAdmin ? s.addHere : 'Đề xuất sự kiện vào ngày này'}
-          </Button>
+          {onAdd && (
+            <Button variant="secondary" onClick={() => onAdd(day)}>
+              <Plus aria-hidden="true" />
+              {isAdmin ? s.addHere : 'Đề xuất sự kiện vào ngày này'}
+            </Button>
+          )}
         </>
       )}
     </ModalDialog>

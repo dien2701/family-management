@@ -107,11 +107,16 @@ public class MemberService {
         return new MemberPage(items, page, size, matched.size(), (int) Math.ceil(matched.size() / (double) size));
     }
 
-    /** SĐT và email chỉ có với Admin và chính chủ hồ sơ (DECISIONS #66). */
+    /**
+     * SĐT và email chỉ có với Admin và chính chủ hồ sơ (DECISIONS #66). {@code viewerId} null (khách) hoặc tài khoản
+     * chưa duyệt/bị khóa thì coi như người ngoài (DECISIONS #88).
+     */
     @Transactional(readOnly = true)
     public MemberDetail get(Long viewerId, Long id) {
         Member member = find(id);
-        boolean contact = auth.find(viewerId).map(a -> a.admin() || id.equals(a.memberId())).orElse(false);
+        boolean contact = viewerId != null && auth.find(viewerId)
+                .filter(AuthFacade.Account::usable)
+                .map(a -> a.admin() || id.equals(a.memberId())).orElse(false);
         return detailOf(member, contact);
     }
 

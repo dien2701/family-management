@@ -45,6 +45,15 @@ public record CurrentUser(Long userId, String systemRole, String approval, Long 
         throw new AuthenticationCredentialsNotFoundException("Chưa đăng nhập");
     }
 
+    /**
+     * Id người gọi, hoặc {@code null} khi là khách. Dùng ở các GET công khai (DECISIONS #88); service nhận
+     * {@code null} thì coi như không phải Admin, không phải chính chủ.
+     */
+    public static Long idOrNull() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getPrincipal() instanceof Jwt jwt ? from(jwt).userId() : null;
+    }
+
     private static Long asLong(Jwt jwt, String claim) {
         Object v = jwt.getClaim(claim);
         return v instanceof Number n ? Long.valueOf(n.longValue()) : null;

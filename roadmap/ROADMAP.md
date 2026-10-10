@@ -75,9 +75,10 @@
 | 39 | Nối FE với BE thật, gỡ lớp giả lập | Claude Code | Sonnet · medium | ✅ 2026-10-09 |
 | ~~40~~ | ~~E2E Playwright~~ (bỏ theo #84) | | | ❌ |
 | 41 | Deploy production | Claude Code | Sonnet · medium | ✅ 2026-10-09 |
+| **GĐ D** | **Bổ sung sau phát hành** | | | |
+| 42 | Xem công khai không cần đăng nhập, tìm kiếm sự kiện, deploy lại | Claude Code | Sonnet · high | ✅ 2026-10-10 |
 
-## ▶️ Đợt đang chờ: _(hết đợt; Đợt 41 đã xong)_
-Công cụ **Claude Code** · Model **Sonnet** · Effort **medium**.
+## ▶️ Đợt đang chờ: không còn (Đợt 42 xong 2026-10-10, chỉ còn deploy bản mới theo `infra/README.md` mục 3)
 
 ---
 
@@ -956,3 +957,62 @@ Sửa bộ file cũ: `DEPLOYMENT.md` xóa mật khẩu SMTP lộ và trỏ sang 
 2. Đăng ký bằng `ROOT_ADMIN_EMAIL`: nhận OTP qua email, thành Admin ngay. Danh sách có 28 thành viên. Để quá 15 phút vẫn còn đăng nhập (cookie refresh hoạt động).
 3. Trợ lý AI trả lời chữ chạy dần (SSE không bị buffer); tải ảnh đại diện lên Cloudinary được.
 4. Chạy `backup.sh` bằng tay: có file `.sql.gz` trong `/opt/giapha/backup`.
+
+---
+
+# GIAI ĐOẠN D — BỔ SUNG SAU PHÁT HÀNH
+
+### Đợt 42 — Xem công khai không cần đăng nhập, tìm kiếm sự kiện, deploy lại ✅ 2026-10-10
+IDEA §2 (vai trò, duyệt tài khoản) · DECISIONS #56, #87 · `.claude/rules/security.md` · FE đọc `docs/DESIGN.md`
+
+> **Chốt 2026-10-10 (theo yêu cầu người dùng, ghi thành DECISIONS #88, thắng #56 ở phần đọc):**
+> - **Khách** (chưa đăng nhập) và **tài khoản chưa duyệt** được **xem chỉ-đọc**: Trang chủ, Thành viên (danh sách, chi tiết, người thân), Cây gia phả, Sự kiện (lịch giỗ/sinh nhật/sự kiện chung) và **Đổi lịch âm – dương** (`them/doi-lich`, thêm 2026-10-10 theo yêu cầu). Thấy **giống User đã duyệt**: SĐT/email thành viên vẫn ẩn (chỉ Admin/chính chủ).
+> - Vẫn bắt đăng nhập **và** đã duyệt: Trợ lý AI, Xuất dữ liệu, tệp đính kèm (tài liệu chung, đính kèm hồ sơ), Thông báo/Web Push, Đề xuất, "Tôi là ai", Hồ sơ cá nhân, Quản trị và **mọi thao tác ghi**.
+> - **Chặn công cụ tìm kiếm** lập chỉ mục (robots.txt + `X-Robots-Tag: noindex`): ai có link mới xem được.
+> - **Tìm kiếm ở trang Sự kiện** (chỉ FE, không đổi API): ô tìm theo tên trên tab "Sắp tới", lọc cả 3 loại; có từ khóa thì tự lấy `days=365`. Lọc theo **ngày/tháng âm** của giỗ (bỏ trống ngày = cả tháng).
+
+**Backend**
+- [x] `config/SecurityConfig.java`: `permitAll` cho **GET** `/api/members`, `/api/members/{id}`, `/api/members/{id}/relatives`, `/api/tree/**`, `/api/events/**`, `/api/calendar/**` (gồm `convert`, `lunar-month-info`), `/api/dashboard`. Không mở `/api/members/{id}/attachments`, `/api/attachments/**`, `/api/reports/**`, `/api/ai/**`, `/api/files/**`. Dùng danh sách đường dẫn tường minh, đường dẫn mới mặc định vẫn bắt đăng nhập. ✅ 2026-10-10
+- [x] `common/security/ApprovalGateFilter.java`: tài khoản chưa duyệt gọi đúng các GET công khai trên thì cho qua (xem như khách); còn lại giữ 403 `ACCOUNT_NOT_APPROVED`. Dùng chung một hằng danh sách đường dẫn công khai với `SecurityConfig` (không chép hai nơi). ✅ 2026-10-10
+- [x] Rà các service đọc `CurrentUser` ở các endpoint trên (member, relatives, tree, calendar, dashboard): không đăng nhập (principal `null`) hoặc chưa duyệt thì coi như **không phải Admin, không phải chính chủ** → ẩn SĐT/email, không lỗi NPE. Dashboard: phần riêng của tài khoản (số thông báo, đề xuất chờ, "Tôi là ai"…) trả rỗng/`null` cho khách. ✅ 2026-10-10
+- [x] Ảnh đại diện: nếu URL Cloudinary cần chữ ký/đăng nhập thì khách vẫn xem được (cùng cách User đang xem). ✅ 2026-10-10
+- [x] `openapi.yaml`: các endpoint công khai ghi rõ "Không cần đăng nhập" (bỏ `401`, đặt `security: []` hoặc thêm `{}`), mô tả dashboard cho khách; chạy `npm run gen:api`. ✅ 2026-10-10
+
+**Frontend**
+- [x] `pages/routes.tsx`: đưa `/` (Trang chủ), `cay`, `thanh-vien`, `thanh-vien/:id`, `lich` ra ngoài `RequireAuth`/`ApprovalGuard`, vẫn trong layout chính. Các trang khác giữ nguyên guard. Tài khoản chưa duyệt không còn bị ép về `cho-duyet` khi vào trang công khai (vào trang cần duyệt thì vẫn về `cho-duyet`). ✅ 2026-10-10
+- [x] Layout khi là khách: header có nút **"Đăng nhập"** thay cho chuông/menu tài khoản; ẩn mục điều hướng tới trang cần đăng nhập (Trợ lý, Thêm > Xuất dữ liệu/Tài liệu chung/Tôi là ai…) hoặc bấm vào thì chuyển `dang-nhap?next=…`. Tài khoản chưa duyệt: banner nhỏ "Tài khoản đang chờ Admin duyệt". ✅ 2026-10-10
+- [x] Ẩn mọi nút sửa/thêm/xóa, "Đề xuất sự kiện", đính kèm khi không có quyền (đã có `isAdmin`/chính chủ thì khách tự rơi vào nhánh ẩn — rà lại). ✅ 2026-10-10
+- [x] `services/api.ts`/`client.ts` + context auth: lần nạp đầu gọi refresh thất bại thì ở trạng thái khách, **không** chuyển về trang đăng nhập; 401 ở trang công khai không làm văng trang. ✅ 2026-10-10
+- [x] Trang Sự kiện, tab "Sắp tới" (`features/calendar/components/UpcomingTab.tsx`): ✅ 2026-10-10
+  - Ô **tìm theo tên**: không phân biệt hoa/thường và dấu (`normalize('NFD')` bỏ dấu, `đ`→`d`), lọc theo `title`. Có từ khóa thì gọi `days=365` (bỏ qua bộ chọn khoảng ngày); xóa từ khóa thì về khoảng đang chọn.
+  - Bộ lọc **ngày mất (âm lịch)**: chọn tháng âm (1–12) và ngày âm (1–30, tùy chọn); khi đặt thì chỉ giữ giỗ (`type = MEMORIAL`) có `lunar.month`/`lunar.day` khớp, trong 365 ngày tới. Kết hợp được với ô tên. Có nút "Xóa lọc".
+  - Không có kết quả: "Không tìm thấy sự kiện phù hợp". Giữ từ khóa trên URL (`?q=`, `?thangAm=`, `?ngayAm=`) để chia sẻ link được.
+  - Chuỗi UI để ở `features/calendar/strings.ts`.
+
+**Không cho lập chỉ mục + deploy**
+- [x] `apps/frontend/public/robots.txt`: `User-agent: *` / `Disallow: /`. `infra/nginx/security-headers.conf` (và `apps/frontend/nginx.conf` bản local): `add_header X-Robots-Tag "noindex, nofollow" always;`. ✅ 2026-10-10
+- [x] Tài liệu: thêm DECISIONS **#88** (xem công khai, chặn index); sửa `.claude/rules/security.md` mục "Duyệt tài khoản", `CLAUDE.md` + `AGENTS.md` dòng "phải được Admin duyệt mới xem được dữ liệu", `IDEA.md` §2 thêm ghi chú trỏ #88. Chính sách bảo mật (`PolicyPage`) thêm 1 câu: thông tin gia phả (trừ SĐT/email) hiển thị công khai cho người có đường dẫn. ✅ 2026-10-10
+- [x] `infra/README.md`: mục "Cập nhật phiên bản" — merge PR → `git tag v1.1.0 && git push origin v1.1.0` (hoặc chạy `deploy.yml` bằng tay) → kiểm tra sau deploy (mở tab ẩn danh xem được thành viên/cây/sự kiện; `/api/ai/quota`, `/api/reports/members.xlsx` trả 401; `curl -I https://giapha.click` có `X-Robots-Tag`). ✅ 2026-10-10
+
+**✅ Đã làm:**
+- **BE:** `common/security/PublicReadPaths.java` (mới) giữ danh sách 12 GET công khai tường minh (members, members/*, members/*/relatives, tree, events, events/*, calendar/convert|lunar-month-info|upcoming|month|recent, dashboard), dùng chung cho `SecurityConfig` (permitAll) và `ApprovalGateFilter` (bỏ cổng duyệt). `CurrentUser.idOrNull()`; `MemberService.get` và `DashboardService.get` nhận người gọi `null`/chưa duyệt/bị khóa thì không có SĐT, email, không có số chờ duyệt. Sửa chú thích springdoc của các controller liên quan. Ảnh đại diện là `upload` công khai của Cloudinary nên không cần đổi.
+- **Hợp đồng:** `openapi.yaml` đánh dấu 12 operation `security: [{}, {bearerAuth: []}]`, bỏ 401/403, sửa mô tả; đã `npm run gen:api`.
+- **FE:** `pages/routes.tsx` đưa `/`, `cay`, `thanh-vien`, `thanh-vien/:id`, `lich`, `them/doi-lich` vào khung chính ngoài `RequireAuth`; `SessionReady` (guards.tsx) chờ khôi phục phiên trước khi vẽ. Layout theo người xem: `navItemsFor` (mục cuối "Đăng nhập" hoặc "Tài khoản"), `Header` (nút Đăng nhập nhớ trang, chuông và menu chỉ khi đã duyệt), `AccessBanner` (chờ duyệt / không được duyệt), `PushPrompt` chỉ khi đã duyệt. `useMe` tắt khi là khách. Ẩn đính kèm ở hồ sơ, nút thêm/đề xuất sự kiện và nút thêm theo ngày khi chưa duyệt.
+- **Tìm kiếm sự kiện:** `UpcomingTab` có ô tìm tên không dấu (`upcomingFilter.ts`, `?q=`), lọc tháng/ngày âm (`?thangAm=`, `?ngayAm=`), nút Xóa lọc, thông báo "Không tìm thấy sự kiện phù hợp"; chuỗi UI ở `calendar/strings.ts`.
+- **Không lập chỉ mục:** `public/robots.txt`, `X-Robots-Tag` ở `infra/nginx/security-headers.conf` và `apps/frontend/nginx.conf`.
+- **Tài liệu:** DECISIONS #88; `.claude/rules/{security,backend,frontend}.md`, `CLAUDE.md`, `AGENTS.md`, `IDEA.md` §2, `PolicyPage` (`policyContent.ts`), `infra/README.md` mục 3.
+- **Test cũ đã xóa (theo #84, vì đổi hành vi):** BE `AccountApprovalApiTest` (5: waitingAccountCanOnlyUseAuthMeAndConsent, anonymousStillGets401NotForbidden, rejectedAccountIsBlockedAndSeesRejectedStatus, approvedAccountUsesApiAfterRefreshingItsToken, tokenWithoutApprovalClaimIsTreatedAsNotApproved), `AdminAccountApiTest` (2: approveLetsTheAccountIntoTheAppAfterRefresh, rejectRevokesSessionsAndAccountCanBeApprovedAgain), `CalendarApiTest` (1: requiresAuthentication); FE `guards.test.tsx` (3). Luồng duyệt/từ chối tài khoản hiện không còn test tự động, các test này dùng `/api/calendar/convert` làm endpoint thử nên cần viết lại với một GET không công khai.
+- Chốt khi hỏi đáp 2026-10-10: tài khoản bị từ chối cũng xem được trang công khai (như khách); `them/doi-lich` mở công khai; khách thấy "Đăng nhập" thay cho "Thêm".
+
+**Việc nên làm thêm (không làm trong đợt):** rate limit theo IP cho các GET công khai nếu thấy bị cào dữ liệu; tìm kiếm phía BE nếu số sự kiện vượt vài nghìn; lọc ngày âm chỉ nhìn 365 ngày tới nên năm âm nhuận có thể thiếu giỗ vừa qua ngày (cần BE nhận `days` lớn hơn nếu muốn đủ); viết lại test luồng duyệt tài khoản với endpoint không công khai; thêm lối vào "Đổi lịch âm – dương" cho khách (hiện chỉ vào bằng link).
+
+**🔧 Setup thủ công cần làm:** Không có (không đổi `.env`, không có migration).
+
+**🧪 Test thủ công (từng bước):**
+1. Tab ẩn danh mở `https://giapha.click` (sau deploy) hoặc `http://localhost:5173`: thấy Trang chủ, Thành viên, chi tiết thành viên (không có SĐT/email), Cây, Sự kiện; không có nút sửa/thêm; header có nút "Đăng nhập".
+2. Khách vào `/tro-ly`, `/them/xuat-du-lieu`, `/thong-bao`: chuyển sang đăng nhập, đăng nhập xong quay lại đúng trang.
+3. `curl` không token: `GET /api/members` 200, `GET /api/ai/quota` 401, `GET /api/reports/members.xlsx` 401, `POST /api/events` 401.
+4. Đăng ký tài khoản mới (chưa duyệt): xem được 4 trang công khai kèm banner chờ duyệt; vào Trợ lý thì về trang chờ duyệt.
+5. Đăng nhập Admin: mọi thứ như cũ, vẫn thấy SĐT/email, sửa được.
+6. Sự kiện > Sắp tới: gõ "suu" ra "Giỗ Cụ Nguyễn Văn Sửu"; chọn tháng âm + ngày âm của một người đã mất → chỉ ra giỗ người đó; xóa lọc về như cũ. Xem ở 375px và 1280px.
+7. `curl -I https://giapha.click/` có `X-Robots-Tag: noindex, nofollow`; `/robots.txt` trả `Disallow: /`.

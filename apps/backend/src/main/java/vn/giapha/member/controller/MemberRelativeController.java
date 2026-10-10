@@ -26,8 +26,8 @@ import vn.giapha.member.dto.RelativeResponse;
 import vn.giapha.member.service.RelativeService;
 
 /**
- * Danh sách người thân trong hồ sơ. Mọi tài khoản đã duyệt xem được (cổng duyệt do {@code ApprovalGateFilter} chặn);
- * ghi do {@link RelativeService} kiểm lại chủ hồ sơ hoặc Admin từ DB.
+ * Danh sách người thân trong hồ sơ. GET xem được không cần đăng nhập (DECISIONS #88); ghi phải đăng nhập, đã duyệt và
+ * do {@link RelativeService} kiểm lại chủ hồ sơ hoặc Admin từ DB.
  */
 @RestController
 @RequestMapping("/api/members/{id}/relatives")
@@ -41,11 +41,9 @@ class MemberRelativeController {
     }
 
     @Operation(operationId = "listRelatives", summary = "Danh sách người thân của một hồ sơ",
-            description = "Mọi tài khoản đã duyệt xem được. Một chiều: chỉ có các dòng do chủ hồ sơ hoặc Admin khai "
+            description = "Không cần đăng nhập (DECISIONS #88). Một chiều: chỉ có các dòng do chủ hồ sơ hoặc Admin khai "
                     + "trong hồ sơ này. Sắp theo thời điểm thêm.")
     @ApiResponse(responseCode = "200", description = "Thành công")
-    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
-    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
     @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
     @GetMapping
     List<RelativeResponse> list(@PathVariable Long id) {

@@ -14,6 +14,7 @@
 ## Thuật ngữ bắt buộc
 - **Tài khoản** (user): người đăng nhập, vai trò Admin hoặc User. **Thành viên** (member): người trong gia phả, là dữ liệu nội dung.
 - Hai khái niệm khác nhau, liên kết 1–1 và không bắt buộc ("Tôi là ai"). Giao diện không dùng lẫn hai từ này.
+- Tài khoản mới phải được Admin duyệt mới dùng đầy đủ. Riêng Trang chủ, Thành viên, Cây, Sự kiện, Đổi lịch thì khách và tài khoản chưa duyệt xem được chỉ-đọc (DECISIONS #88).
 
 ## Điều cấm (Claude Code chặn bằng hook, ở đây phải tự giữ)
 - Không đọc, tạo hay sửa file `.env*` (trừ `.env.example`). Không đưa bí mật hay token vào code hay localStorage.

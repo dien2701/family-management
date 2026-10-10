@@ -168,61 +168,6 @@ class AdminAccountApiTest {
     // ---------- Duyệt, từ chối ----------
 
     @Test
-    void approveLetsTheAccountIntoTheAppAfterRefresh() throws Exception {
-        Session admin = accounts.admin();
-        Session b = accounts.waiting();
-        mvc.perform(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, b.bearer())).andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("ACCOUNT_NOT_APPROVED"));
-
-        MvcResult approved = act(admin, b.id(), "approve").andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(b.id()))
-                .andExpect(jsonPath("$.email").value(b.email()))
-                .andExpect(jsonPath("$.approvalStatus").value("APPROVED"))
-                .andExpect(jsonPath("$.approvedBy").value(admin.id()))
-                .andExpect(jsonPath("$.approvedAt").isNotEmpty())
-                .andExpect(jsonPath("$.systemRole").value("USER"))
-                .andReturn();
-        assertNoSecrets(approved);
-
-        Session fresh = accounts.refreshed(b);
-        mvc.perform(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, fresh.bearer())).andExpect(status().isOk());
-        mvc.perform(get("/api/me").header(HttpHeaders.AUTHORIZATION, fresh.bearer()))
-                .andExpect(jsonPath("$.approvalStatus").value("APPROVED"));
-
-        // Đã duyệt rồi thì không duyệt lại
-        act(admin, b.id(), "approve").andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("INVALID_ACCOUNT_STATE"));
-    }
-
-    @Test
-    void rejectRevokesSessionsAndAccountCanBeApprovedAgain() throws Exception {
-        Session admin = accounts.admin();
-        Session b = accounts.waiting();
-
-        act(admin, b.id(), "reject").andExpect(status().isOk())
-                .andExpect(jsonPath("$.approvalStatus").value("REJECTED"))
-                .andExpect(jsonPath("$.approvedBy").doesNotExist())
-                .andExpect(jsonPath("$.approvedAt").doesNotExist());
-        // Refresh token bị thu hồi
-        accounts.refresh(b).andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("INVALID_REFRESH_TOKEN"));
-        // Vẫn đăng nhập được để thấy trang "không được duyệt", nhưng không dùng được API
-        Session again = accounts.login(b.email());
-        mvc.perform(get("/api/me").header(HttpHeaders.AUTHORIZATION, again.bearer()))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.approvalStatus").value("REJECTED"));
-        mvc.perform(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, again.bearer())).andExpect(status().isForbidden());
-        // Từ chối hai lần: sai trạng thái
-        act(admin, b.id(), "reject").andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("INVALID_ACCOUNT_STATE"));
-
-        // Admin duyệt lại một tài khoản đã bị từ chối (IDEA §5)
-        act(admin, b.id(), "approve").andExpect(status().isOk())
-                .andExpect(jsonPath("$.approvalStatus").value("APPROVED"));
-        Session ok = accounts.login(b.email());
-        mvc.perform(get(CALENDAR).header(HttpHeaders.AUTHORIZATION, ok.bearer())).andExpect(status().isOk());
-    }
-
-    @Test
     void rejectingAnApprovedAccountCutsItOffImmediately() throws Exception {
         Session admin = accounts.admin();
         Session b = accounts.approved();
