@@ -62,8 +62,18 @@ export function parseIso(iso: string): SolarDate {
 export const formatSolar = ({ year, month, day }: SolarDate): string =>
   `${pad(day, 2)}/${pad(month, 2)}/${pad(year, 4)}`
 
-// en-CA cho ra yyyy-MM-dd; ép múi giờ +7 để "hôm nay" đúng với người dùng dù máy đặt múi giờ nào
-const VN_TODAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' })
+// Ép múi giờ +7 để "hôm nay" đúng với người dùng dù máy đặt múi giờ nào.
+// Dùng formatToParts thay vì parse chuỗi: Safari iOS trả en-CA dạng MM/dd/yyyy chứ không phải yyyy-MM-dd.
+const VN_TODAY = new Intl.DateTimeFormat('en-US', {
+  timeZone: 'Asia/Ho_Chi_Minh',
+  year: 'numeric',
+  month: 'numeric',
+  day: 'numeric',
+})
 
 /** Ngày hôm nay theo giờ Việt Nam. */
-export const todayInVietnam = (): SolarDate => parseIso(VN_TODAY.format(new Date()))
+export function todayInVietnam(): SolarDate {
+  const parts = VN_TODAY.formatToParts(new Date())
+  const part = (type: string) => Number(parts.find((p) => p.type === type)?.value)
+  return { year: part('year'), month: part('month'), day: part('day') }
+}
