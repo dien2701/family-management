@@ -1,5 +1,5 @@
 import { TreeDeciduous } from 'lucide-react'
-import { NavLink } from 'react-router'
+import { Link, NavLink } from 'react-router'
 import { isAdmin, isApproved } from '@/features/auth/routing'
 import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/utils/cn'
@@ -17,14 +17,19 @@ export function Sidebar() {
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-[72px] shrink-0 flex-col border-r border-border bg-surface md:flex lg:w-60">
-      <div className="flex h-16 items-center justify-center gap-3 lg:justify-start lg:px-5">
+      <Link
+        to="/"
+        aria-label="Tộc Phả – về Tổng quan"
+        title="Về Tổng quan"
+        className="flex h-16 cursor-pointer items-center justify-center gap-3 rounded-button transition-opacity duration-200 ease-out hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:justify-start lg:px-5"
+      >
         <span className="flex size-10 items-center justify-center rounded-button bg-primary text-primary-fg">
           <TreeDeciduous className="size-6" aria-hidden="true" />
         </span>
         <span className="hidden text-lg leading-tight font-bold text-primary lg:inline">
           Tộc Phả
         </span>
-      </div>
+      </Link>
 
       <nav aria-label="Điều hướng chính" className="px-3 py-2">
         <ul className="flex flex-col gap-1">
