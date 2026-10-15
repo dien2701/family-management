@@ -43,7 +43,7 @@ export function ModalDialog({ open, title, busy, onClose, children }: ModalDialo
         e.preventDefault()
         if (!busy) onClose()
       }}
-      className="m-0 mt-auto max-h-[92dvh] w-full max-w-none flex-col rounded-t-card border border-border bg-surface p-0 text-text shadow-overlay backdrop:bg-text/40 open:flex md:m-auto md:max-h-[85dvh] md:max-w-[480px] md:rounded-card"
+      className="m-0 mt-auto max-h-[92dvh] w-full max-w-none flex-col rounded-t-card border border-border bg-surface p-0 text-text shadow-overlay open:flex md:m-auto md:max-h-[85dvh] md:max-w-[480px] md:rounded-card"
     >
       {open && (
         <>
@@ -62,7 +62,8 @@ export function ModalDialog({ open, title, busy, onClose, children }: ModalDialo
               <X />
             </Button>
           </div>
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:px-6 md:pb-6">
+          {/* flex-auto, không phải flex-1: Safari iOS co phần cuộn về 0 khi cha cao theo nội dung (flex-basis 0%) */}
+          <div className="flex min-h-0 flex-auto flex-col gap-4 overflow-y-auto px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:px-6 md:pb-6">
             {children}
           </div>
         </>

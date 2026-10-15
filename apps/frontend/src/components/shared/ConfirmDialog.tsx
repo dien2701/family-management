@@ -59,7 +59,7 @@ export function ConfirmDialog({
         e.preventDefault()
         if (!loading) onCancel()
       }}
-      className="m-0 mt-auto w-full max-w-none rounded-t-card border border-border bg-surface p-0 text-text shadow-overlay backdrop:bg-text/40 md:m-auto md:max-w-[480px] md:rounded-card"
+      className="m-0 mt-auto w-full max-w-none rounded-t-card border border-border bg-surface p-0 text-text shadow-overlay md:m-auto md:max-w-[480px] md:rounded-card"
     >
       <div className="flex flex-col gap-4 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:p-6">
         <div className="flex items-start justify-between gap-3">

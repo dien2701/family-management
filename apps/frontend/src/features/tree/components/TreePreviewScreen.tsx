@@ -559,7 +559,7 @@ export function TreePreviewScreen({ open, onClose, ...body }: TreePreviewScreenP
         e.preventDefault()
         onClose()
       }}
-      className="m-0 h-dvh max-h-none w-dvw max-w-none flex-col border-0 bg-surface p-0 text-text backdrop:bg-text/40 open:flex"
+      className="m-0 h-dvh max-h-none w-dvw max-w-none flex-col border-0 bg-surface p-0 text-text open:flex"
     >
       {open && <PreviewBody {...body} onClose={onClose} />}
     </dialog>
