@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, UserCheck, UserMinus, TreeDeciduous, ArrowRight, ShieldAlert, CalendarHeart, Flame, Cake, Loader2, ScrollText, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, Users, UserCheck, UserMinus, ArrowRight, ShieldAlert, CalendarHeart, CalendarDays, Flame, Cake, Loader2, Network, ScrollText, Sparkles, type LucideIcon } from 'lucide-react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -7,6 +7,39 @@ import { useDashboard } from '../hooks'
 import type { CalendarOccurrence } from '@/types/api'
 import { daysLabel, dualDateLine } from '@/features/calendar/format'
 import { prayerStrings } from '@/features/prayer/strings'
+import { isApproved } from '@/features/auth/routing'
+import { dashboardStrings as t } from '../strings'
+
+type QuickLink = { to: string; label: string; description: string; icon: LucideIcon }
+
+// Bài khấn và các trang xem công khai ai cũng vào được; Trợ lý AI cần tài khoản đã duyệt nên chỉ thêm khi đủ quyền.
+function quickLinksFor(approved: boolean): QuickLink[] {
+  const links: QuickLink[] = [
+    { to: '/thanh-vien', icon: Users, ...t.member },
+    { to: '/cay', icon: Network, ...t.tree },
+    { to: '/lich', icon: CalendarDays, ...t.event },
+    { to: '/bai-khan', icon: ScrollText, label: prayerStrings.menu, description: prayerStrings.menuDescription },
+  ]
+  if (approved) links.push({ to: '/tro-ly', icon: Sparkles, ...t.assistant })
+  return links
+}
+
+function QuickLinkTile({ to, label, description, icon: Icon }: QuickLink) {
+  return (
+    <Link
+      to={to}
+      className="bg-surface rounded-card p-4 shadow-card border border-border flex flex-col items-start gap-3 min-h-[44px] cursor-pointer transition-colors duration-200 ease-out hover:bg-surface-muted last:odd:col-span-2 lg:last:odd:col-span-1"
+    >
+      <span className="p-3 rounded-full bg-secondary text-secondary-fg">
+        <Icon className="w-6 h-6" aria-hidden="true" />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-18 font-semibold">{label}</span>
+        <span className="block text-14 text-text-muted">{description}</span>
+      </span>
+    </Link>
+  )
+}
 
 function EventIcon({ type }: { type: CalendarOccurrence['type'] }) {
   if (type === 'MEMORIAL') return <Flame className="w-5 h-5 text-event-memorial" />
@@ -39,7 +72,7 @@ function EventCard({ event, title }: { event: CalendarOccurrence; title: string 
 
 function StatTile({ title, value, icon: Icon, colorClass }: { title: string, value: number, icon: LucideIcon, colorClass?: string }) {
   return (
-    <div className="bg-surface rounded-card p-4 shadow-card border border-border flex items-center gap-4">
+    <div className="bg-surface rounded-card p-3 sm:p-4 shadow-card border border-border flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
       <div className={`p-3 rounded-full bg-surface-muted ${colorClass || 'text-text-muted'}`}>
         <Icon className="w-6 h-6" />
       </div>
@@ -54,6 +87,7 @@ function StatTile({ title, value, icon: Icon, colorClass }: { title: string, val
 export function DashboardPage() {
   const { user } = useAuth()
   const { data, isLoading } = useDashboard()
+  const links = quickLinksFor(isApproved(user))
 
   if (isLoading) {
     return (
@@ -78,30 +112,6 @@ export function DashboardPage() {
 
   return (
     <div className="max-w-[1200px] mx-auto space-y-6 pb-8">
-      {/* Thẻ số liệu */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        <StatTile title="Thành viên" value={data.totalMembers} icon={Users} />
-        <StatTile title="Còn sống" value={data.living} icon={UserCheck} colorClass="text-success" />
-        <StatTile title="Đã mất" value={data.deceased} icon={UserMinus} colorClass="text-deceased" />
-        <StatTile title="Trên cây" value={data.onTree} icon={TreeDeciduous} colorClass="text-accent" />
-        <StatTile title="Số đời" value={data.maxGeneration} icon={LayoutDashboard} />
-      </div>
-
-      {/* Lối vào Bài khấn: công khai, cũng là đường vào duy nhất trên điện thoại cho khách (DECISIONS #90) */}
-      <Link
-        to="/bai-khan"
-        className="bg-surface rounded-card p-4 shadow-card border border-border flex items-center gap-4 transition-colors duration-200 ease-out hover:bg-surface-muted"
-      >
-        <span className="p-3 rounded-full bg-secondary text-secondary-fg">
-          <ScrollText className="w-6 h-6" aria-hidden="true" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block text-18 font-semibold">{prayerStrings.menu}</span>
-          <span className="block text-14 text-text-muted">{prayerStrings.menuDescription}</span>
-        </span>
-        <ArrowRight className="w-5 h-5 text-text-muted" aria-hidden="true" />
-      </Link>
-
       {/* Admin Pending Tasks */}
       {user?.systemRole === 'ADMIN' && ((data.pendingAccounts ?? 0) > 0 || (data.pendingLinkRequests ?? 0) > 0) && (
         <div className="bg-warning-bg border border-warning/20 rounded-card p-4 shadow-card">
@@ -131,6 +141,18 @@ export function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Lối vào các trang chính: điện thoại 2 cột (ô lẻ cuối kéo giãn), laptop một hàng */}
+      <nav aria-label="Lối vào nhanh" className={`grid grid-cols-2 gap-3 ${links.length === 5 ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+        {links.map((link) => <QuickLinkTile key={link.to} {...link} />)}
+      </nav>
+
+      {/* Thẻ số liệu */}
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <StatTile title="Thành viên" value={data.totalMembers} icon={Users} />
+        <StatTile title="Còn sống" value={data.living} icon={UserCheck} colorClass="text-success" />
+        <StatTile title="Đã mất" value={data.deceased} icon={UserMinus} colorClass="text-deceased" />
+      </div>
 
       {/* Sự kiện sắp tới (Next event highlight) */}
       {data.nextEvent && (
