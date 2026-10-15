@@ -2546,6 +2546,9 @@ paths:
         - push
       summary: Lấy VAPID public key
       operationId: getPushPublicKey
+      description: Công khai (DECISIONS #89): khách cần khóa này để đăng ký push trên thiết bị.
+      security:
+        - {}
       responses:
         '200':
           description: Thành công
@@ -2594,6 +2597,93 @@ paths:
           description: Thành công
         '502':
           description: Không gửi được tới thiết bị nào (PUSH_DELIVERY_FAILED)
+  /api/push/release:
+    post:
+      tags:
+        - push
+      summary: Chuyển push của thiết bị này từ tài khoản về khách (khi đăng xuất)
+      operationId: releasePush
+      description: 'Cần đăng nhập. Chỉ chuyển khi subscription đang gắn với chính tài khoản gọi: `account_id` về NULL, tùy chọn khách về mặc định. Không có hoặc không phải của mình thì vẫn 200, không báo gì thêm (DECISIONS #89).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnsubscribePushRequest'
+      responses:
+        '200':
+          description: Thành công
+  /api/push/guest:
+    put:
+      tags:
+        - push
+      summary: Khách đăng ký hoặc cập nhật tùy chọn push của thiết bị
+      operationId: putGuestPush
+      description: 'Công khai, nhận diện bằng `endpoint` (DECISIONS #89). Không gửi `pref` thì giữ tùy chọn hiện có (thiết bị mới: mặc định [30,15,7,3,1,0], 07:00, bật cả hai loại). Lỗi: 404 PUSH_SUBSCRIPTION_NOT_FOUND (endpoint đang gắn với tài khoản), 429 RATE_LIMITED, 503 PUSH_NOT_CONFIGURED.'
+      security:
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuestPushRequest'
+      responses:
+        '200':
+          description: Tùy chọn hiện tại của thiết bị
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestPushPref'
+        '404':
+          description: Endpoint đang gắn với tài khoản (PUSH_SUBSCRIPTION_NOT_FOUND)
+        '429':
+          description: Vượt giới hạn theo IP (RATE_LIMITED)
+    delete:
+      tags:
+        - push
+      summary: Khách hủy push của thiết bị
+      operationId: deleteGuestPush
+      description: 'Công khai, nhận diện bằng `endpoint`. Chỉ xóa subscription khách; không có thì vẫn 200. Lỗi: 429 RATE_LIMITED.'
+      security:
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnsubscribePushRequest'
+      responses:
+        '200':
+          description: Thành công
+        '429':
+          description: Vượt giới hạn theo IP (RATE_LIMITED)
+  /api/push/guest/lookup:
+    post:
+      tags:
+        - push
+      summary: Khách đọc tùy chọn push của thiết bị
+      operationId: lookupGuestPush
+      description: 'Công khai. Dùng POST để `endpoint` không nằm trên URL. Lỗi: 404 PUSH_SUBSCRIPTION_NOT_FOUND (chưa đăng ký, hoặc đang gắn với tài khoản), 429 RATE_LIMITED.'
+      security:
+        - {}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnsubscribePushRequest'
+      responses:
+        '200':
+          description: Tùy chọn hiện tại của thiết bị
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestPushPref'
+        '404':
+          description: Chưa đăng ký (PUSH_SUBSCRIPTION_NOT_FOUND)
+        '429':
+          description: Vượt giới hạn theo IP (RATE_LIMITED)
 
 components:
   securitySchemes:
@@ -4431,8 +4521,57 @@ components:
         - keys
     UnsubscribePushRequest:
       type: object
+      description: Chỉ chứa `endpoint`; cũng dùng cho tra cứu và chuyển về khách.
       properties:
         endpoint:
           type: string
       required:
         - endpoint
+    GuestPushPref:
+      type: object
+      description: Tùy chọn nhận bản tin của một thiết bị khách (DECISIONS #89).
+      properties:
+        notifyEvents:
+          type: boolean
+          description: Sự kiện chung và sinh nhật
+        notifyMemorials:
+          type: boolean
+          description: Ngày giỗ
+        remindDaysBefore:
+          type: array
+          minItems: 1
+          maxItems: 10
+          uniqueItems: true
+          items:
+            type: integer
+            minimum: 0
+            maximum: 30
+        remindHour:
+          type: string
+          pattern: '^([01]\d|2[0-3]):[0-5]\d$'
+          description: HH:mm, giờ Asia/Ho_Chi_Minh
+      required:
+        - notifyEvents
+        - notifyMemorials
+        - remindDaysBefore
+        - remindHour
+    GuestPushRequest:
+      type: object
+      properties:
+        endpoint:
+          type: string
+        keys:
+          type: object
+          properties:
+            p256dh:
+              type: string
+            auth:
+              type: string
+          required:
+            - p256dh
+            - auth
+        pref:
+          $ref: '#/components/schemas/GuestPushPref'
+      required:
+        - endpoint
+        - keys

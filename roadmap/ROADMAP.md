@@ -77,8 +77,9 @@
 | 41 | Deploy production | Claude Code | Sonnet · medium | ✅ 2026-10-09 |
 | **GĐ D** | **Bổ sung sau phát hành** | | | |
 | 42 | Xem công khai không cần đăng nhập, tìm kiếm sự kiện, deploy lại | Claude Code | Sonnet · high | ✅ 2026-10-10 |
+| 43 | Khách nhận Web Push không cần đăng nhập | Claude Code | Sonnet · high | ✅ 2026-10-15 |
 
-## ▶️ Đợt đang chờ: không còn (Đợt 42 xong 2026-10-10, chỉ còn deploy bản mới theo `infra/README.md` mục 3)
+## ▶️ Đợt tiếp theo: chưa có (Đợt 43 đã xong 2026-10-15)
 
 ---
 
@@ -1016,3 +1017,43 @@ IDEA §2 (vai trò, duyệt tài khoản) · DECISIONS #56, #87 · `.claude/rule
 5. Đăng nhập Admin: mọi thứ như cũ, vẫn thấy SĐT/email, sửa được.
 6. Sự kiện > Sắp tới: gõ "suu" ra "Giỗ Cụ Nguyễn Văn Sửu"; chọn tháng âm + ngày âm của một người đã mất → chỉ ra giỗ người đó; xóa lọc về như cũ. Xem ở 375px và 1280px.
 7. `curl -I https://giapha.click/` có `X-Robots-Tag: noindex, nofollow`; `/robots.txt` trả `Disallow: /`.
+
+### Đợt 43 — Khách nhận Web Push không cần đăng nhập ✅ 2026-10-15
+IDEA §9 · DECISIONS #46, #88, **#89** · `.claude/rules/security.md` · FE đọc `docs/DESIGN.md`
+
+> **Chốt 2026-10-15 (DECISIONS #89):** khách và tài khoản chưa duyệt bật push trên thiết bị, nhận bản tin sự kiện, giỗ, sinh nhật (dữ liệu công khai). Tự chỉnh loại, số ngày nhắc trước, giờ nhận; mặc định `[30,15,7,3,1,0]`, 07:00. Nhận diện bằng `endpoint`. Đăng nhập thì subscription chuyển sang tài khoản; đăng xuất thì chuyển lại thành khách (không hủy push).
+
+**✅ Đã làm:**
+- **Hợp đồng:** `openapi.yaml` thêm `PUT/DELETE /api/push/guest`, `POST /api/push/guest/lookup`, `POST /api/push/release` (đăng xuất, cần token), schema `GuestPushPref`, `GuestPushRequest`; `GET /api/push/public-key` thành công khai; đã `npm run gen:api`.
+- **BE:** Flyway `V17__push_guest.sql`; `PushSubscription` (account_id NULL + tùy chọn khách), `NotificationDispatch.subscription_id`; `PushSubscriptionService` (API khách, rate limit 30 lần/phút/IP, chỉ nhận endpoint https tới tên miền, `releaseToGuest`, xóa dispatch khi xóa subscription); `PushController`; `PublicPushPaths` dùng chung cho `SecurityConfig` và `ApprovalGateFilter`; `DigestJob` thêm lượt cho thiết bị khách (chỉ ghi dispatch khi thiết bị nhận được).
+- **FE:** `features/notification/{push.ts,api.ts,hooks.ts,strings.ts}`, trang `pages/GuestPushPage.tsx` (route công khai `/thong-bao-thiet-bi`, đã duyệt thì chuyển sang `/thong-bao/cai-dat`), `PushPrompt` hiện cả cho khách (`mode`), `AuthProvider` đăng xuất gọi `releasePushToGuest`, `Header` có chuông dẫn tới trang cho người chưa duyệt.
+- **Tài liệu:** `.claude/rules/{security,frontend}.md`, `CLAUDE.md`, `IDEA.md` §9 mục 7, `DECISIONS.md` #88, `policyContent.ts` (thêm 1 mục thiết bị nhận thông báo, không tăng `POLICY_VERSION`).
+- **Việc nên làm thêm:** (1) `GET /api/push/public-key` phải mở công khai (checklist chỉ nêu 3 đường dẫn) vì khách cần khóa VAPID để đăng ký. (2) `syncPush` trước đây tự đăng ký lại push mỗi lần mở app dù người dùng vừa bấm Tắt; nay chỉ đồng bộ khi trình duyệt còn subscription. (3) Khách chưa có nút "Gửi thử". (4) `DigestJob` lưu lại subscription đã đọc nên nếu khách đổi tùy chọn đúng lúc đang gửi thì có thể bị ghi đè (hiếm). (5) Chưa tăng `POLICY_VERSION` vì tăng sẽ buộc mọi tài khoản đồng ý lại.
+
+**Hợp đồng**
+- [x] `openapi.yaml`: nhóm API khách `security: [{}]`, gửi kèm `endpoint`: `PUT /api/push/guest` (đăng ký hoặc cập nhật tùy chọn, body = subscription + tùy chọn), `POST /api/push/guest/lookup` (đọc tùy chọn theo `endpoint`, dùng POST để không đưa endpoint lên URL), `DELETE /api/push/guest` (hủy). Schema `GuestPushPref` (`notifyEvents`, `notifyMemorials`, `remindDaysBefore`, `remindHour`). Chạy `npm run gen:api`. ✅ 2026-10-15
+
+**Backend**
+- [x] Flyway V mới: `push_subscription.account_id` cho phép `NULL`; thêm `notify_events`, `notify_memorials`, `remind_days_before` (JSON), `remind_hour` (dùng cho khách, tài khoản bỏ qua). `notification_dispatch` thêm `subscription_id` (NULL cho tài khoản), sửa khóa chống trùng để khách tính theo subscription. Entity khớp SQL. ✅ 2026-10-15
+- [x] `PushController`/`PushSubscriptionService`: 3 API khách ở trên. Kiểm tra `remindDaysBefore` (0–30, không trùng, tối đa 10 mốc), `remindHour` `HH:mm`. `endpoint` trùng với subscription đã gắn tài khoản thì không cho khách sửa (trả 404 như không có). ✅ 2026-10-15
+- [x] Mở 3 đường dẫn trên trong `SecurityConfig` và cổng duyệt (`ApprovalGateFilter`), liệt kê tường minh; rate limit bucket4j theo IP. ✅ 2026-10-15
+- [x] Đăng ký push khi đã đăng nhập (`subscribePush` hiện có): `endpoint` đang là khách thì gán sang tài khoản. Thêm API (cần đăng nhập) hoặc mở rộng `unsubscribePush`: lúc đăng xuất chuyển subscription của thiết bị về khách (`account_id = NULL`, tùy chọn khách về mặc định). ✅ 2026-10-15
+- [x] `DigestJob`: thêm lượt cho subscription khách, nhóm theo `remind_hour`, lọc loại + mốc nhắc theo tùy chọn của subscription, nội dung qua `DigestFormatter` (không SĐT/email). Gửi 404/410 thì xóa subscription. ✅ 2026-10-15
+
+**Frontend**
+- [x] `features/notification/push.ts`: hàm bật/tắt push cho khách (đăng ký service worker, gọi API khách). `AuthProvider`: đăng xuất thì gọi chuyển về khách thay cho `disablePush`; đăng nhập thì đăng ký lại để gán sang tài khoản. ✅ 2026-10-15
+- [x] Màn hình "Thông báo trên thiết bị này" cho khách (lối vào từ Trang chủ hoặc menu khách): nút Bật/Tắt, 2 công tắc (Ngày giỗ; Sự kiện và sinh nhật), chọn mốc nhắc (chip 30/15/7/3/1/0 ngày), chọn giờ. `PushPrompt` hiện cả cho khách. ✅ 2026-10-15
+- [x] iPhone chưa cài PWA: hiện hướng dẫn "Thêm vào Màn hình chính". Trình duyệt chặn quyền: hướng dẫn mở lại trong cài đặt trình duyệt. Chuỗi UI ở `features/notification/strings.ts`. ✅ 2026-10-15
+
+**Tài liệu**
+- [x] `.claude/rules/security.md` (mục Duyệt tài khoản: thêm ngoại lệ push khách), `CLAUDE.md` + `AGENTS.md` nếu có dòng nói push bắt đăng nhập, `IDEA.md` §9 thêm ghi chú trỏ #89, `PolicyPage`: 1 câu về subscription của thiết bị (chỉ lưu endpoint, không gắn danh tính). ✅ 2026-10-15
+
+**🔧 Setup thủ công cần làm:** Không đổi `.env` (dùng VAPID sẵn có). Có migration mới, chạy app là Flyway tự áp dụng.
+
+**🧪 Test thủ công (từng bước):**
+1. Tab ẩn danh (Chrome) mở trang, vào "Thông báo trên thiết bị này", bật push, cho phép quyền. Kiểm tra DB có dòng `push_subscription` với `account_id` NULL, mốc `[30,15,7,3,1,0]`.
+2. Đổi giờ nhận sang vài phút tới, chọn mốc khớp một sự kiện sắp tới: đến giờ nhận được bản tin, không có SĐT/email.
+3. Tắt loại "Ngày giỗ": lần gửi sau không còn giỗ. Tắt push: dòng subscription bị xóa.
+4. Bật push khách rồi đăng nhập trên cùng trình duyệt: dòng subscription có `account_id` của tài khoản. Đăng xuất: về lại `NULL`, vẫn nhận bản tin khách.
+5. `curl` không token gọi các API khách quá giới hạn: trả 429. `GET /api/notifications` không token vẫn 401.
+6. Xem ở 375px và 1280px; iPhone Safari chưa cài PWA thấy hướng dẫn cài.

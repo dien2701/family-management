@@ -22,12 +22,14 @@ import vn.giapha.event.dto.EventType;
 import vn.giapha.notification.entity.NotificationDispatch;
 import vn.giapha.notification.entity.NotificationPref;
 import vn.giapha.notification.entity.NotificationType;
+import vn.giapha.notification.entity.PushSubscription;
 import vn.giapha.notification.repository.NotificationDispatchRepository;
 
 /**
  * Gộp giỗ, sinh nhật và sự kiện chung sắp tới thành một bản tin mỗi giờ (IDEA §9 mục 4). Chạy mỗi giờ, chỉ xử lý
  * tài khoản có {@code remindHour} đúng bằng giờ hiện tại (giờ Việt Nam); mốc và loại đã tắt bị loại khỏi bản tin,
  * bản tin rỗng thì không gửi. {@link NotificationDispatchRepository} chống gửi trùng nếu job chạy lại cùng giờ.
+ * Thiết bị khách (subscription không gắn tài khoản, DECISIONS #89) cũng nhận bản tin theo tùy chọn của chính nó.
  */
 @Component
 class DigestJob {
@@ -64,26 +66,66 @@ class DigestJob {
         String hhmm = "%02d:%02d".formatted(now.getHour(), now.getMinute());
         boolean sweep = now.getMinute() == 0;
         Collection<Long> due = sweep ? accounts.usableAccountIds() : notifications.accountIdsRemindingAt(hhmm);
-        if (due.isEmpty()) {
+        List<PushSubscription> guests = push.guestsDueAt(hhmm, sweep);
+        if (due.isEmpty() && guests.isEmpty()) {
             return;
         }
-        Collection<Long> usable = sweep ? due : new HashSet<>(accounts.usableAccountIds());
         List<CalendarOccurrenceResponse> upcoming = events.upcoming30();
         int sent = 0;
-        for (Long accountId : due) {
-            if (!usable.contains(accountId)) {
-                continue;
+        if (!due.isEmpty()) {
+            Collection<Long> usable = sweep ? due : new HashSet<>(accounts.usableAccountIds());
+            for (Long accountId : due) {
+                if (!usable.contains(accountId)) {
+                    continue;
+                }
+                NotificationPref pref = notifications.preference(accountId);
+                // sweep dùng >=; các phút còn lại chỉ có tài khoản khớp đúng giờ:phút nên điều kiện luôn đúng
+                if (hhmm.compareTo(pref.getRemindHour()) < 0) {
+                    continue;
+                }
+                if (sendDigest(accountId, pref, upcoming)) {
+                    sent++;
+                }
             }
-            NotificationPref pref = notifications.preference(accountId);
-            // sweep dùng >=; các phút còn lại chỉ có tài khoản khớp đúng giờ:phút nên điều kiện luôn đúng
-            if (hhmm.compareTo(pref.getRemindHour()) < 0) {
-                continue;
-            }
-            if (sendDigest(accountId, pref, upcoming)) {
-                sent++;
+        }
+        // Thiết bị khách (DECISIONS #89): một lỗi ở thiết bị này không được chặn các thiết bị còn lại
+        for (PushSubscription guest : guests) {
+            try {
+                if (sendGuestDigest(guest, upcoming)) {
+                    sent++;
+                }
+            } catch (RuntimeException e) {
+                log.warn("DigestJob {}: lỗi khi gửi cho thiết bị khách {}", hhmm, guest.getId(), e);
             }
         }
         log.info("DigestJob {}: đã gửi {} bản tin", hhmm, sent);
+    }
+
+    /**
+     * Bản tin cho một thiết bị khách: chỉ dữ liệu công khai (không SĐT/email), lọc theo loại và mốc nhắc của chính
+     * subscription. Chỉ ghi dispatch khi thiết bị nhận được, nên lỗi mạng tạm thời sẽ được thử lại ở lượt quét sau.
+     */
+    private boolean sendGuestDigest(PushSubscription sub, List<CalendarOccurrenceResponse> upcoming) {
+        List<Integer> remindDays = notifications.parseRemindDays(sub.getRemindDaysBefore());
+        List<CalendarOccurrenceResponse> toSend = upcoming.stream()
+                .filter(o -> o.type() == EventType.MEMORIAL ? sub.isNotifyMemorials() : sub.isNotifyEvents())
+                .filter(o -> remindDays.contains(o.daysUntil()))
+                .filter(o -> !dispatches.existsBySubscriptionIdAndEventKeyAndOccurrenceDateAndDaysBefore(sub.getId(),
+                        o.eventKey(), toLocalDate(o), o.daysUntil()))
+                .toList();
+        if (toSend.isEmpty()) {
+            return false;
+        }
+        DigestFormatter.Message message = DigestFormatter.format(toSend);
+        if (!push.sendToSubscription(sub, message.title(), message.body(), DIGEST_LINK)) {
+            return false;
+        }
+        Instant now = Instant.now(clock);
+        for (CalendarOccurrenceResponse o : toSend) {
+            dispatches.save(NotificationDispatch.forSubscription(sub.getId(), o.eventKey(), toLocalDate(o),
+                    o.daysUntil(), now));
+        }
+        return true;
     }
 
     private boolean sendDigest(Long accountId, NotificationPref pref, List<CalendarOccurrenceResponse> upcoming) {

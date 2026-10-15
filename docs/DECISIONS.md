@@ -375,11 +375,20 @@
     → **Chốt:**
     - **Khách** (chưa đăng nhập) và **tài khoản chưa duyệt** (WAITING lẫn REJECTED) xem **chỉ-đọc**: Trang chủ (`GET /api/dashboard`), Thành viên (danh sách, chi tiết, người thân), Cây gia phả, Sự kiện (lịch, sự kiện chung) và trang Đổi lịch âm – dương. Thấy **giống User đã duyệt**: SĐT/email thành viên vẫn chỉ Admin và chính chủ.
     - Backend: danh sách GET công khai nằm **một nơi** (`PublicReadPaths`), dùng chung cho `SecurityConfig` (permitAll) và `ApprovalGateFilter` (bỏ cổng duyệt). Liệt kê tường minh; đường dẫn mới mặc định vẫn bắt đăng nhập và duyệt. Service nhận người gọi `null` thì coi là không phải Admin, không phải chính chủ; dashboard của khách không có số chờ duyệt.
-    - Vẫn bắt đăng nhập **và** đã duyệt: Trợ lý AI, Xuất dữ liệu, tệp đính kèm, Thông báo/Web Push, Đề xuất, "Tôi là ai", Hồ sơ cá nhân, Quản trị và **mọi thao tác ghi**.
+    - Vẫn bắt đăng nhập **và** đã duyệt: Trợ lý AI, Xuất dữ liệu, tệp đính kèm, hộp thư Thông báo (Web Push của khách xem #89), Đề xuất, "Tôi là ai", Hồ sơ cá nhân, Quản trị và **mọi thao tác ghi**.
     - Ảnh đại diện là `upload` công khai của Cloudinary nên khách xem được; tệp đính kèm (`authenticated`) vẫn cần link ký.
     - **Chặn lập chỉ mục:** `robots.txt` (`Disallow: /`) và header `X-Robots-Tag: noindex, nofollow`. Ai có link mới xem được.
     - **Tìm kiếm ở trang Sự kiện** (chỉ FE, không đổi API): tìm theo tên không dấu (có từ khóa thì lấy `days=365`) và lọc giỗ theo tháng/ngày âm, giữ trên URL. Hạn chế: lọc ngày âm chỉ nhìn trong 365 ngày tới nên năm âm nhuận (384 ngày) có thể thiếu một số giỗ vừa qua ngày.
     - Chọn tạm: tài khoản REJECTED cũng xem được trang công khai (như khách); với khách, mục cuối của thanh điều hướng là "Đăng nhập" thay cho "Thêm".
+
+89. **Khách nhận Web Push không cần đăng nhập (thay phần "Thông báo/Web Push bắt đăng nhập" của #88; chốt 2026-10-15, hỏi đáp với người dùng)**
+    → **Chốt:**
+    - Khách và tài khoản chưa duyệt bật được push trên thiết bị, nhận bản tin nhắc **sự kiện, ngày giỗ, sinh nhật** (cùng nội dung công khai #88, không SĐT/email). Không nhận thông báo đề xuất hay thông báo riêng của tài khoản. Hộp thư thông báo (`/thong-bao`) vẫn chỉ cho tài khoản đã duyệt.
+    - `push_subscription.account_id` cho phép `NULL` (= subscription khách). Tùy chọn của khách lưu ngay trên subscription: `notify_events` (sự kiện chung + sinh nhật, như tài khoản), `notify_memorials`, `remind_days_before`, `remind_hour`. Mặc định của khách: **`[30,15,7,3,1,0]`, 07:00**, cả hai loại bật. Mặc định của tài khoản giữ nguyên.
+    - Khách được nhận diện bằng chính `endpoint` (chuỗi bí mật do trình duyệt cấp): API công khai đăng ký, đọc, sửa tùy chọn, hủy đều gửi kèm `endpoint`. Rate limit bucket4j theo IP. Đường dẫn liệt kê tường minh, đường dẫn mới khác vẫn mặc định bắt đăng nhập.
+    - Chống gửi trùng của DigestJob với khách tính theo subscription.
+    - **Đăng nhập** trên thiết bị đã bật push khách: subscription (trùng `endpoint`) chuyển sang tài khoản, dùng tùy chọn của tài khoản. **Đăng xuất**: subscription chuyển lại thành khách (đặt `account_id = NULL`, tùy chọn khách về mặc định) thay vì hủy push như trước, vì bản tin khách chỉ chứa dữ liệu công khai.
+    - Push service trả 404/410 thì xóa subscription (như tài khoản). iPhone chỉ nhận khi đã "Thêm vào Màn hình chính" (iOS 16.4+).
 
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.

@@ -1,5 +1,11 @@
 import { api } from '@/services/client'
-import type { NotificationPage, NotificationPref, PushSubscription } from '@/types/api'
+import type {
+  GuestPushPref,
+  GuestPushRequest,
+  NotificationPage,
+  NotificationPref,
+  PushSubscription,
+} from '@/types/api'
 
 export const notificationApi = {
   getAll: (page: number, size: number) =>
@@ -13,5 +19,11 @@ export const notificationApi = {
   getPublicKey: () => api.get<string>('/push/public-key', { responseType: 'text' }),
   subscribePush: (data: PushSubscription) => api.post<void>('/push/subscribe', data),
   unsubscribePush: (endpoint: string) => api.delete<void>('/push/subscribe', { body: { endpoint } }),
+  /** Đăng xuất: chuyển subscription của thiết bị về khách thay vì hủy (DECISIONS #89). */
+  releasePush: (endpoint: string) => api.post<void>('/push/release', { endpoint }),
   testPush: () => api.post<void>('/push/test'),
+  // Khách và tài khoản chưa duyệt: không cần đăng nhập, nhận diện bằng endpoint
+  putGuestPush: (data: GuestPushRequest) => api.put<GuestPushPref>('/push/guest', data),
+  lookupGuestPush: (endpoint: string) => api.post<GuestPushPref>('/push/guest/lookup', { endpoint }),
+  deleteGuestPush: (endpoint: string) => api.delete<void>('/push/guest', { body: { endpoint } }),
 }

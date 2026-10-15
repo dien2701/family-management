@@ -13,5 +13,9 @@ public interface PushSubscriptionRepository extends JpaRepository<PushSubscripti
 
     List<PushSubscription> findAllByAccountId(Long accountId);
 
-    void deleteByAccountIdAndEndpoint(Long accountId, String endpoint);
+    /** Subscription khách (không gắn tài khoản) đã chọn đúng giờ nhắc {@code HH:mm}. */
+    List<PushSubscription> findByAccountIdIsNullAndRemindHour(String remindHour);
+
+    /** Mọi subscription khách; {@link vn.giapha.notification.service.DigestJob} lọc theo giờ khi quét đầu giờ. */
+    List<PushSubscription> findByAccountIdIsNull();
 }

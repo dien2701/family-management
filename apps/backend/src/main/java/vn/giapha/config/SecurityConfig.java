@@ -37,6 +37,7 @@ import vn.giapha.common.security.AccountAccessLookup;
 import vn.giapha.common.security.ApprovalGateFilter;
 import vn.giapha.common.security.CurrentUser;
 import vn.giapha.common.security.ProblemDetailSecurityHandlers;
+import vn.giapha.common.security.PublicPushPaths;
 import vn.giapha.common.security.PublicReadPaths;
 
 /**
@@ -69,6 +70,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // Xem công khai (DECISIONS #88): chỉ GET, danh sách tường minh; còn lại mặc định bắt đăng nhập
                         .requestMatchers(HttpMethod.GET, PublicReadPaths.GET_PATHS).permitAll()
+                        // Khách nhận Web Push (DECISIONS #89): khóa công khai và nhóm /guest, liệt kê từng phương thức
+                        .requestMatchers(HttpMethod.GET, PublicPushPaths.PUBLIC_KEY).permitAll()
+                        .requestMatchers(HttpMethod.PUT, PublicPushPaths.GUEST).permitAll()
+                        .requestMatchers(HttpMethod.DELETE, PublicPushPaths.GUEST).permitAll()
+                        .requestMatchers(HttpMethod.POST, PublicPushPaths.GUEST_LOOKUP).permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationEntryPoint(handlers)

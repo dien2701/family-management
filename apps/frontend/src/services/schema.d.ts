@@ -1536,7 +1536,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Lấy VAPID public key */
+        /**
+         * Lấy VAPID public key
+         * @description Công khai (DECISIONS
+         */
         get: operations["getPushPublicKey"];
         put?: never;
         post?: never;
@@ -1578,6 +1581,70 @@ export interface paths {
          * @description Lỗi: 404 PUSH_NOT_SUBSCRIBED (chưa đăng ký thiết bị nào), 502 PUSH_DELIVERY_FAILED (không thiết bị nào nhận được).
          */
         post: operations["testPush"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/push/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Chuyển push của thiết bị này từ tài khoản về khách (khi đăng xuất)
+         * @description Cần đăng nhập. Chỉ chuyển khi subscription đang gắn với chính tài khoản gọi: `account_id` về NULL, tùy chọn khách về mặc định. Không có hoặc không phải của mình thì vẫn 200, không báo gì thêm (DECISIONS #89).
+         */
+        post: operations["releasePush"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/push/guest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Khách đăng ký hoặc cập nhật tùy chọn push của thiết bị
+         * @description Công khai, nhận diện bằng `endpoint` (DECISIONS #89). Không gửi `pref` thì giữ tùy chọn hiện có (thiết bị mới: mặc định [30,15,7,3,1,0], 07:00, bật cả hai loại). Lỗi: 404 PUSH_SUBSCRIPTION_NOT_FOUND (endpoint đang gắn với tài khoản), 429 RATE_LIMITED, 503 PUSH_NOT_CONFIGURED.
+         */
+        put: operations["putGuestPush"];
+        post?: never;
+        /**
+         * Khách hủy push của thiết bị
+         * @description Công khai, nhận diện bằng `endpoint`. Chỉ xóa subscription khách; không có thì vẫn 200. Lỗi: 429 RATE_LIMITED.
+         */
+        delete: operations["deleteGuestPush"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/push/guest/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Khách đọc tùy chọn push của thiết bị
+         * @description Công khai. Dùng POST để `endpoint` không nằm trên URL. Lỗi: 404 PUSH_SUBSCRIPTION_NOT_FOUND (chưa đăng ký, hoặc đang gắn với tài khoản), 429 RATE_LIMITED.
+         */
+        post: operations["lookupGuestPush"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2385,8 +2452,27 @@ export interface components {
                 auth: string;
             };
         };
+        /** @description Chỉ chứa `endpoint`; cũng dùng cho tra cứu và chuyển về khách. */
         UnsubscribePushRequest: {
             endpoint: string;
+        };
+        /** @description Tùy chọn nhận bản tin của một thiết bị khách (DECISIONS */
+        GuestPushPref: {
+            /** @description Sự kiện chung và sinh nhật */
+            notifyEvents: boolean;
+            /** @description Ngày giỗ */
+            notifyMemorials: boolean;
+            remindDaysBefore: number[];
+            /** @description HH:mm, giờ Asia/Ho_Chi_Minh */
+            remindHour: string;
+        };
+        GuestPushRequest: {
+            endpoint: string;
+            keys: {
+                p256dh: string;
+                auth: string;
+            };
+            pref?: components["schemas"]["GuestPushPref"];
         };
     };
     responses: {
@@ -4886,6 +4972,133 @@ export interface operations {
             };
             /** @description Không gửi được tới thiết bị nào (PUSH_DELIVERY_FAILED) */
             502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    releasePush: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnsubscribePushRequest"];
+            };
+        };
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    putGuestPush: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GuestPushRequest"];
+            };
+        };
+        responses: {
+            /** @description Tùy chọn hiện tại của thiết bị */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuestPushPref"];
+                };
+            };
+            /** @description Endpoint đang gắn với tài khoản (PUSH_SUBSCRIPTION_NOT_FOUND) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Vượt giới hạn theo IP (RATE_LIMITED) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    deleteGuestPush: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnsubscribePushRequest"];
+            };
+        };
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Vượt giới hạn theo IP (RATE_LIMITED) */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    lookupGuestPush: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnsubscribePushRequest"];
+            };
+        };
+        responses: {
+            /** @description Tùy chọn hiện tại của thiết bị */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuestPushPref"];
+                };
+            };
+            /** @description Chưa đăng ký (PUSH_SUBSCRIPTION_NOT_FOUND) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Vượt giới hạn theo IP (RATE_LIMITED) */
+            429: {
                 headers: {
                     [name: string]: unknown;
                 };

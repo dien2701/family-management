@@ -4,6 +4,7 @@ import { Navigate, type RouteObject } from 'react-router'
 import { AdminProposalsPage } from '@/features/admin/pages/ProposalsPage'
 import { MyProposalsPage } from '@/features/proposal/pages/MyProposalsPage'
 import { InboxPage } from '@/features/notification/pages/InboxPage'
+import { GuestPushPage } from '@/features/notification/pages/GuestPushPage'
 import { SettingsPage } from '@/features/notification/pages/SettingsPage'
 import { AdminLayout } from '@/features/admin/components/AdminLayout'
 import { AccountsPage } from '@/features/admin/pages/AccountsPage'
@@ -115,6 +116,8 @@ export const routes: RouteObject[] = [
           { path: 'thanh-vien/:id', element: <MemberDetailPage />, handle: handle('Hồ sơ thành viên') },
           { path: 'lich', element: <CalendarPage />, handle: handle('Sự kiện') },
           { path: 'them/doi-lich', element: <LunarConverterPage />, handle: handle('Đổi lịch âm – dương') },
+          // Push cho khách và tài khoản chưa duyệt (DECISIONS #89); tài khoản đã duyệt được chuyển sang Cài đặt thông báo
+          { path: 'thong-bao-thiet-bi', element: <GuestPushPage />, handle: handle('Thông báo trên thiết bị này') },
           {
             element: <RequireAuth />,
             children: [

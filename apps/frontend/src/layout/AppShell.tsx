@@ -26,8 +26,8 @@ export function AppShell() {
           className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:py-6 md:pb-6"
         >
           <AccessBanner />
-          {/* Thông báo đẩy cần đăng nhập và đã duyệt */}
-          {isApproved(user) && <PushPrompt />}
+          {/* Thông báo đẩy: đã duyệt gắn với tài khoản, còn lại nhận như khách (DECISIONS #89) */}
+          <PushPrompt mode={isApproved(user) ? 'account' : 'guest'} />
           <Outlet />
         </main>
       </div>

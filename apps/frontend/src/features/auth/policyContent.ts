@@ -19,6 +19,7 @@ export const policySections: PolicySection[] = [
       'Hồ sơ thành viên trong gia phả: họ tên, ngày sinh, ngày mất, giới tính, người thân, số điện thoại, email, nơi ở, nơi an táng, ghi chú và ảnh do Admin hoặc chính thành viên nhập.',
       'Sự kiện chung của gia phả: ngày giỗ, sinh nhật và các sự kiện khác.',
       'Việc bạn đồng ý chính sách này: thời điểm, địa chỉ IP và phiên bản chính sách.',
+      'Thiết bị nhận thông báo đẩy: nếu bạn bật thông báo, chúng tôi chỉ lưu địa chỉ đăng ký do trình duyệt cấp cho thiết bị và các tùy chọn nhắc lịch của bạn, không gắn với họ tên hay tài khoản (trừ khi bạn đang đăng nhập).',
     ],
     outro:
       'Với thành viên trong gia phả, chỉ họ tên là bắt buộc. Mọi thông tin khác đều có thể để trống.',
@@ -28,7 +29,7 @@ export const policySections: PolicySection[] = [
     title: '2. Một gia phả chung và việc duyệt tài khoản',
     items: [
       'Hệ thống chỉ có một gia phả chung cho tất cả tài khoản.',
-      'Tài khoản mới phải được Admin duyệt mới dùng được các chức năng như trợ lý AI, xuất dữ liệu, tệp đính kèm, đề xuất và thông báo. Trong lúc chờ duyệt, bạn chỉ xem được thông tin chung của gia phả.',
+      'Tài khoản mới phải được Admin duyệt mới dùng được các chức năng như trợ lý AI, xuất dữ liệu, tệp đính kèm, đề xuất và hộp thư thông báo. Trong lúc chờ duyệt, bạn chỉ xem được thông tin chung của gia phả và vẫn bật được thông báo nhắc lịch trên thiết bị.',
       'Admin có thể từ chối hoặc khóa tài khoản. Khi đó bạn không đăng nhập hay dùng được các chức năng trên.',
     ],
   },

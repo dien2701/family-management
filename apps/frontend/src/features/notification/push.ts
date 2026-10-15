@@ -1,6 +1,14 @@
+import { ApiError } from '@/services/client'
+import type { GuestPushPref } from '@/types/api'
 import { notificationApi } from './api'
 
 export type PushState = 'unsupported' | 'denied' | 'off' | 'on'
+
+/**
+ * `account`: tài khoản đã duyệt, subscription gắn với tài khoản. `guest`: khách hoặc tài khoản chưa duyệt,
+ * subscription tự giữ tùy chọn và chỉ nhận dữ liệu công khai (DECISIONS #89).
+ */
+export type PushMode = 'account' | 'guest'
 
 // Base64url (khóa VAPID) → bytes cho pushManager.subscribe
 function urlBase64ToUint8Array(base64String: string) {
@@ -48,40 +56,84 @@ async function ensureSubscription(registration: ServiceWorkerRegistration, vapid
   return registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key })
 }
 
-async function upload(subscription: PushSubscription) {
+/** Gửi subscription lên máy chủ; `pref` chỉ có nghĩa với khách (bỏ trống = giữ tùy chọn hiện có). */
+async function upload(subscription: PushSubscription, mode: PushMode, pref?: GuestPushPref) {
   const json = subscription.toJSON()
   if (!json.endpoint || !json.keys?.p256dh || !json.keys.auth) throw new Error('Đăng ký push thất bại: thiếu endpoint hoặc khóa')
-  await notificationApi.subscribePush({ endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } })
+  const keys = { p256dh: json.keys.p256dh, auth: json.keys.auth }
+  if (mode === 'guest') return notificationApi.putGuestPush({ endpoint: json.endpoint, keys, pref })
+  await notificationApi.subscribePush({ endpoint: json.endpoint, keys })
+  return undefined
 }
 
 /** Phải gọi từ thao tác bấm của người dùng (trình duyệt chỉ hỏi quyền khi đó). */
-export async function enablePush() {
+export async function enablePush(mode: PushMode = 'account') {
   if (!supported()) throw new Error('Trình duyệt không hỗ trợ thông báo đẩy')
   if ((await Notification.requestPermission()) !== 'granted') throw new Error('Bạn đã từ chối quyền gửi thông báo')
   const registration = await navigator.serviceWorker.ready
-  await upload(await ensureSubscription(registration, await notificationApi.getPublicKey()))
+  await upload(await ensureSubscription(registration, await notificationApi.getPublicKey()), mode)
 }
 
-/** Gọi mỗi lần mở app: đã cho phép thì bảo đảm thiết bị này đang gắn với tài khoản hiện tại (đổi tài khoản, xoay khóa, subscription bị trình duyệt xóa). */
-export async function syncPush() {
+/**
+ * Gọi mỗi lần mở app: thiết bị đã bật push thì bảo đảm máy chủ có đúng khóa và gắn đúng chủ (đổi tài khoản, xoay khóa,
+ * đăng nhập sau khi bật push khi còn là khách). Không tự bật lại khi người dùng đã tắt, nên bỏ qua nếu trình duyệt không
+ * còn subscription.
+ */
+export async function syncPush(mode: PushMode = 'account') {
   try {
     if (!supported() || Notification.permission !== 'granted') return
     const registration = await navigator.serviceWorker.getRegistration()
-    if (!registration) return
-    await upload(await ensureSubscription(registration, await notificationApi.getPublicKey()))
+    if (!registration || !(await registration.pushManager.getSubscription())) return
+    await upload(await ensureSubscription(registration, await notificationApi.getPublicKey()), mode)
   } catch {
     // Chưa cấu hình VAPID (503), mất mạng... Lần mở sau thử lại
   }
 }
 
-/** Tắt thông báo trên thiết bị này (báo máy chủ trước, rồi hủy ở trình duyệt). Dùng cho nút Tắt và khi đăng xuất. */
-export async function disablePush() {
+/** Tắt thông báo trên thiết bị này (báo máy chủ trước, rồi hủy ở trình duyệt). Dùng cho nút Tắt. */
+export async function disablePush(mode: PushMode = 'account') {
   if (!supported()) return
   const subscription = await currentSubscription()
   if (!subscription) return
   try {
-    await notificationApi.unsubscribePush(subscription.endpoint)
+    if (mode === 'guest') await notificationApi.deleteGuestPush(subscription.endpoint)
+    else await notificationApi.unsubscribePush(subscription.endpoint)
   } finally {
     await subscription.unsubscribe()
   }
+}
+
+/**
+ * Đăng xuất: thiết bị quay lại làm khách và vẫn nhận bản tin công khai (DECISIONS #89), không hủy push. Chuyển không
+ * được thì hủy hẳn để người dùng cũ không còn nhận thông báo của tài khoản trên máy dùng chung.
+ */
+export async function releasePushToGuest() {
+  if (!supported()) return
+  const subscription = await currentSubscription()
+  if (!subscription) return
+  try {
+    await notificationApi.releasePush(subscription.endpoint)
+  } catch {
+    await disablePush('account')
+  }
+}
+
+/** Tùy chọn của thiết bị khách; `null` khi trình duyệt hoặc máy chủ chưa có subscription (hoặc đang gắn tài khoản). */
+export async function getGuestPushPref(): Promise<GuestPushPref | null> {
+  if (!supported()) return null
+  const subscription = await currentSubscription()
+  if (!subscription) return null
+  try {
+    return await notificationApi.lookupGuestPush(subscription.endpoint)
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) return null
+    throw e
+  }
+}
+
+export async function saveGuestPushPref(pref: GuestPushPref): Promise<GuestPushPref> {
+  const subscription = await currentSubscription()
+  if (!subscription) throw new Error('Thiết bị này chưa bật thông báo.')
+  const saved = await upload(subscription, 'guest', pref)
+  return saved ?? pref
 }

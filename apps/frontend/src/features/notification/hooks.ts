@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { notificationApi } from './api'
+import { getGuestPushPref, saveGuestPushPref } from './push'
 import type { Schemas } from '@/types/api'
 
 export const notificationKeys = {
@@ -70,6 +71,25 @@ export function useSubscribePush() {
 export function useUnsubscribePush() {
   return useMutation({
     mutationFn: (endpoint: string) => notificationApi.unsubscribePush(endpoint),
+  })
+}
+
+// Tùy chọn của thiết bị khách. `enabled` chỉ bật khi trình duyệt đã có subscription, để khỏi gọi máy chủ vô ích.
+export function useGuestPushPref(enabled: boolean) {
+  return useQuery({
+    queryKey: [...notificationKeys.all, 'guestPref'] as const,
+    queryFn: getGuestPushPref,
+    enabled,
+  })
+}
+
+export function useSaveGuestPushPref() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (pref: Schemas['GuestPushPref']) => saveGuestPushPref(pref),
+    onSuccess: (saved) => {
+      queryClient.setQueryData([...notificationKeys.all, 'guestPref'], saved)
+    },
   })
 }
 

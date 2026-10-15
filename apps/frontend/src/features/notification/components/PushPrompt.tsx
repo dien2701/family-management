@@ -1,7 +1,9 @@
 import { BellRing, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
-import { enablePush, getPushState, needsHomeScreenInstall, syncPush, type PushState } from '../push'
+import { enablePush, getPushState, needsHomeScreenInstall, syncPush, type PushMode, type PushState } from '../push'
+import { guestPushStrings as s } from '../strings'
 
 const DISMISS_KEY = 'giapha.pushPromptDismissed'
 
@@ -13,16 +15,20 @@ const wasDismissed = () => {
   }
 }
 
-/** Mời bật thông báo đẩy: quyền chỉ xin được khi người dùng bấm, nên cần một nút rõ ràng ngay khi vào app. */
-export function PushPrompt() {
+/**
+ * Mời bật thông báo đẩy: quyền chỉ xin được khi người dùng bấm, nên cần một nút rõ ràng ngay khi vào app.
+ * `mode="guest"` cho khách và tài khoản chưa duyệt (DECISIONS #89): không cần đăng nhập, kèm lối tới trang tùy chỉnh.
+ * Đổi `mode` (đăng nhập, đăng xuất) thì đồng bộ lại để subscription của thiết bị chuyển đúng chủ.
+ */
+export function PushPrompt({ mode }: { mode: PushMode }) {
   const [state, setState] = useState<PushState | null>(null)
   const [dismissed, setDismissed] = useState(wasDismissed)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    void syncPush().then(() => getPushState()).then(setState)
-  }, [])
+    void syncPush(mode).then(() => getPushState()).then(setState)
+  }, [mode])
 
   const homeScreen = needsHomeScreenInstall()
   const show = !dismissed && (state === 'off' || (state === 'unsupported' && homeScreen))
@@ -32,7 +38,7 @@ export function PushPrompt() {
     setBusy(true)
     setError(null)
     try {
-      await enablePush()
+      await enablePush(mode)
       setState('on')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Không bật được thông báo.')
@@ -55,20 +61,23 @@ export function PushPrompt() {
     <div role="status" className="mb-4 flex items-start gap-3 rounded-field bg-secondary px-4 py-3 text-secondary-fg">
       <BellRing className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <p className="font-semibold">Nhận nhắc giỗ, sinh nhật và sự kiện ngay trên điện thoại</p>
-        <p className="text-base">
-          {state === 'unsupported'
-            ? 'Trên iPhone: bấm nút Chia sẻ, chọn "Thêm vào Màn hình chính", rồi mở ứng dụng từ biểu tượng đó để bật thông báo.'
-            : 'Thông báo hiện lên cả khi bạn không mở ứng dụng.'}
-        </p>
+        <p className="font-semibold">{s.prompt.title}</p>
+        <p className="text-base">{state === 'unsupported' ? s.iosInstall : s.prompt.body}</p>
         {error && <p className="mt-1 text-danger">{error}</p>}
         {state === 'off' && (
-          <Button className="mt-2" onClick={() => void enable()} disabled={busy}>
-            Bật thông báo
-          </Button>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <Button onClick={() => void enable()} disabled={busy}>
+              Bật thông báo
+            </Button>
+            {mode === 'guest' && (
+              <Button asChild variant="ghost">
+                <Link to="/thong-bao-thiet-bi">{s.prompt.customize}</Link>
+              </Button>
+            )}
+          </div>
         )}
       </div>
-      <Button variant="ghost" size="icon" aria-label="Để sau" onClick={dismiss}>
+      <Button variant="ghost" size="icon" aria-label={s.prompt.later} onClick={dismiss}>
         <X aria-hidden="true" />
       </Button>
     </div>

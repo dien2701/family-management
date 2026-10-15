@@ -25,8 +25,13 @@ public class NotificationDispatch {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "account_id", nullable = false, updatable = false)
+    /** NULL khi bản tin gửi cho subscription khách (DECISIONS #89). */
+    @Column(name = "account_id", updatable = false)
     private Long accountId;
+
+    /** Chỉ có với subscription khách; chống trùng của khách tính theo cột này. */
+    @Column(name = "subscription_id", updatable = false)
+    private Long subscriptionId;
 
     @Column(name = "event_key", nullable = false, length = 150, updatable = false)
     private String eventKey;
@@ -50,6 +55,13 @@ public class NotificationDispatch {
         this.occurrenceDate = occurrenceDate;
         this.daysBefore = daysBefore;
         this.createdAt = createdAt;
+    }
+
+    public static NotificationDispatch forSubscription(Long subscriptionId, String eventKey, LocalDate occurrenceDate,
+            int daysBefore, Instant createdAt) {
+        NotificationDispatch d = new NotificationDispatch(null, eventKey, occurrenceDate, daysBefore, createdAt);
+        d.subscriptionId = subscriptionId;
+        return d;
     }
 
     public Long getId() {

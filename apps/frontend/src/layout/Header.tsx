@@ -42,7 +42,8 @@ function NotificationBell() {
 }
 
 // Header gọn: quay lại + tiêu đề trang; bên phải là giao diện sáng/tối, rồi chuông + menu tài khoản
-// (đã duyệt) hoặc nút Đăng nhập (khách, DECISIONS #88). Tài khoản chưa duyệt chỉ có nút giao diện, đã có banner ở trên nội dung.
+// (đã duyệt) hoặc nút Đăng nhập (khách, DECISIONS #88). Chưa duyệt thì không có chuông hộp thư mà có lối tới thông báo
+// đẩy của thiết bị (DECISIONS #89); tài khoản chưa duyệt đã có banner ở trên nội dung.
 export function Header() {
   const title = useRouteTitle()
   const navigate = useNavigate()
@@ -70,11 +71,18 @@ export function Header() {
 
         <ThemeToggle />
 
-        {isApproved(user) && (
+        {isApproved(user) ? (
           <>
             <NotificationBell />
             <UserMenu />
           </>
+        ) : (
+          // Khách và tài khoản chưa duyệt: lối tới thông báo đẩy của thiết bị (DECISIONS #89)
+          <Button asChild variant="ghost" size="icon">
+            <Link to="/thong-bao-thiet-bi" aria-label="Thông báo trên thiết bị này">
+              <Bell aria-hidden="true" />
+            </Link>
+          </Button>
         )}
         {!user && (
           <Button asChild>
