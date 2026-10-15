@@ -35,7 +35,6 @@ Sinh bí mật: `openssl rand -base64 48` (JWT), `openssl rand -base64 24` (mậ
 ### 1.4 GitHub
 Settings → Secrets and variables → Actions:
 - Secrets: `DEPLOY_HOST` (`103.77.243.142`), `DEPLOY_USER`, `DEPLOY_SSH_KEY` (private key của cặp khóa dùng riêng cho deploy; public key đã thêm vào `~/.ssh/authorized_keys` trên VPS).
-- Variable (tùy chọn): `VITE_GOOGLE_CLIENT_ID`. Để trống thì nút Google ẩn.
 - Đẩy GHCR dùng `GITHUB_TOKEN` có sẵn, không cần thêm secret. Server đăng nhập GHCR bằng chính token này mỗi lần deploy.
 
 Chạy workflow **Deploy** (Actions → Deploy → Run workflow, hoặc `git tag v1.0.0 && git push origin v1.0.0`).
@@ -67,7 +66,8 @@ docker compose -f docker-compose.prod.yml logs certbot
   - `curl -I https://giapha.click` có `X-Robots-Tag: noindex, nofollow`; `https://giapha.click/robots.txt` trả `Disallow: /`.
 - Quay về bản cũ: đặt `IMAGE_TAG=<mã commit đầy đủ>` trong `.env`, rồi `docker compose -f docker-compose.prod.yml up -d`.
 - Xem log: `docker compose -f docker-compose.prod.yml logs -f app`.
-- Đổi `VITE_GOOGLE_CLIENT_ID` hay `.env` của app: biến FE nằm trong image nên phải deploy lại; biến BE chỉ cần `up -d`.
+- Đổi `.env` của app (kể cả `GOOGLE_CLIENT_ID`): chỉ cần `docker compose -f docker-compose.prod.yml up -d`, không phải build lại.
+- Đăng nhập Google: Google Cloud Console → APIs & Services → Credentials → OAuth client (loại Web) → **Authorized JavaScript origins** thêm `https://giapha.click` và `https://www.giapha.click`; dán Client ID vào `GOOGLE_CLIENT_ID` trong `.env`. Kiểm tra: `curl -s https://giapha.click/api/auth/config` trả đúng Client ID.
 
 ## 4. Sao lưu và khôi phục
 Cài cron (giữ 30 ngày, lưu `/opt/giapha/backup`):

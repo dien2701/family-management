@@ -8,6 +8,7 @@ export const authApi = {
     api.post<AuthResponse>('/auth/verify-otp', body),
   login: (body: Schemas['LoginRequest']) => api.post<AuthResponse>('/auth/login', body),
   google: (body: Schemas['GoogleLoginRequest']) => api.post<AuthResponse>('/auth/google', body),
+  config: () => api.get<Schemas['AuthConfigResponse']>('/auth/config'),
   forgotPassword: (body: Schemas['EmailRequest']) =>
     api.post<OtpSent>('/auth/forgot-password', body),
   verifyResetOtp: (body: Schemas['VerifyOtpRequest']) =>

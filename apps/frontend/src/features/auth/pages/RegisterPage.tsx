@@ -14,8 +14,7 @@ import { AuthLayout } from '../components/AuthLayout'
 import { TextLink } from '../components/TextLink'
 import { GoogleButton } from '../components/GoogleButton'
 import { OrDivider } from '../components/OrDivider'
-import { isGoogleConfigured } from '../googleConfig'
-import { useRegister } from '../hooks'
+import { useGoogleClientId, useRegister } from '../hooks'
 import { carryFrom } from '../routing'
 import { registerSchema, type RegisterValues } from '../schemas'
 import { authStrings as s } from '../strings'
@@ -24,6 +23,7 @@ export function RegisterPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const registerAccount = useRegister()
+  const googleClientId = useGoogleClientId()
   const [googleError, setGoogleError] = useState<string | null>(null)
   const {
     register,
@@ -137,10 +137,10 @@ export function RegisterPage() {
         <Button type="submit" loading={isSubmitting}>
           {s.register.submit}
         </Button>
-        {isGoogleConfigured && (
+        {googleClientId && (
           <>
             <OrDivider />
-            <GoogleButton text="signup_with" onError={setGoogleError} />
+            <GoogleButton clientId={googleClientId} text="signup_with" onError={setGoogleError} />
           </>
         )}
       </form>

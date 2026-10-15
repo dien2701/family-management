@@ -15,8 +15,7 @@ import { AuthLayout } from '../components/AuthLayout'
 import { TextLink } from '../components/TextLink'
 import { GoogleButton } from '../components/GoogleButton'
 import { OrDivider } from '../components/OrDivider'
-import { isGoogleConfigured } from '../googleConfig'
-import { useLogin } from '../hooks'
+import { useGoogleClientId, useLogin } from '../hooks'
 import { readRememberedLogin, writeRememberedLogin } from '../rememberedLogin'
 import { carryFrom } from '../routing'
 import { loginSchema, type LoginValues } from '../schemas'
@@ -27,6 +26,7 @@ export function LoginPage() {
   const location = useLocation()
   const notice = (location.state as { notice?: string } | null)?.notice
   const login = useLogin()
+  const googleClientId = useGoogleClientId()
   const [googleError, setGoogleError] = useState<string | null>(null)
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
   const [remembered] = useState(readRememberedLogin)
@@ -118,10 +118,10 @@ export function LoginPage() {
         <Button type="submit" loading={isSubmitting}>
           {s.login.submit}
         </Button>
-        {isGoogleConfigured && (
+        {googleClientId && (
           <>
             <OrDivider />
-            <GoogleButton text="signin_with" onError={setGoogleError} />
+            <GoogleButton clientId={googleClientId} text="signin_with" onError={setGoogleError} />
           </>
         )}
       </form>

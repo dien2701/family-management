@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { ApiError } from '@/services/client'
-import { GOOGLE_CLIENT_ID } from '../googleConfig'
 import { useGoogleLogin } from '../hooks'
 import { authStrings } from '../strings'
 
-const CLIENT_ID = GOOGLE_CLIENT_ID
 const SCRIPT_SRC = 'https://accounts.google.com/gsi/client'
 
 let scriptPromise: Promise<void> | null = null
@@ -27,13 +25,14 @@ function loadScript(): Promise<void> {
 }
 
 type GoogleButtonProps = {
+  clientId: string
   text: 'signin_with' | 'signup_with'
   /** Báo lỗi đăng nhập Google lên form cha (hiện ở banner đầu form). */
   onError: (message: string) => void
 }
 
 // Google chỉ cấp ID token qua nút do chính Google vẽ; backend xác minh token rồi phát JWT của hệ thống (DECISIONS #15)
-export function GoogleButton({ text, onError }: GoogleButtonProps) {
+export function GoogleButton({ clientId, text, onError }: GoogleButtonProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [failed, setFailed] = useState(false)
   const { mutate } = useGoogleLogin()
@@ -61,7 +60,7 @@ export function GoogleButton({ text, onError }: GoogleButtonProps) {
 
   useEffect(() => {
     const container = containerRef.current
-    if (!CLIENT_ID || !container) return
+    if (!container) return
     let cancelled = false
     loadScript()
       .then(() => {
@@ -69,7 +68,7 @@ export function GoogleButton({ text, onError }: GoogleButtonProps) {
         if (cancelled || !gsi) return
         if (!initialized) {
           gsi.initialize({
-            client_id: CLIENT_ID,
+            client_id: clientId,
             callback: (response) => {
               if (response.credential) credentialHandler?.(response.credential)
             },
@@ -95,9 +94,8 @@ export function GoogleButton({ text, onError }: GoogleButtonProps) {
     return () => {
       cancelled = true
     }
-  }, [text])
+  }, [clientId, text])
 
-  if (!CLIENT_ID) return null
   if (failed)
     return <p className="text-center text-sm text-text-muted">{authStrings.google.loadFailed}</p>
   return <div ref={containerRef} className="flex min-h-11 w-full justify-center" />

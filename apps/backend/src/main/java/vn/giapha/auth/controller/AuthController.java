@@ -10,11 +10,13 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import vn.giapha.auth.dto.AuthConfigResponse;
 import vn.giapha.auth.dto.AuthResponse;
 import vn.giapha.auth.dto.EmailRequest;
 import vn.giapha.auth.dto.GoogleLoginRequest;
@@ -26,6 +28,7 @@ import vn.giapha.auth.dto.VerifyOtpRequest;
 import vn.giapha.auth.service.AuthService;
 import vn.giapha.auth.service.AuthService.AuthResult;
 import vn.giapha.common.web.ApiRefs;
+import vn.giapha.config.AppProperties;
 
 /**
  * Các endpoint mở cho người chưa đăng nhập; refresh token đi qua cookie, không nằm trong body.
@@ -40,10 +43,12 @@ class AuthController {
 
     private final AuthService authService;
     private final RefreshCookieFactory cookies;
+    private final AppProperties props;
 
-    AuthController(AuthService authService, RefreshCookieFactory cookies) {
+    AuthController(AuthService authService, RefreshCookieFactory cookies, AppProperties props) {
         this.authService = authService;
         this.cookies = cookies;
+        this.props = props;
     }
 
     @Operation(operationId = "register", summary = "Đăng ký bằng email và gửi OTP")
@@ -91,6 +96,15 @@ class AuthController {
     @PostMapping("/google")
     ResponseEntity<AuthResponse> google(@Valid @RequestBody GoogleLoginRequest req) {
         return withCookie(authService.loginWithGoogle(req));
+    }
+
+    // Client ID đọc lúc chạy từ GOOGLE_CLIENT_ID, để frontend không phải nướng sẵn lúc build
+    @Operation(operationId = "authConfig", summary = "Cấu hình công khai cho trang đăng nhập (Google Client ID)")
+    @ApiResponse(responseCode = "200", description = "Thành công")
+    @GetMapping("/config")
+    AuthConfigResponse config() {
+        String clientId = props.google().clientId();
+        return new AuthConfigResponse(clientId.isBlank() ? null : clientId);
     }
 
     @Operation(operationId = "refresh", summary = "Đổi refresh cookie lấy access token mới")

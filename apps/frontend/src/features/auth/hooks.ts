@@ -76,6 +76,16 @@ export function useApprovalWatch() {
   return query
 }
 
+/** Client ID Google đọc từ backend lúc chạy (GOOGLE_CLIENT_ID); null hoặc chưa tải xong thì ẩn nút Google. */
+export function useGoogleClientId() {
+  const { data } = useQuery({
+    queryKey: ['auth', 'config'],
+    queryFn: authApi.config,
+    staleTime: Infinity,
+  })
+  return data?.googleClientId ?? null
+}
+
 export function useForgotPassword() {
   return useMutation({ mutationFn: authApi.forgotPassword })
 }

@@ -194,6 +194,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cấu hình công khai cho trang đăng nhập (Google Client ID) */
+        get: operations["authConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/forgot-password": {
         parameters: {
             query?: never;
@@ -2104,6 +2121,10 @@ export interface components {
         GoogleLoginRequest: {
             idToken: string;
         };
+        /** @description Chưa cấu hình GOOGLE_CLIENT_ID thì googleClientId là null và nút Google bị ẩn. */
+        AuthConfigResponse: {
+            googleClientId: string | null;
+        };
         AccountAdminResponse: {
             /** Format: int64 */
             id?: number;
@@ -3076,6 +3097,26 @@ export interface operations {
             400: components["responses"]["ValidationError"];
             401: components["responses"]["Unauthorized"];
             429: components["responses"]["TooManyRequests"];
+        };
+    };
+    authConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthConfigResponse"];
+                };
+            };
         };
     };
     forgotPassword: {

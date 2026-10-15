@@ -50,8 +50,6 @@ jobs:
           file: infra/nginx/Dockerfile
           platforms: linux/amd64
           push: true
-          build-args: |
-            VITE_GOOGLE_CLIENT_ID=${{ vars.VITE_GOOGLE_CLIENT_ID }}
           tags: |
             ghcr.io/${{ env.OWNER }}/giapha-web:latest
             ghcr.io/${{ env.OWNER }}/giapha-web:${{ github.sha }}

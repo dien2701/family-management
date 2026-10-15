@@ -308,6 +308,20 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  /api/auth/config:
+    get:
+      tags:
+        - auth
+      summary: Cấu hình công khai cho trang đăng nhập (Google Client ID)
+      operationId: authConfig
+      security: []
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthConfigResponse'
   /api/auth/forgot-password:
     post:
       tags:
@@ -3814,6 +3828,16 @@ components:
           minLength: 0
       required:
         - idToken
+    AuthConfigResponse:
+      type: object
+      description: Chưa cấu hình GOOGLE_CLIENT_ID thì googleClientId là null và nút Google bị ẩn.
+      properties:
+        googleClientId:
+          type:
+            - string
+            - 'null'
+      required:
+        - googleClientId
     AccountAdminResponse:
       type: object
       properties:

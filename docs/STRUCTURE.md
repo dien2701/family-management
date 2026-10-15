@@ -167,7 +167,6 @@ apps/frontend/
 ├── eslint.config.js              ESLint flat config
 ├── components.json               Cấu hình shadcn/ui
 ├── index.html
-├── .env.local                    VITE_GOOGLE_CLIENT_ID (không commit)
 ├── .gitignore
 ├── README.md
 ├── public/                       Phục vụ nguyên trạng
