@@ -712,6 +712,19 @@ paths:
               - created
               - generation
             default: name
+        - name: dir
+          in: query
+          description: |
+            Chiều sắp xếp theo `sort`. Vắng thì theo mặc định của từng khóa: `name` và `generation` là `asc`
+            (A-Z, đời nhỏ trước), `age` và `created` là `desc` (lớn tuổi trước, mới thêm trước).
+            `age`: `desc` lớn tuổi trước, `asc` nhỏ tuổi trước. `created`: `desc` mới thêm trước, `asc` cũ nhất trước.
+            Người chưa rõ năm sinh (`age`) hoặc chưa lên cây (`generation`) luôn xếp cuối.
+          required: false
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
         - name: ageMin
           in: query
           required: false

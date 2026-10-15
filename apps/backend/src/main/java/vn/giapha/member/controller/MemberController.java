@@ -57,6 +57,9 @@ class MemberController {
             @RequestParam(defaultValue = "name")
             @Pattern(regexp = "name|age|created|generation",
                     message = "sort chỉ nhận: name, age, created, generation.") String sort,
+            @Parameter(description = "asc hoặc desc; vắng thì theo mặc định của khóa sort")
+            @RequestParam(required = false)
+            @Pattern(regexp = "asc|desc", message = "dir chỉ nhận: asc, desc.") String dir,
             @RequestParam(required = false)
             @Min(value = 0, message = "ageMin phải từ 0 đến 150.")
             @Max(value = 150, message = "ageMin phải từ 0 đến 150.") Integer ageMin,
@@ -73,7 +76,7 @@ class MemberController {
             @RequestParam(defaultValue = "20")
             @Min(value = 1, message = "Kích thước trang phải từ 1.")
             @Max(value = 100, message = "Kích thước trang tối đa 100.") int size) {
-        return service.list(new MemberFilter(q, sort, ageMin, ageMax, generation, deceased, onTree), page, size);
+        return service.list(new MemberFilter(q, sort, dir, ageMin, ageMax, generation, deceased, onTree), page, size);
     }
 
     @Operation(operationId = "createMember", summary = "Thêm thành viên",

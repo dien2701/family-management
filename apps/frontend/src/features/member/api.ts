@@ -11,6 +11,7 @@ import type {
 export type MemberListQuery = {
   q?: string
   sort?: 'name' | 'age' | 'created' | 'generation'
+  dir?: 'asc' | 'desc'
   ageMin?: number
   ageMax?: number
   generation?: number

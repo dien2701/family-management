@@ -1,13 +1,59 @@
 import { useEffect, useRef, useState } from 'react'
-import { Search } from 'lucide-react'
+import { ArrowUpDown, ChevronDown, Search, X, type LucideIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
+import { cn } from '@/utils/cn'
 import { memberStrings } from '../strings'
 import type { MemberListQuery } from '../api'
 
 type MemberFiltersProps = {
   filters: MemberListQuery
   onChange: (updates: Partial<MemberListQuery>) => void
+}
+
+type ChipProps = {
+  label: string
+  face: string
+  active: boolean
+  value: string
+  options: { value: string; text: string }[]
+  onChange: (value: string) => void
+  icon?: LucideIcon
+  /** Chiều rộng cố định từ md trở lên (class Tailwind), để đổi chữ không làm các chip kề bên bị xô */
+  widthClass: string
+}
+
+// Chip: <select> gốc phủ trong suốt lên vùng hiển thị nên vẫn dùng bộ chọn và bàn phím của trình duyệt.
+function FilterChip({ label, face, active, value, options, onChange, icon: Icon, widthClass }: ChipProps) {
+  return (
+    <label
+      className={cn(
+        'relative inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border px-3 text-base font-semibold transition-colors duration-200 ease-out has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-accent',
+        widthClass,
+        active
+          ? 'border-transparent bg-secondary text-secondary-fg hover:bg-secondary-hover'
+          : 'border-border bg-surface-muted text-text hover:bg-secondary',
+      )}
+    >
+      {Icon && <Icon className="size-4 shrink-0" aria-hidden />}
+      <span className="min-w-0 truncate whitespace-nowrap">{face}</span>
+      <ChevronDown className="size-4 shrink-0" aria-hidden />
+      <select
+        aria-label={label}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="absolute inset-0 size-full cursor-pointer opacity-0"
+      >
+        {/* Giá trị rỗng: đang xếp bằng chip khác, để chọn lại mục đầu vẫn bắn onChange */}
+        {value === '' && <option value="" hidden />}
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.text}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
 }
 
 export function MemberFilters({ filters, onChange }: MemberFiltersProps) {
@@ -35,10 +81,28 @@ export function MemberFilters({ filters, onChange }: MemberFiltersProps) {
     return () => clearTimeout(t)
   }, [text, onChange])
 
+  const sortKey = filters.sort || 'name'
+  const sortOptions = str.filters.sort.options
+  // Đang xếp theo tuổi thì chip Sắp xếp để trống (tuổi có chip riêng)
+  const currentSort =
+    sortKey === 'age'
+      ? undefined
+      : (sortOptions.find((o) => o.sort === sortKey && (filters.dir ? o.dir === filters.dir : o.default)) ??
+        sortOptions[0])
+  const sortValue = currentSort ? `${currentSort.sort}:${currentSort.dir}` : ''
+  const ageValue = sortKey === 'age' ? (filters.dir === 'asc' ? 'asc' : 'desc') : 'none'
+
+  const deceasedValue = filters.deceased === undefined ? 'all' : filters.deceased ? 'dead' : 'alive'
+  const onTreeValue = filters.onTree === undefined ? 'all' : filters.onTree ? 'yes' : 'no'
+  const deceasedText = str.filters.deceased[deceasedValue]
+  const onTreeText = str.filters.onTree[onTreeValue]
+  const hasFilter = deceasedValue !== 'all' || onTreeValue !== 'all'
+
   return (
-    <div className="flex flex-col gap-3 md:flex-row md:items-end md:flex-wrap mb-6">
-      <div className="relative flex-1 min-w-[200px]">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-text-muted pointer-events-none" />
+    // Điện thoại: ô tìm một hàng, chip lưới 2 cột. Từ md: tất cả một hàng, chip rộng cố định nên vị trí không xô
+    <div className="mb-6 grid grid-cols-2 items-center gap-2 md:flex">
+      <div className="relative col-span-2 min-w-0 md:min-w-40 md:flex-1">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-text-muted" />
         <Input
           type="text"
           placeholder={str.searchPlaceholder}
@@ -47,48 +111,69 @@ export function MemberFilters({ filters, onChange }: MemberFiltersProps) {
           className="pl-10"
         />
       </div>
-      
-      <div className="grid grid-cols-1 gap-3 md:flex md:shrink-0">
-        <Select
-          value={filters.sort || 'name'}
-          onChange={(e) => onChange({ sort: e.target.value as MemberListQuery['sort'] })}
-          aria-label={str.filters.sort}
-          className="md:w-44"
-        >
-          <option value="name">{str.filters.sortOptions.name}</option>
-          <option value="age">{str.filters.sortOptions.age}</option>
-          <option value="created">{str.filters.sortOptions.created}</option>
-          <option value="generation">{str.filters.sortOptions.generation}</option>
-        </Select>
 
-        <Select
-          value={filters.deceased === undefined ? 'all' : filters.deceased ? 'dead' : 'alive'}
-          onChange={(e) => {
-            const v = e.target.value
-            onChange({ deceased: v === 'all' ? undefined : v === 'dead' })
+        <FilterChip
+          icon={ArrowUpDown}
+          widthClass="md:w-48"
+          label={str.filters.sort.label}
+          face={currentSort?.face ?? str.filters.sort.label}
+          active={currentSort !== undefined && !(currentSort.sort === 'name' && currentSort.default)}
+          value={sortValue}
+          options={sortOptions.map((o) => ({ value: `${o.sort}:${o.dir}`, text: o.option }))}
+          onChange={(v) => {
+            const o = sortOptions.find((s) => `${s.sort}:${s.dir}` === v)
+            if (o) onChange({ sort: o.sort, dir: o.default ? undefined : o.dir })
           }}
-          aria-label={str.filters.deceased.label}
-          className="md:w-44"
-        >
-          <option value="all">{str.filters.deceased.all}</option>
-          <option value="alive">{str.filters.deceased.alive}</option>
-          <option value="dead">{str.filters.deceased.dead}</option>
-        </Select>
+        />
 
-        <Select
-          value={filters.onTree === undefined ? 'all' : filters.onTree ? 'yes' : 'no'}
-          onChange={(e) => {
-            const v = e.target.value
-            onChange({ onTree: v === 'all' ? undefined : v === 'yes' })
-          }}
-          aria-label={str.filters.onTree.label}
-          className="md:w-52"
+        <FilterChip
+          widthClass="md:w-48"
+          label={str.filters.age.label}
+          face={ageValue === 'none' ? str.filters.age.label : str.filters.age[ageValue]}
+          active={ageValue !== 'none'}
+          value={ageValue}
+          options={(['none', 'desc', 'asc'] as const).map((v) => ({ value: v, text: str.filters.age[v] }))}
+          onChange={(v) =>
+            onChange(
+              v === 'none'
+                ? { sort: undefined, dir: undefined }
+                : { sort: 'age', dir: v === 'asc' ? 'asc' : undefined },
+            )
+          }
+        />
+
+        <FilterChip
+          widthClass="md:w-36"
+          label={str.filters.deceased.label}
+          face={deceasedValue === 'all' ? str.filters.deceased.label : deceasedText}
+          active={deceasedValue !== 'all'}
+          value={deceasedValue}
+          options={(['all', 'alive', 'dead'] as const).map((v) => ({ value: v, text: str.filters.deceased[v] }))}
+          onChange={(v) => onChange({ deceased: v === 'all' ? undefined : v === 'dead' })}
+        />
+
+        <FilterChip
+          widthClass="md:w-40"
+          label={str.filters.onTree.label}
+          face={onTreeValue === 'all' ? str.filters.onTree.label : onTreeText}
+          active={onTreeValue !== 'all'}
+          value={onTreeValue}
+          options={(['all', 'yes', 'no'] as const).map((v) => ({ value: v, text: str.filters.onTree[v] }))}
+          onChange={(v) => onChange({ onTree: v === 'all' ? undefined : v === 'yes' })}
+        />
+
+        {/* Luôn giữ chỗ, mờ khi chưa lọc; từ md chỉ còn biểu tượng để nhường chỗ cho ô tìm */}
+        <Button
+          variant="ghost"
+          disabled={!hasFilter}
+          aria-label={str.filters.clear}
+          title={str.filters.clear}
+          className="col-span-2 md:w-11 md:shrink-0 md:px-0"
+          onClick={() => onChange({ deceased: undefined, onTree: undefined })}
         >
-          <option value="all">{str.filters.onTree.all}</option>
-          <option value="yes">{str.filters.onTree.yes}</option>
-          <option value="no">{str.filters.onTree.no}</option>
-        </Select>
-      </div>
+          <X aria-hidden />
+          <span className="md:sr-only">{str.filters.clear}</span>
+        </Button>
     </div>
   )
 }

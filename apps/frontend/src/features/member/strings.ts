@@ -9,25 +9,23 @@ export const memberStrings = {
       noMatchDesc: 'Vui lòng thử lại với từ khóa hoặc bộ lọc khác.',
     },
     filters: {
-      sort: 'Sắp xếp',
-      sortOptions: {
-        name: 'Tên A-Z',
-        age: 'Tuổi',
-        created: 'Mới thêm',
-        generation: 'Đời',
+      // `default` là chiều mặc định của khóa (khớp BE); face là chữ trên chip, chiều mặc định thì chỉ hiện tên khóa
+      sort: {
+        label: 'Sắp xếp',
+        options: [
+          { sort: 'name', dir: 'asc', default: true, option: 'Tên A-Z', face: 'Tên' },
+          { sort: 'name', dir: 'desc', default: false, option: 'Tên Z-A', face: 'Tên Z-A' },
+          { sort: 'created', dir: 'desc', default: true, option: 'Mới thêm trước', face: 'Mới thêm' },
+          { sort: 'created', dir: 'asc', default: false, option: 'Cũ nhất trước', face: 'Cũ nhất trước' },
+          { sort: 'generation', dir: 'asc', default: true, option: 'Đời nhỏ trước', face: 'Đời' },
+          { sort: 'generation', dir: 'desc', default: false, option: 'Đời lớn trước', face: 'Đời lớn trước' },
+        ] as const,
       },
-      deceased: {
-        label: 'Trạng thái',
-        all: 'Trạng thái: Tất cả',
-        alive: 'Còn sống',
-        dead: 'Đã mất',
-      },
-      onTree: {
-        label: 'Cây gia phả',
-        all: 'Cây gia phả: Tất cả',
-        yes: 'Đã có',
-        no: 'Chưa có',
-      },
+      // Chip riêng cho sắp xếp theo tuổi; chọn một mục ở đây thì chip Sắp xếp về trạng thái trống và ngược lại
+      age: { label: 'Tuổi', none: 'Không xếp theo tuổi', desc: 'Tuổi lớn đến nhỏ', asc: 'Tuổi nhỏ đến lớn' },
+      deceased: { label: 'Trạng thái', all: 'Tất cả', alive: 'Còn sống', dead: 'Đã mất' },
+      onTree: { label: 'Trên cây', all: 'Tất cả', yes: 'Đã lên cây', no: 'Chưa lên cây' },
+      clear: 'Xóa lọc',
     },
   },
   detail: {

@@ -14,7 +14,7 @@ export function MembersPage() {
   const { data, isLoading, isError } = useMembers(filters)
   
   const isFiltered = Object.keys(filters).some(k => 
-    k !== 'page' && k !== 'size' && k !== 'sort' && filters[k as keyof typeof filters] !== undefined
+    k !== 'page' && k !== 'size' && k !== 'sort' && k !== 'dir' && filters[k as keyof typeof filters] !== undefined
   )
 
   return (

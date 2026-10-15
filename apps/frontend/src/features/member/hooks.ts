@@ -9,6 +9,7 @@ export function useMemberFilters() {
   const filters: MemberListQuery = {
     q: searchParams.get('q') || undefined,
     sort: (searchParams.get('sort') as MemberListQuery['sort']) || 'name',
+    dir: (searchParams.get('dir') as MemberListQuery['dir']) || undefined,
     ageMin: searchParams.has('ageMin') ? Number(searchParams.get('ageMin')) : undefined,
     ageMax: searchParams.has('ageMax') ? Number(searchParams.get('ageMax')) : undefined,
     generation: searchParams.has('generation') ? Number(searchParams.get('generation')) : undefined,

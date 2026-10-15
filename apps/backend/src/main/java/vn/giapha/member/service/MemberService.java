@@ -97,7 +97,7 @@ public class MemberService {
                 .filter(m -> inAgeRange(m, filter, currentYear))
                 .filter(m -> filter.onTree() == null || filter.onTree() == generations.containsKey(m.getId()))
                 .filter(m -> filter.generation() == null || filter.generation().equals(generations.get(m.getId())))
-                .sorted(comparatorOf(filter.sort(), generations))
+                .sorted(comparatorOf(filter.sort(), filter.dir(), generations))
                 .toList();
         int from = (int) Math.min((long) page * size, matched.size());
         int to = Math.min(from + size, matched.size());
@@ -242,19 +242,26 @@ public class MemberService {
                 && (filter.ageMax() == null || age <= filter.ageMax());
     }
 
-    private static Comparator<Member> comparatorOf(String sort, Map<Long, Integer> generations) {
-        return switch (sort == null ? "name" : sort) {
-            // Lớn tuổi trước = năm sinh nhỏ trước; chưa rõ năm sinh xếp cuối
-            case "age" -> Comparator.comparing(Member::getBirthYear, Comparator.nullsLast(Comparator.<Integer>naturalOrder()))
+    private static Comparator<Member> comparatorOf(String sort, String dir, Map<Long, Integer> generations) {
+        String key = sort == null ? "name" : sort;
+        // dir vắng thì theo mặc định của khóa: tuổi và ngày thêm giảm dần (lớn tuổi, mới thêm trước), còn lại tăng dần
+        boolean desc = dir == null ? key.equals("age") || key.equals("created") : dir.equals("desc");
+        Comparator<Integer> natural = Comparator.naturalOrder();
+        Comparator<Integer> reverse = Comparator.reverseOrder();
+        return switch (key) {
+            // Tuổi giảm dần = năm sinh nhỏ trước; chưa rõ năm sinh luôn xếp cuối
+            case "age" -> Comparator.comparing(Member::getBirthYear, Comparator.nullsLast(desc ? natural : reverse))
                     .thenComparing(BY_NAME);
-            case "created" -> Comparator.comparing(Member::getCreatedAt, Comparator.<Instant>reverseOrder())
-                    .thenComparing(Member::getId, Comparator.<Long>reverseOrder());
-            // Đời nhỏ trước, người chưa lên cây xếp cuối
+            case "created" -> {
+                Comparator<Member> byCreated = Comparator.comparing(Member::getCreatedAt)
+                        .thenComparing(Member::getId);
+                yield desc ? byCreated.reversed() : byCreated;
+            }
+            // Người chưa lên cây luôn xếp cuối
             case "generation" -> Comparator
-                    .comparing((Member m) -> generations.get(m.getId()),
-                            Comparator.nullsLast(Comparator.<Integer>naturalOrder()))
+                    .comparing((Member m) -> generations.get(m.getId()), Comparator.nullsLast(desc ? reverse : natural))
                     .thenComparing(BY_NAME);
-            default -> BY_NAME;
+            default -> desc ? BY_NAME.reversed() : BY_NAME;
         };
     }
 }
