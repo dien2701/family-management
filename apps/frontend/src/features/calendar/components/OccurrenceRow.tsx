@@ -1,4 +1,4 @@
-import { Pencil } from 'lucide-react'
+import { Pencil, Trash2 } from 'lucide-react'
 import { Link } from 'react-router'
 import { Badge } from '@/components/shared/Badge'
 import { Button } from '@/components/ui/button'
@@ -10,18 +10,38 @@ import { calendarStrings } from '../strings'
 
 type OccurrenceRowProps = {
   occurrence: CalendarOccurrence
-  /** Có thì Admin thấy nút Sửa ở sự kiện chung. */
-  onEdit?: (eventId: number) => void
+  /** Sự kiện chung: ai được truyền thì thấy nút Sửa (User gửi đề xuất). Giỗ và sinh nhật: chỉ Admin. */
+  onEdit?: (occurrence: CalendarOccurrence) => void
+  /** Chỉ Admin mới thấy nút Xóa, ở cả sự kiện chung, giỗ và sinh nhật. */
+  onDelete?: (occurrence: CalendarOccurrence) => void
+  isAdmin?: boolean
   /** Ẩn dòng ngày khi danh sách đã nằm dưới tiêu đề ngày (bảng chi tiết một ngày). */
   hideDate?: boolean
   className?: string
 }
 
 /** Một lần xảy ra: icon và nhãn theo loại (không chỉ màu), tên, ngày dương – âm, "còn N ngày", "giỗ lần thứ N", "tròn N tuổi". */
-export function OccurrenceRow({ occurrence: o, onEdit, hideDate, className }: OccurrenceRowProps) {
+export function OccurrenceRow({
+  occurrence: o,
+  onEdit,
+  onDelete,
+  isAdmin,
+  hideDate,
+  className,
+}: OccurrenceRowProps) {
   const meta = EVENT_TYPE_META[o.type]
   const Icon = meta.icon
   const ordinal = ordinalLabel(o)
+  const custom = o.eventId !== null
+  const editable = custom || (isAdmin === true && o.memberId !== null)
+  const showEdit = onEdit !== undefined && editable
+  const showDelete = onDelete !== undefined && isAdmin === true && editable
+  const t = calendarStrings.occurrence
+  const labels = custom
+    ? { edit: t.edit, delete: t.delete }
+    : o.type === 'BIRTHDAY'
+      ? { edit: t.editBirthday, delete: t.deleteBirthday }
+      : { edit: t.editMemorial, delete: t.deleteMemorial }
 
   return (
     <li
@@ -61,16 +81,30 @@ export function OccurrenceRow({ occurrence: o, onEdit, hideDate, className }: Oc
           </Badge>
         </div>
       </div>
-      {onEdit && o.eventId !== null && (
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={`${calendarStrings.occurrence.edit}: ${o.title}`}
-          className="-mt-1 -mr-1 shrink-0"
-          onClick={() => onEdit(o.eventId!)}
-        >
-          <Pencil />
-        </Button>
+      {(showEdit || showDelete) && (
+        <div className="-mt-1 -mr-1 flex shrink-0 items-center">
+          {showEdit && (
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={`${labels.edit}: ${o.title}`}
+              onClick={() => onEdit!(o)}
+            >
+              <Pencil />
+            </Button>
+          )}
+          {showDelete && (
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={`${labels.delete}: ${o.title}`}
+              className="text-danger"
+              onClick={() => onDelete!(o)}
+            >
+              <Trash2 />
+            </Button>
+          )}
+        </div>
       )}
     </li>
   )

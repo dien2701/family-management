@@ -4,9 +4,12 @@ import { useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { isApproved } from '@/features/auth/routing'
 import { useAuth } from '@/hooks/useAuth'
+import type { CalendarOccurrence } from '@/types/api'
 import type { DualDateValue } from '@/utils/lunar'
 import { EventFormDialog, prefillDate } from '../components/EventFormDialog'
+import { MemberDateDialog } from '../components/MemberDateDialog'
 import { MonthTab } from '../components/MonthTab'
+import { OccurrenceDeleteDialog } from '../components/OccurrenceDeleteDialog'
 import { UpcomingTab } from '../components/UpcomingTab'
 import { calendarStrings } from '../strings'
 
@@ -19,6 +22,7 @@ const TABS: { value: Tab; label: string }[] = [
 ]
 
 type FormState = { open: boolean; eventId: number | null; initialDate?: DualDateValue }
+type MemberDateState = { open: boolean; memberId: number | null; kind: 'MEMORIAL' | 'BIRTHDAY' }
 
 /**
  * Trang Lịch: tab "Sắp tới" và "Lịch tháng". Ai cũng xem được, kể cả khách (DECISIONS #88). Admin thêm, sửa, xóa
@@ -33,7 +37,15 @@ export function CalendarPage() {
   const [form, setForm] = useState<FormState>({ open: false, eventId: null })
 
   const openCreate = (initialDate?: DualDateValue) => setForm({ open: true, eventId: null, initialDate })
-  const openEdit = (eventId: number) => setForm({ open: true, eventId })
+  const [memberDate, setMemberDate] = useState<MemberDateState>({ open: false, memberId: null, kind: 'MEMORIAL' })
+  const [deleting, setDeleting] = useState<CalendarOccurrence | null>(null)
+
+  // Sự kiện chung mở form sự kiện; giỗ và sinh nhật (chỉ Admin) mở form ngày trong hồ sơ
+  const openEdit = (o: CalendarOccurrence) => {
+    if (o.eventId !== null) setForm({ open: true, eventId: o.eventId })
+    else if (o.memberId !== null)
+      setMemberDate({ open: true, memberId: o.memberId, kind: o.type === 'BIRTHDAY' ? 'BIRTHDAY' : 'MEMORIAL' })
+  }
   const closeForm = () => setForm((f) => ({ ...f, open: false }))
 
   const selectTab = (value: Tab) => {
@@ -76,11 +88,12 @@ export function CalendarPage() {
 
       <div role="tabpanel" id="calendar-panel" aria-labelledby={`calendar-tab-${tab}`}>
         {tab === 'sap-toi' ? (
-          <UpcomingTab isAdmin={isAdmin} onEdit={openEdit} />
+          <UpcomingTab isAdmin={isAdmin} onEdit={openEdit} onDelete={setDeleting} />
         ) : (
           <MonthTab
             isAdmin={isAdmin}
             onEdit={openEdit}
+            onDelete={setDeleting}
             onAdd={
               canWrite
                 ? (day, mode) => openCreate(prefillDate(mode, mode === 'lunar' ? day.lunar : day.solar))
@@ -98,6 +111,17 @@ export function CalendarPage() {
           mode={isAdmin ? 'direct' : 'proposal'}
           onClose={closeForm}
         />
+      )}
+      {isAdmin && (
+        <>
+          <MemberDateDialog
+            open={memberDate.open}
+            memberId={memberDate.memberId}
+            kind={memberDate.kind}
+            onClose={() => setMemberDate((m) => ({ ...m, open: false }))}
+          />
+          <OccurrenceDeleteDialog occurrence={deleting} onClose={() => setDeleting(null)} />
+        </>
       )}
     </div>
   )

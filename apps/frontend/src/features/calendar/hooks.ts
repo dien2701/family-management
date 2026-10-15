@@ -1,5 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { CustomEventInput } from '@/types/api'
+import { memberApi } from '../member/api'
+import { formValuesToInput, memberToFormValues, type MemberFormValues } from '../member/schemas'
 import { calendarApi, type UpcomingQuery } from './api'
 import type { CalendarMode } from './monthNav'
 
@@ -49,6 +51,25 @@ export function useUpdateEvent() {
     mutationFn: ({ id, input }: { id: number; input: CustomEventInput }) =>
       calendarApi.updateEvent(id, input),
     onSuccess: done,
+  })
+}
+
+/**
+ * Sửa riêng nhóm ngày (sinh, mất, giỗ riêng) của một hồ sơ từ Lịch. PUT thay toàn bộ hồ sơ nên đọc bản mới nhất
+ * rồi chỉ ghi đè các trường truyền vào, tránh ghi đè dữ liệu cũ trong cache.
+ */
+export function usePatchMemberDates() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ memberId, patch }: { memberId: number; patch: Partial<MemberFormValues> }) => {
+      const member = await memberApi.getMemberDetail(memberId)
+      return memberApi.updateMember(memberId, formValuesToInput({ ...memberToFormValues(member), ...patch }))
+    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: CALENDAR_KEY }),
+        queryClient.invalidateQueries({ queryKey: ['members'] }),
+      ]),
   })
 }
 

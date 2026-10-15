@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react'
 import { ModalDialog } from '@/components/shared/ModalDialog'
 import { Button } from '@/components/ui/button'
-import type { CalendarDay } from '@/types/api'
+import type { CalendarDay, CalendarOccurrence } from '@/types/api'
 import { formatLunar, formatSolarWithWeekday } from '@/utils/lunar'
 import { calendarStrings } from '../strings'
 import { OccurrenceRow } from './OccurrenceRow'
@@ -12,14 +12,15 @@ type DaySheetProps = {
   /** `null` là đóng. */
   day: CalendarDay | null
   isAdmin: boolean
-  onEdit: (eventId: number) => void
+  onEdit: (occurrence: CalendarOccurrence) => void
+  onDelete: (occurrence: CalendarOccurrence) => void
   /** Không truyền thì không có nút thêm (khách và tài khoản chưa duyệt chỉ xem). */
   onAdd?: (day: CalendarDay) => void
   onClose: () => void
 }
 
 /** Danh sách sự kiện của một ngày: bottom sheet trên điện thoại, modal từ 768px (DESIGN §6). */
-export function DaySheet({ day, isAdmin, onEdit, onAdd, onClose }: DaySheetProps) {
+export function DaySheet({ day, isAdmin, onEdit, onDelete, onAdd, onClose }: DaySheetProps) {
   return (
     <ModalDialog
       open={day !== null}
@@ -38,7 +39,9 @@ export function DaySheet({ day, isAdmin, onEdit, onAdd, onClose }: DaySheetProps
                   key={o.eventKey}
                   occurrence={o}
                   hideDate
+                  isAdmin={isAdmin}
                   onEdit={onEdit}
+                  onDelete={onDelete}
                 />
               ))}
             </ul>

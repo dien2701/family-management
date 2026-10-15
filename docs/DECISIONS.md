@@ -445,6 +445,16 @@
     - **Khách và tài khoản chưa duyệt:** vẫn một phiên trong bộ nhớ, không danh sách (#91). Nút "Đoạn chat mới" chỉ xóa phiên.
     - **Giao diện:** cột bên (≥1024px) và ngăn kéo (bottom sheet) trên điện thoại; trang Trợ lý được thiết kế lại cùng đợt. Đang nhận câu trả lời thì khóa chuyển/tạo/sửa đoạn (phải bấm Dừng trước).
 
+## T. Admin sửa, xóa mọi mục trên Lịch (chốt 2026-10-15, hỏi đáp với người dùng)
+
+95. **Admin sửa và xóa được cả giỗ và sinh nhật ngay tại trang Lịch**, không chỉ sự kiện chung (bổ sung #65, #75–#78; không đổi API, không đổi quyền User)
+    → **Chốt:**
+    - **Dữ liệu vẫn một nguồn:** giỗ và sinh nhật tiếp tục tự sinh từ hồ sơ thành viên; không có "sự kiện giỗ" riêng. Sửa/xóa từ Lịch chính là sửa/xóa ngày trong hồ sơ qua `PUT /api/members/{id}` (FE đọc hồ sơ mới nhất rồi chỉ ghi đè nhóm ngày).
+    - **Sửa giỗ:** ngày mất (dương hoặc âm, cho phép chỉ ngày/tháng âm) và ngày giỗ riêng (`memorialOverride`). **Sửa sinh nhật:** ngày sinh (cho phép chỉ năm). Nơi an táng không nằm trong form này.
+    - **Xóa giỗ:** xóa ngày mất và ngày giỗ riêng, thành viên vẫn còn và vẫn `isDeceased = true`. **Xóa sinh nhật:** xóa ngày sinh. Có hộp xác nhận.
+    - **Nút Sửa và Xóa ở từng dòng** (Sắp tới, Lịch tháng, bảng chi tiết ngày) cho Admin; sự kiện chung có thêm nút Xóa ngay ở dòng (trước chỉ xóa được trong form sửa). User đã duyệt vẫn chỉ đề xuất sự kiện chung (#77).
+    - **Không thêm giỗ/sinh nhật từ Lịch:** muốn có thì nhập ngày trong hồ sơ; nút "Thêm sự kiện" vẫn chỉ thêm sự kiện chung.
+
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.
 - Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt. Cần cập nhật khi duyệt: Trợ lý AI nay mở cho khách (#91) và giọng nói do trình duyệt xử lý (#92).

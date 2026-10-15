@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { FilterChip } from '@/components/shared/FilterChip'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import type { EventType } from '@/types/api'
+import type { CalendarOccurrence, EventType } from '@/types/api'
 import type { UpcomingQuery } from '../api'
 import { EVENT_TYPES, EVENT_TYPE_META } from '../eventMeta'
 import { useUpcoming } from '../hooks'
@@ -20,14 +20,15 @@ const PAGE_SIZE = 10
 
 type UpcomingTabProps = {
   isAdmin: boolean
-  onEdit: (eventId: number) => void
+  onEdit: (occurrence: CalendarOccurrence) => void
+  onDelete: (occurrence: CalendarOccurrence) => void
 }
 
 /**
  * Tab "Sắp tới": chọn khoảng thời gian, lọc theo loại, sắp xếp (IDEA §6.5); thêm tìm theo tên (DECISIONS #88).
  * Từ khóa nằm trên URL (`?q=`) để chia sẻ được.
  */
-export function UpcomingTab({ isAdmin, onEdit }: UpcomingTabProps) {
+export function UpcomingTab({ isAdmin, onEdit, onDelete }: UpcomingTabProps) {
   const [params, setParams] = useSearchParams()
   const q = params.get('q') ?? ''
   const searching = q.trim() !== ''
@@ -211,7 +212,13 @@ export function UpcomingTab({ isAdmin, onEdit }: UpcomingTabProps) {
             data-busy={query.isFetching && query.isPlaceholderData}
           >
             {items.slice(0, shown).map((o) => (
-              <OccurrenceRow key={o.eventKey} occurrence={o} onEdit={onEdit} />
+              <OccurrenceRow
+                key={o.eventKey}
+                occurrence={o}
+                isAdmin={isAdmin}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             ))}
           </ul>
           {items.length > PAGE_SIZE && (

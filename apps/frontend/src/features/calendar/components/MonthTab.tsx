@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Button } from '@/components/ui/button'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
-import type { CalendarDay } from '@/types/api'
+import type { CalendarDay, CalendarOccurrence } from '@/types/api'
 import { cn } from '@/utils/cn'
 import { todayInVietnam, toJdn, type SolarDate } from '@/utils/lunar'
 import { useCalendarMonth } from '../hooks'
@@ -18,13 +18,14 @@ const s = calendarStrings.month
 
 type MonthTabProps = {
   isAdmin: boolean
-  onEdit: (eventId: number) => void
+  onEdit: (occurrence: CalendarOccurrence) => void
+  onDelete: (occurrence: CalendarOccurrence) => void
   /** Thêm sự kiện vào ngày đã chọn; `mode` là lịch đang xem để điền sẵn đúng lịch. Không truyền thì chỉ xem. */
   onAdd?: (day: CalendarDay, mode: CalendarMode) => void
 }
 
 /** Tab "Lịch tháng": lưới từ 768px, danh sách theo tuần bên dưới; nút gạt "Xem theo âm" (IDEA §6.5). */
-export function MonthTab({ isAdmin, onEdit, onAdd }: MonthTabProps) {
+export function MonthTab({ isAdmin, onEdit, onDelete, onAdd }: MonthTabProps) {
   const [today] = useState(todayInVietnam)
   const [mode, setMode] = useState<CalendarMode>('solar')
   // Một ngày nằm trong tháng đang xem; đổi dương/âm vẫn giữ đúng thời điểm
@@ -109,9 +110,13 @@ export function MonthTab({ isAdmin, onEdit, onAdd }: MonthTabProps) {
         day={selectedDay}
         isAdmin={isAdmin}
         onClose={() => setSelected(null)}
-        onEdit={(id) => {
+        onEdit={(o) => {
           setSelected(null)
-          onEdit(id)
+          onEdit(o)
+        }}
+        onDelete={(o) => {
+          setSelected(null)
+          onDelete(o)
         }}
         onAdd={
           onAdd &&
