@@ -1,5 +1,7 @@
-import { TreeDeciduous } from 'lucide-react'
+import { ArrowLeft, TreeDeciduous } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { Link } from 'react-router'
+import { Button } from '@/components/ui/button'
 import { useRouteTitle } from '@/hooks/useRouteTitle'
 import { authStrings } from '../strings'
 
@@ -15,16 +17,27 @@ export function AuthLayout({ title, description, children, footer }: AuthLayoutP
   useRouteTitle() // đặt document.title theo route
   return (
     <div className="flex min-h-dvh flex-col items-center px-4 py-8 md:justify-center md:py-12">
-      <div className="mb-6 flex items-center gap-3">
+      <Link
+        to="/"
+        aria-label={`${authStrings.brand} – ${authStrings.backToDashboard}`}
+        title={authStrings.backToDashboard}
+        className="mb-6 flex min-h-11 cursor-pointer items-center gap-3 rounded-button transition-opacity duration-200 ease-out hover:opacity-80"
+      >
         <span className="flex size-10 items-center justify-center rounded-button bg-primary text-primary-fg">
           <TreeDeciduous className="size-6" aria-hidden="true" />
         </span>
         <span className="text-lg leading-tight font-bold text-primary">{authStrings.brand}</span>
-      </div>
+      </Link>
       <main className="w-full max-w-md rounded-card border border-border bg-surface p-4 shadow-card md:p-6">
         <h1 className="text-xl leading-tight font-bold md:text-2xl">{title}</h1>
         {description && <p className="mt-2 text-text-muted">{description}</p>}
         <div className="mt-6">{children}</div>
+        <Button asChild variant="secondary" className="mt-4 w-full">
+          <Link to="/">
+            <ArrowLeft aria-hidden="true" />
+            {authStrings.backToDashboard}
+          </Link>
+        </Button>
       </main>
       {footer && <div className="mt-6 text-center">{footer}</div>}
     </div>

@@ -6,6 +6,7 @@ export const POLICY_VERSION = '1.0'
 
 export const authStrings = {
   brand: 'Tộc Phả',
+  backToDashboard: 'Về trang Tổng quan',
   fields: {
     fullName: 'Họ và tên',
     email: 'Email',
