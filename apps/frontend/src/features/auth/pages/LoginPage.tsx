@@ -6,6 +6,7 @@ import { Alert } from '@/components/shared/Alert'
 import { FormField } from '@/components/shared/FormField'
 import { PasswordInput } from '@/components/shared/PasswordInput'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { ApiError } from '@/services/client'
 import { applyApiError } from '@/utils/formErrors'
@@ -16,6 +17,7 @@ import { GoogleButton } from '../components/GoogleButton'
 import { OrDivider } from '../components/OrDivider'
 import { isGoogleConfigured } from '../googleConfig'
 import { useLogin } from '../hooks'
+import { readRememberedLogin, writeRememberedLogin } from '../rememberedLogin'
 import { carryFrom } from '../routing'
 import { loginSchema, type LoginValues } from '../schemas'
 import { authStrings as s } from '../strings'
@@ -27,6 +29,8 @@ export function LoginPage() {
   const login = useLogin()
   const [googleError, setGoogleError] = useState<string | null>(null)
   const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null)
+  const [remembered] = useState(readRememberedLogin)
+  const [remember, setRemember] = useState(true)
   const {
     register,
     handleSubmit,
@@ -34,7 +38,7 @@ export function LoginPage() {
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: remembered?.email ?? '', password: remembered?.password ?? '' },
   })
 
   const submit = handleSubmit(async (values) => {
@@ -43,6 +47,7 @@ export function LoginPage() {
     try {
       // Thành công: AuthProvider lưu phiên, GuestOnly tự chuyển tới trang đích
       await login.mutateAsync(values)
+      writeRememberedLogin(remember ? { email: values.email, password: values.password } : null)
     } catch (error) {
       if (error instanceof ApiError && error.code === 'EMAIL_NOT_VERIFIED') {
         setUnverifiedEmail(values.email)
@@ -93,14 +98,19 @@ export function LoginPage() {
             type="email"
             inputMode="email"
             autoComplete="email"
-            autoFocus
+            autoFocus={!remembered}
             {...register('email')}
           />
         </FormField>
         <FormField label={s.fields.password} error={errors.password?.message}>
           <PasswordInput autoComplete="current-password" {...register('password')} />
         </FormField>
-        <div className="-mt-2 text-right">
+        <div className="-mt-2 flex flex-wrap items-center justify-between gap-x-4">
+          <Checkbox
+            label={s.login.remember}
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+          />
           <TextLink to="/quen-mat-khau" className="font-medium">
             {s.login.forgot}
           </TextLink>

@@ -23,6 +23,7 @@ export const authStrings = {
     description: 'Chào mừng bạn quay lại với gia phả.',
     submit: 'Đăng nhập',
     forgot: 'Quên mật khẩu?',
+    remember: 'Ghi nhớ đăng nhập',
     noAccount: 'Chưa có tài khoản?',
     toRegister: 'Đăng ký',
     unverified: 'Nhập mã xác thực',
