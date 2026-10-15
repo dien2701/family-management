@@ -45,6 +45,12 @@ public record CurrentUser(Long userId, String systemRole, String approval, Long 
         throw new AuthenticationCredentialsNotFoundException("Chưa đăng nhập");
     }
 
+    /** Người dùng của request hiện tại, hoặc {@code null} khi là khách (DECISIONS #91). */
+    public static CurrentUser orNull() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getPrincipal() instanceof Jwt jwt ? from(jwt) : null;
+    }
+
     /**
      * Id người gọi, hoặc {@code null} khi là khách. Dùng ở các GET công khai (DECISIONS #88); service nhận
      * {@code null} thì coi như không phải Admin, không phải chính chủ.

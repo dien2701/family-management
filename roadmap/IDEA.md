@@ -63,7 +63,7 @@ Chỉ có hai vai trò: **Admin** và **User**. Có thể có nhiều Admin, và
 | Xem danh sách, chi tiết, cây, lịch, dashboard | ✅ | ✅ |
 | Xem SĐT, email của thành viên | ✅ | Chỉ của chính mình |
 | Tùy chọn thông báo của bản thân | ✅ | ✅ |
-| Hỏi AI mỗi ngày | 30 câu | 15 câu |
+| Hỏi AI mỗi ngày | 30 câu | 15 câu (khách và tài khoản chưa duyệt: cấu hình `aiQuotaGuest`, mặc định 15, DECISIONS #91) |
 
 **Admin đầu tiên (Admin gốc):**
 - Được khai bằng biến môi trường `ROOT_ADMIN_EMAIL`.
@@ -400,6 +400,7 @@ audit_log(id, actor_id, action, target_type, target_id, before_data JSON, after_
 
 - **Nhà cung cấp:** **Google Gemini, API gói trả phí**, đặt sau interface `AiProvider`.
 - **Trả lời dạng streaming** qua SSE.
+- **Khách và tài khoản chưa duyệt cũng hỏi được** (DECISIONS #91): hạn mức riêng `aiQuotaGuest` (Admin đổi, 0 = tắt), đếm theo mã thiết bị, không lưu lịch sử, không soạn bản nháp.
 - AI **chỉ đọc** dữ liệu thông qua các hàm (function calling):
   - `searchMembers`
   - `getMember`

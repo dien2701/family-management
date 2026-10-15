@@ -51,8 +51,9 @@ class AiToolExecutorFactory {
         this.json = json;
     }
 
-    AiToolExecutor create() {
-        return new AiToolExecutor(members, tree, calendar, events, json);
+    /** @param guest khách chưa đăng nhập hoặc tài khoản chưa duyệt: chỉ tra cứu, không soạn bản nháp (DECISIONS #91). */
+    AiToolExecutor create(boolean guest) {
+        return new AiToolExecutor(members, tree, calendar, events, json, guest);
     }
 }
 
@@ -65,16 +66,18 @@ class AiToolExecutor implements AiProvider.ToolExecutor {
     private final CalendarFacade calendar;
     private final EventFacade events;
     private final JsonMapper json;
+    private final boolean guest;
 
     private AiDraftRecord lastDraft;
 
     AiToolExecutor(MemberFacade members, TreeFacade tree, CalendarFacade calendar, EventFacade events,
-            JsonMapper json) {
+            JsonMapper json, boolean guest) {
         this.members = members;
         this.tree = tree;
         this.calendar = calendar;
         this.events = events;
         this.json = json;
+        this.guest = guest;
     }
 
     /** Bản nháp vừa soạn ở lượt gọi tool gần nhất (nếu có {@code draftProposal}); dùng để phát sự kiện SSE {@code draft}. */
@@ -94,7 +97,9 @@ class AiToolExecutor implements AiProvider.ToolExecutor {
                 case "upcomingEvents" -> upcomingEvents();
                 case "lunarConvert" -> lunarConvert(safeArgs);
                 case "stats" -> stats();
-                case "draftProposal" -> draftProposal(safeArgs);
+                case "draftProposal" -> guest
+                        ? Map.of("error", "Khách chưa đăng nhập không soạn được bản nháp. Hãy hướng dẫn họ đăng nhập.")
+                        : draftProposal(safeArgs);
                 default -> Map.of("error", "Không có tool tên " + name + ".");
             };
         } catch (BusinessException e) {

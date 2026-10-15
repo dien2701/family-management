@@ -1,10 +1,15 @@
 package vn.giapha.ai.service;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,8 +22,8 @@ import vn.giapha.common.config.DynamicSettings;
 import vn.giapha.common.exception.BusinessException;
 
 /**
- * Lượt hỏi AI trong ngày (IDEA §10; DECISIONS #73): User 15, Admin 30 (đọc từ {@link DynamicSettings}, đổi được lúc
- * chạy). Reset lúc 0h giờ Việt Nam bằng cách so ngày, không cần job riêng ({@link AiUsage#increment}).
+ * Lượt hỏi AI trong ngày (IDEA §10; DECISIONS #73, #91): User 15, Admin 30, khách 15 (đọc từ {@link DynamicSettings},
+ * đổi được lúc chạy). Reset lúc 0h giờ Việt Nam bằng cách so ngày, không cần job riêng ({@link AiUsage#increment}).
  */
 @Service
 public class AiQuotaService {
@@ -67,6 +72,47 @@ public class AiQuotaService {
             u.decrement(today(), Instant.now(clock));
             repository.save(u);
         });
+    }
+
+    // ---------- Khách (DECISIONS #91) ----------
+
+    /**
+     * Đếm lượt của khách theo mã thiết bị trong bộ nhớ, giống rate limit (DECISIONS #19): mất khi restart, một instance.
+     * Khóa gồm ngày giờ Việt Nam nên qua 0h tự sang bộ đếm mới; mục cũ tự hết hạn sau 24 giờ.
+     */
+    private final Cache<String, AtomicInteger> guestUsage = Caffeine.newBuilder()
+            .expireAfterWrite(Duration.ofHours(24)).maximumSize(100_000).build();
+
+    public AiQuota getGuest(String guestKey) {
+        int limit = settings.aiQuotaGuest();
+        AtomicInteger counter = guestUsage.getIfPresent(guestDayKey(guestKey));
+        int used = counter == null ? 0 : counter.get();
+        return new AiQuota(limit, used, Math.max(0, limit - used), resetAt());
+    }
+
+    /** Như {@link #checkAndIncrement} nhưng cho khách; hạn mức 0 là tắt AI với khách. */
+    public AiQuota checkAndIncrementGuest(String guestKey) {
+        int limit = settings.aiQuotaGuest();
+        AtomicInteger counter = guestUsage.get(guestDayKey(guestKey), k -> new AtomicInteger());
+        int used = counter.incrementAndGet();
+        if (used > limit) {
+            counter.decrementAndGet();
+            throw new BusinessException(HttpStatus.TOO_MANY_REQUESTS, "AI_QUOTA_EXCEEDED", limit == 0
+                    ? "Trợ lý AI chưa mở cho khách. Vui lòng đăng nhập để sử dụng."
+                    : "Bạn đã dùng hết lượt hỏi AI hôm nay. Đăng nhập để có thêm lượt; lượt hỏi được đặt lại lúc 0h.");
+        }
+        return new AiQuota(limit, used, Math.max(0, limit - used), resetAt());
+    }
+
+    public void refundGuest(String guestKey) {
+        AtomicInteger counter = guestUsage.getIfPresent(guestDayKey(guestKey));
+        if (counter != null) {
+            counter.updateAndGet(v -> Math.max(0, v - 1));
+        }
+    }
+
+    private String guestDayKey(String guestKey) {
+        return today() + "|" + guestKey;
     }
 
     private LocalDate today() {

@@ -19,7 +19,7 @@ paths:
 
 ## Phân quyền và duyệt tài khoản (bản v2, DECISIONS #54–#56, #74)
 - **Không có tenant**: không có `family_id`, không lọc theo family, không có cột/bộ lọc `locked` (module `family` cũ gỡ ở Đợt 26, đừng viết code mới dựa vào nó).
-- Mọi API nghiệp vụ chỉ cho tài khoản `approval_status = APPROVED` (403 `ACCOUNT_NOT_APPROVED`). Ngoại lệ: `/api/auth/**`, `GET /api/me`, `POST /api/me/consent` và các GET xem công khai trong `common/security/PublicReadPaths` (DECISIONS #88, khách cũng gọi được; service nhận người gọi `null`).
+- Mọi API nghiệp vụ chỉ cho tài khoản `approval_status = APPROVED` (403 `ACCOUNT_NOT_APPROVED`). Ngoại lệ: `/api/auth/**`, `GET /api/me`, `POST /api/me/consent` và các GET xem công khai trong `common/security/PublicReadPaths` (DECISIONS #88, khách cũng gọi được; service nhận người gọi `null`), và `POST /api/ai/chat`, `GET /api/ai/quota` trong `PublicAiPaths` (DECISIONS #91; controller dùng `CurrentUser.orNull()`, tài khoản chưa duyệt tính như khách).
 - Quyền Admin kiểm tra ở Service hoặc `@PreAuthorize`, không chỉ ở giao diện. Thao tác ghi kiểm trạng thái/vai trò **từ DB**, không chỉ tin claim (claim có thể cũ 15 phút).
 - Quyền tự quản hồ sơ của User (#75, #76, #78) và phạm vi đề xuất chỉ EVENT (#77) kiểm tra ở backend. SĐT/email của thành viên chỉ trả cho Admin và chính chủ (`user.member_id`).
 - Mỗi endpoint mới (không nằm trong `PublicReadPaths`) phải chặn: chưa đăng nhập → 401, chưa duyệt → 403 `ACCOUNT_NOT_APPROVED`, User gọi API của Admin → 403 (không cần viết test, #84).

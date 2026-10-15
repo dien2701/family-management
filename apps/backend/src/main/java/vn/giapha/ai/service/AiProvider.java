@@ -2,6 +2,7 @@ package vn.giapha.ai.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Nhà cung cấp mô hình AI (IDEA §10; DECISIONS #47), đặt sau interface này để đổi nhà cung cấp chỉ cần thêm một bản
@@ -20,9 +21,11 @@ public interface AiProvider {
     }
 
     /**
-     * Trả lời một câu hỏi, tự gọi {@code tools} khi cần cho tới khi có câu trả lời cuối cùng (không lộ ra ngoài các
-     * lượt gọi tool giữa chừng). Ném {@link vn.giapha.common.exception.BusinessException} 503 {@code AI_UNAVAILABLE}
-     * khi mô hình lỗi hoặc chưa cấu hình.
+     * Trả lời một câu hỏi, tự gọi {@code tools} khi cần cho tới khi có câu trả lời cuối cùng. Chữ nào có là gọi
+     * {@code onToken} ngay (DECISIONS #92) để phát SSE; giá trị trả về là toàn bộ câu trả lời, bằng đúng những gì
+     * đã phát. Ném {@link vn.giapha.common.exception.BusinessException} 503 {@code AI_UNAVAILABLE} khi mô hình
+     * lỗi hoặc chưa cấu hình.
      */
-    String reply(String systemPrompt, List<Turn> history, String userMessage, ToolExecutor tools);
+    String reply(String systemPrompt, List<Turn> history, String userMessage, ToolExecutor tools,
+            Consumer<String> onToken);
 }

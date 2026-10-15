@@ -2255,13 +2255,23 @@ paths:
       summary: Hỏi trợ lý AI (streaming SSE)
       description: |
         Trả `text/event-stream`. Mỗi event có `event:` là tên và `data:` là JSON:
-        - `token`: `{ "text": "..." }` — một đoạn chữ của câu trả lời, nối dần vào cuối.
+        - `status`: `{ "text": "..." }` — việc Trợ lý đang làm trong lúc tra cứu (ví dụ "Đang tìm thành viên…"), có thể lặp lại, trước event `token` đầu tiên.
+        - `token`: `{ "text": "..." }` — một đoạn chữ của câu trả lời, nối dần vào cuối. Gửi ngay khi Gemini trả chữ.
         - `draft`: `AiDraft` — thẻ xem trước đề xuất sự kiện do AI soạn (AI không tự ghi dữ liệu).
         - `done`: `AiQuota` — kết thúc lượt, kèm số lượt còn lại.
         - `error`: `{ "code": "...", "message": "..." }` — lỗi giữa chừng (ví dụ `AI_UNAVAILABLE`).
 
         Hết lượt trong ngày thì trả 429 `AI_QUOTA_EXCEEDED` (chưa mở luồng).
+
+        Mở cho khách và tài khoản chưa duyệt (DECISIONS #91): tính lượt theo hạn mức khách (`aiQuotaGuest`) và mã
+        thiết bị `X-Device-Id`, không lưu lịch sử (FE gửi `history`), không soạn bản nháp (không có event `draft`).
+        Tài khoản đã duyệt tính theo tài khoản, bỏ qua `X-Device-Id` và `history`.
       operationId: aiChat
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
       requestBody:
         required: true
         content:
@@ -2277,8 +2287,6 @@ paths:
                 type: string
         '400':
           $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
         '429':
@@ -2293,8 +2301,14 @@ paths:
     get:
       tags:
         - ai
-      summary: Số lượt hỏi còn lại hôm nay (User 15, Admin 30, đặt lại 0h giờ Việt Nam)
+      summary: Số lượt hỏi còn lại hôm nay (User 15, Admin 30, khách 15, đặt lại 0h giờ Việt Nam)
+      description: Mở cho khách và tài khoản chưa duyệt (DECISIONS #91): trả hạn mức khách theo `X-Device-Id`.
       operationId: getAiQuota
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
       responses:
         '200':
           description: Thành công
@@ -2302,8 +2316,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AiQuota'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
   /api/ai/messages:
@@ -2908,6 +2920,14 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
+    DeviceId:
+      name: X-Device-Id
+      in: header
+      required: false
+      description: Mã thiết bị của khách (FE sinh ngẫu nhiên, 16–64 ký tự chữ-số-gạch ngang, lưu trên máy). Thiếu hoặc sai dạng thì tính theo IP.
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9-]{16,64}$'
     AiDraftId:
       name: id
       in: path
@@ -4413,6 +4433,11 @@ components:
         aiQuotaAdmin:
           type: integer
           format: int32
+        aiQuotaGuest:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Lượt hỏi AI mỗi ngày của khách và tài khoản chưa duyệt; 0 là tắt AI với khách
         uploadMaxMb:
           type: integer
           format: int32
@@ -4423,6 +4448,7 @@ components:
         - policyVersion
         - aiQuotaUser
         - aiQuotaAdmin
+        - aiQuotaGuest
         - uploadMaxMb
         - totalQuotaMb
     DeletedMemberSnapshotSummary:
@@ -4534,8 +4560,29 @@ components:
           type: string
           minLength: 1
           maxLength: 1000
+        history:
+          type: array
+          maxItems: 10
+          description: Chỉ khách dùng (không có lịch sử lưu ở server); FE gửi vài lượt gần nhất của phiên
+          items:
+            $ref: '#/components/schemas/AiChatTurn'
       required:
         - message
+    AiChatTurn:
+      type: object
+      properties:
+        role:
+          type: string
+          enum:
+            - user
+            - model
+        text:
+          type: string
+          minLength: 1
+          maxLength: 2000
+      required:
+        - role
+        - text
     AiQuota:
       type: object
       description: Lượt hỏi trong ngày (theo giờ Việt Nam). `remaining = limit - used`.
@@ -4543,7 +4590,7 @@ components:
         limit:
           type: integer
           format: int32
-          description: 15 với User, 30 với Admin (cấu hình ở `SystemSettings`)
+          description: 15 với User, 30 với Admin, 15 với khách (cấu hình ở `SystemSettings`)
         used:
           type: integer
           format: int32

@@ -30,6 +30,8 @@ type RequestOptions = {
   query?: Record<string, QueryValue | QueryValue[]>
   body?: unknown
   signal?: AbortSignal
+  /** Header bổ sung (ví dụ `X-Device-Id` của Trợ lý AI cho khách). */
+  headers?: Record<string, string>
   /** Phản hồi `text/plain` (ví dụ VAPID public key), không phải JSON. */
   responseType?: 'text'
 }
@@ -129,6 +131,7 @@ async function request<T>(
     response = await fetch(buildUrl(path, options.query), {
       method,
       headers: {
+        ...options.headers,
         // Endpoint chỉ trả text/plain (khóa VAPID) mà nhận Accept: application/json thì BE trả 406
         Accept: options.responseType === 'text' ? 'text/plain' : 'application/json',
         ...(options.body !== undefined && { 'Content-Type': 'application/json' }),

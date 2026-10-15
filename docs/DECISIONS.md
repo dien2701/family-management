@@ -405,7 +405,25 @@
     - **Lối vào:** một mục trong menu "Thêm" (và menu khách) và một thẻ trên Trang chủ.
     - Thông tin đã điền **không gửi lên AI**.
 
+## Q. Trợ lý AI cho khách (chốt 2026-10-15, hỏi đáp với người dùng)
+
+91. **Khách và tài khoản chưa duyệt dùng được Trợ lý AI, có hạn mức riêng**
+    → **Chốt:** (thắng #47 và #56 ở phần AI)
+    - **Mở:** `POST /api/ai/chat` và `GET /api/ai/quota` (khai báo ở `PublicAiPaths`) cho khách và tài khoản chưa duyệt. `GET /api/ai/messages` và `/api/ai/drafts/*` vẫn cần đăng nhập và duyệt. Tài khoản đã duyệt vẫn đi qua cổng duyệt đầy đủ (kiểm DB khi ghi), nên tài khoản bị khóa không dùng AI được.
+    - **Hạn mức:** thêm cấu hình `aiQuotaGuest` (mặc định 15 lượt/ngày, Admin đổi ở Cấu hình hệ thống, **0 = tắt AI với khách**). User 15 và Admin 30 giữ nguyên. Đặt lại 0h giờ Việt Nam.
+    - **Đếm theo mã thiết bị** (header `X-Device-Id`, FE sinh ngẫu nhiên, lưu `localStorage`), thiếu hoặc sai dạng thì rơi về IP. Tài khoản chưa duyệt đếm như khách. Bộ đếm **trong bộ nhớ** (Caffeine, như rate limit #19): mất khi restart. Mã thiết bị dễ lách (xóa dữ liệu, ẩn danh) nên chỉ là hạn mức mềm.
+    - **Chống dồn dập:** 5 lần/phút như cũ nhưng khách tính theo **IP**.
+    - **Không lưu lịch sử** của khách ở server; FE giữ cuộc trò chuyện trong phiên và gửi kèm tối đa 10 lượt gần nhất (`history`, mỗi lượt ≤ 2000 ký tự) làm ngữ cảnh. Tài khoản đã duyệt bỏ qua `history`.
+    - **Khách chỉ tra cứu:** không soạn bản nháp sự kiện (tool `draftProposal` bị chặn cho khách); AI hướng dẫn đăng nhập. Dữ liệu AI đọc vẫn chỉ là dữ liệu công khai, không SĐT hay email (#73).
+
+92. **Trợ lý AI: stream thật từng chữ và nhập bằng giọng nói** (2026-10-15, hỏi đáp với người dùng)
+    → **Chốt:**
+    - **Stream thật từ Gemini:** `GeminiProvider` gọi `generateContentStream`, chữ nào có là phát SSE `token` ngay (`AiProvider.reply` nhận `onToken`). Lời gọi tool nằm trong luồng nên mỗi vòng gom lời gọi, chạy tool rồi stream tiếp (tối đa 6 vòng). Thắng ghi chú "không streaming" ở #47. Tin nhắn chỉ lưu sau khi trả lời xong; client ngắt kết nối thì dừng gọi Gemini và hoàn lại lượt.
+    - **FE hiện chữ ngay khi nhận, không đệm giả lập** (đã thử đệm từng từ rồi bỏ, vì Gemini 2.5 Flash tắt suy nghĩ sinh cả câu trong chưa tới 1 giây nên đệm chỉ làm chậm thêm). Thời gian chờ chủ yếu nằm **trước chữ đầu tiên** (các vòng gọi tool), nên BE gửi thêm SSE `status` ("Đang tìm thành viên…") mỗi khi gọi tool, FE hiện dòng đó trong lúc chưa có chữ.
+    - **Nhập giọng nói bằng Web Speech API của trình duyệt** (`vi-VN`), không gửi âm thanh qua BE. Âm thanh do nhà cung cấp trình duyệt (Google/Apple) xử lý. Trình duyệt không hỗ trợ (Firefox) thì ẩn nút micro. Nói xong chữ **điền vào ô nhập** để xem lại, người dùng tự bấm Gửi (không tự gửi).
+    - **Việc chờ:** thêm câu về âm thanh giọng nói do trình duyệt xử lý vào chính sách bảo mật khi có người duyệt (xem mục "Việc còn chờ").
+
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.
-- Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt.
+- Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt. Cần cập nhật khi duyệt: Trợ lý AI nay mở cho khách (#91) và giọng nói do trình duyệt xử lý (#92).
 

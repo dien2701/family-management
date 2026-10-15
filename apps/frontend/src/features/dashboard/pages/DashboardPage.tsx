@@ -9,22 +9,18 @@ import { useDashboard } from '../hooks'
 import type { CalendarOccurrence } from '@/types/api'
 import { daysLabel, dualDateLine } from '@/features/calendar/format'
 import { prayerStrings } from '@/features/prayer/strings'
-import { isApproved } from '@/features/auth/routing'
 import { dashboardStrings as t } from '../strings'
 
 type QuickLink = { to: string; label: string; description: string; icon: LucideIcon }
 
-// Bài khấn và các trang xem công khai ai cũng vào được; Trợ lý AI cần tài khoản đã duyệt nên chỉ thêm khi đủ quyền.
-function quickLinksFor(approved: boolean): QuickLink[] {
-  const links: QuickLink[] = [
-    { to: '/thanh-vien', icon: Users, ...t.member },
-    { to: '/cay', icon: Network, ...t.tree },
-    { to: '/lich', icon: CalendarDays, ...t.event },
-    { to: '/bai-khan', icon: ScrollText, label: prayerStrings.menu, description: prayerStrings.menuDescription },
-  ]
-  if (approved) links.push({ to: '/tro-ly', icon: Sparkles, ...t.assistant })
-  return links
-}
+// Bài khấn, Trợ lý AI (DECISIONS #91) và các trang xem công khai ai cũng vào được.
+const QUICK_LINKS: QuickLink[] = [
+  { to: '/thanh-vien', icon: Users, ...t.member },
+  { to: '/cay', icon: Network, ...t.tree },
+  { to: '/lich', icon: CalendarDays, ...t.event },
+  { to: '/bai-khan', icon: ScrollText, label: prayerStrings.menu, description: prayerStrings.menuDescription },
+  { to: '/tro-ly', icon: Sparkles, ...t.assistant },
+]
 
 function QuickLinkTile({ to, label, description, icon: Icon }: QuickLink) {
   return (
@@ -135,7 +131,7 @@ function StatTile({ title, value, icon: Icon, colorClass }: { title: string, val
 export function DashboardPage() {
   const { user } = useAuth()
   const { data, isLoading } = useDashboard()
-  const links = quickLinksFor(isApproved(user))
+  const links = QUICK_LINKS
 
   if (isLoading) {
     return (

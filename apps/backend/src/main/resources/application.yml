@@ -47,7 +47,8 @@ app:
     vapid-subject: ${VAPID_SUBJECT:mailto:admin@example.com}
   ai:
     gemini-api-key: ${GEMINI_API_KEY:}
-    model: ${GEMINI_MODEL:gemini-2.5-flash}
+    model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
+    thinking-budget: ${GEMINI_THINKING_BUDGET:0}
   file:
     cloud-name: ${CLOUDINARY_CLOUD_NAME:}
     api-key: ${CLOUDINARY_API_KEY:}

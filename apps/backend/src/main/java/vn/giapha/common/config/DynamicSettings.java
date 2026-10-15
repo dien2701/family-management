@@ -14,6 +14,9 @@ public interface DynamicSettings {
 
     int aiQuotaAdmin();
 
+    /** Lượt hỏi AI mỗi ngày của khách và tài khoản chưa duyệt (DECISIONS #91); 0 là tắt. */
+    int aiQuotaGuest();
+
     int uploadMaxMb();
 
     int totalQuotaMb();

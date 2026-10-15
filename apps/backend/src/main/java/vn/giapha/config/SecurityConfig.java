@@ -37,6 +37,7 @@ import vn.giapha.common.security.AccountAccessLookup;
 import vn.giapha.common.security.ApprovalGateFilter;
 import vn.giapha.common.security.CurrentUser;
 import vn.giapha.common.security.ProblemDetailSecurityHandlers;
+import vn.giapha.common.security.PublicAiPaths;
 import vn.giapha.common.security.PublicPushPaths;
 import vn.giapha.common.security.PublicReadPaths;
 
@@ -75,6 +76,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, PublicPushPaths.GUEST).permitAll()
                         .requestMatchers(HttpMethod.DELETE, PublicPushPaths.GUEST).permitAll()
                         .requestMatchers(HttpMethod.POST, PublicPushPaths.GUEST_LOOKUP).permitAll()
+                        // Trợ lý AI cho khách (DECISIONS #91): chỉ hỏi và xem lượt còn lại
+                        .requestMatchers(HttpMethod.POST, PublicAiPaths.CHAT).permitAll()
+                        .requestMatchers(HttpMethod.GET, PublicAiPaths.QUOTA).permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationEntryPoint(handlers)

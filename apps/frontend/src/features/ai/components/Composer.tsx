@@ -1,8 +1,9 @@
-import { SendHorizontal, Square } from 'lucide-react'
+import { Mic, MicOff, SendHorizontal, Square } from 'lucide-react'
 import { useId, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { aiStrings } from '../strings'
+import { useSpeechInput } from '../useSpeechInput'
 
 type ComposerProps = {
   streaming: boolean
@@ -31,9 +32,28 @@ export function Composer({ streaming, disabled, hint, onSend, onStop }: Composer
     el.style.height = `${Math.min(el.scrollHeight, 128)}px`
   }
 
+  // Nói xong thì chữ nằm trong ô nhập để người dùng xem lại rồi mới bấm Gửi (DECISIONS #92)
+  const voiceBaseRef = useRef('')
+  const voice = useSpeechInput((transcript) => {
+    const base = voiceBaseRef.current.trimEnd()
+    const joined = base && transcript ? `${base} ${transcript}` : base || transcript
+    setText(joined.slice(0, MAX_LENGTH))
+    requestAnimationFrame(resize)
+  })
+  const toggleVoice = () => {
+    if (voice.listening) {
+      voice.stop()
+      return
+    }
+    voiceBaseRef.current = text
+    voice.start()
+  }
+  const status = voice.error ?? (voice.listening ? aiStrings.voiceListening : hint)
+
   const submit = (event?: FormEvent) => {
     event?.preventDefault()
     if (!canSend) return
+    voice.stop()
     onSend(text)
     setText('')
     // Đặt lại chiều cao sau khi React xóa nội dung
@@ -65,7 +85,7 @@ export function Composer({ streaming, disabled, hint, onSend, onStop }: Composer
           maxLength={MAX_LENGTH}
           disabled={disabled}
           placeholder={aiStrings.inputPlaceholder}
-          aria-describedby={hint ? hintId : undefined}
+          aria-describedby={status ? hintId : undefined}
           onChange={(event) => {
             setText(event.target.value)
             resize()
@@ -73,6 +93,21 @@ export function Composer({ streaming, disabled, hint, onSend, onStop }: Composer
           onKeyDown={onKeyDown}
           className="max-h-32 min-h-11 flex-1 resize-none py-2.5"
         />
+        {voice.supported && (
+          <Button
+            type="button"
+            variant={voice.listening ? 'primary' : 'secondary'}
+            size="icon"
+            disabled={disabled || streaming}
+            aria-pressed={voice.listening}
+            aria-label={voice.listening ? aiStrings.voiceStop : aiStrings.voiceStart}
+            title={voice.listening ? aiStrings.voiceStop : aiStrings.voiceStart}
+            onClick={toggleVoice}
+            className={voice.listening ? 'motion-safe:animate-pulse' : undefined}
+          >
+            {voice.listening ? <MicOff aria-hidden="true" /> : <Mic aria-hidden="true" />}
+          </Button>
+        )}
         {streaming ? (
           <Button type="button" variant="secondary" onClick={onStop} aria-label={aiStrings.stop}>
             <Square aria-hidden="true" />
@@ -85,9 +120,13 @@ export function Composer({ streaming, disabled, hint, onSend, onStop }: Composer
           </Button>
         )}
       </div>
-      {hint && (
-        <p id={hintId} className="mt-2 text-sm text-text-muted tabular-nums">
-          {hint}
+      {status && (
+        <p
+          id={hintId}
+          role={voice.error ? 'alert' : undefined}
+          className="mt-2 text-sm text-text-muted tabular-nums"
+        >
+          {status}
         </p>
       )}
     </form>

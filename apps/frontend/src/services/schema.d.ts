@@ -1317,12 +1317,17 @@ export interface paths {
         /**
          * Hỏi trợ lý AI (streaming SSE)
          * @description Trả `text/event-stream`. Mỗi event có `event:` là tên và `data:` là JSON:
-         *     - `token`: `{ "text": "..." }` — một đoạn chữ của câu trả lời, nối dần vào cuối.
+         *     - `status`: `{ "text": "..." }` — việc Trợ lý đang làm trong lúc tra cứu (ví dụ "Đang tìm thành viên…"), có thể lặp lại, trước event `token` đầu tiên.
+         *     - `token`: `{ "text": "..." }` — một đoạn chữ của câu trả lời, nối dần vào cuối. Gửi ngay khi Gemini trả chữ.
          *     - `draft`: `AiDraft` — thẻ xem trước đề xuất sự kiện do AI soạn (AI không tự ghi dữ liệu).
          *     - `done`: `AiQuota` — kết thúc lượt, kèm số lượt còn lại.
          *     - `error`: `{ "code": "...", "message": "..." }` — lỗi giữa chừng (ví dụ `AI_UNAVAILABLE`).
          *
          *     Hết lượt trong ngày thì trả 429 `AI_QUOTA_EXCEEDED` (chưa mở luồng).
+         *
+         *     Mở cho khách và tài khoản chưa duyệt (DECISIONS #91): tính lượt theo hạn mức khách (`aiQuotaGuest`) và mã
+         *     thiết bị `X-Device-Id`, không lưu lịch sử (FE gửi `history`), không soạn bản nháp (không có event `draft`).
+         *     Tài khoản đã duyệt tính theo tài khoản, bỏ qua `X-Device-Id` và `history`.
          */
         post: operations["aiChat"];
         delete?: never;
@@ -1338,7 +1343,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Số lượt hỏi còn lại hôm nay (User 15, Admin 30, đặt lại 0h giờ Việt Nam) */
+        /**
+         * Số lượt hỏi còn lại hôm nay (User 15, Admin 30, khách 15, đặt lại 0h giờ Việt Nam)
+         * @description Mở cho khách và tài khoản chưa duyệt (DECISIONS
+         */
         get: operations["getAiQuota"];
         put?: never;
         post?: never;
@@ -2428,6 +2436,11 @@ export interface components {
             aiQuotaUser: number;
             /** Format: int32 */
             aiQuotaAdmin: number;
+            /**
+             * Format: int32
+             * @description Lượt hỏi AI mỗi ngày của khách và tài khoản chưa duyệt; 0 là tắt AI với khách
+             */
+            aiQuotaGuest: number;
             /** Format: int32 */
             uploadMaxMb: number;
             /** Format: int32 */
@@ -2489,12 +2502,19 @@ export interface components {
         };
         AiChatRequest: {
             message: string;
+            /** @description Chỉ khách dùng (không có lịch sử lưu ở server); FE gửi vài lượt gần nhất của phiên */
+            history?: components["schemas"]["AiChatTurn"][];
+        };
+        AiChatTurn: {
+            /** @enum {string} */
+            role: "user" | "model";
+            text: string;
         };
         /** @description Lượt hỏi trong ngày (theo giờ Việt Nam). `remaining = limit - used`. */
         AiQuota: {
             /**
              * Format: int32
-             * @description 15 với User, 30 với Admin (cấu hình ở `SystemSettings`)
+             * @description 15 với User, 30 với Admin, 15 với khách (cấu hình ở `SystemSettings`)
              */
             limit: number;
             /** Format: int32 */
@@ -2691,6 +2711,8 @@ export interface components {
         };
     };
     parameters: {
+        /** @description Mã thiết bị của khách (FE sinh ngẫu nhiên, 16–64 ký tự chữ-số-gạch ngang, lưu trên máy). Thiếu hoặc sai dạng thì tính theo IP. */
+        DeviceId: string;
         /** @description `id` của bản nháp do AI soạn */
         AiDraftId: number;
         /** @description `id` của sự kiện chung */
@@ -4705,7 +4727,10 @@ export interface operations {
     aiChat: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Mã thiết bị của khách (FE sinh ngẫu nhiên, 16–64 ký tự chữ-số-gạch ngang, lưu trên máy). Thiếu hoặc sai dạng thì tính theo IP. */
+                "X-Device-Id"?: components["parameters"]["DeviceId"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -4725,7 +4750,6 @@ export interface operations {
                 };
             };
             400: components["responses"]["ValidationError"];
-            401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             429: components["responses"]["TooManyRequests"];
             /** @description Trợ lý chưa dùng được (`AI_UNAVAILABLE`) */
@@ -4742,7 +4766,10 @@ export interface operations {
     getAiQuota: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Mã thiết bị của khách (FE sinh ngẫu nhiên, 16–64 ký tự chữ-số-gạch ngang, lưu trên máy). Thiếu hoặc sai dạng thì tính theo IP. */
+                "X-Device-Id"?: components["parameters"]["DeviceId"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -4757,7 +4784,6 @@ export interface operations {
                     "application/json": components["schemas"]["AiQuota"];
                 };
             };
-            401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
         };
     };

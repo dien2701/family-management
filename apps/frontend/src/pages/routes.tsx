@@ -124,6 +124,8 @@ export const routes: RouteObject[] = [
           { path: 'bai-khan/:id', element: <PrayerDetailPage />, handle: handle(prayerStrings.menu) },
           // Push cho khách và tài khoản chưa duyệt (DECISIONS #89); tài khoản đã duyệt được chuyển sang Cài đặt thông báo
           { path: 'thong-bao-thiet-bi', element: <GuestPushPage />, handle: handle('Thông báo trên thiết bị này') },
+          // Trợ lý AI: khách và tài khoản chưa duyệt hỏi được (DECISIONS #91), không có lịch sử và bản nháp
+          { path: 'tro-ly', element: <AssistantPage />, handle: handle(aiStrings.title) },
           {
             element: <RequireAuth />,
             children: [
@@ -157,7 +159,6 @@ export const routes: RouteObject[] = [
                     element: <ExportPage />,
                     handle: handle('Xuất dữ liệu'),
                   },
-                  { path: 'tro-ly', element: <AssistantPage />, handle: handle(aiStrings.title) },
                   { path: 'de-xuat', element: <MyProposalsPage />, handle: handle('Đề xuất của tôi') },
                   { path: 'thong-bao', element: <InboxPage />, handle: handle('Thông báo') },
                   { path: 'thong-bao/cai-dat', element: <SettingsPage />, handle: handle('Cài đặt thông báo') },

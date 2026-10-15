@@ -32,6 +32,7 @@ public class ApprovalGateFilter extends OncePerRequestFilter {
     private final AccountAccessLookup lookup;
     private final ProblemDetailSecurityHandlers problems;
     private final RequestMatcher exempt;
+    private final RequestMatcher guestAi = PublicAiPaths.matcher();
 
     public ApprovalGateFilter(AccountAccessLookup lookup, ProblemDetailSecurityHandlers problems) {
         this.lookup = lookup;
@@ -59,6 +60,11 @@ public class ApprovalGateFilter extends OncePerRequestFilter {
         }
         CurrentUser user = CurrentUser.from(jwt);
         if (!user.isApproved()) {
+            // Trợ lý AI (DECISIONS #91): tài khoản chưa duyệt đi qua như khách; AiChatService tính lượt theo khách
+            if (guestAi.matches(request)) {
+                chain.doFilter(request, response);
+                return;
+            }
             notApproved(response);
             return;
         }

@@ -25,7 +25,7 @@ export function ChatMessage({ item }: { item: ChatItem }) {
                 {item.content ? (
                   <SafeMarkdown text={item.content} />
                 ) : (
-                  <p className="text-text-muted">{aiStrings.thinking}</p>
+                  <p className="text-text-muted">{item.status ?? aiStrings.thinking}</p>
                 )}
                 {item.streaming && item.content && (
                   <span

@@ -64,6 +64,8 @@ public record AppProperties(
     /** Gemini (IDEA §10, DECISIONS #47). Khóa rỗng nghĩa là chưa cấu hình: {@code GeminiProvider} trả 503. */
     public record Ai(
             @DefaultValue("") String geminiApiKey,
-            @DefaultValue("gemini-2.5-flash") String model) {
+            @DefaultValue("gemini-3.5-flash-lite") String model,
+            /** Ngân sách "suy nghĩ" của mô hình: 0 là tắt (nhanh nhất), âm là để mô hình tự quyết (chậm hơn). */
+            @DefaultValue("0") int thinkingBudget) {
     }
 }

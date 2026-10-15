@@ -1,7 +1,10 @@
 import { Sparkles } from 'lucide-react'
 import { useEffect, useRef } from 'react'
+import { Link } from 'react-router'
 import { Alert } from '@/components/shared/Alert'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { isApproved } from '@/features/auth/routing'
+import { useAuth } from '@/hooks/useAuth'
 import { ChatMessage } from '../components/ChatMessage'
 import { Composer } from '../components/Composer'
 import { useAiMessages, useAiQuota } from '../hooks'
@@ -17,9 +20,15 @@ const formatResetDate = (iso: string) =>
   })
 
 export function AssistantPage() {
+  const { user } = useAuth()
+  // Khách và tài khoản chưa duyệt dùng được Trợ lý nhưng không có lịch sử và bản nháp (DECISIONS #91)
+  const guest = !isApproved(user)
+  const suggestions = guest
+    ? aiStrings.suggestions
+    : [...aiStrings.suggestions, aiStrings.draftSuggestion]
   const quota = useAiQuota()
-  const history = useAiMessages()
-  const { items, streaming, send, stop } = useAssistantChat()
+  const history = useAiMessages(!guest)
+  const { items, streaming, send, stop } = useAssistantChat(guest)
   const endRef = useRef<HTMLDivElement>(null)
 
   const past: ChatItem[] = (history.data ?? []).map((m) => ({
@@ -41,12 +50,28 @@ export function AssistantPage() {
   const hint =
     quota.data === undefined
       ? null
-      : outOfQuota
-        ? aiStrings.quotaOut(formatResetDate(quota.data.resetAt))
-        : aiStrings.quotaLeft(quota.data.remaining)
+      : guest && quota.data.limit === 0
+        ? aiStrings.guestOff
+        : outOfQuota
+          ? aiStrings.quotaOut(formatResetDate(quota.data.resetAt))
+          : aiStrings.quotaLeft(quota.data.remaining)
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      {guest && (
+        <p className="text-sm text-text-muted">
+          {user ? aiStrings.guestPendingNote : aiStrings.guestNote}{' '}
+          {!user && (
+            <Link
+              to="/dang-nhap"
+              state={{ from: '/tro-ly' }}
+              className="inline-flex min-h-11 items-center font-medium text-primary underline"
+            >
+              {aiStrings.guestLogin}
+            </Link>
+          )}
+        </p>
+      )}
       {history.isError && <Alert>{aiStrings.historyError}</Alert>}
 
       <div
@@ -55,7 +80,7 @@ export function AssistantPage() {
         aria-label={aiStrings.title}
         className="flex min-h-[40dvh] flex-col gap-4"
       >
-        {all.length === 0 && !history.isPending ? (
+        {all.length === 0 && !history.isLoading ? (
           <EmptyState
             icon={Sparkles}
             title={aiStrings.emptyTitle}
@@ -65,7 +90,7 @@ export function AssistantPage() {
                 aria-label={aiStrings.suggestionsLabel}
                 className="flex flex-wrap justify-center gap-2"
               >
-                {aiStrings.suggestions.map((suggestion) => (
+                {suggestions.map((suggestion) => (
                   <li key={suggestion}>
                     <button
                       type="button"

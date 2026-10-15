@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError } from '@/services/client'
 import type { AiDraft } from '@/types/api'
 import { AI_QUOTA_KEY } from './hooks'
-import { streamChat } from './sse'
+import { streamChat, type ChatTurn } from './sse'
 import { aiStrings } from './strings'
 
 export type ChatItem = {
@@ -13,6 +13,8 @@ export type ChatItem = {
   draft?: AiDraft | null
   /** Câu trả lời đang được nhận dần */
   streaming?: boolean
+  /** Việc Trợ lý đang làm (đang tra cứu...), chỉ hiện khi chưa có chữ nào */
+  status?: string
   stopped?: boolean
   error?: string
 }
@@ -20,8 +22,22 @@ export type ChatItem = {
 let counter = 0
 const nextId = () => `local-${++counter}`
 
-/** Trạng thái cuộc trò chuyện đang diễn ra: gửi câu hỏi, nhận chữ dần, dừng giữa chừng. */
-export function useAssistantChat() {
+const MAX_HISTORY = 10
+
+/** Vài lượt gần nhất của phiên để khách có ngữ cảnh (server không lưu lịch sử của khách, DECISIONS #91). */
+function toHistory(items: ChatItem[]): ChatTurn[] {
+  const turns = items
+    .filter((item) => item.content && !item.error && !item.streaming)
+    .map((item): ChatTurn => ({ role: item.role === 'USER' ? 'user' : 'model', text: item.content }))
+    .slice(-MAX_HISTORY)
+  return turns[0]?.role === 'model' ? turns.slice(1) : turns
+}
+
+/**
+ * Trạng thái cuộc trò chuyện đang diễn ra: gửi câu hỏi, nhận chữ dần, dừng giữa chừng.
+ * `guest`: khách hoặc tài khoản chưa duyệt, gửi kèm lịch sử của phiên vì server không lưu.
+ */
+export function useAssistantChat(guest: boolean) {
   const queryClient = useQueryClient()
   const [items, setItems] = useState<ChatItem[]>([])
   const [streaming, setStreaming] = useState(false)
@@ -39,6 +55,7 @@ export function useAssistantChat() {
       const message = text.trim()
       if (!message || controllerRef.current) return
 
+      const history = guest ? toHistory(items) : []
       const replyId = nextId()
       setItems((all) => [
         ...all,
@@ -50,10 +67,13 @@ export function useAssistantChat() {
       setStreaming(true)
 
       try {
+        // Chữ nào nhận được là hiện ngay (DECISIONS #92), không đệm giả lập
         await streamChat(
           message,
+          history,
           {
             onToken: (chunk) => patch(replyId, (item) => ({ ...item, content: item.content + chunk })),
+            onStatus: (status) => patch(replyId, (item) => ({ ...item, status })),
             onDraft: (draft) => patch(replyId, (item) => ({ ...item, draft })),
             onDone: (quota) => queryClient.setQueryData(AI_QUOTA_KEY, quota),
           },
@@ -74,7 +94,7 @@ export function useAssistantChat() {
         setStreaming(false)
       }
     },
-    [patch, queryClient],
+    [guest, items, patch, queryClient],
   )
 
   const stop = useCallback(() => controllerRef.current?.abort(), [])

@@ -8,8 +8,13 @@ export function useAiQuota() {
 }
 
 /** Lịch sử chỉ nạp một lần khi mở trang; tin mới nằm ở state của cuộc trò chuyện. */
-export function useAiMessages() {
-  return useQuery({ queryKey: ['ai', 'messages'], queryFn: aiApi.messages, staleTime: Infinity })
+export function useAiMessages(enabled = true) {
+  return useQuery({
+    queryKey: ['ai', 'messages'],
+    queryFn: aiApi.messages,
+    staleTime: Infinity,
+    enabled,
+  })
 }
 
 export function useDraftAction(kind: 'submit' | 'apply') {

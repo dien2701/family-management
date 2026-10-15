@@ -12,12 +12,22 @@ export const aiStrings = {
     'Tháng này có sinh nhật ai?',
     'Gia phả hiện có bao nhiêu thành viên?',
     'Đổi ngày 15/8 âm lịch năm nay sang dương lịch',
-    'Thêm sự kiện họp mặt họ vào mùng 10 tháng 3 âm lịch',
   ],
+  // Chỉ gợi ý cho tài khoản đã duyệt: khách không soạn được bản nháp (DECISIONS #91)
+  draftSuggestion: 'Thêm sự kiện họp mặt họ vào mùng 10 tháng 3 âm lịch',
+  guestNote:
+    'Bạn đang hỏi với tư cách khách: cuộc trò chuyện không được lưu và Trợ lý không soạn được đề xuất sự kiện.',
+  guestPendingNote:
+    'Tài khoản của bạn chưa được duyệt nên Trợ lý tính lượt như khách và không lưu cuộc trò chuyện.',
+  guestLogin: 'Đăng nhập',
+  guestOff: 'Trợ lý chưa mở cho khách. Vui lòng đăng nhập để sử dụng.',
   inputLabel: 'Câu hỏi cho Trợ lý',
   inputPlaceholder: 'Nhập câu hỏi…',
   send: 'Gửi',
   stop: 'Dừng',
+  voiceStart: 'Nhập bằng giọng nói',
+  voiceStop: 'Dừng ghi âm',
+  voiceListening: 'Đang nghe… hãy nói câu hỏi của bạn. Nói xong, kiểm tra lại rồi bấm Gửi.',
   stopped: 'Đã dừng trả lời',
   thinking: 'Trợ lý đang trả lời…',
   quotaLeft: (n: number) => `Còn ${n} câu hôm nay`,

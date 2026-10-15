@@ -2,9 +2,14 @@
 // header Bearer hay body). Gặp 401 thì refresh một lần rồi thử lại, giống `services/client.ts`.
 import { ApiError, getAccessToken, refreshSession, type ProblemDetail } from '@/services/client'
 import type { AiDraft, AiQuota } from '@/types/api'
+import { deviceHeaders } from './deviceId'
+
+export type ChatTurn = { role: 'user' | 'model'; text: string }
 
 export type ChatHandlers = {
   onToken: (text: string) => void
+  /** Dòng trạng thái trong lúc Trợ lý tra cứu, trước khi có chữ đầu tiên */
+  onStatus: (text: string) => void
   onDraft: (draft: AiDraft) => void
   onDone: (quota: AiQuota) => void
 }
@@ -34,6 +39,7 @@ function dispatch({ event, data }: SseEvent, handlers: ChatHandlers) {
     return
   }
   if (event === 'token') handlers.onToken((payload as { text?: string }).text ?? '')
+  else if (event === 'status') handlers.onStatus((payload as { text?: string }).text ?? '')
   else if (event === 'draft') handlers.onDraft(payload as AiDraft)
   else if (event === 'done') handlers.onDone(payload as AiQuota)
   else if (event === 'error') {
@@ -42,7 +48,11 @@ function dispatch({ event, data }: SseEvent, handlers: ChatHandlers) {
   }
 }
 
-async function post(message: string, signal: AbortSignal): Promise<Response> {
+async function post(
+  message: string,
+  history: ChatTurn[],
+  signal: AbortSignal,
+): Promise<Response> {
   const send = () => {
     const token = getAccessToken()
     return fetch('/api/ai/chat', {
@@ -50,9 +60,10 @@ async function post(message: string, signal: AbortSignal): Promise<Response> {
       headers: {
         Accept: 'text/event-stream',
         'Content-Type': 'application/json',
+        ...deviceHeaders(),
         ...(token && { Authorization: `Bearer ${token}` }),
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, history }),
       credentials: 'same-origin',
       signal,
     })
@@ -76,13 +87,17 @@ async function post(message: string, signal: AbortSignal): Promise<Response> {
   }
 }
 
-/** Gửi câu hỏi và gọi handler mỗi khi có chữ, bản nháp hoặc kết thúc. Hủy bằng `signal`. */
+/**
+ * Gửi câu hỏi và gọi handler mỗi khi có chữ, bản nháp hoặc kết thúc. Hủy bằng `signal`.
+ * `history` chỉ khách cần (không có lịch sử lưu ở server); tài khoản đã duyệt thì server bỏ qua.
+ */
 export async function streamChat(
   message: string,
+  history: ChatTurn[],
   handlers: ChatHandlers,
   signal: AbortSignal,
 ): Promise<void> {
-  const response = await post(message, signal)
+  const response = await post(message, history, signal)
   if (!response.ok) {
     let problem: ProblemDetail = {}
     try {

@@ -58,7 +58,7 @@ services:
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:?đặt CLOUDINARY_API_KEY trong .env}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:?đặt CLOUDINARY_API_SECRET trong .env}
       GEMINI_API_KEY: ${GEMINI_API_KEY:?đặt GEMINI_API_KEY trong .env}
-      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-flash}
+      GEMINI_MODEL: ${GEMINI_MODEL:-gemini-3.5-flash-lite}
       # Tùy chọn: để trống thì nút Google ẩn / Web Push không gửi
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}

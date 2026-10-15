@@ -9,10 +9,11 @@ import { ADMIN_NAV_ITEM, AI_NAV_ITEM, PRAYER_NAV_ITEM, navItemsFor, type NavItem
 export function Sidebar() {
   const { user } = useAuth()
   const base = navItemsFor(user)
-  // Trợ lý và Quản trị cần đăng nhập và đã duyệt; Quản trị chỉ Admin. Chèn trước mục cuối để mục cuối giữ nguyên chỗ
+  // Quản trị cần đăng nhập và đã duyệt, chỉ Admin. Trợ lý AI ai cũng có (DECISIONS #91). Chèn trước mục cuối để mục
+  // cuối giữ nguyên chỗ
   const items: readonly NavItem[] = isApproved(user)
     ? [...base.slice(0, -1), AI_NAV_ITEM, ...(isAdmin(user) ? [ADMIN_NAV_ITEM] : []), ...base.slice(-1)]
-    : [...base.slice(0, -1), PRAYER_NAV_ITEM, ...base.slice(-1)]
+    : [...base.slice(0, -1), AI_NAV_ITEM, PRAYER_NAV_ITEM, ...base.slice(-1)]
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-[72px] shrink-0 flex-col border-r border-border bg-surface md:flex lg:w-60">

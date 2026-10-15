@@ -3,6 +3,7 @@ package vn.giapha.ai.service;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -38,7 +39,14 @@ class FakeAiProvider implements AiProvider {
             "(?:them|tao) su kien (.+?) ngay (\\d{1,2}) thang (gieng|chap|\\d{1,2})(?: nam (\\d{4}))?\\s*(am|duong)?");
 
     @Override
-    public String reply(String systemPrompt, List<Turn> history, String userMessage, ToolExecutor tools) {
+    public String reply(String systemPrompt, List<Turn> history, String userMessage, ToolExecutor tools,
+            Consumer<String> onToken) {
+        String answer = answer(userMessage, tools);
+        onToken.accept(answer);
+        return answer;
+    }
+
+    private String answer(String userMessage, ToolExecutor tools) {
         String cleaned = clean(userMessage);
 
         if (containsAny(cleaned, CONTACT_KEYWORDS)) {

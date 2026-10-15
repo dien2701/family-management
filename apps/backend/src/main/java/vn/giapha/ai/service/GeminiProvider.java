@@ -3,6 +3,7 @@ package vn.giapha.ai.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,22 +12,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import com.google.genai.Client;
+import com.google.genai.ResponseStream;
 import com.google.genai.types.Content;
 import com.google.genai.types.FunctionCall;
 import com.google.genai.types.FunctionDeclaration;
 import com.google.genai.types.GenerateContentConfig;
 import com.google.genai.types.GenerateContentResponse;
 import com.google.genai.types.Part;
+import com.google.genai.types.ThinkingConfig;
 import com.google.genai.types.Tool;
 
 import vn.giapha.common.exception.BusinessException;
 import vn.giapha.config.AppProperties;
 
 /**
- * {@link AiProvider} thật bằng {@code com.google.genai} (IDEA §10; DECISIONS #47). Gọi {@code generateContent}
- * không streaming (Gemini Developer API không đảm bảo stream cùng lúc với function calling ở mọi phiên bản mô
- * hình): {@code AiChatService} tự chia câu trả lời cuối cùng thành từng đoạn để phát SSE. Vòng lặp tool tối đa
- * {@value #MAX_TOOL_CALLS} lượt để tránh mô hình gọi tool vô hạn.
+ * {@link AiProvider} thật bằng {@code com.google.genai} (IDEA §10; DECISIONS #47, #92). Gọi
+ * {@code generateContentStream}: chữ nào có là phát ngay cho {@code AiChatService} đẩy SSE. Lời gọi tool nằm trong
+ * luồng nên mỗi vòng gom hết lời gọi rồi chạy tool và gọi stream tiếp. Vòng lặp tool tối đa {@value #MAX_TOOL_CALLS}
+ * lượt để tránh mô hình gọi tool vô hạn.
  */
 @Component
 @Profile("!dev & !test")
@@ -36,22 +39,45 @@ class GeminiProvider implements AiProvider {
     private static final int MAX_TOOL_CALLS = 6;
 
     private final AppProperties.Ai config;
+    // Dùng chung một Client (giữ kết nối HTTP/TLS) thay vì dựng lại mỗi câu hỏi
+    private volatile Client client;
 
     GeminiProvider(AppProperties props) {
         this.config = props.ai();
     }
 
+    private Client client() {
+        Client c = client;
+        if (c == null) {
+            synchronized (this) {
+                if (client == null) {
+                    client = Client.builder().apiKey(config.geminiApiKey()).build();
+                }
+                c = client;
+            }
+        }
+        return c;
+    }
+
     @Override
-    public String reply(String systemPrompt, List<Turn> history, String userMessage, ToolExecutor tools) {
+    public String reply(String systemPrompt, List<Turn> history, String userMessage, ToolExecutor tools,
+            Consumer<String> onToken) {
         if (config.geminiApiKey().isBlank()) {
             throw unavailable();
         }
         try {
-            Client client = Client.builder().apiKey(config.geminiApiKey()).build();
-            GenerateContentConfig genConfig = GenerateContentConfig.builder()
+            long startedAt = System.nanoTime();
+            long[] firstTokenAt = { 0 };
+            Client client = client();
+            GenerateContentConfig.Builder genBuilder = GenerateContentConfig.builder()
                     .systemInstruction(Content.fromParts(Part.fromText(systemPrompt)))
-                    .tools(Tool.builder().functionDeclarations(toolDeclarations()))
-                    .build();
+                    .tools(Tool.builder().functionDeclarations(toolDeclarations()));
+            // Tra cứu bằng tool không cần suy nghĩ dài; tắt đi tiết kiệm vài giây mỗi vòng gọi. Chỉ gửi cho họ
+            // 2.5 Flash: các mô hình khác (Pro, 2.0, 3.x) không nhận ngân sách 0 và trả 400 INVALID_ARGUMENT
+            if (config.thinkingBudget() >= 0 && config.model().startsWith("gemini-2.5-flash")) {
+                genBuilder.thinkingConfig(ThinkingConfig.builder().thinkingBudget(config.thinkingBudget()).build());
+            }
+            GenerateContentConfig genConfig = genBuilder.build();
 
             List<Content> contents = new ArrayList<>();
             for (Turn turn : history) {
@@ -59,15 +85,49 @@ class GeminiProvider implements AiProvider {
             }
             contents.add(Content.builder().role("user").parts(Part.fromText(userMessage)).build());
 
-            GenerateContentResponse response = client.models.generateContent(config.model(), contents, genConfig);
-            int guard = 0;
-            while (response.functionCalls() != null && !response.functionCalls().isEmpty()
-                    && guard++ < MAX_TOOL_CALLS) {
-                List<Part> modelParts = response.parts();
-                contents.add(Content.builder().role("model").parts(modelParts == null ? List.of() : modelParts)
-                        .build());
+            StringBuilder answer = new StringBuilder();
+            for (int round = 0;; round++) {
+                // Mỗi vòng là một lần gọi stream: chữ phát ngay, lời gọi tool gom lại rồi chạy sau khi hết luồng
+                List<Part> modelParts = new ArrayList<>();
+                List<FunctionCall> calls = new ArrayList<>();
+                boolean needBreak = answer.length() > 0;
+                try (ResponseStream<GenerateContentResponse> stream = client.models
+                        .generateContentStream(config.model(), contents, genConfig)) {
+                    for (GenerateContentResponse chunk : stream) {
+                        List<Part> parts = chunk.parts();
+                        if (parts == null) {
+                            continue;
+                        }
+                        for (Part part : parts) {
+                            // Chunk cuối của luồng hay có part chữ rỗng; gửi lại part rỗng cho Gemini là 400
+                            boolean emptyText = part.functionCall().isEmpty()
+                                    && part.text().map(String::isEmpty).orElse(false);
+                            if (!emptyText) {
+                                modelParts.add(part);
+                            }
+                            part.functionCall().ifPresent(calls::add);
+                            // Chữ suy nghĩ (thought) không phát cho người dùng
+                            boolean thought = part.thought().orElse(false);
+                            String piece = part.text().orElse("");
+                            if (!thought && !piece.isEmpty()) {
+                                // Có lời dẫn trước khi gọi tool ở vòng trước thì tách đoạn, khỏi dính liền câu trả lời
+                                String out = needBreak ? "\n\n" + piece : piece;
+                                needBreak = false;
+                                if (firstTokenAt[0] == 0) {
+                                    firstTokenAt[0] = System.nanoTime();
+                                }
+                                answer.append(out);
+                                onToken.accept(out);
+                            }
+                        }
+                    }
+                }
+                if (calls.isEmpty() || round >= MAX_TOOL_CALLS) {
+                    break;
+                }
+                contents.add(Content.builder().role("model").parts(modelParts).build());
                 List<Part> toolResults = new ArrayList<>();
-                for (FunctionCall call : response.functionCalls()) {
+                for (FunctionCall call : calls) {
                     String name = call.name().orElse("");
                     Map<String, Object> args = call.args().orElse(Map.of());
                     Map<String, Object> result = tools.execute(name, args);
@@ -75,18 +135,21 @@ class GeminiProvider implements AiProvider {
                 }
                 // API hiện hành chỉ nhận role user/model; role "function" (kiểu cũ) bị trả 400 INVALID_ARGUMENT
                 contents.add(Content.builder().role("user").parts(toolResults).build());
-                response = client.models.generateContent(config.model(), contents, genConfig);
             }
-            String text = response.text();
-            if (text == null || text.isBlank()) {
+            if (answer.toString().isBlank()) {
                 throw unavailable();
             }
-            return text;
+            long now = System.nanoTime();
+            log.info("Gemini trả lời: chữ đầu sau {} ms, xong sau {} ms ({} ký tự, model {})",
+                    firstTokenAt[0] == 0 ? -1 : (firstTokenAt[0] - startedAt) / 1_000_000,
+                    (now - startedAt) / 1_000_000, answer.length(), config.model());
+            return answer.toString();
         } catch (BusinessException e) {
             throw e;
         } catch (RuntimeException e) {
             // Trước đây nuốt hết nên không biết Gemini từ chối vì sao (khóa sai, hết quota, sai model...)
-            log.warn("Gemini lỗi ({}): {}", e.getClass().getSimpleName(), e.getMessage());
+            log.warn("Gemini lỗi (model {}, suy nghĩ {}): {} {}", config.model(), config.thinkingBudget(),
+                    e.getClass().getSimpleName(), e.getMessage());
             throw unavailable();
         }
     }
