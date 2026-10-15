@@ -31,7 +31,9 @@ function errorMessage(error: unknown): string {
 // Quản trị > Tài khoản (IDEA §6.10): duyệt, từ chối, khóa, mở khóa, cấp/gỡ Admin. Quyền do backend quyết định.
 export function AccountsPage() {
   const { user } = useAuth()
-  const { tab, q, status, role, page, query, update } = useAccountParams()
+  // Backend tắt duyệt tài khoản (`approvalRequired` false): không có tab Chờ duyệt, tài khoản mới tự vào dùng
+  const approvalRequired = user?.approvalRequired !== false
+  const { tab, q, status, role, page, query, update } = useAccountParams(approvalRequired)
   const accounts = useAccounts(query)
   const waitingCount = useWaitingCount()
   const action = useAccountAction()
@@ -99,6 +101,7 @@ export function AccountsPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      {approvalRequired && (
       <div
         role="tablist"
         aria-label={s.accounts.tabsLabel}
@@ -127,11 +130,13 @@ export function AccountsPage() {
           label={s.accounts.tabAll}
         />
       </div>
+      )}
 
       <AccountFilters
         search={search}
         onSearchChange={setSearch}
         showFilters={tab === 'all'}
+        hideWaitingOption={!approvalRequired}
         status={status}
         role={role}
         onStatusChange={(value) => update({ status: value })}

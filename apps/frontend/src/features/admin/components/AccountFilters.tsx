@@ -10,6 +10,8 @@ type AccountFiltersProps = {
   onSearchChange: (value: string) => void
   /** Chỉ tab Tất cả có lọc trạng thái và vai trò; tab Chờ duyệt đã cố định trạng thái. */
   showFilters: boolean
+  /** Tắt duyệt tài khoản thì không còn trạng thái Chờ duyệt để lọc. */
+  hideWaitingOption?: boolean
   status: StatusFilter | undefined
   role: 'ADMIN' | 'USER' | undefined
   onStatusChange: (value: StatusFilter | undefined) => void
@@ -20,6 +22,7 @@ export function AccountFilters({
   search,
   onSearchChange,
   showFilters,
+  hideWaitingOption = false,
   status,
   role,
   onStatusChange,
@@ -43,7 +46,7 @@ export function AccountFilters({
                 }
               >
                 <option value="">{s.accounts.allOption}</option>
-                {STATUS_FILTERS.map((value) => (
+                {STATUS_FILTERS.filter((value) => !(hideWaitingOption && value === 'WAITING')).map((value) => (
                   <option key={value} value={value}>
                     {s.status[value.toLowerCase() as keyof typeof s.status]}
                   </option>

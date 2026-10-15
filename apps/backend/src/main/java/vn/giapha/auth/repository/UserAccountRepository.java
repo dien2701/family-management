@@ -70,6 +70,15 @@ public interface UserAccountRepository
     @Query("update UserAccount u set u.memberId = null where u.memberId = :memberId")
     int clearMember(@Param("memberId") Long memberId);
 
+    /** Duyệt hàng loạt tài khoản đã xác thực còn chờ duyệt (khi tắt duyệt); không có Admin duyệt nên approvedBy để trống. */
+    @Modifying
+    @Query("""
+            update UserAccount u
+            set u.approvalStatus = vn.giapha.auth.entity.ApprovalStatus.APPROVED, u.approvedAt = :at
+            where u.status = vn.giapha.auth.entity.AccountStatus.ACTIVE
+              and u.approvalStatus = vn.giapha.auth.entity.ApprovalStatus.WAITING""")
+    int approveAllWaiting(@Param("at") Instant at);
+
     /** Xóa tài khoản PENDING quá hạn; refresh_token đi theo nhờ ON DELETE CASCADE. */
     @Modifying
     @Query("delete from UserAccount u where u.status = vn.giapha.auth.entity.AccountStatus.PENDING and u.createdAt < :cutoff")

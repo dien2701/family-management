@@ -47,6 +47,7 @@ services:
       # Quản trị & bảo mật
       JWT_SECRET: ${JWT_SECRET:-giapha_default_secret_key_minimum_32_bytes_long_123456}
       ROOT_ADMIN_EMAIL: ${ROOT_ADMIN_EMAIL:-admin@example.com}
+      REQUIRE_ACCOUNT_APPROVAL: ${REQUIRE_ACCOUNT_APPROVAL:-false}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
       TZ: UTC
 

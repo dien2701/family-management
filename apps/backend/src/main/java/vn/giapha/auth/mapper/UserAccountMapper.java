@@ -10,9 +10,10 @@ import vn.giapha.auth.entity.UserAccount;
 @Mapper
 public interface UserAccountMapper {
 
-    /** {@code consentRequired} không nằm trong entity mà suy ra từ bảng consent nên truyền vào riêng. */
+    /** {@code consentRequired} suy ra từ bảng consent, {@code approvalRequired} từ cấu hình; cả hai không nằm trong entity. */
     @Mapping(target = "consentRequired", source = "consentRequired")
-    MeResponse toMe(UserAccount user, boolean consentRequired);
+    @Mapping(target = "approvalRequired", source = "approvalRequired")
+    MeResponse toMe(UserAccount user, boolean consentRequired, boolean approvalRequired);
 
     /** {@code member} cần tên từ module member nên {@code AdminAccountService} gắn sau bằng {@code withMember}. */
     @Mapping(target = "member", ignore = true)

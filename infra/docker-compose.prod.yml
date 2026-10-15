@@ -49,6 +49,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?đặt DB_PASSWORD trong .env}
       JWT_SECRET: ${JWT_SECRET:?đặt JWT_SECRET (>= 32 byte) trong .env}
       ROOT_ADMIN_EMAIL: ${ROOT_ADMIN_EMAIL:?đặt ROOT_ADMIN_EMAIL trong .env}
+      REQUIRE_ACCOUNT_APPROVAL: ${REQUIRE_ACCOUNT_APPROVAL:-false}
       MAIL_HOST: ${MAIL_HOST:?đặt MAIL_HOST trong .env}
       MAIL_PORT: ${MAIL_PORT:-587}
       MAIL_USERNAME: ${MAIL_USERNAME:?đặt MAIL_USERNAME trong .env}

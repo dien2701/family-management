@@ -7,7 +7,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -50,6 +54,8 @@ public class AuthService {
     public record AuthResult(AuthResponse body, String refreshToken) {
     }
 
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
     /** BCrypt chỉ dùng 72 byte đầu; Spring từ chối mật khẩu dài hơn nên chặn ở đây bằng lỗi trường. */
     private static final int BCRYPT_MAX_BYTES = 72;
 
@@ -68,6 +74,7 @@ public class AuthService {
     private final ApplicationEventPublisher events;
     private final Clock clock;
     private final Policy loginPerIpPolicy;
+    private final boolean requireApproval;
     /** Băm một mật khẩu giả khi email không tồn tại để thời gian phản hồi không lộ email nào có thật. */
     private final String dummyHash;
 
@@ -92,6 +99,7 @@ public class AuthService {
         this.clock = clock;
         this.loginPerIpPolicy = new Policy("login-ip", props.auth().loginPerMinutePerIp(),
                 Duration.ofMinutes(1));
+        this.requireApproval = props.auth().requireApproval();
         this.dummyHash = passwordEncoder.encode("dummy-password-for-timing");
     }
 
@@ -337,9 +345,30 @@ public class AuthService {
     private UserAccount activated(UserAccount user) {
         UserAccount promoted = rootAdmin.promoteIfRoot(user);
         if (promoted.getApprovalStatus() == ApprovalStatus.WAITING) {
-            events.publishEvent(new AccountPendingEvent(promoted.getId()));
+            if (requireApproval) {
+                events.publishEvent(new AccountPendingEvent(promoted.getId()));
+            } else {
+                // Tắt duyệt: vào dùng ngay, không có Admin duyệt nên approvedBy để trống
+                promoted.approve(null, Instant.now(clock));
+            }
         }
         return promoted;
+    }
+
+    /**
+     * Khi tắt duyệt, tài khoản đã xác thực mà còn chờ duyệt (đăng ký trước lúc tắt) được duyệt hàng loạt lúc khởi động.
+     * Tài khoản bị từ chối giữ nguyên. Bật lại duyệt thì chỉ tài khoản mới phải chờ, số đã duyệt không bị đảo.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
+    public void approveWaitingWhenApprovalDisabled() {
+        if (requireApproval) {
+            return;
+        }
+        int approved = users.approveAllWaiting(Instant.now(clock));
+        if (approved > 0) {
+            log.info("Tắt duyệt tài khoản: đã tự duyệt {} tài khoản đang chờ", approved);
+        }
     }
 
     private AuthResponse authResponse(UserAccount user) {
@@ -349,7 +378,7 @@ public class AuthService {
     }
 
     private MeResponse toMe(UserAccount user) {
-        return mapper.toMe(user, !consents.hasAcceptedCurrentPolicy(user.getId()));
+        return mapper.toMe(user, !consents.hasAcceptedCurrentPolicy(user.getId()), requireApproval);
     }
 
     private OtpSentResponse otpSent(String email) {

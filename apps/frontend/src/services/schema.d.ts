@@ -1999,6 +1999,8 @@ export interface components {
             /** @enum {string} */
             approvalStatus?: "WAITING" | "APPROVED" | "REJECTED";
             consentRequired?: boolean;
+            /** @description Hệ thống đang bắt Admin duyệt tài khoản mới. false thì tài khoản tự được duyệt khi kích hoạt và giao diện ẩn mục duyệt tài khoản. */
+            approvalRequired?: boolean;
             /**
              * Format: int64
              * @description Thành viên mà tài khoản đã liên kết ("Tôi là ai"); không có nghĩa là chưa liên kết.

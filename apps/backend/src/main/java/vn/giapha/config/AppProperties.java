@@ -33,7 +33,9 @@ public record AppProperties(
             @DefaultValue("5") int loginMaxFailures,
             @DefaultValue("15m") Duration loginLockDuration,
             @DefaultValue("30") int loginPerMinutePerIp,
-            @DefaultValue("7d") Duration pendingRetention) {
+            @DefaultValue("7d") Duration pendingRetention,
+            // false: tài khoản tự được duyệt khi kích hoạt (tắt tạm thời việc Admin duyệt); true: như thiết kế gốc
+            @DefaultValue("true") boolean requireApproval) {
     }
 
     /**

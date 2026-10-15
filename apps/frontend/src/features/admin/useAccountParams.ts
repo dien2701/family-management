@@ -25,10 +25,11 @@ type Patch = Partial<{
  * Bộ lọc của trang Tài khoản nằm trên URL (`?tab=all&q=an&status=LOCKED&role=ADMIN&page=1`) để tải lại
  * hoặc gửi link vẫn giữ nguyên màn hình. Đổi bất kỳ bộ lọc nào ngoài `page` thì về trang đầu.
  */
-export function useAccountParams() {
+export function useAccountParams(approvalRequired = true) {
   const [params, setParams] = useSearchParams()
 
-  const tab: AccountTab = params.get('tab') === 'all' ? 'all' : 'waiting'
+  // Tắt duyệt tài khoản thì không còn tab Chờ duyệt, luôn ở tab Tất cả
+  const tab: AccountTab = !approvalRequired || params.get('tab') === 'all' ? 'all' : 'waiting'
   const q = params.get('q') ?? ''
   const statusParam = params.get('status')
   const roleParam = params.get('role')

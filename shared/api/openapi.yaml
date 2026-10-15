@@ -3560,6 +3560,9 @@ components:
             - REJECTED
         consentRequired:
           type: boolean
+        approvalRequired:
+          type: boolean
+          description: Hệ thống đang bắt Admin duyệt tài khoản mới. false thì tài khoản tự được duyệt khi kích hoạt và giao diện ẩn mục duyệt tài khoản.
         memberId:
           type: integer
           format: int64

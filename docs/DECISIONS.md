@@ -423,6 +423,16 @@
     - **Nhập giọng nói bằng Web Speech API của trình duyệt** (`vi-VN`), không gửi âm thanh qua BE. Âm thanh do nhà cung cấp trình duyệt (Google/Apple) xử lý. Trình duyệt không hỗ trợ (Firefox) thì ẩn nút micro. Nói xong chữ **điền vào ô nhập** để xem lại, người dùng tự bấm Gửi (không tự gửi).
     - **Việc chờ:** thêm câu về âm thanh giọng nói do trình duyệt xử lý vào chính sách bảo mật khi có người duyệt (xem mục "Việc còn chờ").
 
+## R. Tạm tắt việc Admin duyệt tài khoản (chốt 2026-10-15, hỏi đáp với người dùng)
+
+93. **Công tắc `REQUIRE_ACCOUNT_APPROVAL`: tắt thì tài khoản vào dùng ngay, không xóa tính năng duyệt** (thắng #54–#56 khi công tắc tắt)
+    → **Chốt:**
+    - **Công tắc là biến môi trường** `REQUIRE_ACCOUNT_APPROVAL` → `app.auth.require-approval`. Mặc định trong `application.yml` và compose là `false` (đang tắt). Đặt `true` rồi khởi động lại để bật lại duyệt như cũ. Test cũ (`application-test.yml`) giữ `true`.
+    - **Tắt = tự duyệt lúc kích hoạt:** `AuthService.activated` đặt `APPROVED` ngay khi xác thực OTP hoặc đăng nhập Google lần đầu (`approvedBy` để trống), không phát `AccountPendingEvent` nên Admin không bị báo. Cổng duyệt, claim `approval`, `PublicReadPaths`... giữ nguyên.
+    - **Tài khoản đang chờ:** lúc khởi động với công tắc tắt, mọi tài khoản `ACTIVE` + `WAITING` được duyệt hàng loạt (`approveAllWaiting`). Tài khoản `REJECTED` và `LOCKED` giữ nguyên. Bật lại thì chỉ tài khoản mới phải chờ, tài khoản đã duyệt không bị đảo.
+    - **Giao diện:** `MeResponse.approvalRequired` cho FE biết. Tắt thì trang Quản trị > Tài khoản ẩn tab "Chờ duyệt" và ô lọc "Chờ duyệt". Duyệt "Tôi là ai", đề xuất sự kiện và khóa/mở khóa tài khoản không đổi. Trang `/cho-duyet` và thẻ dashboard vẫn còn trong code nhưng không ai tới.
+    - **Hệ quả:** khách vẫn xem công khai (#88) nhưng tài khoản mới đăng ký giờ ghi dữ liệu được ngay (ví dụ hồ sơ của mình sau khi liên kết); Admin không còn chốt người lạ trước khi vào.
+
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.
 - Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt. Cần cập nhật khi duyệt: Trợ lý AI nay mở cho khách (#91) và giọng nói do trình duyệt xử lý (#92).
