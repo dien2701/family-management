@@ -13,7 +13,7 @@ export const BLANK = '........'
 export function extractSlots(content: string): string[] {
   const names = new Set<string>()
   for (const m of content.matchAll(SLOT)) {
-    const name = m[1].trim()
+    const name = (m[1] ?? '').trim()
     if (name) names.add(name)
   }
   return [...names]
@@ -32,7 +32,7 @@ export function fillContent(content: string, values: Record<string, string>): st
 export function slotError(content: string): string | null {
   const names = new Set<string>()
   for (const m of content.matchAll(SLOT)) {
-    const name = m[1].trim()
+    const name = (m[1] ?? '').trim()
     if (!name || name.length > MAX_SLOT_NAME) return prayerStrings.form.slotNameLength
     names.add(name)
   }

@@ -116,7 +116,7 @@ function AvatarCard() {
       <AvatarUpload
         key={user.avatarUrl ?? 'none'}
         label={file ? 'Ảnh mới (chưa lưu)' : 'Ảnh hiện tại'}
-        name={user.fullName}
+        name={user.fullName ?? ''}
         currentUrl={user.avatarUrl}
         file={file}
         onChange={setFile}

@@ -56,7 +56,7 @@ export function fillsSignature(fills: LocalFills): string {
   return JSON.stringify(
     Object.keys(fills)
       .sort()
-      .map((id) => [id, Object.entries(fills[id]).sort(([a], [b]) => a.localeCompare(b))]),
+      .map((id) => [id, Object.entries(fills[id] ?? {}).sort(([a], [b]) => a.localeCompare(b))]),
   )
 }
 
