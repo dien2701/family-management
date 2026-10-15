@@ -26,7 +26,7 @@ export function OccurrenceRow({ occurrence: o, onEdit, hideDate, className }: Oc
   return (
     <li
       className={cn(
-        'flex items-start gap-3 rounded-field border border-border bg-surface p-3',
+        'flex items-start gap-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-accent',
         className,
       )}
     >
