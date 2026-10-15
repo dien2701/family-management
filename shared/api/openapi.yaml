@@ -904,7 +904,8 @@ paths:
         - files
       summary: Xin chữ ký để tải tệp lên Cloudinary
       description: |
-        Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`).
+        Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`) và
+        `kind = ACCOUNT_AVATAR` cho ảnh của chính tài khoản đã duyệt.
         Máy chủ kiểm MIME (jpg, png, webp, pdf, docx, xlsx; ảnh đại diện chỉ jpg/png/webp), tối đa 10 MB mỗi tệp và 1 GB toàn hệ thống.
         Lỗi: 400 `VALIDATION_ERROR` (gồm hết dung lượng: `QUOTA_EXCEEDED`), 403 `FORBIDDEN`, 503 `STORAGE_NOT_CONFIGURED` khi chưa có khóa Cloudinary.
       operationId: signUpload
@@ -934,6 +935,7 @@ paths:
       summary: Xác nhận tệp đã tải lên Cloudinary
       description: |
         Máy chủ kiểm lại tệp trên Cloudinary rồi ghi nhận. Với `AVATAR`, ảnh cũ của hồ sơ bị thay và `avatarUrl` được cập nhật.
+        Với `ACCOUNT_AVATAR`, ảnh cũ của tài khoản bị thay và `avatarUrl` của tài khoản (`GET /api/me`) được cập nhật.
         Quyền như `/api/files/sign`.
       operationId: confirmUpload
       requestBody:
@@ -1007,6 +1009,43 @@ paths:
       responses:
         '204':
           description: Đã xóa
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/me/avatar:
+    delete:
+      tags:
+        - files
+      summary: Gỡ ảnh đại diện của tài khoản đang đăng nhập
+      description: Xóa cả trên Cloudinary (sau khi commit); `avatarUrl` của tài khoản về `null`.
+      operationId: removeMyAvatar
+      responses:
+        '204':
+          description: Đã gỡ
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/admin/accounts/{id}/avatar:
+    delete:
+      tags:
+        - files
+      summary: Admin gỡ ảnh đại diện của một tài khoản
+      description: Chỉ Admin. Xóa cả trên Cloudinary (sau khi commit).
+      operationId: removeAccountAvatar
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Đã gỡ
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -3291,9 +3330,13 @@ components:
         - isDeceased
     FileKind:
       type: string
+      description: |
+        `AVATAR` là ảnh của một thành viên, `ACCOUNT_AVATAR` là ảnh của tài khoản đang gọi (chủ ảnh lấy từ token,
+        `memberId` bị bỏ qua), `DOCUMENT` là tài liệu.
       enum:
         - AVATAR
         - DOCUMENT
+        - ACCOUNT_AVATAR
     FileSignRequest:
       type: object
       properties:

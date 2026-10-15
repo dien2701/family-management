@@ -1,8 +1,8 @@
 import { LogOut, Settings, UserRound } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
+import { UserAvatar } from '@/components/shared/UserAvatar'
 import { useAuth } from '@/hooks/useAuth'
-import { initialOf } from '@/utils/text'
 
 const ITEM =
   'flex min-h-11 w-full items-center gap-3 px-4 text-left text-base transition-colors hover:bg-surface-muted'
@@ -37,9 +37,9 @@ export function UserMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-base font-semibold text-secondary-fg transition-colors hover:bg-secondary-hover"
+        className="shrink-0 cursor-pointer rounded-full transition-opacity hover:opacity-80"
       >
-        {initialOf(user?.fullName)}
+        <UserAvatar url={user?.avatarUrl} name={user?.fullName} className="size-10 text-base" />
       </button>
       {open && (
         <div

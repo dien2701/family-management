@@ -129,6 +129,12 @@ public class AuthFacade implements AccountAccessLookup {
         }).orElse(Access.GONE);
     }
 
+    /** Đặt hoặc gỡ ảnh đại diện của tài khoản ({@code url} null là gỡ). Quyền do module gọi kiểm. */
+    @Transactional
+    public void changeAvatar(Long userId, String url) {
+        users.findById(userId).ifPresent(u -> u.setAvatarUrl(url));
+    }
+
     /** Thu hồi mọi refresh token: buộc đăng nhập lại để claim trong token khớp với thay đổi vừa xảy ra. */
     @Transactional
     public void revokeSessions(Long userId) {

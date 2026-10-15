@@ -1,13 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ChevronRight, UserCheck } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { ChevronRight, Trash2, UserCheck } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
 import { Link } from 'react-router'
 import { Alert } from '@/components/shared/Alert'
+import { AvatarUpload } from '@/components/shared/AvatarUpload'
 import { Badge } from '@/components/shared/Badge'
 import { FormField } from '@/components/shared/FormField'
 import { PasswordInput } from '@/components/shared/PasswordInput'
+import { UserAvatar } from '@/components/shared/UserAvatar'
 import { Button } from '@/components/ui/button'
 import { LogoutButton } from '@/features/auth/components/LogoutButton'
 import { useChangePassword } from '@/features/auth/hooks'
@@ -15,7 +17,7 @@ import { changePasswordSchema } from '@/features/auth/schemas'
 import { useLinkedMember } from '@/features/link/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import { ApiError } from '@/services/client'
-import { initialOf } from '@/utils/text'
+import { useRemoveMyAvatar, useUploadMyAvatar } from '../hooks'
 
 type PasswordForm = z.infer<typeof changePasswordSchema>
 
@@ -90,6 +92,73 @@ function ChangePasswordCard() {
   )
 }
 
+function avatarErrorText(error: unknown): string | null {
+  if (!error) return null
+  if (error instanceof ApiError) return error.message
+  return 'Không xử lý được ảnh này, vui lòng chọn ảnh khác hoặc thử lại.'
+}
+
+/** Ảnh riêng của tài khoản (độc lập với ảnh thành viên): chọn, xem trước, rồi bấm Lưu mới tải lên. */
+function AvatarCard() {
+  const { user } = useAuth()
+  const upload = useUploadMyAvatar()
+  const remove = useRemoveMyAvatar()
+  const [file, setFile] = useState<File | null>(null)
+  if (!user) return null
+
+  const errorText = avatarErrorText(upload.error ?? remove.error)
+  const busy = upload.isPending || remove.isPending
+
+  return (
+    <Card title="Ảnh đại diện">
+      {errorText && <Alert>{errorText}</Alert>}
+      {/* key theo ảnh hiện tại: lưu hoặc gỡ xong thì component chọn ảnh làm lại từ đầu */}
+      <AvatarUpload
+        key={user.avatarUrl ?? 'none'}
+        label={file ? 'Ảnh mới (chưa lưu)' : 'Ảnh hiện tại'}
+        name={user.fullName}
+        currentUrl={user.avatarUrl}
+        file={file}
+        onChange={setFile}
+        disabled={busy}
+        hint="JPG, PNG hoặc WebP. Ảnh được cắt vuông ở giữa và thu nhỏ trước khi tải lên."
+        labels={{
+          choose: 'Chọn ảnh',
+          change: 'Đổi ảnh',
+          clear: 'Bỏ ảnh đã chọn',
+          badType: 'Chỉ nhận ảnh JPG, PNG hoặc WebP.',
+          tooBig: 'Ảnh quá lớn, tối đa 10 MB. Hãy chọn ảnh nhỏ hơn.',
+        }}
+      />
+      <div className="flex flex-wrap gap-2">
+        {file && (
+          <Button
+            type="button"
+            loading={upload.isPending}
+            disabled={busy}
+            onClick={() => upload.mutate(file, { onSuccess: () => setFile(null) })}
+          >
+            Lưu ảnh
+          </Button>
+        )}
+        {!file && user.avatarUrl && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="text-danger"
+            loading={remove.isPending}
+            disabled={busy}
+            onClick={() => remove.mutate()}
+          >
+            <Trash2 aria-hidden="true" />
+            Gỡ ảnh
+          </Button>
+        )}
+      </div>
+    </Card>
+  )
+}
+
 /** Hồ sơ cá nhân của TÀI KHOẢN đang đăng nhập (khác hồ sơ thành viên ở trang Thành viên). */
 export function ProfilePage() {
   const { user } = useAuth()
@@ -101,9 +170,7 @@ export function ProfilePage() {
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <Card title="Thông tin tài khoản">
         <div className="flex items-center gap-4">
-          <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-secondary text-2xl font-semibold text-secondary-fg">
-            {initialOf(user.fullName)}
-          </span>
+          <UserAvatar url={user.avatarUrl} name={user.fullName} className="size-16 text-2xl" />
           <div className="min-w-0">
             <p className="truncate text-xl leading-tight font-bold">{user.fullName}</p>
             <p className="truncate text-text-muted">{user.email}</p>
@@ -120,6 +187,8 @@ export function ProfilePage() {
           </Row>
         </dl>
       </Card>
+
+      <AvatarCard />
 
       <Card title="Liên kết với thành viên">
         <Link

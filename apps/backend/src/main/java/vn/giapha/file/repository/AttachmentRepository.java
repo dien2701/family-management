@@ -20,6 +20,8 @@ public interface AttachmentRepository extends JpaRepository<Attachment, Long> {
 
     List<Attachment> findByMemberIdAndKind(Long memberId, AttachmentKind kind);
 
+    List<Attachment> findByAccountIdAndKind(Long accountId, AttachmentKind kind);
+
     boolean existsByPublicId(String publicId);
 
     /** Tổng dung lượng toàn hệ thống, tính vào quota 1 GB (DECISIONS #67). */

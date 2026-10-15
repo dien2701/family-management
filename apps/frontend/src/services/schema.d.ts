@@ -461,7 +461,8 @@ export interface paths {
         put?: never;
         /**
          * Xin chữ ký để tải tệp lên Cloudinary
-         * @description Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`).
+         * @description Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`) và
+         *     `kind = ACCOUNT_AVATAR` cho ảnh của chính tài khoản đã duyệt.
          *     Máy chủ kiểm MIME (jpg, png, webp, pdf, docx, xlsx; ảnh đại diện chỉ jpg/png/webp), tối đa 10 MB mỗi tệp và 1 GB toàn hệ thống.
          *     Lỗi: 400 `VALIDATION_ERROR` (gồm hết dung lượng: `QUOTA_EXCEEDED`), 403 `FORBIDDEN`, 503 `STORAGE_NOT_CONFIGURED` khi chưa có khóa Cloudinary.
          */
@@ -484,6 +485,7 @@ export interface paths {
         /**
          * Xác nhận tệp đã tải lên Cloudinary
          * @description Máy chủ kiểm lại tệp trên Cloudinary rồi ghi nhận. Với `AVATAR`, ảnh cũ của hồ sơ bị thay và `avatarUrl` được cập nhật.
+         *     Với `ACCOUNT_AVATAR`, ảnh cũ của tài khoản bị thay và `avatarUrl` của tài khoản (`GET /api/me`) được cập nhật.
          *     Quyền như `/api/files/sign`.
          */
         post: operations["confirmUpload"];
@@ -539,6 +541,46 @@ export interface paths {
         post?: never;
         /** Xóa tệp đính kèm */
         delete: operations["deleteAttachment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Gỡ ảnh đại diện của tài khoản đang đăng nhập
+         * @description Xóa cả trên Cloudinary (sau khi commit); `avatarUrl` của tài khoản về `null`.
+         */
+        delete: operations["removeMyAvatar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Admin gỡ ảnh đại diện của một tài khoản
+         * @description Chỉ Admin. Xóa cả trên Cloudinary (sau khi commit).
+         */
+        delete: operations["removeAccountAvatar"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1861,8 +1903,12 @@ export interface components {
             memorialOverride?: components["schemas"]["MemorialOverride"] | null;
             burialPlace?: string | null;
         };
-        /** @enum {string} */
-        FileKind: "AVATAR" | "DOCUMENT";
+        /**
+         * @description `AVATAR` là ảnh của một thành viên, `ACCOUNT_AVATAR` là ảnh của tài khoản đang gọi (chủ ảnh lấy từ token,
+         *     `memberId` bị bỏ qua), `DOCUMENT` là tài liệu.
+         * @enum {string}
+         */
+        FileKind: "AVATAR" | "DOCUMENT" | "ACCOUNT_AVATAR";
         FileSignRequest: {
             kind: components["schemas"]["FileKind"];
             /**
@@ -3487,6 +3533,49 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Đã xóa */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    removeMyAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã gỡ */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    removeAccountAvatar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã gỡ */
             204: {
                 headers: {
                     [name: string]: unknown;

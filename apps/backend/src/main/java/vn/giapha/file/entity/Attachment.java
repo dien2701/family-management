@@ -31,6 +31,10 @@ public class Attachment {
     @Column(name = "member_id")
     private Long memberId;
 
+    /** Chủ của ảnh ACCOUNT_AVATAR ({@code user_account.id}); null với các loại khác. */
+    @Column(name = "account_id")
+    private Long accountId;
+
     @Column(name = "public_id", nullable = false, length = 300)
     private String publicId;
 
@@ -60,10 +64,11 @@ public class Attachment {
     protected Attachment() {
     }
 
-    public Attachment(AttachmentKind kind, Long memberId, String publicId, FileFormat format, String url, String title,
-            String fileName, long sizeBytes, Long createdBy, Instant now) {
+    public Attachment(AttachmentKind kind, Long memberId, Long accountId, String publicId, FileFormat format,
+            String url, String title, String fileName, long sizeBytes, Long createdBy, Instant now) {
         this.kind = kind;
         this.memberId = memberId;
+        this.accountId = accountId;
         this.publicId = publicId;
         this.format = format;
         this.url = url;
@@ -84,6 +89,10 @@ public class Attachment {
 
     public Long getMemberId() {
         return memberId;
+    }
+
+    public Long getAccountId() {
+        return accountId;
     }
 
     public String getPublicId() {

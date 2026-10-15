@@ -76,4 +76,27 @@ class AttachmentController {
     void delete(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id) {
         service.delete(current.userId(), id);
     }
+
+    @Operation(operationId = "removeMyAvatar", summary = "Gỡ ảnh đại diện của tài khoản đang đăng nhập",
+            tags = "files", description = "Xóa cả trên Cloudinary (sau khi commit); avatarUrl về null.")
+    @ApiResponse(responseCode = "204", description = "Đã gỡ")
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @DeleteMapping("/api/me/avatar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void removeMine(@Parameter(hidden = true) CurrentUser current) {
+        service.removeAccountAvatar(current.userId(), current.userId());
+    }
+
+    @Operation(operationId = "removeAccountAvatar", summary = "Admin gỡ ảnh đại diện của một tài khoản",
+            tags = "files", description = "Chỉ Admin. Xóa cả trên Cloudinary (sau khi commit).")
+    @ApiResponse(responseCode = "204", description = "Đã gỡ")
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
+    @DeleteMapping("/api/admin/accounts/{id}/avatar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void removeOfAccount(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id) {
+        service.removeAccountAvatar(current.userId(), id);
+    }
 }

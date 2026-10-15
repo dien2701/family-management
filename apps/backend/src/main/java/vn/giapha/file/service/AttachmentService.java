@@ -43,6 +43,7 @@ public class AttachmentService {
     private static final String TARGET_TYPE = "ATTACHMENT";
     private static final String FOLDER = "giapha/";
     private static final String AVATAR_FOLDER = FOLDER + "avatar/";
+    private static final String ACCOUNT_AVATAR_FOLDER = FOLDER + "account/";
     private static final String DOCUMENT_FOLDER = FOLDER + "document/";
     private static final long BYTES_PER_MB = 1024L * 1024L;
     private static final int MAX_NAME = 255;
@@ -97,8 +98,8 @@ public class AttachmentService {
         }
         requireQuota(size);
 
-        FileStorage.SignedUpload signed = storage.signUpload(newPublicId(request.kind(), request.memberId(), format),
-                format);
+        FileStorage.SignedUpload signed = storage.signUpload(
+                newPublicId(request.kind(), ownerOf(request.kind(), actorId, request.memberId()), format), format);
         return new FileSignResponse(signed.uploadUrl(), signed.fields());
     }
 
@@ -112,14 +113,15 @@ public class AttachmentService {
         FileFormat format = null;
         if (fileName != null) {
             format = FileFormat.ofFileName(fileName).orElse(null);
-            if (format == null || (request.kind() == AttachmentKind.AVATAR && !format.isImage())) {
+            if (format == null || (request.kind() != AttachmentKind.DOCUMENT && !format.isImage())) {
                 errors.add(new FieldError("fileName", "Định dạng tệp không được hỗ trợ."));
                 format = null;
             }
         }
         String publicId = request.publicId();
         if (publicId == null || !SAFE_PUBLIC_ID.matcher(publicId).matches()
-                || !publicId.startsWith(expectedPrefix(request.kind(), request.memberId()))) {
+                || !publicId.startsWith(expectedPrefix(request.kind(),
+                        ownerOf(request.kind(), actorId, request.memberId())))) {
             errors.add(new FieldError("publicId", "Mã tệp không hợp lệ."));
         }
         if (!errors.isEmpty()) {
@@ -144,7 +146,9 @@ public class AttachmentService {
         }
 
         Instant now = Instant.now(clock);
-        Attachment row = new Attachment(request.kind(), request.memberId(), publicId, format, stored.secureUrl(),
+        boolean accountAvatar = request.kind() == AttachmentKind.ACCOUNT_AVATAR;
+        Attachment row = new Attachment(request.kind(), accountAvatar ? null : request.memberId(),
+                accountAvatar ? actorId : null, publicId, format, stored.secureUrl(),
                 request.kind() == AttachmentKind.DOCUMENT ? title : null, fileName, bytes, actorId, now);
         try {
             attachments.saveAndFlush(row);
@@ -159,6 +163,12 @@ public class AttachmentService {
             attachments.deleteAll(old);
             cleaner.deleteAfterCommit(old);
             members.changeAvatar(row.getMemberId(), row.getUrl());
+        } else if (accountAvatar) {
+            List<Attachment> old = attachments.findByAccountIdAndKind(actorId, AttachmentKind.ACCOUNT_AVATAR).stream()
+                    .filter(a -> !a.getId().equals(row.getId())).toList();
+            attachments.deleteAll(old);
+            cleaner.deleteAfterCommit(old);
+            auth.changeAvatar(actorId, row.getUrl());
         }
         AttachmentResponse response = AttachmentResponse.of(row);
         audit.write(actorId, "CREATE", TARGET_TYPE, row.getId(), null, response);
@@ -208,9 +218,33 @@ public class AttachmentService {
         attachments.delete(a);
         if (a.getKind() == AttachmentKind.AVATAR) {
             members.changeAvatar(a.getMemberId(), null);
+        } else if (a.getKind() == AttachmentKind.ACCOUNT_AVATAR) {
+            auth.changeAvatar(a.getAccountId(), null);
         }
         cleaner.deleteAfterCommit(List.of(a));
         audit.write(actorId, "DELETE", TARGET_TYPE, id, before, null);
+    }
+
+    /**
+     * Gỡ ảnh đại diện của tài khoản: chính chủ (đã duyệt) gỡ ảnh của mình, Admin gỡ ảnh của bất kỳ tài khoản nào.
+     * Xóa dòng ngay, xóa trên Cloudinary sau khi commit; {@code avatarUrl} về null kể cả khi đang là ảnh Google.
+     */
+    @Transactional
+    public void removeAccountAvatar(Long actorId, Long accountId) {
+        AuthFacade.Account actor = auth.find(actorId).filter(AuthFacade.Account::usable).orElseThrow(
+                AttachmentService::forbidden);
+        if (!actorId.equals(accountId) && !actor.admin()) {
+            throw forbidden();
+        }
+        if (auth.find(accountId).isEmpty()) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, "ACCOUNT_NOT_FOUND", "Không tìm thấy tài khoản này.");
+        }
+        List<Attachment> old = attachments.findByAccountIdAndKind(accountId, AttachmentKind.ACCOUNT_AVATAR);
+        List<AttachmentResponse> before = old.stream().map(AttachmentResponse::of).toList();
+        attachments.deleteAll(old);
+        cleaner.deleteAfterCommit(old);
+        auth.changeAvatar(accountId, null);
+        audit.write(actorId, "DELETE", "ACCOUNT_AVATAR", accountId, before, null);
     }
 
     // ---------- Nội bộ ----------
@@ -226,7 +260,10 @@ public class AttachmentService {
         }
     }
 
-    /** Admin, hoặc User đã liên kết với đúng {@code memberId} khi tải AVATAR (DECISIONS #78). Cũng kiểm dữ liệu vào. */
+    /**
+     * Admin; User đã liên kết với đúng {@code memberId} khi tải AVATAR (DECISIONS #78); mọi tài khoản đã duyệt khi
+     * tải ACCOUNT_AVATAR (chủ ảnh luôn là người gọi, không nhận từ request). Cũng kiểm dữ liệu vào.
+     */
     private void requireUploader(Long actorId, AttachmentKind kind, Long memberId) {
         AuthFacade.Account account = auth.find(actorId).filter(AuthFacade.Account::usable).orElseThrow(
                 AttachmentService::forbidden);
@@ -239,12 +276,12 @@ public class AttachmentService {
         if (!errors.isEmpty()) {
             throw validation(errors);
         }
-        boolean allowed = account.admin()
+        boolean allowed = account.admin() || kind == AttachmentKind.ACCOUNT_AVATAR
                 || (kind == AttachmentKind.AVATAR && account.memberId() != null && account.memberId().equals(memberId));
         if (!allowed) {
             throw forbidden();
         }
-        if (memberId != null && !members.exists(memberId)) {
+        if (kind != AttachmentKind.ACCOUNT_AVATAR && memberId != null && !members.exists(memberId)) {
             throw validation(List.of(new FieldError("memberId", "Thành viên không tồn tại.")));
         }
     }
@@ -259,7 +296,7 @@ public class AttachmentService {
         FileFormat format = FileFormat.ofMime(mimeType).orElse(null);
         if (format == null) {
             errors.add(new FieldError(field, "Chỉ nhận jpg, png, webp, pdf, docx, xlsx."));
-        } else if (kind == AttachmentKind.AVATAR && !format.isImage()) {
+        } else if (kind != AttachmentKind.DOCUMENT && !format.isImage()) {
             errors.add(new FieldError(field, "Ảnh đại diện chỉ nhận jpg, png, webp."));
             return null;
         }
@@ -290,18 +327,26 @@ public class AttachmentService {
         return title;
     }
 
-    private static String expectedPrefix(AttachmentKind kind, Long memberId) {
+    /** Chủ của tệp trong public_id: tài khoản đang gọi với ACCOUNT_AVATAR, còn lại là thành viên trong request. */
+    private static Long ownerOf(AttachmentKind kind, Long actorId, Long memberId) {
+        return kind == AttachmentKind.ACCOUNT_AVATAR ? actorId : memberId;
+    }
+
+    private static String expectedPrefix(AttachmentKind kind, Long ownerId) {
         if (kind == AttachmentKind.AVATAR) {
-            return AVATAR_FOLDER + memberId + "-";
+            return AVATAR_FOLDER + ownerId + "-";
+        }
+        if (kind == AttachmentKind.ACCOUNT_AVATAR) {
+            return ACCOUNT_AVATAR_FOLDER + ownerId + "-";
         }
         return DOCUMENT_FOLDER;
     }
 
     /** Ảnh: {@code giapha/avatar/<memberId>-<uuid>}; tệp raw giữ đuôi để tải về đúng loại. */
-    private static String newPublicId(AttachmentKind kind, Long memberId, FileFormat format) {
+    private static String newPublicId(AttachmentKind kind, Long ownerId, FileFormat format) {
         String id = UUID.randomUUID().toString().replace("-", "");
         String suffix = format.isImage() ? "" : "." + format.extension();
-        return expectedPrefix(kind, memberId) + id + suffix;
+        return expectedPrefix(kind, ownerId) + id + suffix;
     }
 
     private static boolean storedFormatMatches(FileStorage.StoredFile stored, String publicId, FileFormat expected) {

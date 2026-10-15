@@ -1,7 +1,6 @@
-import { api, ApiError } from '@/services/client'
+import { api } from '@/services/client'
+import { uploadAvatar } from '@/services/upload'
 import type {
-  Attachment,
-  FileSignResponse,
   MemberDetail,
   MemberInput,
   MemberPage,
@@ -21,31 +20,6 @@ export type MemberListQuery = {
   size?: number
 }
 
-/** Ảnh đại diện: xin chữ ký → gửi thẳng lên Cloudinary → xác nhận với máy chủ (IDEA §6.7). */
-async function uploadAvatar(memberId: number, file: File): Promise<Attachment> {
-  const sign = await api.post<FileSignResponse>('/files/sign', {
-    kind: 'AVATAR',
-    memberId,
-    fileName: file.name,
-    mimeType: file.type,
-    sizeBytes: file.size,
-  })
-  const body = new FormData()
-  for (const [key, value] of Object.entries(sign.fields)) body.append(key, value)
-  body.append('file', file)
-  const response = await fetch(sign.uploadUrl, { method: 'POST', body })
-  if (!response.ok) {
-    throw new ApiError(response.status, { title: 'Tải ảnh lên không thành công, vui lòng thử lại.' })
-  }
-  const uploaded = (await response.json()) as { public_id: string }
-  return api.post<Attachment>('/files/confirm', {
-    kind: 'AVATAR',
-    memberId,
-    publicId: uploaded.public_id,
-    fileName: file.name,
-  })
-}
-
 export const memberApi = {
   getMembers: (query: MemberListQuery) =>
     api.get<MemberPage>('/members', { query: query as Record<string, string | number | boolean | null | undefined> }),
@@ -61,5 +35,5 @@ export const memberApi = {
     api.put<Relative>(`/members/${id}/relatives/${relativeId}`, { label }),
   deleteRelative: (id: number, relativeId: number) =>
     api.delete<void>(`/members/${id}/relatives/${relativeId}`),
-  uploadAvatar,
+  uploadAvatar: (memberId: number, file: File) => uploadAvatar({ kind: 'AVATAR', memberId }, file),
 }
