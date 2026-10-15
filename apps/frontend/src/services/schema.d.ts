@@ -1318,12 +1318,17 @@ export interface paths {
          * Hỏi trợ lý AI (streaming SSE)
          * @description Trả `text/event-stream`. Mỗi event có `event:` là tên và `data:` là JSON:
          *     - `status`: `{ "text": "..." }` — việc Trợ lý đang làm trong lúc tra cứu (ví dụ "Đang tìm thành viên…"), có thể lặp lại, trước event `token` đầu tiên.
+         *     - `conversation`: `AiConversation` — chỉ khi tài khoản đã duyệt gửi câu đầu của một đoạn chat mới (`conversationId` trống): đoạn vừa tạo (DECISIONS #94), gửi sau khi trả lời xong và trước `done`.
          *     - `token`: `{ "text": "..." }` — một đoạn chữ của câu trả lời, nối dần vào cuối. Gửi ngay khi Gemini trả chữ.
          *     - `draft`: `AiDraft` — thẻ xem trước đề xuất sự kiện do AI soạn (AI không tự ghi dữ liệu).
          *     - `done`: `AiQuota` — kết thúc lượt, kèm số lượt còn lại.
          *     - `error`: `{ "code": "...", "message": "..." }` — lỗi giữa chừng (ví dụ `AI_UNAVAILABLE`).
          *
          *     Hết lượt trong ngày thì trả 429 `AI_QUOTA_EXCEEDED` (chưa mở luồng).
+         *
+         *     Tài khoản đã duyệt: `conversationId` trống thì tạo đoạn chat mới (tiêu đề cắt từ câu hỏi); đoạn không tồn tại
+         *     hoặc của người khác trả 404 `AI_CONVERSATION_NOT_FOUND`; đã đủ 50 đoạn và đều ghim thì trả 409
+         *     `AI_CONVERSATION_LIMIT`. Ngữ cảnh gửi cho Trợ lý chỉ gồm các tin của đúng đoạn đó.
          *
          *     Mở cho khách và tài khoản chưa duyệt (DECISIONS #91): tính lượt theo hạn mức khách (`aiQuotaGuest`) và mã
          *     thiết bị `X-Device-Id`, không lưu lịch sử (FE gửi `history`), không soạn bản nháp (không có event `draft`).
@@ -1363,7 +1368,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Lịch sử trò chuyện của tài khoản hiện tại (cũ trước, mới sau) */
+        /** Tin nhắn của một đoạn chat (cũ trước, mới sau) */
         get: operations["listAiMessages"];
         put?: never;
         post?: never;
@@ -1371,6 +1376,47 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/ai/conversations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Danh sách đoạn chat của tài khoản hiện tại (ghim trước, rồi mới hoạt động nhất)
+         * @description Có `q` thì chỉ trả đoạn có tiêu đề hoặc nội dung tin chứa `q` (không phân biệt hoa thường, dấu).
+         */
+        get: operations["listAiConversations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ai/conversations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Xóa đoạn chat cùng mọi tin nhắn và bản nháp trong đó */
+        delete: operations["deleteAiConversation"];
+        options?: never;
+        head?: never;
+        /**
+         * Đổi tên hoặc ghim/bỏ ghim đoạn chat
+         * @description Chỉ chủ đoạn chat. Trường nào trống thì giữ nguyên.
+         */
+        patch: operations["updateAiConversation"];
         trace?: never;
     };
     "/api/ai/drafts/{id}/submit": {
@@ -2506,6 +2552,26 @@ export interface components {
             message: string;
             /** @description Chỉ khách dùng (không có lịch sử lưu ở server); FE gửi vài lượt gần nhất của phiên */
             history?: components["schemas"]["AiChatTurn"][];
+            /**
+             * Format: int64
+             * @description Đoạn chat đang hỏi tiếp; trống thì tạo đoạn mới. Khách bỏ qua trường này.
+             */
+            conversationId?: number | null;
+        };
+        AiConversation: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            pinned: boolean;
+            /**
+             * Format: date-time
+             * @description Lần chat cuối
+             */
+            updatedAt: string;
+        };
+        AiConversationUpdate: {
+            title?: string | null;
+            pinned?: boolean | null;
         };
         AiChatTurn: {
             /** @enum {string} */
@@ -4753,6 +4819,8 @@ export interface operations {
             };
             400: components["responses"]["ValidationError"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             429: components["responses"]["TooManyRequests"];
             /** @description Trợ lý chưa dùng được (`AI_UNAVAILABLE`) */
             503: {
@@ -4791,7 +4859,8 @@ export interface operations {
     };
     listAiMessages: {
         parameters: {
-            query?: {
+            query: {
+                conversationId: number;
                 limit?: number;
             };
             header?: never;
@@ -4811,6 +4880,84 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    listAiConversations: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiConversation"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    deleteAiConversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã xóa */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateAiConversation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AiConversationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiConversation"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     submitAiDraft: {

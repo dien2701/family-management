@@ -2256,12 +2256,17 @@ paths:
       description: |
         Trả `text/event-stream`. Mỗi event có `event:` là tên và `data:` là JSON:
         - `status`: `{ "text": "..." }` — việc Trợ lý đang làm trong lúc tra cứu (ví dụ "Đang tìm thành viên…"), có thể lặp lại, trước event `token` đầu tiên.
+        - `conversation`: `AiConversation` — chỉ khi tài khoản đã duyệt gửi câu đầu của một đoạn chat mới (`conversationId` trống): đoạn vừa tạo (DECISIONS #94), gửi sau khi trả lời xong và trước `done`.
         - `token`: `{ "text": "..." }` — một đoạn chữ của câu trả lời, nối dần vào cuối. Gửi ngay khi Gemini trả chữ.
         - `draft`: `AiDraft` — thẻ xem trước đề xuất sự kiện do AI soạn (AI không tự ghi dữ liệu).
         - `done`: `AiQuota` — kết thúc lượt, kèm số lượt còn lại.
         - `error`: `{ "code": "...", "message": "..." }` — lỗi giữa chừng (ví dụ `AI_UNAVAILABLE`).
 
         Hết lượt trong ngày thì trả 429 `AI_QUOTA_EXCEEDED` (chưa mở luồng).
+
+        Tài khoản đã duyệt: `conversationId` trống thì tạo đoạn chat mới (tiêu đề cắt từ câu hỏi); đoạn không tồn tại
+        hoặc của người khác trả 404 `AI_CONVERSATION_NOT_FOUND`; đã đủ 50 đoạn và đều ghim thì trả 409
+        `AI_CONVERSATION_LIMIT`. Ngữ cảnh gửi cho Trợ lý chỉ gồm các tin của đúng đoạn đó.
 
         Mở cho khách và tài khoản chưa duyệt (DECISIONS #91): tính lượt theo hạn mức khách (`aiQuotaGuest`) và mã
         thiết bị `X-Device-Id`, không lưu lịch sử (FE gửi `history`), không soạn bản nháp (không có event `draft`).
@@ -2289,6 +2294,10 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '429':
           $ref: '#/components/responses/TooManyRequests'
         '503':
@@ -2322,9 +2331,16 @@ paths:
     get:
       tags:
         - ai
-      summary: Lịch sử trò chuyện của tài khoản hiện tại (cũ trước, mới sau)
+      summary: Tin nhắn của một đoạn chat (cũ trước, mới sau)
       operationId: listAiMessages
       parameters:
+        - name: conversationId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
         - name: limit
           in: query
           required: false
@@ -2347,6 +2363,93 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/ai/conversations:
+    get:
+      tags:
+        - ai
+      summary: Danh sách đoạn chat của tài khoản hiện tại (ghim trước, rồi mới hoạt động nhất)
+      description: Có `q` thì chỉ trả đoạn có tiêu đề hoặc nội dung tin chứa `q` (không phân biệt hoa thường, dấu).
+      operationId: listAiConversations
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiConversation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/ai/conversations/{id}:
+    patch:
+      tags:
+        - ai
+      summary: Đổi tên hoặc ghim/bỏ ghim đoạn chat
+      description: Chỉ chủ đoạn chat. Trường nào trống thì giữ nguyên.
+      operationId: updateAiConversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiConversationUpdate'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiConversation'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - ai
+      summary: Xóa đoạn chat cùng mọi tin nhắn và bản nháp trong đó
+      operationId: deleteAiConversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '204':
+          description: Đã xóa
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/ai/drafts/{id}/submit:
     post:
       tags:
@@ -4569,8 +4672,46 @@ components:
           description: Chỉ khách dùng (không có lịch sử lưu ở server); FE gửi vài lượt gần nhất của phiên
           items:
             $ref: '#/components/schemas/AiChatTurn'
+        conversationId:
+          type:
+            - integer
+            - 'null'
+          format: int64
+          description: Đoạn chat đang hỏi tiếp; trống thì tạo đoạn mới. Khách bỏ qua trường này.
       required:
         - message
+    AiConversation:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        pinned:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+          description: Lần chat cuối
+      required:
+        - id
+        - title
+        - pinned
+        - updatedAt
+    AiConversationUpdate:
+      type: object
+      properties:
+        title:
+          type:
+            - string
+            - 'null'
+          minLength: 1
+          maxLength: 60
+        pinned:
+          type:
+            - boolean
+            - 'null'
     AiChatTurn:
       type: object
       properties:

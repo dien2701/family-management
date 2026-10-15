@@ -1,7 +1,7 @@
 // Đọc Server-Sent Events của `POST /api/ai/chat` bằng fetch + ReadableStream (EventSource không gửi được
 // header Bearer hay body). Gặp 401 thì refresh một lần rồi thử lại, giống `services/client.ts`.
 import { ApiError, getAccessToken, refreshSession, type ProblemDetail } from '@/services/client'
-import type { AiDraft, AiQuota } from '@/types/api'
+import type { AiConversation, AiDraft, AiQuota } from '@/types/api'
 import { deviceHeaders } from './deviceId'
 
 export type ChatTurn = { role: 'user' | 'model'; text: string }
@@ -11,6 +11,8 @@ export type ChatHandlers = {
   /** Dòng trạng thái trong lúc Trợ lý tra cứu, trước khi có chữ đầu tiên */
   onStatus: (text: string) => void
   onDraft: (draft: AiDraft) => void
+  /** Đoạn chat vừa được tạo từ câu hỏi đầu tiên (chỉ tài khoản đã duyệt) */
+  onConversation: (conversation: AiConversation) => void
   onDone: (quota: AiQuota) => void
 }
 
@@ -41,6 +43,7 @@ function dispatch({ event, data }: SseEvent, handlers: ChatHandlers) {
   if (event === 'token') handlers.onToken((payload as { text?: string }).text ?? '')
   else if (event === 'status') handlers.onStatus((payload as { text?: string }).text ?? '')
   else if (event === 'draft') handlers.onDraft(payload as AiDraft)
+  else if (event === 'conversation') handlers.onConversation(payload as AiConversation)
   else if (event === 'done') handlers.onDone(payload as AiQuota)
   else if (event === 'error') {
     const { code, message } = payload as { code?: string; message?: string }
@@ -51,6 +54,7 @@ function dispatch({ event, data }: SseEvent, handlers: ChatHandlers) {
 async function post(
   message: string,
   history: ChatTurn[],
+  conversationId: number | null,
   signal: AbortSignal,
 ): Promise<Response> {
   const send = () => {
@@ -63,7 +67,7 @@ async function post(
         ...deviceHeaders(),
         ...(token && { Authorization: `Bearer ${token}` }),
       },
-      body: JSON.stringify({ message, history }),
+      body: JSON.stringify({ message, history, conversationId }),
       credentials: 'same-origin',
       signal,
     })
@@ -89,15 +93,17 @@ async function post(
 
 /**
  * Gửi câu hỏi và gọi handler mỗi khi có chữ, bản nháp hoặc kết thúc. Hủy bằng `signal`.
- * `history` chỉ khách cần (không có lịch sử lưu ở server); tài khoản đã duyệt thì server bỏ qua.
+ * `history` chỉ khách cần (không có lịch sử lưu ở server); tài khoản đã duyệt thì server bỏ qua và dùng
+ * `conversationId` (`null`: mở đoạn chat mới).
  */
 export async function streamChat(
   message: string,
   history: ChatTurn[],
+  conversationId: number | null,
   handlers: ChatHandlers,
   signal: AbortSignal,
 ): Promise<void> {
-  const response = await post(message, history, signal)
+  const response = await post(message, history, conversationId, signal)
   if (!response.ok) {
     let problem: ProblemDetail = {}
     try {

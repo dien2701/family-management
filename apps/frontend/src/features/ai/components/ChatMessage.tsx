@@ -1,3 +1,4 @@
+import { Sparkles } from 'lucide-react'
 import { Alert } from '@/components/shared/Alert'
 import { cn } from '@/utils/cn'
 import { aiStrings } from '../strings'
@@ -11,7 +12,17 @@ export function ChatMessage({ item }: { item: ChatItem }) {
   return (
     <div className={cn('flex', mine ? 'justify-end' : 'justify-start')}>
       <div className={cn('min-w-0', mine ? 'max-w-[85%]' : 'w-full max-w-[95%] md:max-w-[85%]')}>
-        <p className={cn('mb-1 text-sm text-text-muted', mine && 'text-right')}>
+        <p
+          className={cn(
+            'mb-1 flex items-center gap-1.5 text-sm text-text-muted',
+            mine && 'justify-end',
+          )}
+        >
+          {!mine && (
+            <span className="flex size-6 items-center justify-center rounded-full bg-secondary text-secondary-fg">
+              <Sparkles aria-hidden="true" className="size-3.5" />
+            </span>
+          )}
           {mine ? aiStrings.you : aiStrings.assistant}
         </p>
         {mine ? (

@@ -129,7 +129,7 @@ notification_dispatch(user_id, event_key, occurrence_date, offset, UQ(cả 4 c�
 
 attachment(id, member_id NULL (NULL = tài liệu chung), kind[AVATAR|DOCUMENT], url, public_id, mime, size, title, uploaded_by)
 ai_usage(user_id, usage_date, count, PK(user_id, usage_date))
-ai_message(id, user_id, role, content, created_at)
+ai_message(id, user_id, role, content, created_at)   ← từ DECISIONS #94: thêm bảng ai_conversation, ai_message có conversation_id, bỏ hạn 30 ngày
 system_setting(key PK, value)
 audit_log(id, actor_id, action, target_type, target_id, before_data JSON, after_data JSON, created_at)
 ```

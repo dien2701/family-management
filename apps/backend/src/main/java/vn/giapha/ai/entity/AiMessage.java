@@ -15,7 +15,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 /**
- * Một dòng trong luồng chat duy nhất của một tài khoản (IDEA §10; DECISIONS #47), giữ 30 ngày. {@code draftJson} là
+ * Một dòng trong một đoạn chat của tài khoản (IDEA §10; DECISIONS #47, #94). {@code draftJson} là
  * ảnh chụp {@code AiDraft} hiện hành khi dòng này (luôn {@code ASSISTANT}) kèm bản nháp đề xuất; id của bản nháp
  * chính là {@link #id} của dòng này. {@code null} khi câu trả lời không kèm bản nháp.
  */
@@ -29,6 +29,9 @@ public class AiMessage {
 
     @Column(name = "account_id", nullable = false, updatable = false)
     private Long accountId;
+
+    @Column(name = "conversation_id", nullable = false, updatable = false)
+    private Long conversationId;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
@@ -48,8 +51,10 @@ public class AiMessage {
     protected AiMessage() {
     }
 
-    public AiMessage(Long accountId, AiRole role, String content, String draftJson, Instant createdAt) {
+    public AiMessage(Long accountId, Long conversationId, AiRole role, String content, String draftJson,
+            Instant createdAt) {
         this.accountId = accountId;
+        this.conversationId = conversationId;
         this.role = role;
         this.content = content;
         this.draftJson = draftJson;
@@ -67,6 +72,10 @@ public class AiMessage {
 
     public Long getAccountId() {
         return accountId;
+    }
+
+    public Long getConversationId() {
+        return conversationId;
     }
 
     public AiRole getRole() {

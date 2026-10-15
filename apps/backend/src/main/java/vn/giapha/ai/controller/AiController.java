@@ -10,10 +10,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,10 +28,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import vn.giapha.ai.dto.AiChatRequest;
+import vn.giapha.ai.dto.AiConversationResponse;
+import vn.giapha.ai.dto.AiConversationUpdate;
 import vn.giapha.ai.dto.AiDraft;
 import vn.giapha.ai.dto.AiMessageResponse;
 import vn.giapha.ai.dto.AiQuota;
 import vn.giapha.ai.service.AiChatService;
+import vn.giapha.ai.service.AiConversationService;
 import vn.giapha.ai.service.AiDraftService;
 import vn.giapha.common.security.CurrentUser;
 import vn.giapha.common.web.ApiRefs;
@@ -45,10 +51,13 @@ class AiController {
     private static final String DEVICE_ID_HEADER = "X-Device-Id";
 
     private final AiChatService chatService;
+    private final AiConversationService conversationService;
     private final AiDraftService draftService;
 
-    AiController(AiChatService chatService, AiDraftService draftService) {
+    AiController(AiChatService chatService, AiConversationService conversationService,
+            AiDraftService draftService) {
         this.chatService = chatService;
+        this.conversationService = conversationService;
         this.draftService = draftService;
     }
 
@@ -56,6 +65,8 @@ class AiController {
     @ApiResponse(responseCode = "200", description = "Luồng sự kiện")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
     @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
+    @ApiResponse(responseCode = "409", ref = ApiRefs.CONFLICT)
     @ApiResponse(responseCode = "429", ref = ApiRefs.TOO_MANY_REQUESTS)
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     SseEmitter chat(@Parameter(hidden = true) HttpServletRequest http,
@@ -74,14 +85,49 @@ class AiController {
         return chatService.quota(CurrentUser.orNull(), deviceId, http.getRemoteAddr());
     }
 
-    @Operation(operationId = "listAiMessages", summary = "Lịch sử trò chuyện của tài khoản hiện tại")
+    @Operation(operationId = "listAiMessages", summary = "Tin nhắn của một đoạn chat")
     @ApiResponse(responseCode = "200", description = "Thành công")
     @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
     @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
     @GetMapping("/messages")
     List<AiMessageResponse> messages(@Parameter(hidden = true) CurrentUser current,
+            @RequestParam @Min(1) Long conversationId,
             @RequestParam(defaultValue = "50") @Min(1) @Max(200) int limit) {
-        return chatService.history(current.userId(), limit);
+        return chatService.history(current.userId(), conversationId, limit);
+    }
+
+    @Operation(operationId = "listAiConversations", summary = "Danh sách đoạn chat của tài khoản hiện tại")
+    @ApiResponse(responseCode = "200", description = "Thành công")
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @GetMapping("/conversations")
+    List<AiConversationResponse> conversations(@Parameter(hidden = true) CurrentUser current,
+            @RequestParam(required = false) @Size(max = 100) String q) {
+        return conversationService.list(current.userId(), q);
+    }
+
+    @Operation(operationId = "updateAiConversation", summary = "Đổi tên hoặc ghim/bỏ ghim đoạn chat")
+    @ApiResponse(responseCode = "200", description = "Thành công")
+    @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
+    @PatchMapping("/conversations/{id}")
+    AiConversationResponse updateConversation(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id,
+            @Valid @RequestBody AiConversationUpdate request) {
+        return conversationService.update(current.userId(), id, request);
+    }
+
+    @Operation(operationId = "deleteAiConversation", summary = "Xóa đoạn chat cùng mọi tin nhắn trong đó")
+    @ApiResponse(responseCode = "204", description = "Đã xóa")
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
+    @DeleteMapping("/conversations/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void deleteConversation(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id) {
+        conversationService.delete(current.userId(), id);
     }
 
     @Operation(operationId = "submitAiDraft", summary = "User gửi bản nháp của AI thành đề xuất sự kiện")

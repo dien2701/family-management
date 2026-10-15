@@ -79,8 +79,9 @@
 | 42 | Xem công khai không cần đăng nhập, tìm kiếm sự kiện, deploy lại | Claude Code | Sonnet · high | ✅ 2026-10-10 |
 | 43 | Khách nhận Web Push không cần đăng nhập | Claude Code | Sonnet · high | ✅ 2026-10-15 |
 | 44 | Bài khấn: Admin soạn mẫu, người dùng điền thông tin cá nhân | Claude Code | Sonnet · high | ✅ 2026-10-15 |
+| 45 | Trợ lý AI: nhiều đoạn chat | Claude Code | Sonnet · high | ✅ 2026-10-15 |
 
-## ▶️ Đợt tiếp theo: chưa có (Đợt 44 — Bài khấn đã xong ✅ 2026-10-15)
+## ▶️ Đợt tiếp theo: chưa có (Đợt 45 — Trợ lý AI nhiều đoạn chat đã xong ✅ 2026-10-15)
 
 ---
 
@@ -1101,3 +1102,37 @@ DECISIONS #88, **#90** · `.claude/rules/security.md` · FE đọc `docs/DESIGN.
 5. Admin đổi tên ô `{Ngụ tại}` → `{Địa chỉ}`: ô "Tín chủ" vẫn giữ giá trị, ô "Địa chỉ" trống.
 6. Tìm "giao thua" (không dấu) ra bài; đổi sắp xếp A–Z/Cũ nhất/Mới nhất. Bấm "Đọc chữ to" trên điện thoại: màn hình không tự tắt.
 7. Xem ở 375px và 1280px.
+
+### Đợt 45 — Trợ lý AI: nhiều đoạn chat ✅ 2026-10-15
+DECISIONS #91, #92, **#94** · `.claude/rules/security.md` · FE đọc `docs/DESIGN.md`
+
+> **Chốt 2026-10-15 (DECISIONS #94):** tài khoản đã duyệt có nhiều đoạn chat độc lập (ghim, đổi tên, xóa, tìm); tối đa 50, đủ thì tự xóa đoạn không ghim cũ nhất; bỏ hạn 30 ngày; khách giữ một phiên, nút "Đoạn chat mới" chỉ xóa phiên; thiết kế lại cả trang Trợ lý.
+
+**Hợp đồng**
+- [x] `openapi.yaml`: `GET /api/ai/conversations?q=`, `PATCH`/`DELETE /api/ai/conversations/{id}`; `GET /api/ai/messages` nhận `conversationId` (bắt buộc); `AiChatRequest.conversationId`; SSE event `conversation`; schema `AiConversation`, `AiConversationUpdate`. Chạy `npm run gen:api`. ✅ 2026-10-15
+
+**Backend** (module `vn.giapha.ai`)
+- [x] Flyway `V21__ai_conversation.sql`: bảng `ai_conversation`, cột `ai_message.conversation_id` (FK cascade), gom lịch sử cũ thành "Trò chuyện trước đây". Entity `AiConversation`, `AiMessage.conversationId`. ✅ 2026-10-15
+- [x] `AiConversationService`: list/tìm, đổi tên/ghim, xóa, kiểm tra chủ đoạn, tạo đoạn (tiêu đề từ câu đầu, đủ 50 thì xóa đoạn không ghim cũ nhất, toàn ghim thì 409 `AI_CONVERSATION_LIMIT`). `AiChatService` nhận `conversationId`, ngữ cảnh chỉ lấy từ đoạn đó, phát SSE `conversation`. Gỡ `AiMessageCleanupJob`. ✅ 2026-10-15
+
+**Frontend** (`features/ai/`)
+- [x] `useAssistantChat` quản lý đoạn đang mở (`open(id|null)`, tải tin từ server); `sse.ts` gửi `conversationId`, nhận event `conversation`. ✅ 2026-10-15
+- [x] `ConversationList` (nút "Đoạn chat mới", tìm có debounce, ghim, đổi tên, xóa có xác nhận): cột bên ≥1024px, ngăn kéo (bottom sheet) trên điện thoại; vào trang tự mở đoạn gần nhất. Khách chỉ có nút "Đoạn chat mới" xóa phiên. ✅ 2026-10-15
+- [x] Làm lại trang Trợ lý: thanh tiêu đề đoạn, avatar Trợ lý ở tin nhắn, trạng thái đang tải. ✅ 2026-10-15
+
+**✅ Đã làm (2026-10-15):**
+- Hợp đồng + `gen:api`. BE: `V21__ai_conversation.sql`, `AiConversation`, `AiConversationRepository`, `AiConversationService`, `AiChatService`/`AiController` nhận đoạn chat; gỡ `AiMessageCleanupJob`.
+- FE: `useAssistantChat`, `sse.ts`, `hooks.ts`, `api.ts`, `components/{ConversationList,RenameConversationDialog,ChatMessage}`, `pages/AssistantPage`, `strings.ts`.
+- Việc nên làm thêm: đoạn trống do lỗi giữa chừng khi lưu tin (hiếm) có thể còn lại với tiêu đề câu đầu; chưa có phân trang danh sách (tối đa 50 nên không cần).
+
+**🔧 Setup thủ công cần làm:** Không đổi `.env`. Có migration mới, chạy app là Flyway tự áp dụng (lịch sử cũ thành đoạn "Trò chuyện trước đây").
+
+**🧪 Test thủ công (từng bước):**
+1. Tài khoản đã duyệt có lịch sử cũ: mở Trợ lý thấy đoạn "Trò chuyện trước đây" tự mở, đủ tin cũ và bản nháp.
+2. Bấm "Đoạn chat mới", hỏi "Sắp tới có ngày giỗ nào?": đoạn mới xuất hiện đầu danh sách, tiêu đề là câu hỏi. Hỏi tiếp trong đoạn mới: Trợ lý không nhắc nội dung đoạn cũ.
+3. Ghim một đoạn: lên đầu danh sách, tải lại vẫn ghim. Đổi tên: tên mới hiện ở danh sách và thanh tiêu đề. Xóa: có hộp xác nhận, xóa đoạn đang mở thì về đoạn mới.
+4. Ô tìm: gõ từ trong tiêu đề, và từ chỉ có trong nội dung tin (không dấu cũng ra).
+5. Trong lúc Trợ lý đang trả lời: danh sách và nút "Đoạn chat mới" bị khóa; bấm Dừng thì mở lại.
+6. Tạo đủ 50 đoạn rồi tạo thêm: đoạn không ghim cũ nhất bị xóa. Ghim cả 50 rồi tạo thêm: báo lỗi 409, không tính lượt.
+7. Khách (ẩn danh): không thấy danh sách; "Đoạn chat mới" xóa cuộc trò chuyện hiện tại.
+8. Xem ở 375px (ngăn kéo) và 1280px (cột bên).

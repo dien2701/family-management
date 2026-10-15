@@ -2,7 +2,8 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError } from '@/services/client'
 import type { AiDraft } from '@/types/api'
-import { AI_QUOTA_KEY } from './hooks'
+import { aiApi } from './api'
+import { AI_CONVERSATIONS_KEY, AI_QUOTA_KEY } from './hooks'
 import { streamChat, type ChatTurn } from './sse'
 import { aiStrings } from './strings'
 
@@ -34,14 +35,20 @@ function toHistory(items: ChatItem[]): ChatTurn[] {
 }
 
 /**
- * Trạng thái cuộc trò chuyện đang diễn ra: gửi câu hỏi, nhận chữ dần, dừng giữa chừng.
- * `guest`: khách hoặc tài khoản chưa duyệt, gửi kèm lịch sử của phiên vì server không lưu.
+ * Trạng thái đoạn chat đang mở: gửi câu hỏi, nhận chữ dần, dừng giữa chừng, mở đoạn khác (DECISIONS #94).
+ * `guest`: khách hoặc tài khoản chưa duyệt, chỉ có một phiên trong bộ nhớ và gửi kèm lịch sử vì server không lưu.
+ * `conversationId` là `null` ở đoạn mới chưa gửi câu nào: server tạo đoạn khi nhận câu đầu rồi báo id về.
  */
 export function useAssistantChat(guest: boolean) {
   const queryClient = useQueryClient()
   const [items, setItems] = useState<ChatItem[]>([])
+  const [conversationId, setConversationId] = useState<number | null>(null)
   const [streaming, setStreaming] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState(false)
   const controllerRef = useRef<AbortController | null>(null)
+  // Đoạn đang muốn xem: bỏ kết quả tải của đoạn đã bị đổi sang đoạn khác
+  const wantedRef = useRef<number | null>(null)
 
   // Rời trang thì hủy luồng đang mở
   useEffect(() => () => controllerRef.current?.abort(), [])
@@ -50,10 +57,43 @@ export function useAssistantChat(guest: boolean) {
     setItems((all) => all.map((item) => (item.id === id ? change(item) : item)))
   }, [])
 
+  /** Mở đoạn đã có (tải tin từ server) hoặc `null` để bắt đầu đoạn mới. Không đổi được khi đang trả lời. */
+  const open = useCallback(
+    async (id: number | null) => {
+      if (controllerRef.current) return
+      wantedRef.current = id
+      setConversationId(id)
+      setItems([])
+      setLoadError(false)
+      if (id === null) {
+        setLoading(false)
+        return
+      }
+      setLoading(true)
+      try {
+        const messages = await aiApi.messages(id)
+        if (wantedRef.current !== id) return
+        setItems(
+          messages.map((m) => ({
+            id: `history-${m.id}`,
+            role: m.role,
+            content: m.content,
+            draft: m.draft,
+          })),
+        )
+      } catch {
+        if (wantedRef.current === id) setLoadError(true)
+      } finally {
+        if (wantedRef.current === id) setLoading(false)
+      }
+    },
+    [],
+  )
+
   const send = useCallback(
     async (text: string) => {
       const message = text.trim()
-      if (!message || controllerRef.current) return
+      if (!message || controllerRef.current || loading) return
 
       const history = guest ? toHistory(items) : []
       const replyId = nextId()
@@ -71,15 +111,22 @@ export function useAssistantChat(guest: boolean) {
         await streamChat(
           message,
           history,
+          guest ? null : conversationId,
           {
             onToken: (chunk) => patch(replyId, (item) => ({ ...item, content: item.content + chunk })),
             onStatus: (status) => patch(replyId, (item) => ({ ...item, status })),
             onDraft: (draft) => patch(replyId, (item) => ({ ...item, draft })),
+            onConversation: (conversation) => {
+              wantedRef.current = conversation.id
+              setConversationId(conversation.id)
+            },
             onDone: (quota) => queryClient.setQueryData(AI_QUOTA_KEY, quota),
           },
           controller.signal,
         )
         patch(replyId, (item) => ({ ...item, streaming: false }))
+        // Đoạn vừa có tin mới: lên đầu danh sách (hoặc mới xuất hiện)
+        void queryClient.invalidateQueries({ queryKey: AI_CONVERSATIONS_KEY })
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') {
           patch(replyId, (item) => ({ ...item, streaming: false, stopped: true }))
@@ -94,10 +141,10 @@ export function useAssistantChat(guest: boolean) {
         setStreaming(false)
       }
     },
-    [guest, items, patch, queryClient],
+    [conversationId, guest, items, loading, patch, queryClient],
   )
 
   const stop = useCallback(() => controllerRef.current?.abort(), [])
 
-  return { items, streaming, send, stop }
+  return { items, conversationId, streaming, loading, loadError, open, send, stop }
 }

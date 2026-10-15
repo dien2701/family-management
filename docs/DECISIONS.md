@@ -433,6 +433,18 @@
     - **Giao diện:** `MeResponse.approvalRequired` cho FE biết. Tắt thì trang Quản trị > Tài khoản ẩn tab "Chờ duyệt" và ô lọc "Chờ duyệt". Duyệt "Tôi là ai", đề xuất sự kiện và khóa/mở khóa tài khoản không đổi. Trang `/cho-duyet` và thẻ dashboard vẫn còn trong code nhưng không ai tới.
     - **Hệ quả:** khách vẫn xem công khai (#88) nhưng tài khoản mới đăng ký giờ ghi dữ liệu được ngay (ví dụ hồ sơ của mình sau khi liên kết); Admin không còn chốt người lạ trước khi vào.
 
+## S. Nhiều đoạn chat cho Trợ lý AI (chốt 2026-10-15, hỏi đáp với người dùng)
+
+94. **Tài khoản đã duyệt có nhiều đoạn chat thay cho một luồng duy nhất** (thắng #47 "một luồng chat duy nhất" và hạn 30 ngày ở IDEA §10)
+    → **Chốt:**
+    - **Dữ liệu:** bảng `ai_conversation` (`account_id`, `title` ≤ 100, `pinned`, `created_at`, `updated_at`); `ai_message.conversation_id` (FK `ON DELETE CASCADE`). `V21__ai_conversation.sql` gom lịch sử cũ của mỗi tài khoản thành một đoạn "Trò chuyện trước đây".
+    - **Cách tạo:** đoạn chỉ có khi gửi câu đầu (không lưu đoạn trống). `POST /api/ai/chat` nhận `conversationId` (trống = đoạn mới), server tạo đoạn sau khi trả lời xong và báo id qua SSE `conversation`. Tiêu đề cắt từ câu hỏi đầu (~40 ký tự). Đổi tên 1–60 ký tự.
+    - **Độc lập:** ngữ cảnh gửi Gemini chỉ gồm 20 tin gần nhất của **đúng đoạn đó**. Hạn mức lượt hỏi theo ngày giữ nguyên (tính theo tài khoản, không theo đoạn).
+    - **Thao tác:** ghim, đổi tên, xóa (kèm mọi tin và bản nháp), tìm theo tiêu đề và nội dung (server, collation `ai_ci` nên không phân biệt dấu). Danh sách: ghim trước, rồi lần chat cuối mới nhất. Vào trang thì mở đoạn gần nhất.
+    - **Không còn hạn 30 ngày:** gỡ `AiMessageCleanupJob`. Tối đa **50 đoạn** mỗi tài khoản; tạo đoạn thứ 51 thì tự xóa đoạn **không ghim** có lần chat cuối cũ nhất; đủ 50 đoạn mà đều ghim thì 409 `AI_CONVERSATION_LIMIT`.
+    - **Khách và tài khoản chưa duyệt:** vẫn một phiên trong bộ nhớ, không danh sách (#91). Nút "Đoạn chat mới" chỉ xóa phiên.
+    - **Giao diện:** cột bên (≥1024px) và ngăn kéo (bottom sheet) trên điện thoại; trang Trợ lý được thiết kế lại cùng đợt. Đang nhận câu trả lời thì khóa chuyển/tạo/sửa đoạn (phải bấm Dừng trước).
+
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.
 - Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt. Cần cập nhật khi duyệt: Trợ lý AI nay mở cho khách (#91) và giọng nói do trình duyệt xử lý (#92).

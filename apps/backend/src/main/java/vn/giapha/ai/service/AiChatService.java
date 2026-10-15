@@ -17,10 +17,12 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import tools.jackson.databind.json.JsonMapper;
 
 import vn.giapha.ai.dto.AiChatRequest;
+import vn.giapha.ai.dto.AiConversationResponse;
 import vn.giapha.ai.dto.AiDraft;
 import vn.giapha.ai.dto.AiDraftRecord;
 import vn.giapha.ai.dto.AiMessageResponse;
 import vn.giapha.ai.dto.AiQuota;
+import vn.giapha.ai.entity.AiConversation;
 import vn.giapha.ai.entity.AiMessage;
 import vn.giapha.ai.entity.AiRole;
 import vn.giapha.ai.repository.AiMessageRepository;
@@ -30,8 +32,8 @@ import vn.giapha.common.security.RateLimiter;
 
 /**
  * Điều phối một lượt hỏi AI (IDEA §10; DECISIONS #47, #73): kiểm quota rồi tăng, tải lịch sử, gọi {@link AiProvider}
- * (tự gọi tool qua {@link AiToolExecutor}), lưu tin nhắn, phát SSE ({@code token}/{@code draft}/{@code done}/
- * {@code error}). Chạy trên luồng ảo riêng để không giữ luồng servlet trong lúc gọi mô hình.
+ * (tự gọi tool qua {@link AiToolExecutor}), lưu tin nhắn vào đoạn chat, phát SSE ({@code token}/{@code draft}/
+ * {@code conversation}/{@code done}/{@code error}). Chạy trên luồng ảo riêng để không giữ luồng servlet trong lúc gọi mô hình.
  */
 @Service
 public class AiChatService {
@@ -72,6 +74,7 @@ public class AiChatService {
             "draftProposal", "Đang soạn bản nháp…");
 
     private final AiMessageRepository messageRepository;
+    private final AiConversationService conversations;
     private final AiQuotaService quotaService;
     private final AiToolExecutorFactory toolExecutorFactory;
     private final AiProvider provider;
@@ -79,10 +82,11 @@ public class AiChatService {
     private final JsonMapper json;
     private final Clock clock;
 
-    AiChatService(AiMessageRepository messageRepository, AiQuotaService quotaService,
-            AiToolExecutorFactory toolExecutorFactory, AiProvider provider, RateLimiter rateLimiter, JsonMapper json,
-            Clock clock) {
+    AiChatService(AiMessageRepository messageRepository, AiConversationService conversations,
+            AiQuotaService quotaService, AiToolExecutorFactory toolExecutorFactory, AiProvider provider,
+            RateLimiter rateLimiter, JsonMapper json, Clock clock) {
         this.messageRepository = messageRepository;
+        this.conversations = conversations;
         this.quotaService = quotaService;
         this.toolExecutorFactory = toolExecutorFactory;
         this.provider = provider;
@@ -101,6 +105,10 @@ public class AiChatService {
         String guestKey = accountId == null ? guestKey(deviceId, clientIp) : null;
         rateLimiter.acquireOrThrow(BURST_POLICY, accountId != null ? String.valueOf(accountId) : "ip:" + clientIp,
                 "AI_RATE_LIMITED", "Bạn hỏi quá nhanh, vui lòng thử lại sau {seconds} giây.");
+        // Đoạn chat sai chủ hoặc đã đủ 50 đoạn ghim: báo trước khi tính lượt (DECISIONS #94)
+        if (accountId != null) {
+            conversations.check(accountId, request.conversationId());
+        }
         AiQuota quotaAfter = accountId != null ? quotaService.checkAndIncrement(accountId, current.isAdmin())
                 : quotaService.checkAndIncrementGuest(guestKey);
 
@@ -109,9 +117,10 @@ public class AiChatService {
         return emitter;
     }
 
-    /** Lịch sử trò chuyện, cũ trước (Đợt 36–37: {@code GET /api/ai/messages}). */
-    public List<AiMessageResponse> history(Long accountId, int limit) {
-        List<AiMessage> rows = messageRepository.findByAccountIdOrderByCreatedAtDesc(accountId,
+    /** Tin của một đoạn chat, cũ trước ({@code GET /api/ai/messages}); đoạn phải của chính tài khoản. */
+    public List<AiMessageResponse> history(Long accountId, Long conversationId, int limit) {
+        conversations.require(accountId, conversationId);
+        List<AiMessage> rows = messageRepository.findByConversationIdOrderByCreatedAtDesc(conversationId,
                 PageRequest.of(0, limit));
         List<AiMessage> chronological = new ArrayList<>(rows);
         Collections.reverse(chronological);
@@ -141,7 +150,9 @@ public class AiChatService {
             AiQuota quotaAfter) {
         boolean guest = accountId == null;
         try {
-            List<AiProvider.Turn> history = guest ? guestTurns(request) : loadTurns(accountId);
+            // Mỗi đoạn chat độc lập: ngữ cảnh chỉ lấy từ tin của chính đoạn đó
+            List<AiProvider.Turn> history = guest ? guestTurns(request)
+                    : request.conversationId() == null ? List.of() : loadTurns(request.conversationId());
             AiToolExecutor executor = toolExecutorFactory.create(guest);
             String prompt = guest ? SYSTEM_PROMPT + GUEST_NOTE : SYSTEM_PROMPT;
             // Chữ nào có là phát ngay (DECISIONS #92); lưu tin nhắn chỉ sau khi trả lời xong để lỗi giữa chừng
@@ -160,10 +171,17 @@ public class AiChatService {
                     });
 
             if (!guest) {
-                messageRepository.save(
-                        new AiMessage(accountId, AiRole.USER, request.message(), null, Instant.now(clock)));
-                AiMessage assistantRow = messageRepository
-                        .save(new AiMessage(accountId, AiRole.ASSISTANT, answer, null, Instant.now(clock)));
+                boolean created = request.conversationId() == null;
+                AiConversation conversation = created ? conversations.create(accountId, request.message())
+                        : conversations.touch(accountId, request.conversationId());
+                Long conversationId = conversation.getId();
+                messageRepository.save(new AiMessage(accountId, conversationId, AiRole.USER, request.message(), null,
+                        Instant.now(clock)));
+                AiMessage assistantRow = messageRepository.save(new AiMessage(accountId, conversationId,
+                        AiRole.ASSISTANT, answer, null, Instant.now(clock)));
+                if (created) {
+                    send(emitter, "conversation", AiConversationResponse.of(conversation));
+                }
                 Optional<AiDraftRecord> draft = executor.lastDraft();
                 if (draft.isPresent()) {
                     AiDraftRecord withId = draft.get().withId(assistantRow.getId());
@@ -201,8 +219,8 @@ public class AiChatService {
         return request.history().stream().map(t -> new AiProvider.Turn(t.role(), t.text())).toList();
     }
 
-    private List<AiProvider.Turn> loadTurns(Long accountId) {
-        List<AiMessage> rows = messageRepository.findByAccountIdOrderByCreatedAtDesc(accountId,
+    private List<AiProvider.Turn> loadTurns(Long conversationId) {
+        List<AiMessage> rows = messageRepository.findByConversationIdOrderByCreatedAtDesc(conversationId,
                 PageRequest.of(0, HISTORY_LIMIT));
         List<AiMessage> chronological = new ArrayList<>(rows);
         Collections.reverse(chronological);
