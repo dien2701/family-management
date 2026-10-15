@@ -20,6 +20,7 @@ export const policySections: PolicySection[] = [
       'Sự kiện chung của gia phả: ngày giỗ, sinh nhật và các sự kiện khác.',
       'Việc bạn đồng ý chính sách này: thời điểm, địa chỉ IP và phiên bản chính sách.',
       'Thiết bị nhận thông báo đẩy: nếu bạn bật thông báo, chúng tôi chỉ lưu địa chỉ đăng ký do trình duyệt cấp cho thiết bị và các tùy chọn nhắc lịch của bạn, không gắn với họ tên hay tài khoản (trừ khi bạn đang đăng nhập).',
+      'Thông tin bạn điền cho các bài khấn: nếu có tài khoản đã được duyệt, thông tin được lưu theo tài khoản và chỉ bạn xem được (kể cả Admin cũng không xem được); nếu chưa đăng nhập, thông tin chỉ lưu trên thiết bị của bạn.',
     ],
     outro:
       'Với thành viên trong gia phả, chỉ họ tên là bắt buộc. Mọi thông tin khác đều có thể để trống.',

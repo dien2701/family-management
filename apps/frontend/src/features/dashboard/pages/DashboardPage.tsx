@@ -1,4 +1,4 @@
-import { LayoutDashboard, Users, UserCheck, UserMinus, TreeDeciduous, ArrowRight, ShieldAlert, CalendarHeart, Flame, Cake, Loader2, type LucideIcon } from 'lucide-react'
+import { LayoutDashboard, Users, UserCheck, UserMinus, TreeDeciduous, ArrowRight, ShieldAlert, CalendarHeart, Flame, Cake, Loader2, ScrollText, type LucideIcon } from 'lucide-react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useDashboard } from '../hooks'
 import type { CalendarOccurrence } from '@/types/api'
 import { daysLabel, dualDateLine } from '@/features/calendar/format'
+import { prayerStrings } from '@/features/prayer/strings'
 
 function EventIcon({ type }: { type: CalendarOccurrence['type'] }) {
   if (type === 'MEMORIAL') return <Flame className="w-5 h-5 text-event-memorial" />
@@ -85,6 +86,21 @@ export function DashboardPage() {
         <StatTile title="Trên cây" value={data.onTree} icon={TreeDeciduous} colorClass="text-accent" />
         <StatTile title="Số đời" value={data.maxGeneration} icon={LayoutDashboard} />
       </div>
+
+      {/* Lối vào Bài khấn: công khai, cũng là đường vào duy nhất trên điện thoại cho khách (DECISIONS #90) */}
+      <Link
+        to="/bai-khan"
+        className="bg-surface rounded-card p-4 shadow-card border border-border flex items-center gap-4 transition-colors duration-200 ease-out hover:bg-surface-muted"
+      >
+        <span className="p-3 rounded-full bg-secondary text-secondary-fg">
+          <ScrollText className="w-6 h-6" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-18 font-semibold">{prayerStrings.menu}</span>
+          <span className="block text-14 text-text-muted">{prayerStrings.menuDescription}</span>
+        </span>
+        <ArrowRight className="w-5 h-5 text-text-muted" aria-hidden="true" />
+      </Link>
 
       {/* Admin Pending Tasks */}
       {user?.systemRole === 'ADMIN' && ((data.pendingAccounts ?? 0) > 0 || (data.pendingLinkRequests ?? 0) > 0) && (

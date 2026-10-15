@@ -52,6 +52,8 @@ tags:
     description: Thành viên đã xóa (chỉ Admin)
   - name: dashboard
     description: Tổng quan (thẻ số liệu, sự kiện gần nhất)
+  - name: prayers
+    description: Bài khấn do Admin soạn mẫu và thông tin cá nhân người dùng điền riêng từng bài (DECISIONS #90)
 paths:
   /api/me/consent:
     post:
@@ -2684,6 +2686,168 @@ paths:
           description: Chưa đăng ký (PUSH_SUBSCRIPTION_NOT_FOUND)
         '429':
           description: Vượt giới hạn theo IP (RATE_LIMITED)
+  /api/prayers:
+    get:
+      tags:
+        - prayers
+      summary: Danh sách bài khấn
+      operationId: listPrayers
+      description: 'Công khai (khách và tài khoản chưa duyệt cũng xem được, DECISIONS #88, #90). Xếp theo tiêu đề; không kèm nội dung.'
+      security:
+        - {}
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PrayerSummary'
+    post:
+      tags:
+        - prayers
+      summary: Thêm bài khấn
+      operationId: createPrayer
+      description: 'Chỉ Admin. Nội dung ≤ 20.000 ký tự, tối đa 30 ô `{Tên ô}` khác nhau, tên ô 1–50 ký tự.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrayerRequest'
+      responses:
+        '201':
+          description: Đã thêm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prayer'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/prayers/{id}:
+    get:
+      tags:
+        - prayers
+      summary: Chi tiết một bài khấn
+      operationId: getPrayer
+      description: 'Công khai. Lỗi: 404 `PRAYER_NOT_FOUND`.'
+      security:
+        - {}
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PrayerId'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prayer'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - prayers
+      summary: Sửa bài khấn
+      operationId: updatePrayer
+      description: 'Chỉ Admin. Thay toàn bộ nội dung. Giá trị đã điền khớp theo tên ô nên không bị lệch. Lỗi: 404 `PRAYER_NOT_FOUND`.'
+      parameters:
+        - $ref: '#/components/parameters/PrayerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrayerRequest'
+      responses:
+        '200':
+          description: Đã sửa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prayer'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - prayers
+      summary: Xóa bài khấn
+      operationId: deletePrayer
+      description: 'Chỉ Admin. Xóa luôn thông tin mọi người đã điền cho bài này. Lỗi: 404 `PRAYER_NOT_FOUND`.'
+      parameters:
+        - $ref: '#/components/parameters/PrayerId'
+      responses:
+        '204':
+          description: Đã xóa
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/prayers/{id}/fill:
+    get:
+      tags:
+        - prayers
+      summary: Thông tin tôi đã điền cho bài khấn
+      operationId: getPrayerFill
+      description: 'Tài khoản đã duyệt. Chỉ trả của chính người gọi (Admin cũng không đọc được của người khác); chưa điền thì `values` rỗng. Không gửi lên AI. Lỗi: 404 `PRAYER_NOT_FOUND`.'
+      parameters:
+        - $ref: '#/components/parameters/PrayerId'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrayerFill'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+        - prayers
+      summary: Lưu thông tin tôi đã điền cho bài khấn
+      operationId: savePrayerFill
+      description: 'Tài khoản đã duyệt. Thay toàn bộ `values` của chính người gọi (`account_id` lấy từ token). Mỗi tên ô 1–50 ký tự, mỗi giá trị ≤ 500 ký tự, tối đa 30 ô. Lỗi: 404 `PRAYER_NOT_FOUND`.'
+      parameters:
+        - $ref: '#/components/parameters/PrayerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PrayerFill'
+      responses:
+        '200':
+          description: Đã lưu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrayerFill'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
 components:
   securitySchemes:
@@ -2706,6 +2870,15 @@ components:
       in: path
       required: true
       description: '`id` của sự kiện chung'
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    PrayerId:
+      name: id
+      in: path
+      required: true
+      description: '`id` của bài khấn'
       schema:
         type: integer
         format: int64
@@ -3886,6 +4059,78 @@ components:
         - month
         - day
         - leap
+    PrayerSummary:
+      type: object
+      description: Một dòng của danh sách bài khấn, không kèm nội dung.
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - createdAt
+        - updatedAt
+    Prayer:
+      type: object
+      description: |
+        Bài khấn. `content` là văn bản thường, giữ nguyên xuống dòng; ô trống viết dạng `{Tên ô}`
+        (cùng tên xuất hiện nhiều lần là một ô).
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - content
+        - createdAt
+        - updatedAt
+    PrayerRequest:
+      type: object
+      description: Nội dung bài khấn khi thêm hoặc sửa (PUT thay toàn bộ).
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        content:
+          type: string
+          maxLength: 20000
+          description: Tối đa 30 ô `{Tên ô}` khác nhau, tên ô 1–50 ký tự
+      required:
+        - title
+        - content
+    PrayerFill:
+      type: object
+      description: Thông tin cá nhân người dùng đã điền cho một bài, theo tên ô.
+      properties:
+        values:
+          type: object
+          description: Tên ô → giá trị (≤ 500 ký tự mỗi giá trị, tối đa 30 ô)
+          additionalProperties:
+            type: string
+            maxLength: 500
+      required:
+        - values
     CustomEvent:
       type: object
       description: |

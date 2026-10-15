@@ -18,6 +18,8 @@ public final class PublicReadPaths {
             "/api/tree",
             "/api/events",
             "/api/events/*",
+            "/api/prayers",
+            "/api/prayers/*",
             "/api/calendar/convert",
             "/api/calendar/lunar-month-info",
             "/api/calendar/upcoming",

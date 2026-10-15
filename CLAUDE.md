@@ -10,6 +10,7 @@ PWA quản lý **một gia phả chung** (bản chốt v2, 2026-09-25): thành v
 - Thành viên chỉ bắt buộc họ tên (ghi nguyên văn), không tự đặt giới tính. Mỗi hồ sơ có danh sách **người thân** một chiều (thành viên đã có + nhãn), độc lập với cây. User đã liên kết "Tôi là ai" tự sửa trực tiếp hồ sơ, người thân và ảnh đại diện của mình, trừ các trường về việc đã mất (chỉ Admin). Đề xuất chỉ còn cho sự kiện chung (DECISIONS mục K #75–#78). Dữ liệu ban đầu là 28 thành viên ở `shared/fixtures/seed/members.json` (IDEA Phụ lục A).
 - **Tài khoản ≠ thành viên** (DECISIONS #79–#82): xem mục Thuật ngữ bên dưới. Liên kết 1–1, qua yêu cầu "Tôi là ai" (Admin duyệt) hoặc Admin gán trực tiếp; User tự hủy, Admin hủy được. Khi liên kết, email tài khoản được chép một lần sang hồ sơ nếu ô email đang trống.
 - **Hai công cụ** (DECISIONS #83): các đợt FE nhẹ (11, 18–23) làm bằng **Antigravity** (Gemini, đọc `AGENTS.md`), còn lại làm bằng **Claude Code**. Cột "Công cụ" ở bảng Tiến độ của ROADMAP là nguồn sự thật.
+- **Bài khấn** (DECISIONS #90, Đợt 44): Admin soạn bài mẫu có ô `{Tên ô}`, ai cũng xem; thông tin cá nhân điền riêng từng bài, tài khoản đã duyệt lưu server (chỉ chính chủ), khách lưu trên máy.
 - **Đang ở GĐ C (nối và phát hành):** frontend (GĐ A) và backend (GĐ B) đã xong; Đợt 39 đã gỡ lớp giả lập, frontend gọi backend thật. Còn Đợt 41 (deploy).
 
 ## Thuật ngữ
@@ -26,7 +27,7 @@ Giao diện gọi người đăng nhập là "tài khoản", người trong gia 
 | File | Nội dung | Khi nào đọc |
 |---|---|---|
 | `roadmap/IDEA.md` | Đặc tả nghiệp vụ **bản chốt v2** (nguồn sự thật), Phụ lục A là dữ liệu ban đầu | Khi làm module liên quan, đọc đúng mục § |
-| `docs/DECISIONS.md` | 84 quyết định kỹ thuật, **thắng IDEA.md khi có mâu thuẫn**. **Mục J (#54–#74) là đổi hướng v2**, thắng mọi mục trước; **mục K (#75–#78) là hồ sơ tự quản**, thắng mục J; **mục L (#79–#83) là tài khoản ≠ thành viên, liên kết, chia việc Claude Code / Antigravity**, thắng mục K; **mục M (#84) là tiết kiệm token: bỏ test mới, review**, thắng mọi mục trước; quyết định cũ bị hủy có đánh dấu ❌/🔁 | Khi phân vân về cách làm |
+| `docs/DECISIONS.md` | 90 quyết định kỹ thuật (**mục P (#90) là bài khấn**), **thắng IDEA.md khi có mâu thuẫn**. **Mục J (#54–#74) là đổi hướng v2**, thắng mọi mục trước; **mục K (#75–#78) là hồ sơ tự quản**, thắng mục J; **mục L (#79–#83) là tài khoản ≠ thành viên, liên kết, chia việc Claude Code / Antigravity**, thắng mục K; **mục M (#84) là tiết kiệm token: bỏ test mới, review**, thắng mọi mục trước; quyết định cũ bị hủy có đánh dấu ❌/🔁 | Khi phân vân về cách làm |
 | `AGENTS.md` | Ngữ cảnh cho Antigravity: dẫn về file này và ghi các điều cấm thay cho hook | Khi sửa quy tắc chung (giữ hai file khớp nhau) |
 | `docs/STRUCTURE.md` | Cây thư mục đích của `.claude/`, backend, frontend | Khi tạo file hoặc thư mục mới |
 | `shared/api/openapi.yaml` | **Hợp đồng API** (nguồn sự thật, có từ Đợt 9) | Trước khi làm hoặc đổi bất kỳ API nào |

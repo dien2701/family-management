@@ -28,6 +28,9 @@ import { VerifyOtpPage } from '@/features/auth/pages/VerifyOtpPage'
 import { WaitingApprovalPage } from '@/features/auth/pages/WaitingApprovalPage'
 import { CalendarPage } from '@/features/calendar/pages/CalendarPage'
 import { LunarConverterPage } from '@/features/calendar/pages/LunarConverterPage'
+import { PrayerDetailPage } from '@/features/prayer/pages/PrayerDetailPage'
+import { PrayersPage } from '@/features/prayer/pages/PrayersPage'
+import { prayerStrings } from '@/features/prayer/strings'
 import { linkStrings } from '@/features/link/strings'
 import { MyIdentityPage } from '@/features/link/pages/MyIdentityPage'
 import { AppShell } from '@/layout/AppShell'
@@ -116,6 +119,9 @@ export const routes: RouteObject[] = [
           { path: 'thanh-vien/:id', element: <MemberDetailPage />, handle: handle('Hồ sơ thành viên') },
           { path: 'lich', element: <CalendarPage />, handle: handle('Sự kiện') },
           { path: 'them/doi-lich', element: <LunarConverterPage />, handle: handle('Đổi lịch âm – dương') },
+          // Bài khấn: xem công khai (DECISIONS #88, #90); thêm/sửa/xóa chỉ Admin, thông tin điền lưu trên máy nếu chưa duyệt
+          { path: 'bai-khan', element: <PrayersPage />, handle: handle(prayerStrings.menu) },
+          { path: 'bai-khan/:id', element: <PrayerDetailPage />, handle: handle(prayerStrings.menu) },
           // Push cho khách và tài khoản chưa duyệt (DECISIONS #89); tài khoản đã duyệt được chuyển sang Cài đặt thông báo
           { path: 'thong-bao-thiet-bi', element: <GuestPushPage />, handle: handle('Thông báo trên thiết bị này') },
           {

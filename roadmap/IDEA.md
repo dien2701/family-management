@@ -394,6 +394,8 @@ audit_log(id, actor_id, action, target_type, target_id, before_data JSON, after_
 6. Mỗi người tự bật/tắt từng loại (giỗ, sinh nhật, sự kiện chung), từng mốc nhắc và chọn giờ nhận.
 7. **Khách không cần đăng nhập** (DECISIONS #89, thay phần "Web Push bắt đăng nhập" của #88): khách và tài khoản chưa duyệt bật push trên thiết bị, nhận bản tin giỗ, sinh nhật, sự kiện (dữ liệu công khai), tự chỉnh loại, mốc nhắc (mặc định 30/15/7/3/1/0 ngày) và giờ (mặc định 07:00). Subscription chuyển sang tài khoản khi đăng nhập, về lại khách khi đăng xuất.
 
+> **Ghi chú (Đợt 44, DECISIONS #90):** thêm chức năng **Bài khấn** ngoài đặc tả gốc: Admin soạn bài mẫu có ô `{Tên ô}`, ai cũng xem, mỗi người điền thông tin riêng từng bài (tài khoản đã duyệt lưu server, khách lưu trên máy). Chi tiết ở DECISIONS #90.
+
 ## 10. Trợ lý AI
 
 - **Nhà cung cấp:** **Google Gemini, API gói trả phí**, đặt sau interface `AiProvider`.

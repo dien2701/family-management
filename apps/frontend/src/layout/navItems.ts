@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   LogIn,
   Network,
+  ScrollText,
   ShieldCheck,
   Sparkles,
   UserRound,
@@ -28,7 +29,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { to: '/cay', label: 'Cây gia phả', icon: Network },
   { to: '/thanh-vien', label: 'Thành viên', icon: Users },
   { to: '/lich', label: 'Sự kiện', icon: CalendarDays },
-  { to: '/them', label: 'Thêm', icon: Ellipsis, alsoActiveFor: ['/quan-tri', '/tro-ly'] },
+  { to: '/them', label: 'Thêm', icon: Ellipsis, alsoActiveFor: ['/quan-tri', '/tro-ly', '/bai-khan'] },
 ]
 
 /**
@@ -45,6 +46,10 @@ export function navItemsFor(user: Me | null): readonly NavItem[] {
 
 // Trợ lý AI: có ở Sidebar và rail; trên điện thoại vào từ trang Thêm (thanh dưới giữ đúng 5 mục).
 export const AI_NAV_ITEM: NavItem = { to: '/tro-ly', label: 'Trợ lý', icon: Sparkles }
+
+// Bài khấn xem công khai (DECISIONS #90). Khách và tài khoản chưa duyệt không có trang Thêm, nên Sidebar và rail
+// chèn mục này riêng; tài khoản đã duyệt vào từ trang Thêm. Trên điện thoại, khách vào từ thẻ ở Trang chủ.
+export const PRAYER_NAV_ITEM: NavItem = { to: '/bai-khan', label: 'Bài khấn', icon: ScrollText }
 
 // Chỉ Admin thấy. Có ở Sidebar và rail; trên điện thoại nằm trong trang Thêm (thanh dưới giữ đúng 5 mục).
 export const ADMIN_NAV_ITEM: NavItem = { to: '/quan-tri', label: 'Quản trị', icon: ShieldCheck }

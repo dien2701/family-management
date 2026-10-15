@@ -78,8 +78,9 @@
 | **GĐ D** | **Bổ sung sau phát hành** | | | |
 | 42 | Xem công khai không cần đăng nhập, tìm kiếm sự kiện, deploy lại | Claude Code | Sonnet · high | ✅ 2026-10-10 |
 | 43 | Khách nhận Web Push không cần đăng nhập | Claude Code | Sonnet · high | ✅ 2026-10-15 |
+| 44 | Bài khấn: Admin soạn mẫu, người dùng điền thông tin cá nhân | Claude Code | Sonnet · high | ✅ 2026-10-15 |
 
-## ▶️ Đợt tiếp theo: chưa có (Đợt 43 đã xong 2026-10-15)
+## ▶️ Đợt tiếp theo: chưa có (Đợt 44 — Bài khấn đã xong ✅ 2026-10-15)
 
 ---
 
@@ -1057,3 +1058,46 @@ IDEA §9 · DECISIONS #46, #88, **#89** · `.claude/rules/security.md` · FE đ�
 4. Bật push khách rồi đăng nhập trên cùng trình duyệt: dòng subscription có `account_id` của tài khoản. Đăng xuất: về lại `NULL`, vẫn nhận bản tin khách.
 5. `curl` không token gọi các API khách quá giới hạn: trả 429. `GET /api/notifications` không token vẫn 401.
 6. Xem ở 375px và 1280px; iPhone Safari chưa cài PWA thấy hướng dẫn cài.
+
+### Đợt 44 — Bài khấn: Admin soạn mẫu, người dùng điền thông tin cá nhân ✅ 2026-10-15
+DECISIONS #88, **#90** · `.claude/rules/security.md` · FE đọc `docs/DESIGN.md`
+
+> **Chốt 2026-10-15 (DECISIONS #90):** Admin thêm/sửa/xóa bài (văn bản thường, ô trống `{Tên ô}`). Ai cũng xem được. Mỗi bài điền thông tin riêng: tài khoản đã duyệt lưu server, khách và chưa duyệt lưu trên máy; đăng nhập thì hỏi chuyển lên. Tìm theo tên, sắp xếp A–Z/cũ nhất/mới nhất, chế độ đọc chữ to. Lối vào: menu "Thêm" và thẻ Trang chủ.
+
+**Hợp đồng**
+- [x] `openapi.yaml` nhóm `prayer`: `GET /api/prayers` (công khai; danh sách `id`, `title`, `createdAt`, `updatedAt`, không kèm nội dung), `GET /api/prayers/{id}` (công khai; kèm `content`), `POST /api/prayers`, `PUT`/`DELETE /api/prayers/{id}` (Admin). `GET`/`PUT /api/prayers/{id}/fill` (tài khoản đã duyệt; body/trả về `values`: map tên ô → giá trị). Schema `PrayerSummary`, `Prayer`, `PrayerRequest`, `PrayerFill`. Chạy `npm run gen:api`. ✅ 2026-10-15
+
+**Backend** (module mới `vn.giapha.prayer`)
+- [x] Flyway `V18__prayer.sql`: bảng `prayer` (`id`, `title` ≤ 200, `content` TEXT, `created_at`, `updated_at`); bảng `prayer_fill` (`account_id`, `prayer_id`, `values_json` JSON, `updated_at`, khóa chính `(account_id, prayer_id)`, FK `ON DELETE CASCADE` theo cả hai). Entity khớp SQL. ✅ 2026-10-15
+- [x] CRUD bài khấn: chỉ Admin ghi (kiểm ở backend). Kiểm tra: tiêu đề bắt buộc, nội dung ≤ 20.000 ký tự, tối đa 30 ô `{…}`, tên ô 1–50 ký tự. Danh sách sắp theo tiêu đề. ✅ 2026-10-15
+- [x] Fill: chỉ đọc/ghi của chính tài khoản đang gọi (`account_id` lấy từ token, không nhận từ body); Admin cũng không có API đọc fill của người khác. Mỗi giá trị ≤ 500 ký tự; bài không tồn tại trả 404. ✅ 2026-10-15
+- [x] Thêm `GET /api/prayers`, `GET /api/prayers/{id}` vào `PublicReadPaths` (liệt kê tường minh). Fill vẫn bắt đăng nhập và duyệt. ✅ 2026-10-15
+
+**Frontend** (`features/prayer/`)
+- [x] Trang danh sách `/bai-khan` (công khai): ô tìm theo tên không dấu (dùng lại hàm bỏ dấu của trang Sự kiện), chọn sắp xếp A–Z (mặc định) / Cũ nhất / Mới nhất, giữ trên URL. Admin thấy nút "Thêm bài khấn". ✅ 2026-10-15
+- [x] Trang chi tiết `/bai-khan/:id`: khối "Thông tin của bạn" gồm các ô lấy từ `{Tên ô}` trong bài (không trùng tên), bên dưới là bài khấn đã thay giá trị (ô trống hiện "........"). Nút Lưu. Nút "Đọc chữ to": toàn màn hình, chữ lớn, giữ màn hình sáng bằng Wake Lock nếu có. ✅ 2026-10-15
+- [x] Lưu thông tin: tài khoản đã duyệt gọi API fill; khách và chưa duyệt lưu `localStorage` (một khóa, map `prayerId` → giá trị, đọc/ghi bọc try/catch). Bài đã bị xóa thì bỏ qua bản trên máy. ✅ 2026-10-15
+- [x] Sau khi đăng nhập (tài khoản đã duyệt) mà máy còn thông tin đã điền: hộp thoại "Chuyển thông tin đã điền trên máy này vào tài khoản?". Đồng ý: `PUT` từng bài rồi xóa bản trên máy. Không: giữ nguyên, ghi nhớ để không hỏi lại tới khi bản trên máy đổi. ✅ 2026-10-15
+- [x] Form Admin thêm/sửa (tiêu đề, nội dung dạng textarea, gợi ý cú pháp `{Tên ô}`, xem trước danh sách ô nhận được), xóa có xác nhận. ✅ 2026-10-15
+- [x] Lối vào: mục "Bài khấn" trong menu "Thêm" và menu khách (`navItems.ts`), thẻ "Bài khấn" trên Trang chủ. Chuỗi UI ở `features/prayer/strings.ts`. ✅ 2026-10-15
+
+**Tài liệu**
+- [x] `.claude/rules/security.md` (thêm GET bài khấn vào danh sách công khai; fill chỉ chính chủ, không gửi AI), `CLAUDE.md` + `AGENTS.md` (một dòng ở Tổng quan, mục P trong bảng Tài liệu), `docs/STRUCTURE.md` (module `prayer`), `IDEA.md` thêm ghi chú trỏ #90, `PolicyPage`: 1 câu về thông tin bài khấn lưu theo tài khoản (không tăng `POLICY_VERSION`). ✅ 2026-10-15
+
+**✅ Đã làm (2026-10-15):**
+- Hợp đồng `prayers` (6 operation, 4 schema) + `npm run gen:api`. BE module `vn.giapha.prayer`: `V18__prayer.sql`, entity `Prayer`/`PrayerFill` (khóa ghép), `PrayerService` (Admin ghi, kiểm tối đa 30 ô, tên ô 1–50, giá trị ≤ 500; fill theo `account_id` của token), `PrayerController`, thêm 2 GET vào `PublicReadPaths`.
+- FE `features/prayer/`: danh sách (tìm không dấu, sắp xếp A–Z/Cũ nhất/Mới nhất giữ trên URL), chi tiết (điền ô, lưu server hoặc `localStorage`, Đọc chữ to + Wake Lock), form Admin, hộp thoại chuyển thông tin sau đăng nhập (`FillTransferDialog` gắn ở `AppShell`), lối vào ở Thêm, Sidebar khách và thẻ Trang chủ.
+- File chính: `shared/api/openapi.yaml`, `apps/backend/.../prayer/**`, `apps/frontend/src/features/prayer/**`, `pages/routes.tsx`, `layout/{navItems,Sidebar,AppShell}`. Tài liệu: security.md, CLAUDE.md, AGENTS.md, STRUCTURE.md, IDEA.md, `policyContent.ts` (không tăng `POLICY_VERSION`).
+- Việc nên làm thêm: Sidebar và thanh dưới của tài khoản đã duyệt chưa có mục Bài khấn riêng (vào từ Thêm hoặc thẻ Trang chủ, đúng đặc tả). Ô của bài cũ bị Admin đổi tên vẫn giữ trong `values` (tối đa 30 khóa), chưa có dọn.
+- Gặp hook chặn sửa `V18__prayer.sql` sau khi vừa tạo nên giữ cột `content` là `TEXT` đúng đặc tả (20.000 ký tự BMP ≤ 60 KB; chỉ vượt 64 KB nếu toàn emoji 4 byte).
+
+**🔧 Setup thủ công cần làm:** Không đổi `.env`. Có migration mới, chạy app là Flyway tự áp dụng.
+
+**🧪 Test thủ công (từng bước):**
+1. Admin thêm bài "Văn khấn giao thừa ngoài trời" với `{Tín chủ}`, `{Ngụ tại}`: trang chi tiết hiện đúng 2 ô.
+2. Tab ẩn danh (khách): xem được danh sách và bài, điền 2 ô, Lưu, tải lại trang vẫn còn. DevTools không có request ghi nào lên server.
+3. Đăng nhập tài khoản đã duyệt trên cùng trình duyệt: hiện hộp thoại chuyển. Đồng ý: DB có dòng `prayer_fill`, `localStorage` hết dữ liệu. Mở máy khác đăng nhập vẫn thấy.
+4. Tài khoản User khác mở cùng bài: ô trống, không thấy thông tin của người kia. `POST /api/prayers` bằng token User trả 403; gọi `/fill` không token trả 401.
+5. Admin đổi tên ô `{Ngụ tại}` → `{Địa chỉ}`: ô "Tín chủ" vẫn giữ giá trị, ô "Địa chỉ" trống.
+6. Tìm "giao thua" (không dấu) ra bài; đổi sắp xếp A–Z/Cũ nhất/Mới nhất. Bấm "Đọc chữ to" trên điện thoại: màn hình không tự tắt.
+7. Xem ở 375px và 1280px.

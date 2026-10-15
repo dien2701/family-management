@@ -390,6 +390,21 @@
     - **Đăng nhập** trên thiết bị đã bật push khách: subscription (trùng `endpoint`) chuyển sang tài khoản, dùng tùy chọn của tài khoản. **Đăng xuất**: subscription chuyển lại thành khách (đặt `account_id = NULL`, tùy chọn khách về mặc định) thay vì hủy push như trước, vì bản tin khách chỉ chứa dữ liệu công khai.
     - Push service trả 404/410 thì xóa subscription (như tài khoản). iPhone chỉ nhận khi đã "Thêm vào Màn hình chính" (iOS 16.4+).
 
+## P. Bài khấn (chốt 2026-10-15, hỏi đáp với người dùng)
+
+90. **Bài khấn: Admin soạn mẫu, mỗi người tự điền thông tin cá nhân**
+    → **Chốt:**
+    - **Nội dung bài** (tiêu đề + nội dung) chỉ **Admin** thêm, sửa, xóa. Văn bản thường, giữ nguyên xuống dòng, không định dạng. Hệ thống bắt đầu trống, Admin tự nhập (không seed). Năm can chi ghi thẳng trong nội dung, Admin tự sửa mỗi năm.
+    - **Ô trống** viết dạng `{Tên ô}` trong nội dung, ví dụ `Tín chủ con là: {Tín chủ}`. Cùng tên xuất hiện nhiều lần trong một bài là một ô. Giá trị khớp theo tên nên Admin sửa bài không làm lệch ô.
+    - **Thông tin cá nhân điền riêng từng bài** (không dùng chung giữa các bài).
+    - **Xem:** mọi người, kể cả khách và tài khoản chưa duyệt (thêm GET bài khấn vào `PublicReadPaths`, như #88).
+    - **Lưu thông tin đã điền:** tài khoản **đã duyệt** lưu trên server (theo tài khoản, chỉ chính chủ đọc/ghi, Admin cũng không xem được). **Khách và tài khoản chưa duyệt** lưu trên máy (`localStorage`), không gọi API ghi.
+    - **Khi đăng nhập** (tài khoản đã duyệt) mà máy còn thông tin đã điền: hỏi "Chuyển thông tin đã điền trên máy này vào tài khoản?". Đồng ý: ghi đè lên server các bài có trên máy rồi xóa bản trên máy. Không: giữ bản trên máy, không hỏi lại cho tới khi bản trên máy thay đổi (chọn tạm).
+    - **Trang danh sách:** tìm theo tên (không dấu), sắp xếp A–Z (mặc định), cũ nhất, mới nhất (theo ngày tạo), giữ trên URL. Không phân nhóm, không nút sao chép.
+    - **Chế độ đọc chữ to:** toàn màn hình, chữ lớn, giữ màn hình sáng (Wake Lock nếu trình duyệt hỗ trợ).
+    - **Lối vào:** một mục trong menu "Thêm" (và menu khách) và một thẻ trên Trang chủ.
+    - Thông tin đã điền **không gửi lên AI**.
+
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.
 - Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt.

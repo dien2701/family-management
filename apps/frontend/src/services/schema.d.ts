@@ -1651,6 +1651,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/prayers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Danh sách bài khấn
+         * @description Công khai (khách và tài khoản chưa duyệt cũng xem được, DECISIONS #88, #90). Xếp theo tiêu đề; không kèm nội dung.
+         */
+        get: operations["listPrayers"];
+        put?: never;
+        /**
+         * Thêm bài khấn
+         * @description Chỉ Admin. Nội dung ≤ 20.000 ký tự, tối đa 30 ô `{Tên ô}` khác nhau, tên ô 1–50 ký tự.
+         */
+        post: operations["createPrayer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prayers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Chi tiết một bài khấn
+         * @description Công khai. Lỗi: 404 `PRAYER_NOT_FOUND`.
+         */
+        get: operations["getPrayer"];
+        /**
+         * Sửa bài khấn
+         * @description Chỉ Admin. Thay toàn bộ nội dung. Giá trị đã điền khớp theo tên ô nên không bị lệch. Lỗi: 404 `PRAYER_NOT_FOUND`.
+         */
+        put: operations["updatePrayer"];
+        post?: never;
+        /**
+         * Xóa bài khấn
+         * @description Chỉ Admin. Xóa luôn thông tin mọi người đã điền cho bài này. Lỗi: 404 `PRAYER_NOT_FOUND`.
+         */
+        delete: operations["deletePrayer"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/prayers/{id}/fill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Thông tin tôi đã điền cho bài khấn
+         * @description Tài khoản đã duyệt. Chỉ trả của chính người gọi (Admin cũng không đọc được của người khác); chưa điền thì `values` rỗng. Không gửi lên AI. Lỗi: 404 `PRAYER_NOT_FOUND`.
+         */
+        get: operations["getPrayerFill"];
+        /**
+         * Lưu thông tin tôi đã điền cho bài khấn
+         * @description Tài khoản đã duyệt. Thay toàn bộ `values` của chính người gọi (`account_id` lấy từ token). Mỗi tên ô 1–50 ký tự, mỗi giá trị ≤ 500 ký tự, tối đa 30 ô. Lỗi: 404 `PRAYER_NOT_FOUND`.
+         */
+        put: operations["savePrayerFill"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2156,6 +2232,43 @@ export interface components {
             day: number;
             leap: boolean;
         };
+        /** @description Một dòng của danh sách bài khấn, không kèm nội dung. */
+        PrayerSummary: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /**
+         * @description Bài khấn. `content` là văn bản thường, giữ nguyên xuống dòng; ô trống viết dạng `{Tên ô}`
+         *     (cùng tên xuất hiện nhiều lần là một ô).
+         */
+        Prayer: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            content: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        /** @description Nội dung bài khấn khi thêm hoặc sửa (PUT thay toàn bộ). */
+        PrayerRequest: {
+            title: string;
+            /** @description Tối đa 30 ô `{Tên ô}` khác nhau, tên ô 1–50 ký tự */
+            content: string;
+        };
+        /** @description Thông tin cá nhân người dùng đã điền cho một bài, theo tên ô. */
+        PrayerFill: {
+            /** @description Tên ô → giá trị (≤ 500 ký tự mỗi giá trị, tối đa 30 ô) */
+            values: {
+                [key: string]: string;
+            };
+        };
         /**
          * @description Sự kiện chung. `calendar` là lịch người nhập dùng để tính ngày. `year = null` nghĩa là lặp hằng năm
          *     (âm lịch theo quy tắc IDEA §7); có `year` thì chỉ diễn ra một lần vào đúng ngày đó.
@@ -2536,6 +2649,8 @@ export interface components {
         AiDraftId: number;
         /** @description `id` của sự kiện chung */
         EventId: number;
+        /** @description `id` của bài khấn */
+        PrayerId: number;
         /** @description `id` của ô trên cây (không phải id thành viên) */
         TreeNodeId: number;
         MemberId: number;
@@ -5104,6 +5219,189 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    listPrayers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrayerSummary"][];
+                };
+            };
+        };
+    };
+    createPrayer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrayerRequest"];
+            };
+        };
+        responses: {
+            /** @description Đã thêm */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Prayer"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    getPrayer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của bài khấn */
+                id: components["parameters"]["PrayerId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Prayer"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updatePrayer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của bài khấn */
+                id: components["parameters"]["PrayerId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrayerRequest"];
+            };
+        };
+        responses: {
+            /** @description Đã sửa */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Prayer"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deletePrayer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của bài khấn */
+                id: components["parameters"]["PrayerId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã xóa */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getPrayerFill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của bài khấn */
+                id: components["parameters"]["PrayerId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrayerFill"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    savePrayerFill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description `id` của bài khấn */
+                id: components["parameters"]["PrayerId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrayerFill"];
+            };
+        };
+        responses: {
+            /** @description Đã lưu */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrayerFill"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
 }

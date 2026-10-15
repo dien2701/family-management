@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router'
 import { isApproved } from '@/features/auth/routing'
 import { PushPrompt } from '@/features/notification/components/PushPrompt'
+import { FillTransferDialog } from '@/features/prayer/components/FillTransferDialog'
 import { useAuth } from '@/hooks/useAuth'
 import { AccessBanner } from './AccessBanner'
 import { BottomNav } from './BottomNav'
@@ -29,6 +30,8 @@ export function AppShell() {
           {/* Thông báo đẩy: đã duyệt gắn với tài khoản, còn lại nhận như khách (DECISIONS #89) */}
           <PushPrompt mode={isApproved(user) ? 'account' : 'guest'} />
           <Outlet />
+          {/* Hỏi chuyển thông tin bài khấn đã điền trên máy vào tài khoản sau khi đăng nhập (DECISIONS #90) */}
+          <FillTransferDialog />
         </main>
       </div>
       <BottomNav />

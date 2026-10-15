@@ -1,4 +1,14 @@
-import { ArrowLeftRight, ChevronRight, ShieldCheck, Sparkles, UserCheck, UserCog, Files, FileDown } from 'lucide-react'
+import {
+  ArrowLeftRight,
+  ChevronRight,
+  ShieldCheck,
+  Sparkles,
+  UserCheck,
+  UserCog,
+  Files,
+  FileDown,
+  ScrollText,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Link } from 'react-router'
 import { adminStrings } from '@/features/admin/strings'
@@ -6,6 +16,7 @@ import { aiStrings } from '@/features/ai/strings'
 import { AccountCard } from '@/features/auth/components/AccountCard'
 import { isAdmin } from '@/features/auth/routing'
 import { linkStrings } from '@/features/link/strings'
+import { prayerStrings } from '@/features/prayer/strings'
 import { useAuth } from '@/hooks/useAuth'
 import { InstallAppItem } from '@/features/pwa/components/InstallAppItem'
 
@@ -43,6 +54,12 @@ const ITEMS: Item[] = [
     label: 'Đổi lịch âm – dương',
     description: 'Tra ngày âm lịch và dương lịch tương ứng',
     icon: ArrowLeftRight,
+  },
+  {
+    to: '/bai-khan',
+    label: prayerStrings.menu,
+    description: prayerStrings.menuDescription,
+    icon: ScrollText,
   },
   {
     to: '/them/tai-lieu-chung',

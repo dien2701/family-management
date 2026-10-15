@@ -107,6 +107,7 @@ apps/backend/
     │   │   ├── event/                     │
     │   │   ├── proposal/                  │
     │   │   ├── notification/              │
+    │   │   ├── prayer/                    │  Bài khấn + thông tin điền (DECISIONS #90)
     │   │   ├── file/                      │
     │   │   ├── ai/                        │
     │   │   ├── report/                    │
@@ -208,6 +209,7 @@ apps/frontend/
     │   ├── event/
     │   ├── proposal/
     │   ├── notification/
+    │   ├── prayer/                   api.ts, hooks.ts, schemas.ts, slots.ts (ô {Tên ô}), localFill.ts, strings.ts, components/, pages/
     │   ├── file/
     │   ├── ai/
     │   ├── report/
