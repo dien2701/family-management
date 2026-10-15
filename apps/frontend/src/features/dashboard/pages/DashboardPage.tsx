@@ -1,7 +1,9 @@
 import { LayoutDashboard, Users, UserCheck, UserMinus, ArrowRight, ShieldAlert, CalendarHeart, CalendarDays, Flame, Cake, Loader2, Network, ScrollText, Sparkles, type LucideIcon } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { Pagination } from '@/components/shared/Pagination'
 import { useAuth } from '@/hooks/useAuth'
 import { useDashboard } from '../hooks'
 import type { CalendarOccurrence } from '@/types/api'
@@ -66,6 +68,52 @@ function EventCard({ event, title }: { event: CalendarOccurrence; title: string 
         </div>
         {event.daysUntil !== 0 && <div className="text-14 opacity-80">ngày nữa</div>}
       </div>
+    </div>
+  )
+}
+
+const PAGE_SIZE = 5
+
+// Danh sách đã xếp gần nhất trước (BE), FE chỉ cắt trang nên trang đầu luôn là 5 sự kiện gần nhất
+function EventListCard({ title, empty, events, dayLabel, dayClass }: {
+  title: string
+  empty: string
+  events: CalendarOccurrence[]
+  dayLabel: (event: CalendarOccurrence) => string
+  dayClass: string
+}) {
+  const [page, setPage] = useState(0)
+  const totalPages = Math.ceil(events.length / PAGE_SIZE)
+  const shown = events.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
+
+  return (
+    <div className="bg-surface rounded-card shadow-card border border-border overflow-hidden">
+      <h3 className="text-16 font-semibold p-4 bg-surface-muted border-b border-border">{title}</h3>
+      {events.length === 0 ? (
+        <div className="p-8 text-center text-text-muted text-14">{empty}</div>
+      ) : (
+        <>
+          <ul className="divide-y divide-border">
+            {shown.map((event, idx) => (
+              <li key={idx} className="p-4 flex items-center justify-between gap-3 hover:bg-surface-muted transition-colors">
+                <div className="flex items-center gap-3 min-w-0">
+                  <EventIcon type={event.type} />
+                  <div className="min-w-0">
+                    <div className="font-medium text-16 text-text">{event.title}</div>
+                    <div className="text-14 text-text-muted">{dualDateLine(event)}</div>
+                  </div>
+                </div>
+                <div className={`text-14 tabular-nums shrink-0 ${dayClass}`}>{dayLabel(event)}</div>
+              </li>
+            ))}
+          </ul>
+          {totalPages > 1 && (
+            <div className="p-3 border-t border-border">
+              <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }
@@ -160,67 +208,20 @@ export function DashboardPage() {
       )}
 
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Trong 30 ngày tới */}
-        <div className="bg-surface rounded-card shadow-card border border-border overflow-hidden">
-          <h3 className="text-16 font-semibold p-4 bg-surface-muted border-b border-border">
-            Sắp tới (30 ngày)
-          </h3>
-          <div className="p-0">
-            {data.upcoming30.length === 0 ? (
-              <div className="p-8 text-center text-text-muted text-14">
-                Không có sự kiện nào trong 30 ngày tới
-              </div>
-            ) : (
-              <ul className="divide-y divide-border">
-                {data.upcoming30.map((event, idx) => (
-                  <li key={idx} className="p-4 flex items-center justify-between hover:bg-surface-muted transition-colors">
-                    <div className="flex items-center gap-3">
-                      <EventIcon type={event.type} />
-                      <div>
-                        <div className="font-medium text-16 text-text">{event.title}</div>
-                        <div className="text-14 text-text-muted">{dualDateLine(event)}</div>
-                      </div>
-                    </div>
-                    <div className="text-14 font-medium tabular-nums text-accent">
-                      {event.daysUntil === 0 ? 'Hôm nay' : `Còn ${event.daysUntil} ngày`}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-
-        {/* Mới diễn ra */}
-        <div className="bg-surface rounded-card shadow-card border border-border overflow-hidden">
-          <h3 className="text-16 font-semibold p-4 bg-surface-muted border-b border-border">
-            Mới diễn ra
-          </h3>
-          <div className="p-0">
-            {data.recentEvents.length === 0 ? (
-              <div className="p-8 text-center text-text-muted text-14">
-                Chưa có sự kiện nào gần đây
-              </div>
-            ) : (
-              <ul className="divide-y divide-border">
-                {data.recentEvents.map((event, idx) => (
-                  <li key={idx} className="p-4 flex items-center justify-between hover:bg-surface-muted transition-colors">
-                    <div className="flex items-center gap-3">
-                      <EventIcon type={event.type} />
-                      <div>
-                        <div className="font-medium text-16 text-text">{event.title}</div>
-                        <div className="text-14 text-text-muted">{dualDateLine(event)}</div>
-                      </div>
-                    </div>
-                    <div className="text-14 text-text-muted tabular-nums">
-                      {daysLabel(event.daysUntil)}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
+        <EventListCard
+          title="Sắp tới (30 ngày)"
+          empty="Không có sự kiện nào trong 30 ngày tới"
+          events={data.upcoming30}
+          dayLabel={(e) => (e.daysUntil === 0 ? 'Hôm nay' : `Còn ${e.daysUntil} ngày`)}
+          dayClass="font-medium text-accent"
+        />
+        <EventListCard
+          title="Mới diễn ra"
+          empty="Chưa có sự kiện nào gần đây"
+          events={data.recentEvents}
+          dayLabel={(e) => daysLabel(e.daysUntil)}
+          dayClass="text-text-muted"
+        />
       </div>
     </div>
   )
