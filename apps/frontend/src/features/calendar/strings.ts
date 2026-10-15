@@ -37,6 +37,8 @@ export const calendarStrings = {
     searchPlaceholder: 'Tìm sự kiện theo tên (không cần gõ dấu, tìm cả năm)',
     clearFilters: 'Xóa lọc',
     found: (n: number) => `Tìm thấy ${n} sự kiện`,
+    showing: (shown: number, total: number) => `Đang hiện ${shown}/${total} sự kiện`,
+    showMore: 'Xem thêm',
     noMatch: 'Không tìm thấy sự kiện phù hợp',
     noMatchHint: 'Thử bỏ bớt từ khóa.',
     empty: 'Không có sự kiện nào',

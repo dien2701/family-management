@@ -16,6 +16,7 @@ import { OccurrenceRow } from './OccurrenceRow'
 
 const s = calendarStrings.upcoming
 const DAYS: UpcomingQuery['days'][] = [7, 15, 30, 90, 365]
+const PAGE_SIZE = 10
 
 type UpcomingTabProps = {
   isAdmin: boolean
@@ -47,6 +48,11 @@ export function UpcomingTab({ isAdmin, onEdit }: UpcomingTabProps) {
     () => (query.data ? filterUpcoming(query.data, { q, lunarMonth: null, lunarDay: null }) : []),
     [query.data, q],
   )
+
+  // Số mục đang hiện; đổi bộ lọc thì về lại PAGE_SIZE (khóa lọc khác khóa đã lưu)
+  const filterKey = `${q}|${rangeValue}|${type}|${sort}`
+  const [more, setMore] = useState({ key: filterKey, shown: PAGE_SIZE })
+  const shown = more.key === filterKey ? more.shown : PAGE_SIZE
 
   const update = useCallback(
     (changes: Record<string, string | null>) => {
@@ -204,10 +210,25 @@ export function UpcomingTab({ isAdmin, onEdit }: UpcomingTabProps) {
             className="flex flex-col gap-2 data-[busy=true]:opacity-60"
             data-busy={query.isFetching && query.isPlaceholderData}
           >
-            {items.map((o) => (
+            {items.slice(0, shown).map((o) => (
               <OccurrenceRow key={o.eventKey} occurrence={o} onEdit={onEdit} />
             ))}
           </ul>
+          {items.length > PAGE_SIZE && (
+            <div className="flex flex-col items-center gap-2">
+              <p role="status" className="text-sm text-text-muted">
+                {s.showing(Math.min(shown, items.length), items.length)}
+              </p>
+              {shown < items.length && (
+                <Button
+                  variant="secondary"
+                  onClick={() => setMore({ key: filterKey, shown: shown + PAGE_SIZE })}
+                >
+                  {s.showMore}
+                </Button>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>
