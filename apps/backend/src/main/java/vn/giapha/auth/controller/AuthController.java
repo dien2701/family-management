@@ -68,10 +68,7 @@ class AuthController {
         if (result.auth() == null) {
             return ResponseEntity.ok(result.otpSent());
         }
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .header(HttpHeaders.SET_COOKIE, cookies.create(result.auth().refreshToken()))
-                .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                .body(result.auth().body());
+        return withCookie(HttpStatus.CREATED, result.auth());
     }
 
     @Operation(operationId = "resendOtp", summary = "Gửi lại OTP đăng ký")
@@ -170,7 +167,11 @@ class AuthController {
     }
 
     private ResponseEntity<AuthResponse> withCookie(AuthResult result) {
-        return ResponseEntity.ok()
+        return withCookie(HttpStatus.OK, result);
+    }
+
+    private ResponseEntity<AuthResponse> withCookie(HttpStatus status, AuthResult result) {
+        return ResponseEntity.status(status)
                 .header(HttpHeaders.SET_COOKIE, cookies.create(result.refreshToken()))
                 .header(HttpHeaders.CACHE_CONTROL, "no-store")
                 .body(result.body());

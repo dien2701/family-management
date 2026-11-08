@@ -42,35 +42,39 @@ function GreetingCard({ name, guest, event }: { name?: string; guest: boolean; e
       </h2>
       <p className="mt-1 text-text-muted">{guest ? t.welcomeGuest : t.welcomeUser}</p>
 
-      <div className="mt-4 rounded-field bg-surface/80 p-3">
-        <p className="text-sm font-medium text-text-muted">{t.nextEvent}</p>
-        {event ? (
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            aria-label={`${t.eventDetail}: ${event.title}`}
-            className="mt-1 flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-field text-left transition-colors hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            <EventIcon type={event.type} />
-            <span className="min-w-0 flex-1">
-              <span className="block font-semibold text-text">{event.title}</span>
-              <span className="block text-sm text-text-muted">{dualDateLine(event)}</span>
+      {event ? (
+        // Cả khối là một nút: tên sự kiện to bên trái, ô đếm ngày nền đậm bên phải
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={`${t.eventDetail}: ${event.title}`}
+          className="group mt-4 flex w-full cursor-pointer items-center gap-3 rounded-field border border-border bg-surface p-3 text-left shadow-card transition-colors hover:border-primary/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        >
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-1.5 text-sm font-medium text-text-muted">
+              <EventIcon type={event.type} />
+              {t.nextEvent}
             </span>
-            <span className="shrink-0 text-right">
-              {event.daysUntil === 0 ? (
-                <span className="font-bold text-primary">Hôm nay</span>
-              ) : (
-                <>
-                  <span className="block text-2xl leading-tight font-bold text-primary tabular-nums">{event.daysUntil}</span>
-                  <span className="block text-sm text-text-muted">ngày nữa</span>
-                </>
-              )}
-            </span>
-          </button>
-        ) : (
+            <span className="mt-1 block text-lg leading-snug font-bold text-text group-hover:text-primary">{event.title}</span>
+            <span className="mt-0.5 block text-sm text-text-muted">{dualDateLine(event)}</span>
+          </span>
+          <span className="flex min-w-18 shrink-0 flex-col items-center justify-center self-stretch rounded-field bg-primary px-3 py-2 text-primary-fg">
+            {event.daysUntil === 0 ? (
+              <span className="text-lg leading-tight font-bold">Hôm nay</span>
+            ) : (
+              <>
+                <span className="text-3xl leading-none font-bold tabular-nums">{event.daysUntil}</span>
+                <span className="mt-1 text-sm">ngày nữa</span>
+              </>
+            )}
+          </span>
+        </button>
+      ) : (
+        <div className="mt-4 rounded-field border border-border bg-surface p-3">
+          <p className="text-sm font-medium text-text-muted">{t.nextEvent}</p>
           <p className="mt-1 text-text">{t.noNextEvent}</p>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="mt-4 grid grid-cols-2 gap-3 md:flex">
         <Button asChild>

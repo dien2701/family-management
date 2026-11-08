@@ -50,11 +50,11 @@ import vn.giapha.config.AppProperties;
 @Service
 public class AuthService {
 
-    /** Kết quả đăng nhập: body trả JSON và refresh token thô để controller đặt vào cookie. */
     /** Kết quả đăng ký: đã gửi OTP ({@code auth} null), hoặc tắt OTP thì đã đăng nhập luôn ({@code otpSent} null). */
     public record RegisterResult(OtpSentResponse otpSent, AuthResult auth) {
     }
 
+    /** Kết quả đăng nhập: body trả JSON và refresh token thô để controller đặt vào cookie. */
     public record AuthResult(AuthResponse body, String refreshToken) {
     }
 
