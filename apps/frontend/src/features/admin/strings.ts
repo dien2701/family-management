@@ -21,6 +21,7 @@ export const adminStrings = {
     emptyDeleted: 'Chưa có tài khoản nào bị xóa',
     emptyDeletedHint: 'Tài khoản bị xóa sẽ nằm ở đây và khôi phục được bất cứ lúc nào.',
     deletedAt: 'Ngày xóa',
+    deleteAdminHint: 'Muốn xóa tài khoản Admin thì gỡ quyền Admin trước.',
     search: 'Tìm tài khoản',
     searchPlaceholder: 'Họ tên hoặc email',
     statusFilter: 'Trạng thái',

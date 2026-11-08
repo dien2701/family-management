@@ -28,6 +28,7 @@ export function useUnreadCount() {
 export function useReadNotification() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { silent: true },
     mutationFn: (id: number) => notificationApi.read(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all })
@@ -38,6 +39,7 @@ export function useReadNotification() {
 export function useReadAllNotifications() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã đánh dấu tất cả là đã đọc.' },
     mutationFn: () => notificationApi.readAll(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.all })
@@ -55,6 +57,7 @@ export function useNotificationPreferences() {
 export function useUpdateNotificationPreferences() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã lưu cài đặt thông báo.' },
     mutationFn: (data: Schemas['NotificationPref']) => notificationApi.updatePreferences(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: notificationKeys.preferences() })
@@ -64,12 +67,14 @@ export function useUpdateNotificationPreferences() {
 
 export function useSubscribePush() {
   return useMutation({
+    meta: { successMessage: 'Đã bật thông báo trên thiết bị này.' },
     mutationFn: (data: Schemas['PushSubscription']) => notificationApi.subscribePush(data),
   })
 }
 
 export function useUnsubscribePush() {
   return useMutation({
+    meta: { successMessage: 'Đã tắt thông báo trên thiết bị này.' },
     mutationFn: (endpoint: string) => notificationApi.unsubscribePush(endpoint),
   })
 }
@@ -86,6 +91,7 @@ export function useGuestPushPref(enabled: boolean) {
 export function useSaveGuestPushPref() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã lưu cài đặt thông báo.' },
     mutationFn: (pref: Schemas['GuestPushPref']) => saveGuestPushPref(pref),
     onSuccess: (saved) => {
       queryClient.setQueryData([...notificationKeys.all, 'guestPref'], saved)
@@ -95,6 +101,7 @@ export function useSaveGuestPushPref() {
 
 export function useTestPush() {
   return useMutation({
+    meta: { successMessage: 'Đã gửi thông báo thử.' },
     mutationFn: () => notificationApi.testPush(),
   })
 }

@@ -62,6 +62,7 @@ function useInvalidateMembers() {
 export function useCreateMember() {
   const invalidate = useInvalidateMembers()
   return useMutation({
+    meta: { successMessage: 'Đã thêm thành viên.' },
     mutationFn: (input: MemberInput) => memberApi.createMember(input),
     onSuccess: invalidate,
   })
@@ -70,6 +71,7 @@ export function useCreateMember() {
 export function useUpdateMember() {
   const invalidate = useInvalidateMembers()
   return useMutation({
+    meta: { successMessage: 'Đã cập nhật thành viên.' },
     mutationFn: ({ id, input }: { id: number; input: MemberInput }) =>
       memberApi.updateMember(id, input),
     onSuccess: invalidate,
@@ -79,6 +81,7 @@ export function useUpdateMember() {
 export function useUploadAvatar() {
   const invalidate = useInvalidateMembers()
   return useMutation({
+    meta: { successMessage: 'Đã cập nhật ảnh đại diện.' },
     mutationFn: ({ memberId, file }: { memberId: number; file: File }) =>
       memberApi.uploadAvatar(memberId, file),
     onSuccess: invalidate,
@@ -88,6 +91,7 @@ export function useUploadAvatar() {
 export function useDeleteMember() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã xóa thành viên.' },
     mutationFn: (id: number) => memberApi.deleteMember(id),
     // Không refetch ngay: trang chi tiết đang mở sẽ gặp 404 trước khi kịp chuyển đi
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['members'], refetchType: 'none' }),
@@ -107,6 +111,7 @@ export function useRelatives(memberId: number) {
 export function useAddRelative(memberId: number) {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã thêm người thân.' },
     mutationFn: (input: RelativeInput) => memberApi.addRelative(memberId, input),
     // Lỗi 409 (người này đã có trong danh sách từ nơi khác) cũng nên tải lại danh sách cho khớp
     onSettled: () => queryClient.invalidateQueries({ queryKey: relativesKey(memberId) }),
@@ -116,6 +121,7 @@ export function useAddRelative(memberId: number) {
 export function useUpdateRelative(memberId: number) {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã cập nhật người thân.' },
     mutationFn: ({ relativeId, label }: { relativeId: number; label: string }) =>
       memberApi.updateRelative(memberId, relativeId, label),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: relativesKey(memberId) }),
@@ -125,6 +131,7 @@ export function useUpdateRelative(memberId: number) {
 export function useDeleteRelative(memberId: number) {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã xóa người thân.' },
     mutationFn: (relativeId: number) => memberApi.deleteRelative(memberId, relativeId),
     // Lỗi 404 (dòng đã bị xóa ở nơi khác) cũng nên tải lại danh sách cho khớp
     onSettled: () => queryClient.invalidateQueries({ queryKey: relativesKey(memberId) }),

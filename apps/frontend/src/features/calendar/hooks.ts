@@ -40,6 +40,7 @@ function useAfterEventChange() {
 export function useCreateEvent() {
   const done = useAfterEventChange()
   return useMutation({
+    meta: { successMessage: 'Đã thêm sự kiện.' },
     mutationFn: (input: CustomEventInput) => calendarApi.createEvent(input),
     onSuccess: done,
   })
@@ -48,6 +49,7 @@ export function useCreateEvent() {
 export function useUpdateEvent() {
   const done = useAfterEventChange()
   return useMutation({
+    meta: { successMessage: 'Đã cập nhật sự kiện.' },
     mutationFn: ({ id, input }: { id: number; input: CustomEventInput }) =>
       calendarApi.updateEvent(id, input),
     onSuccess: done,
@@ -61,9 +63,19 @@ export function useUpdateEvent() {
 export function usePatchMemberDates() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ memberId, patch }: { memberId: number; patch: Partial<MemberFormValues> }) => {
+    meta: { successMessage: 'Đã cập nhật ngày.' },
+    mutationFn: async ({
+      memberId,
+      patch,
+    }: {
+      memberId: number
+      patch: Partial<MemberFormValues>
+    }) => {
       const member = await memberApi.getMemberDetail(memberId)
-      return memberApi.updateMember(memberId, formValuesToInput({ ...memberToFormValues(member), ...patch }))
+      return memberApi.updateMember(
+        memberId,
+        formValuesToInput({ ...memberToFormValues(member), ...patch }),
+      )
     },
     onSuccess: () =>
       Promise.all([
@@ -75,5 +87,9 @@ export function usePatchMemberDates() {
 
 export function useDeleteEvent() {
   const done = useAfterEventChange()
-  return useMutation({ mutationFn: (id: number) => calendarApi.deleteEvent(id), onSuccess: done })
+  return useMutation({
+    meta: { successMessage: 'Đã xóa sự kiện.' },
+    mutationFn: (id: number) => calendarApi.deleteEvent(id),
+    onSuccess: done,
+  })
 }

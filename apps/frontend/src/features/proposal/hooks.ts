@@ -5,7 +5,8 @@ import type { Schemas } from '@/types/api'
 export const proposalKeys = {
   all: ['proposals'] as const,
   mine: (page: number, size: number) => [...proposalKeys.all, 'mine', page, size] as const,
-  admin: (page: number, size: number, status?: string) => [...proposalKeys.all, 'admin', page, size, status] as const,
+  admin: (page: number, size: number, status?: string) =>
+    [...proposalKeys.all, 'admin', page, size, status] as const,
   count: () => [...proposalKeys.all, 'count'] as const,
 }
 
@@ -33,6 +34,7 @@ export function usePendingProposalsCount() {
 export function useCreateProposal() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã gửi đề xuất, chờ Admin duyệt.' },
     mutationFn: (data: Schemas['ProposalInput']) => proposalApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: proposalKeys.all })
@@ -43,8 +45,14 @@ export function useCreateProposal() {
 export function useApproveProposal() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, modifiedPayload }: { id: number; modifiedPayload?: Record<string, unknown> }) =>
-      proposalApi.approve(id, modifiedPayload),
+    meta: { successMessage: 'Đã duyệt đề xuất.' },
+    mutationFn: ({
+      id,
+      modifiedPayload,
+    }: {
+      id: number
+      modifiedPayload?: Record<string, unknown>
+    }) => proposalApi.approve(id, modifiedPayload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: proposalKeys.all })
       queryClient.invalidateQueries({ queryKey: ['events'] }) // Invalidate events too
@@ -55,6 +63,7 @@ export function useApproveProposal() {
 export function useRejectProposal() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã từ chối đề xuất.' },
     mutationFn: ({ id, note }: { id: number; note: string }) => proposalApi.reject(id, note),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: proposalKeys.all })

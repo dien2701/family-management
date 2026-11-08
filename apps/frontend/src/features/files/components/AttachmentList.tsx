@@ -3,6 +3,7 @@ import { FileText, Download, Trash2, X, FileImage, Image as ImageIcon } from 'lu
 import { cn } from '@/utils/cn'
 import { useApi } from '@/services/api'
 import { toast } from '@/components/ui/use-toast'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import type { Schemas } from '@/types/api'
 import { useMe } from '@/hooks/useMe'
 
@@ -22,20 +23,21 @@ export function AttachmentList({ attachments, onDeleteSuccess, className }: Atta
   const images = attachments.filter(a => a.mimeType.startsWith('image/'))
   const documents = attachments.filter(a => !a.mimeType.startsWith('image/'))
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa tệp đính kèm này không?')) return
+  const [confirmId, setConfirmId] = useState<number | null>(null)
 
+  const handleDelete = (id: number) => setConfirmId(id)
+
+  const confirmDelete = async () => {
+    const id = confirmId
+    if (id === null) return
     setDeletingId(id)
     try {
       await api.delete(`/api/attachments/${id}`)
-      toast({ title: 'Thành công', description: 'Đã xóa tệp đính kèm.' })
+      toast({ title: 'Đã xóa tệp đính kèm.' })
+      setConfirmId(null)
       onDeleteSuccess?.(id)
     } catch (err) {
-      toast({ 
-        variant: 'destructive', 
-        title: 'Lỗi', 
-        description: (err as Error).message || 'Không thể xóa tệp.' 
-      })
+      toast({ variant: 'destructive', title: (err as Error).message || 'Không thể xóa tệp.' })
     } finally {
       setDeletingId(null)
     }
@@ -158,6 +160,18 @@ export function AttachmentList({ attachments, onDeleteSuccess, className }: Atta
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmId !== null}
+        title="Xóa tệp đính kèm?"
+        description="Tệp sẽ bị xóa vĩnh viễn và không khôi phục được."
+        confirmLabel="Xóa"
+        cancelLabel="Hủy"
+        danger
+        loading={deletingId !== null}
+        onConfirm={() => void confirmDelete()}
+        onCancel={() => setConfirmId(null)}
+      />
 
       {/* Lightbox đơn giản */}
       {lightboxImage && (

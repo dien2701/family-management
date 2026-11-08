@@ -26,8 +26,9 @@ function pageItems(page: number, totalPages: number): (number | '…')[] {
     .filter((p) => p >= 0 && p <= last)
     .sort((a, b) => a - b)
   const items: (number | '…')[] = []
-  keep.forEach((p, i) => {
-    const gap = i === 0 ? 0 : p - keep[i - 1]
+  keep.forEach((p, i, arr) => {
+    const prev = arr[i - 1]
+    const gap = prev === undefined ? 0 : p - prev
     if (gap === 2) items.push(p - 1)
     else if (gap > 2) items.push('…')
     items.push(p)

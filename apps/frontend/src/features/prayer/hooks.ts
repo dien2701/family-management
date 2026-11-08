@@ -35,25 +35,36 @@ function useAfterPrayerChange() {
 
 export function useCreatePrayer() {
   const done = useAfterPrayerChange()
-  return useMutation({ mutationFn: (input: PrayerRequest) => prayerApi.create(input), onSuccess: done })
+  return useMutation({
+    meta: { successMessage: 'Đã thêm bài khấn.' },
+    mutationFn: (input: PrayerRequest) => prayerApi.create(input),
+    onSuccess: done,
+  })
 }
 
 export function useUpdatePrayer() {
   const done = useAfterPrayerChange()
   return useMutation({
-    mutationFn: ({ id, input }: { id: number; input: PrayerRequest }) => prayerApi.update(id, input),
+    meta: { successMessage: 'Đã cập nhật bài khấn.' },
+    mutationFn: ({ id, input }: { id: number; input: PrayerRequest }) =>
+      prayerApi.update(id, input),
     onSuccess: done,
   })
 }
 
 export function useDeletePrayer() {
   const done = useAfterPrayerChange()
-  return useMutation({ mutationFn: (id: number) => prayerApi.remove(id), onSuccess: done })
+  return useMutation({
+    meta: { successMessage: 'Đã xóa bài khấn.' },
+    mutationFn: (id: number) => prayerApi.remove(id),
+    onSuccess: done,
+  })
 }
 
 export function useSavePrayerFill() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã lưu thông tin điền.' },
     mutationFn: ({ id, values }: { id: number; values: PrayerFill['values'] }) =>
       prayerApi.saveFill(id, values),
     onSuccess: (data, { id }) => queryClient.setQueryData([...PRAYER_KEY, 'fill', id], data),

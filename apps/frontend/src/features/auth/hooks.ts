@@ -11,30 +11,51 @@ const ME_KEY = ['me'] as const
 // Các hook đăng nhập tự lưu phiên vào AuthProvider khi thành công; điều hướng do route guard lo.
 
 export function useRegister() {
-  return useMutation({ mutationFn: authApi.register })
+  return useMutation({
+    meta: { successMessage: 'Đã gửi mã xác thực đến email của bạn.' },
+    mutationFn: authApi.register,
+  })
 }
 
 export function useResendOtp() {
-  return useMutation({ mutationFn: authApi.resendOtp })
+  return useMutation({
+    meta: { successMessage: 'Đã gửi lại mã xác thực.' },
+    mutationFn: authApi.resendOtp,
+  })
 }
 
 export function useVerifyOtp() {
   const { setSession } = useAuth()
-  return useMutation({ mutationFn: authApi.verifyOtp, onSuccess: setSession })
+  return useMutation({
+    meta: { successMessage: 'Xác thực email thành công.' },
+    mutationFn: authApi.verifyOtp,
+    onSuccess: setSession,
+  })
 }
 
 export function useChangePassword() {
-  return useMutation({ mutationFn: authApi.changePassword })
+  return useMutation({
+    meta: { successMessage: 'Đã đổi mật khẩu.' },
+    mutationFn: authApi.changePassword,
+  })
 }
 
 export function useLogin() {
   const { setSession } = useAuth()
-  return useMutation({ mutationFn: authApi.login, onSuccess: setSession })
+  return useMutation({
+    meta: { successMessage: 'Đăng nhập thành công.' },
+    mutationFn: authApi.login,
+    onSuccess: setSession,
+  })
 }
 
 export function useGoogleLogin() {
   const { setSession } = useAuth()
-  return useMutation({ mutationFn: authApi.google, onSuccess: setSession })
+  return useMutation({
+    meta: { successMessage: 'Đăng nhập thành công.' },
+    mutationFn: authApi.google,
+    onSuccess: setSession,
+  })
 }
 
 /** Ghi nhận đồng ý chính sách (đăng nhập Google lần đầu); xong thì cập nhật `consentRequired` của phiên. */
@@ -42,6 +63,7 @@ export function useAcceptConsent() {
   const { updateUser } = useAuth()
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã ghi nhận đồng ý.' },
     mutationFn: () => authApi.consent({ acceptTerms: true }),
     onSuccess: (me) => {
       // Bản `/me` đang cache (của useApprovalWatch) cũng phải mới, kẻo nó ghi đè lại `consentRequired` cũ
@@ -87,13 +109,22 @@ export function useGoogleClientId() {
 }
 
 export function useForgotPassword() {
-  return useMutation({ mutationFn: authApi.forgotPassword })
+  return useMutation({
+    meta: { successMessage: 'Đã gửi mã đặt lại mật khẩu đến email.' },
+    mutationFn: authApi.forgotPassword,
+  })
 }
 
 export function useVerifyResetOtp() {
-  return useMutation({ mutationFn: authApi.verifyResetOtp })
+  return useMutation({
+    meta: { successMessage: 'Mã xác thực hợp lệ.' },
+    mutationFn: authApi.verifyResetOtp,
+  })
 }
 
 export function useResetPassword() {
-  return useMutation({ mutationFn: authApi.resetPassword })
+  return useMutation({
+    meta: { successMessage: 'Đã đặt lại mật khẩu.' },
+    mutationFn: authApi.resetPassword,
+  })
 }

@@ -19,6 +19,7 @@ function useRefreshMe() {
 export function useUploadMyAvatar() {
   const refreshMe = useRefreshMe()
   return useMutation({
+    meta: { successMessage: 'Đã cập nhật ảnh đại diện.' },
     mutationFn: async (file: File) => accountApi.uploadAvatar(await cropSquare(file)),
     onSuccess: refreshMe,
   })
@@ -26,5 +27,9 @@ export function useUploadMyAvatar() {
 
 export function useRemoveMyAvatar() {
   const refreshMe = useRefreshMe()
-  return useMutation({ mutationFn: accountApi.removeAvatar, onSuccess: refreshMe })
+  return useMutation({
+    meta: { successMessage: 'Đã gỡ ảnh đại diện.' },
+    mutationFn: accountApi.removeAvatar,
+    onSuccess: refreshMe,
+  })
 }

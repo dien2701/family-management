@@ -21,6 +21,13 @@ export function useAiConversations(q: string, enabled = true) {
 export function useUpdateConversation() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: {
+      successMessage: (_d, v) => {
+        const { pinned } = v as AiConversationUpdate
+        if (pinned === undefined) return 'Đã đổi tên đoạn chat.'
+        return pinned ? 'Đã ghim đoạn chat.' : 'Đã bỏ ghim đoạn chat.'
+      },
+    },
     mutationFn: ({ id, ...body }: AiConversationUpdate & { id: number }) =>
       aiApi.updateConversation(id, body),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: AI_CONVERSATIONS_KEY }),
@@ -30,6 +37,7 @@ export function useUpdateConversation() {
 export function useDeleteConversation() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã xóa đoạn chat.' },
     mutationFn: aiApi.deleteConversation,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: AI_CONVERSATIONS_KEY }),
   })
@@ -37,6 +45,7 @@ export function useDeleteConversation() {
 
 export function useDraftAction(kind: 'submit' | 'apply') {
   return useMutation({
+    meta: { successMessage: kind === 'submit' ? 'Đã gửi đề xuất.' : 'Đã áp dụng bản nháp.' },
     mutationFn: (id: number) => (kind === 'submit' ? aiApi.submitDraft(id) : aiApi.applyDraft(id)),
   })
 }

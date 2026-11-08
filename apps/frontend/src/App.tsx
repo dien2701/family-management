@@ -4,6 +4,7 @@ import { AuthProvider } from '@/context/AuthProvider'
 import { routes } from '@/pages/routes'
 import { queryClient } from '@/services/queryClient'
 import { PWABadge } from '@/features/pwa/components/PWABadge'
+import { Toaster } from '@/components/ui/sonner'
 
 const router = createBrowserRouter(routes)
 
@@ -12,6 +13,7 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <PWABadge />
+        <Toaster />
         <RouterProvider router={router} />
       </AuthProvider>
     </QueryClientProvider>

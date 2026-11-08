@@ -14,6 +14,7 @@ import type { z } from 'zod'
 import { Alert } from '@/components/shared/Alert'
 import { AvatarUpload } from '@/components/shared/AvatarUpload'
 import { Badge } from '@/components/shared/Badge'
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { FormField } from '@/components/shared/FormField'
 import { ListGroup, ListRow } from '@/components/shared/ListRow'
 import { PasswordInput } from '@/components/shared/PasswordInput'
@@ -118,6 +119,7 @@ function AvatarCard() {
   const upload = useUploadMyAvatar()
   const remove = useRemoveMyAvatar()
   const [file, setFile] = useState<File | null>(null)
+  const [askRemove, setAskRemove] = useState(false)
   if (!user) return null
 
   const errorText = avatarErrorText(upload.error ?? remove.error)
@@ -162,13 +164,28 @@ function AvatarCard() {
             className="text-danger"
             loading={remove.isPending}
             disabled={busy}
-            onClick={() => remove.mutate()}
+            onClick={() => {
+              remove.reset()
+              setAskRemove(true)
+            }}
           >
             <Trash2 aria-hidden="true" />
             Gỡ ảnh
           </Button>
         )}
       </div>
+      <ConfirmDialog
+        open={askRemove}
+        title="Gỡ ảnh đại diện?"
+        description="Ảnh hiện tại của tài khoản sẽ bị gỡ."
+        confirmLabel="Gỡ ảnh"
+        cancelLabel="Hủy"
+        danger
+        loading={remove.isPending}
+        error={remove.error ? avatarErrorText(remove.error) : null}
+        onConfirm={() => remove.mutate(undefined, { onSuccess: () => setAskRemove(false) })}
+        onCancel={() => setAskRemove(false)}
+      />
     </Card>
   )
 }

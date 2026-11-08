@@ -1,6 +1,8 @@
+import { toast as sonner } from 'sonner'
+
 type ToastInput = { title: string; description?: string; variant?: 'default' | 'destructive' }
 
-// Chưa có hệ thống toast trong DESIGN; tạm báo bằng hộp thoại của trình duyệt
-export function toast({ title, description }: ToastInput) {
-  window.alert(description ? `${title}\n${description}` : title)
+export function toast({ title, description, variant }: ToastInput) {
+  if (variant === 'destructive') sonner.error(title, { description })
+  else sonner.success(title, { description })
 }

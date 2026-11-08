@@ -1,10 +1,27 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ME_KEY } from '@/hooks/useMe'
 import type { AccountListQuery, Schemas } from '@/types/api'
-import { adminAccountsApi, linkRequestsApi, adminSettingsApi, adminDeletedMembersApi, type AccountAction } from './api'
+import {
+  adminAccountsApi,
+  linkRequestsApi,
+  adminSettingsApi,
+  adminDeletedMembersApi,
+  type AccountAction,
+} from './api'
 
 const ACCOUNTS_KEY = ['admin', 'accounts'] as const
 const LINK_REQUESTS_KEY = ['admin', 'link-requests'] as const
+
+const ACCOUNT_ACTION_DONE: Record<AccountAction, string> = {
+  approve: 'Đã duyệt tài khoản.',
+  reject: 'Đã từ chối tài khoản.',
+  lock: 'Đã khóa tài khoản.',
+  unlock: 'Đã mở khóa tài khoản.',
+  'grant-admin': 'Đã cấp quyền Admin.',
+  'revoke-admin': 'Đã gỡ quyền Admin.',
+  delete: 'Đã xóa tài khoản.',
+  restore: 'Đã khôi phục tài khoản.',
+}
 
 /** Danh sách tài khoản; giữ trang cũ trên màn hình trong lúc tải trang/bộ lọc mới để không nháy skeleton. */
 export function useAccounts(query: AccountListQuery) {
@@ -34,6 +51,9 @@ export function useWaitingCount() {
 export function useAccountAction() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: {
+      successMessage: (_d, v) => ACCOUNT_ACTION_DONE[(v as { action: AccountAction }).action],
+    },
     mutationFn: ({ id, action }: { id: number; action: AccountAction }) =>
       adminAccountsApi.act(id, action),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ACCOUNTS_KEY }),
@@ -64,6 +84,12 @@ export function usePendingLinkRequests() {
 export function useLinkRequestAction() {
   const invalidate = useInvalidateLinks()
   return useMutation({
+    meta: {
+      successMessage: (_d, v) =>
+        (v as { action: string }).action === 'approve'
+          ? 'Đã duyệt yêu cầu liên kết.'
+          : 'Đã từ chối yêu cầu liên kết.',
+    },
     mutationFn: ({ id, action }: { id: number; action: 'approve' | 'reject' }) =>
       action === 'approve' ? linkRequestsApi.approve(id) : linkRequestsApi.reject(id),
     // Lỗi 409 (yêu cầu đã được xử lý, thành viên vừa có tài khoản khác) cũng cần tải lại danh sách
@@ -74,6 +100,7 @@ export function useLinkRequestAction() {
 export function useLinkMember() {
   const invalidate = useInvalidateLinks()
   return useMutation({
+    meta: { successMessage: 'Đã liên kết tài khoản với thành viên.' },
     mutationFn: ({ accountId, memberId }: { accountId: number; memberId: number }) =>
       adminAccountsApi.linkMember(accountId, memberId),
     onSettled: invalidate,
@@ -83,6 +110,7 @@ export function useLinkMember() {
 export function useUnlinkMember() {
   const invalidate = useInvalidateLinks()
   return useMutation({
+    meta: { successMessage: 'Đã hủy liên kết.' },
     mutationFn: (accountId: number) => adminAccountsApi.unlinkMember(accountId),
     onSettled: invalidate,
   })
@@ -98,6 +126,7 @@ export function useSettings() {
 export function useUpdateSettings() {
   const queryClient = useQueryClient()
   return useMutation({
+    meta: { successMessage: 'Đã lưu cài đặt hệ thống.' },
     mutationFn: (settings: Schemas['SystemSettings']) => adminSettingsApi.update(settings),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'settings'] }),
   })
@@ -114,7 +143,7 @@ export function useDeletedMembers(page: number, size: number) {
 export function useDeletedMemberSnapshot(auditId: number | null) {
   return useQuery({
     queryKey: ['admin', 'deleted-members', auditId],
-    queryFn: () => auditId ? adminDeletedMembersApi.get(auditId) : Promise.reject('No auditId'),
+    queryFn: () => (auditId ? adminDeletedMembersApi.get(auditId) : Promise.reject('No auditId')),
     enabled: auditId !== null,
   })
 }

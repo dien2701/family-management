@@ -6,7 +6,6 @@ import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ModalDialog } from '@/components/shared/ModalDialog'
 import { Button } from '@/components/ui/button'
-import { toast } from '@/components/ui/use-toast'
 import { isApproved } from '@/features/auth/routing'
 import { useAuth } from '@/hooks/useAuth'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
@@ -78,11 +77,7 @@ export function AssistantPage() {
     setDrawer(false)
     void open(null)
   }
-  const togglePin = (c: AiConversation) =>
-    update.mutate(
-      { id: c.id, pinned: !c.pinned },
-      { onError: () => toast({ title: aiStrings.conversations.actionError }) },
-    )
+  const togglePin = (c: AiConversation) => update.mutate({ id: c.id, pinned: !c.pinned })
   const confirmDelete = () => {
     if (!deleting) return
     remove.mutate(deleting.id, {
