@@ -12,6 +12,7 @@ import { cn } from '@/utils/cn'
 import type { AccountAction, LinkAction } from '../api'
 import { AccountFilters } from '../components/AccountFilters'
 import { AccountList } from '../components/AccountList'
+import { AccountSheet } from '../components/AccountSheet'
 import { AssignMemberDialog } from '../components/AssignMemberDialog'
 import { useAccountAction, useAccounts, useUnlinkMember, useWaitingCount } from '../hooks'
 import { accountActionText, accountErrorText, adminStrings as s } from '../strings'
@@ -43,6 +44,8 @@ export function AccountsPage() {
   const [assigning, setAssigning] = useState<AccountAdmin | null>(null)
   const [assignSession, setAssignSession] = useState(0)
   const [unlinking, setUnlinking] = useState<AccountAdmin | null>(null)
+  // Tài khoản đang xem trong hộp chi tiết
+  const [viewing, setViewing] = useState<AccountAdmin | null>(null)
 
   // Ô tìm giữ chữ đang gõ riêng; chỉ ghi lên URL (và gọi API) sau khi ngừng gõ một lúc
   const [search, setSearch] = useState(q)
@@ -174,8 +177,8 @@ export function AccountsPage() {
             <AccountList
               accounts={items}
               selfId={user?.id}
+              onOpen={setViewing}
               onAction={openConfirm}
-              onLinkAction={openLinkAction}
             />
             <p className="text-center text-sm text-text-muted tabular-nums">
               {s.pagination.total(accounts.data?.totalElements ?? items.length)}
@@ -194,6 +197,14 @@ export function AccountsPage() {
           </div>
         )}
       </div>
+
+      <AccountSheet
+        account={viewing}
+        selfId={user?.id}
+        onClose={() => setViewing(null)}
+        onAction={openConfirm}
+        onLinkAction={openLinkAction}
+      />
 
       <ConfirmDialog
         open={pending !== null}
@@ -279,7 +290,7 @@ function ListSkeleton() {
         <div
           key={i}
           aria-hidden="true"
-          className="h-28 animate-pulse rounded-card border border-border bg-surface shadow-card"
+          className="h-20 animate-pulse rounded-card border border-border bg-surface shadow-card"
         />
       ))}
     </div>

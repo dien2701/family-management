@@ -41,6 +41,8 @@ export const adminStrings = {
       actions: 'Thao tác',
     },
     notLinked: 'Chưa liên kết thành viên',
+    details: 'Chi tiết tài khoản',
+    filtersLabel: 'Bộ lọc tài khoản',
     memberLabel: 'Thành viên',
   },
   link: {

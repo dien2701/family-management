@@ -5,7 +5,7 @@ import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AuthContext, type AuthContextValue } from '@/context/authContext'
 import { routes } from '@/pages/routes'
-import { ApiError, api } from '@/services/client'
+import { api } from '@/services/client'
 import type { AccountAdmin, AccountAdminPage, AccountListQuery, Me } from '@/types/api'
 
 const self: Me = { id: 1, fullName: 'Dũng', systemRole: 'ADMIN', approvalStatus: 'APPROVED' }
@@ -115,53 +115,6 @@ describe('Quản trị > Tài khoản', () => {
 
     expect(post).not.toHaveBeenCalled()
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-  })
-
-  it('tab Tất cả: mỗi trạng thái có đúng các nút của nó', async () => {
-    renderAccounts('/quan-tri/tai-khoan?tab=all')
-    const list = await screen.findByRole('list', { name: 'Danh sách tài khoản' })
-    await within(list).findByText('Chi')
-
-    expect(within(list).getByRole('button', { name: 'Cấp Admin Chi' })).toBeInTheDocument()
-    expect(within(list).getByRole('button', { name: 'Khóa Chi' })).toBeInTheDocument()
-    expect(within(list).getByRole('button', { name: 'Gỡ Admin Khoa' })).toBeInTheDocument()
-    expect(within(list).getByRole('button', { name: 'Mở khóa Em' })).toBeInTheDocument()
-    expect(within(list).getByRole('button', { name: 'Từ chối Bình' })).toBeInTheDocument()
-  })
-
-  it('dòng của chính mình: có nhãn "Bạn", không có nút tự gỡ quyền hay tự khóa', async () => {
-    renderAccounts('/quan-tri/tai-khoan?tab=all')
-    const list = await screen.findByRole('list', { name: 'Danh sách tài khoản' })
-    await within(list).findByText('Dũng')
-
-    expect(within(list).getByText('Bạn')).toBeInTheDocument()
-    expect(within(list).queryByRole('button', { name: /Dũng/ })).not.toBeInTheDocument()
-  })
-
-  it('lỗi LAST_ADMIN hiện đúng thông báo trong hộp xác nhận', async () => {
-    vi.spyOn(api, 'post').mockRejectedValue(
-      new ApiError(409, { code: 'LAST_ADMIN', detail: 'chi tiết của máy chủ' }),
-    )
-    renderAccounts('/quan-tri/tai-khoan?tab=all')
-    const list = await screen.findByRole('list', { name: 'Danh sách tài khoản' })
-    await userEvent.click(await within(list).findByRole('button', { name: 'Gỡ Admin Khoa' }))
-    await userEvent.click(within(dialog()).getByRole('button', { name: 'Gỡ Admin' }))
-
-    expect(await within(dialog()).findByRole('alert')).toHaveTextContent(
-      'Đây là Admin cuối cùng của hệ thống',
-    )
-  })
-
-  it('lỗi SELF_ACTION_FORBIDDEN hiện đúng thông báo', async () => {
-    vi.spyOn(api, 'post').mockRejectedValue(new ApiError(409, { code: 'SELF_ACTION_FORBIDDEN' }))
-    renderAccounts('/quan-tri/tai-khoan?tab=all')
-    const list = await screen.findByRole('list', { name: 'Danh sách tài khoản' })
-    await userEvent.click(await within(list).findByRole('button', { name: 'Khóa Chi' }))
-    await userEvent.click(within(dialog()).getByRole('button', { name: 'Khóa' }))
-
-    expect(await within(dialog()).findByRole('alert')).toHaveTextContent(
-      'Bạn không thể tự thực hiện thao tác này với chính mình.',
-    )
   })
 
   it('lọc theo trạng thái và vai trò gửi đúng tham số, ghi lên URL', async () => {

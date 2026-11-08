@@ -52,17 +52,17 @@ export function MorePage() {
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <AccountCard />
       <nav aria-label="Các mục khác" className="flex flex-col gap-4">
+        {isAdmin(user) && (
+          <SectionCard title={adminStrings.menu}>
+            <Tiles items={[{ to: '/quan-tri', label: adminStrings.menu, icon: UserCog }]} />
+          </SectionCard>
+        )}
         <SectionCard title="Tiện ích">
           <Tiles items={UTILITIES} />
         </SectionCard>
         <SectionCard title="Gia đình">
           <Tiles items={FAMILY} />
         </SectionCard>
-        {isAdmin(user) && (
-          <SectionCard title={adminStrings.menu}>
-            <Tiles items={[{ to: '/quan-tri', label: adminStrings.menu, icon: UserCog }]} />
-          </SectionCard>
-        )}
         <SectionCard title="Khác">
           <Tiles items={OTHER}>
             <InstallAppItem />

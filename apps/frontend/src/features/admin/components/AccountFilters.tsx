@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react'
-import { FormField } from '@/components/shared/FormField'
+import { FilterBar } from '@/components/shared/FilterBar'
+import { FilterChip } from '@/components/shared/FilterChip'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
 import { STATUS_FILTERS, isRoleFilter, isStatusFilter, type StatusFilter } from '../accountRules'
 import { adminStrings as s } from '../strings'
 
@@ -18,6 +18,9 @@ type AccountFiltersProps = {
   onRoleChange: (value: 'ADMIN' | 'USER' | undefined) => void
 }
 
+const statusText = (value: StatusFilter) => s.status[value.toLowerCase() as keyof typeof s.status]
+
+// Cùng kiểu thanh lọc của Thành viên và Sự kiện: ô tìm + chip chọn, gọn một hàng từ md
 export function AccountFilters({
   search,
   onSearchChange,
@@ -28,81 +31,63 @@ export function AccountFilters({
   onStatusChange,
   onRoleChange,
 }: AccountFiltersProps) {
-  return (
-    <div className="flex flex-col gap-3 md:flex-row md:items-start">
-      <div className="md:flex-1">
-        <FormField label={s.accounts.search}>
-          <SearchInput value={search} onChange={onSearchChange} />
-        </FormField>
-      </div>
-      {showFilters && (
-        <>
-          <div className="md:w-48">
-            <FormField label={s.accounts.statusFilter}>
-              <Select
-                value={status ?? ''}
-                onChange={(e) =>
-                  onStatusChange(isStatusFilter(e.target.value) ? e.target.value : undefined)
-                }
-              >
-                <option value="">{s.accounts.allOption}</option>
-                {STATUS_FILTERS.filter((value) => !(hideWaitingOption && value === 'WAITING')).map((value) => (
-                  <option key={value} value={value}>
-                    {s.status[value.toLowerCase() as keyof typeof s.status]}
-                  </option>
-                ))}
-              </Select>
-            </FormField>
-          </div>
-          <div className="md:w-40">
-            <FormField label={s.accounts.roleFilter}>
-              <Select
-                value={role ?? ''}
-                onChange={(e) =>
-                  onRoleChange(isRoleFilter(e.target.value) ? e.target.value : undefined)
-                }
-              >
-                <option value="">{s.accounts.allOption}</option>
-                <option value="ADMIN">{s.role.ADMIN}</option>
-                <option value="USER">{s.role.USER}</option>
-              </Select>
-            </FormField>
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-// FormField gắn id/invalid/aria-describedby vào phần tử con trực tiếp, nên ô tìm có icon là một
-// component riêng chuyển các prop đó xuống <Input>.
-function SearchInput({
-  value,
-  onChange,
-  ...rest
-}: {
-  value: string
-  onChange: (value: string) => void
-  id?: string
-  invalid?: boolean
-  'aria-describedby'?: string
-}) {
-  return (
-    <div className="relative">
+  const searchBox = (
+    <>
       <Search
         className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-text-muted"
         aria-hidden="true"
       />
       <Input
-        {...rest}
         type="search"
         inputMode="search"
         autoComplete="off"
+        aria-label={s.accounts.search}
         placeholder={s.accounts.searchPlaceholder}
         className="pl-10"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
       />
-    </div>
+    </>
+  )
+
+  if (!showFilters) {
+    return (
+      <div className="rounded-card border border-border bg-surface p-3 shadow-card">
+        <div className="relative">{searchBox}</div>
+      </div>
+    )
+  }
+
+  return (
+    <FilterBar label={s.accounts.filtersLabel} search={searchBox}>
+      <FilterChip
+        widthClass="w-auto shrink-0 md:w-48"
+        label={s.accounts.statusFilter}
+        face={status ? statusText(status) : s.accounts.statusFilter}
+        active={status !== undefined}
+        value={status ?? ''}
+        options={[
+          { value: 'all', text: s.accounts.allOption },
+          ...STATUS_FILTERS.filter((v) => !(hideWaitingOption && v === 'WAITING')).map((v) => ({
+            value: v,
+            text: statusText(v),
+          })),
+        ]}
+        onChange={(v) => onStatusChange(isStatusFilter(v) ? v : undefined)}
+      />
+      <FilterChip
+        widthClass="w-auto shrink-0 md:w-40"
+        label={s.accounts.roleFilter}
+        face={role ? s.role[role] : s.accounts.roleFilter}
+        active={role !== undefined}
+        value={role ?? ''}
+        options={[
+          { value: 'all', text: s.accounts.allOption },
+          { value: 'ADMIN', text: s.role.ADMIN },
+          { value: 'USER', text: s.role.USER },
+        ]}
+        onChange={(v) => onRoleChange(isRoleFilter(v) ? v : undefined)}
+      />
+    </FilterBar>
   )
 }
