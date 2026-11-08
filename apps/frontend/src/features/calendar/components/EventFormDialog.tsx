@@ -5,6 +5,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { Alert } from '@/components/shared/Alert'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { FormField } from '@/components/shared/FormField'
+import { StickyActions } from '@/components/shared/StickyActions'
 import { ModalDialog } from '@/components/shared/ModalDialog'
 import { DualDateInput } from '@/components/ui/DualDateInput'
 import { Button } from '@/components/ui/button'
@@ -240,7 +241,7 @@ function EventForm({ event, initialDate, mode, onDone, onDelete }: EventFormProp
         )}
       />
 
-      <div className="flex flex-col-reverse gap-2 md:flex-row md:justify-end">
+      <StickyActions inSheet>
         {onDelete && (
           <Button type="button" variant="ghost" className="text-danger md:mr-auto" onClick={onDelete}>
             {mode === 'proposal' ? s.proposeDelete : s.delete}
@@ -249,7 +250,7 @@ function EventForm({ event, initialDate, mode, onDone, onDelete }: EventFormProp
         <Button type="submit" loading={isSubmitting}>
           {mode === 'proposal' ? s.sendProposal : s.save}
         </Button>
-      </div>
+      </StickyActions>
     </form>
   )
 }

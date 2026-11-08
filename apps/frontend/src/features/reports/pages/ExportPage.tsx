@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { FileDown, Calendar, Download } from 'lucide-react'
+import { FileDown, Calendar, Download, Moon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useApi } from '@/services/api'
 import { toast } from '@/components/ui/use-toast'
 import { Input } from '@/components/ui/input'
+import { FormField } from '@/components/shared/FormField'
+import { SectionCard } from '@/components/shared/SectionCard'
 
 export function ExportPage() {
   const api = useApi()
@@ -37,116 +39,69 @@ export function ExportPage() {
     }
   }
 
+  // Nút tải: hiện vòng xoay ở đúng nút đang tải, khóa các nút khác
+  const exportButton = (type: string, url: string, label: string) => (
+    <Button
+      variant="secondary"
+      className="flex-1"
+      loading={loading === type}
+      disabled={loading !== null}
+      onClick={() => void handleExport(type, url)}
+    >
+      {loading !== type && <Download aria-hidden="true" />}
+      {label}
+    </Button>
+  )
+
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 md:py-8 space-y-6">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <h1 className="text-2xl font-bold">Xuất dữ liệu</h1>
-      <p className="text-muted-foreground mb-6">
-        Tải xuống các báo cáo về danh sách thành viên, sự kiện và lịch giỗ.
-      </p>
-      
+      <p className="text-text-muted">Tải xuống các báo cáo về danh sách thành viên, sự kiện và lịch giỗ.</p>
+
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Danh sách thành viên */}
-        <section className="rounded-card border border-border bg-surface p-4 shadow-card space-y-4">
-          <div className="flex items-center gap-2 text-lg font-semibold">
-            <FileDown className="h-5 w-5" />
-            <h3>Hồ sơ thành viên</h3>
+        <SectionCard title="Hồ sơ thành viên" icon={FileDown}>
+          <div className="flex flex-col gap-4">
+            <p className="text-text-muted">Xuất danh sách toàn bộ thành viên trong gia phả.</p>
+            <div className="flex gap-2">
+              {exportButton('members-xlsx', '/api/reports/members.xlsx', 'Excel')}
+              {exportButton('members-pdf', '/api/reports/members.pdf', 'PDF')}
+            </div>
           </div>
-          <p className="text-sm text-muted-foreground h-10">
-            Xuất danh sách toàn bộ thành viên trong gia phả.
-          </p>
-          <div className="flex gap-2 pt-2">
-            <Button 
-              variant="secondary" 
-              className="flex-1"
-              disabled={loading !== null}
-              onClick={() => handleExport('members-xlsx', '/api/reports/members.xlsx')}
-            >
-              {loading === 'members-xlsx' ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              ) : (
-                <Download className="mr-2 h-4 w-4" />
-              )}
-              Excel
-            </Button>
-            <Button 
-              variant="secondary" 
-              className="flex-1"
-              disabled={loading !== null}
-              onClick={() => handleExport('members-pdf', '/api/reports/members.pdf')}
-            >
-              {loading === 'members-pdf' ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              ) : (
-                <Download className="mr-2 h-4 w-4" />
-              )}
-              PDF
-            </Button>
-          </div>
-        </section>
+        </SectionCard>
 
-        {/* Sự kiện trong năm (Dương lịch) */}
-        <section className="rounded-card border border-border bg-surface p-4 shadow-card space-y-4">
-          <div className="flex items-center gap-2 text-lg font-semibold">
-            <Calendar className="h-5 w-5" />
-            <h3>Sự kiện (Dương lịch)</h3>
+        <SectionCard title="Sự kiện (Dương lịch)" icon={Calendar}>
+          <div className="flex flex-col gap-4">
+            <FormField label="Năm">
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={eventYear}
+                onChange={(e) => setEventYear(Number(e.target.value))}
+                className="sm:w-32"
+              />
+            </FormField>
+            <div className="flex">
+              {exportButton('events-xlsx', `/api/reports/events.xlsx?year=${eventYear}`, 'Tải Excel')}
+            </div>
           </div>
-          <div className="flex items-center gap-2 h-10">
-            <span className="text-sm">Năm:</span>
-            <Input 
-              type="number" 
-              value={eventYear} 
-              onChange={(e) => setEventYear(Number(e.target.value))}
-              className="w-24 h-8 text-sm" 
-            />
-          </div>
-          <div className="pt-2">
-            <Button 
-              variant="secondary" 
-              className="w-full"
-              disabled={loading !== null}
-              onClick={() => handleExport('events-xlsx', `/api/reports/events.xlsx?year=${eventYear}`)}
-            >
-              {loading === 'events-xlsx' ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              ) : (
-                <Download className="mr-2 h-4 w-4" />
-              )}
-              Tải Excel
-            </Button>
-          </div>
-        </section>
+        </SectionCard>
 
-        {/* Lịch giỗ (Âm lịch) */}
-        <section className="rounded-card border border-border bg-surface p-4 shadow-card space-y-4">
-          <div className="flex items-center gap-2 text-lg font-semibold">
-            <Calendar className="h-5 w-5" />
-            <h3>Lịch giỗ (Âm lịch)</h3>
+        <SectionCard title="Lịch giỗ (Âm lịch)" icon={Moon}>
+          <div className="flex flex-col gap-4">
+            <FormField label="Năm âm lịch">
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={memorialYear}
+                onChange={(e) => setMemorialYear(Number(e.target.value))}
+                className="sm:w-32"
+              />
+            </FormField>
+            <div className="flex">
+              {exportButton('memorials-pdf', `/api/reports/memorials.pdf?lunarYear=${memorialYear}`, 'Tải PDF')}
+            </div>
           </div>
-          <div className="flex items-center gap-2 h-10">
-            <span className="text-sm">Năm:</span>
-            <Input 
-              type="number" 
-              value={memorialYear} 
-              onChange={(e) => setMemorialYear(Number(e.target.value))}
-              className="w-24 h-8 text-sm" 
-            />
-          </div>
-          <div className="pt-2">
-            <Button 
-              variant="secondary" 
-              className="w-full"
-              disabled={loading !== null}
-              onClick={() => handleExport('memorials-pdf', `/api/reports/memorials.pdf?lunarYear=${memorialYear}`)}
-            >
-              {loading === 'memorials-pdf' ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              ) : (
-                <Download className="mr-2 h-4 w-4" />
-              )}
-              Tải PDF
-            </Button>
-          </div>
-        </section>
+        </SectionCard>
       </div>
     </div>
   )

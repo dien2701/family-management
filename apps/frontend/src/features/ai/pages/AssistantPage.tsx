@@ -177,7 +177,7 @@ export function AssistantPage() {
               <PanelLeftOpen aria-hidden="true" />
             </Button>
           )}
-          <h2 className="min-w-0 flex-1 truncate text-lg font-semibold md:text-xl">
+          <h2 className="min-w-0 flex-1 truncate text-lg font-bold text-primary md:text-xl">
             {guest ? aiStrings.title : activeTitle}
           </h2>
           <Button

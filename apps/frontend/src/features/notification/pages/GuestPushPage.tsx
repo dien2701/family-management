@@ -1,8 +1,10 @@
-import { Bell, BellOff, Check, Smartphone } from 'lucide-react'
+import { Bell, BellOff, BellRing, Check, Smartphone } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Navigate } from 'react-router'
 import { Alert } from '@/components/shared/Alert'
 import { FormField } from '@/components/shared/FormField'
+import { SectionCard } from '@/components/shared/SectionCard'
+import { StickyActions } from '@/components/shared/StickyActions'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -14,7 +16,6 @@ import { useGuestPushPref, useSaveGuestPushPref } from '../hooks'
 import { disablePush, enablePush, getPushState, needsHomeScreenInstall, syncPush, type PushState } from '../push'
 import { GUEST_REMIND_DAYS, guestPushStrings as s } from '../strings'
 
-const CARD = 'flex flex-col gap-4 rounded-card border border-border bg-surface p-4 shadow-card md:p-6'
 const HOUR_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
 
 type Message = { kind: 'success' | 'danger'; text: string }
@@ -59,55 +60,52 @@ function GuestPushPanel() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-      <section aria-labelledby="guest-push-title" className={CARD}>
-        <div>
-          <h2 id="guest-push-title" className="flex items-center gap-2 text-lg font-semibold">
-            <Smartphone className="size-5" aria-hidden="true" /> {s.title}
-          </h2>
-          <p className="mt-1 text-text-muted">{s.intro}</p>
+      <SectionCard title={s.title} icon={Smartphone}>
+        <div className="flex flex-col gap-4">
+          <p className="-mt-1 text-text-muted">{s.intro}</p>
+
+          <p className="font-semibold" aria-live="polite">
+            {state ? s.status[state] : s.checking}
+          </p>
+
+          {state === 'unsupported' && (
+            <Alert variant="info">{homeScreen ? s.iosInstall : s.unsupported}</Alert>
+          )}
+          {state === 'denied' && <Alert variant="info">{s.denied}</Alert>}
+          {message && <Alert variant={message.kind}>{message.text}</Alert>}
+
+          {state === 'off' && (
+            <Button
+              className="w-full sm:w-auto sm:self-start"
+              loading={busy}
+              onClick={() =>
+                void run(async () => {
+                  await enablePush('guest')
+                  return s.enabled
+                })
+              }
+            >
+              <Bell aria-hidden="true" /> {s.enable}
+            </Button>
+          )}
+          {state === 'on' && (
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto sm:self-start"
+              loading={busy}
+              onClick={() =>
+                void run(async () => {
+                  await disablePush('guest')
+                  save.reset()
+                  return s.disabled
+                })
+              }
+            >
+              <BellOff aria-hidden="true" /> {s.disable}
+            </Button>
+          )}
         </div>
-
-        <p className="font-semibold" aria-live="polite">
-          {state ? s.status[state] : s.checking}
-        </p>
-
-        {state === 'unsupported' && (
-          <Alert variant="info">{homeScreen ? s.iosInstall : s.unsupported}</Alert>
-        )}
-        {state === 'denied' && <Alert variant="info">{s.denied}</Alert>}
-        {message && <Alert variant={message.kind}>{message.text}</Alert>}
-
-        {state === 'off' && (
-          <Button
-            className="w-full sm:w-auto sm:self-start"
-            loading={busy}
-            onClick={() =>
-              void run(async () => {
-                await enablePush('guest')
-                return s.enabled
-              })
-            }
-          >
-            <Bell aria-hidden="true" /> {s.enable}
-          </Button>
-        )}
-        {state === 'on' && (
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto sm:self-start"
-            loading={busy}
-            onClick={() =>
-              void run(async () => {
-                await disablePush('guest')
-                save.reset()
-                return s.disabled
-              })
-            }
-          >
-            <BellOff aria-hidden="true" /> {s.disable}
-          </Button>
-        )}
-      </section>
+      </SectionCard>
 
       {state === 'on' && pref.isSuccess && pref.data && (
         // key theo giá trị đã lưu: lưu xong thì form dựng lại với bản mới, không còn "chưa lưu"
@@ -148,84 +146,81 @@ function PrefForm({ pref, save }: { pref: GuestPushPref; save: SaveMutation }) {
 
   return (
     <form
-      aria-labelledby="guest-pref-title"
-      className={CARD}
+      className="flex flex-col gap-4"
       onSubmit={(e) => {
         e.preventDefault()
         submit()
       }}
     >
-      <h2 id="guest-pref-title" className="text-lg font-semibold">
-        {s.prefs.title}
-      </h2>
+      <SectionCard title={s.prefs.title} icon={BellRing}>
+        <div className="flex flex-col gap-4">
+          <div>
+            <Checkbox
+              label={s.prefs.memorials}
+              checked={memorials}
+              onChange={(e) => setMemorials(e.target.checked)}
+            />
+            <Checkbox
+              label={s.prefs.events}
+              checked={events}
+              onChange={(e) => setEvents(e.target.checked)}
+            />
+          </div>
 
-      <div>
-        <Checkbox
-          label={s.prefs.memorials}
-          checked={memorials}
-          onChange={(e) => setMemorials(e.target.checked)}
-        />
-        <Checkbox
-          label={s.prefs.events}
-          checked={events}
-          onChange={(e) => setEvents(e.target.checked)}
-        />
-      </div>
+          <div className="border-t border-border pt-4">
+            <p id="guest-days-label" className="text-base font-medium">
+              {s.prefs.daysTitle}
+            </p>
+            <p className="mb-2 text-sm text-text-muted">{s.prefs.daysHint}</p>
+            <div role="group" aria-labelledby="guest-days-label" className="flex flex-wrap gap-2">
+              {GUEST_REMIND_DAYS.map((day) => {
+                const on = days.includes(day)
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => toggleDay(day)}
+                    className={cn(
+                      'inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full px-4 text-base font-medium transition-colors duration-200',
+                      on
+                        ? 'bg-primary text-primary-fg hover:bg-primary-hover'
+                        : 'bg-secondary text-secondary-fg hover:bg-secondary-hover',
+                    )}
+                  >
+                    {on && <Check className="size-4" aria-hidden="true" />}
+                    {s.prefs.dayChip(day)}
+                  </button>
+                )
+              })}
+            </div>
+            {!daysOk && (
+              <p role="alert" className="mt-2 text-sm font-medium text-danger">
+                {s.prefs.daysError}
+              </p>
+            )}
+          </div>
 
-      <div className="border-t border-border pt-4">
-        <p id="guest-days-label" className="text-base font-medium">
-          {s.prefs.daysTitle}
-        </p>
-        <p className="mb-2 text-sm text-text-muted">{s.prefs.daysHint}</p>
-        <div role="group" aria-labelledby="guest-days-label" className="flex flex-wrap gap-2">
-          {GUEST_REMIND_DAYS.map((day) => {
-            const on = days.includes(day)
-            return (
-              <button
-                key={day}
-                type="button"
-                aria-pressed={on}
-                onClick={() => toggleDay(day)}
-                className={cn(
-                  'inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full px-4 text-base font-medium transition-colors duration-200',
-                  on
-                    ? 'bg-primary text-primary-fg hover:bg-primary-hover'
-                    : 'bg-secondary text-secondary-fg hover:bg-secondary-hover',
-                )}
-              >
-                {on && <Check className="size-4" aria-hidden="true" />}
-                {s.prefs.dayChip(day)}
-              </button>
-            )
-          })}
+          <FormField label={s.prefs.hourLabel} hint={s.prefs.hourHint}>
+            <Input
+              type="time"
+              value={hour}
+              className="sm:w-40"
+              onChange={(e) => setHour(e.target.value)}
+            />
+          </FormField>
+
         </div>
-        {!daysOk && (
-          <p role="alert" className="mt-2 text-sm font-medium text-danger">
-            {s.prefs.daysError}
-          </p>
-        )}
-      </div>
-
-      <FormField label={s.prefs.hourLabel} hint={s.prefs.hourHint}>
-        <Input
-          type="time"
-          value={hour}
-          className="sm:w-40"
-          onChange={(e) => setHour(e.target.value)}
-        />
-      </FormField>
+      </SectionCard>
 
       {save.isError && <Alert variant="danger">{save.error.message || s.prefs.saveFailed}</Alert>}
       {save.isSuccess && !dirty && <Alert variant="success">{s.prefs.saved}</Alert>}
 
-      <Button
-        type="submit"
-        className="w-full sm:w-auto sm:self-end"
-        disabled={!dirty || !daysOk || !hourOk}
-        loading={save.isPending}
-      >
-        {s.prefs.save}
-      </Button>
+      <StickyActions>
+        <Button type="submit" disabled={!dirty || !daysOk || !hourOk} loading={save.isPending}>
+          {s.prefs.save}
+        </Button>
+      </StickyActions>
     </form>
   )
 }

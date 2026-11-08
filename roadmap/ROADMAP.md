@@ -83,10 +83,10 @@
 | **GĐ E** | **Làm lại giao diện ưu tiên điện thoại (DECISIONS #96)** | | | |
 | 46 | Token, khung chung (header, thanh dưới, thẻ dùng chung) và Trang chủ | Claude Code | Sonnet · high | ✅ 2026-11-08 |
 | 47 | Thêm, Hồ sơ cá nhân, Cài đặt, Thành viên, Sự kiện | Claude Code | Sonnet · medium | ✅ 2026-11-08 |
-| 48 | Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm | Claude Code | Sonnet · medium | ⬜ |
+| 48 | Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm | Claude Code | Sonnet · medium | ✅ 2026-11-08 |
 | 49 | Quản trị và nhóm trang đăng nhập | Claude Code | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt tiếp theo: Đợt 48 — Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm
+## ▶️ Đợt tiếp theo: Đợt 49 — Quản trị và nhóm trang đăng nhập
 
 ---
 
@@ -1182,14 +1182,18 @@ Việc nên làm thêm: `EmptyState` vẫn là thẻ riêng nên trạng thái r
 
 ---
 
-### Đợt 48 — Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm
+### Đợt 48 — Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm ✅ 2026-11-08
 DECISIONS #96 · `docs/DESIGN.md` mục 9
-- [ ] **Form** (`MemberFormPage`, form sự kiện, form hồ sơ, form bài khấn): chia nhóm trường thành `SectionCard`, nút Lưu/Hủy vào `StickyActions`.
-- [ ] **Cây** (`TreePage`): thanh công cụ điện thoại gọn (nút tròn 44px nổi trên sơ đồ), không đổi thuật toán layout.
-- [ ] **Bài khấn, Trợ lý AI, Thông báo** (`PrayersPage`, `PrayerDetailPage`, `AssistantPage`, `InboxPage`, cài đặt thông báo, `GuestPushPage`).
-- [ ] **Trang trong Thêm:** Đề xuất của tôi, Tôi là ai, Tài liệu chung, Xuất dữ liệu.
+- [x] **Form** (`MemberFormPage`, form sự kiện, form hồ sơ, form bài khấn): chia nhóm trường thành `SectionCard`, nút Lưu/Hủy vào `StickyActions`. ✅ 2026-11-08
+- [x] **Cây** (`TreePage`): thanh công cụ điện thoại gọn (nút tròn 44px nổi trên sơ đồ), không đổi thuật toán layout. ✅ 2026-11-08
+- [x] **Bài khấn, Trợ lý AI, Thông báo** (`PrayersPage`, `PrayerDetailPage`, `AssistantPage`, `InboxPage`, cài đặt thông báo, `GuestPushPage`). ✅ 2026-11-08
+- [x] **Trang trong Thêm:** Đề xuất của tôi, Tôi là ai, Tài liệu chung, Xuất dữ liệu. ✅ 2026-11-08
 
-**✅ Đã làm:** (điền khi xong)
+**✅ Đã làm:** **Form**: `MemberForm` (thêm/sửa hồ sơ) chia 5 `SectionCard` có icon, Lưu/Hủy trong `StickyActions`, bỏ lề thừa ở `MemberFormPage`. Form sự kiện và bài khấn (theo trả lời của người dùng) giữ bottom sheet, nút dính đáy sheet nhờ prop mới `StickyActions inSheet`, không bọc `SectionCard`.
+**Cây**: thêm `tree/components/TreePhoneTools.tsx` (cột nút tròn 44px góc trên phải sơ đồ: Tổ tiên của tôi, Dọc/Ngang, Thêm người gốc (Admin), ⋯ "Tùy chọn hiển thị" mở sheet có Cỡ ô, Xem cây, Đặt lại các ô); `TreeToolbar` tách `SizeGroup`, ẩn hàng nút trên điện thoại. Không đổi layout.
+**Bài khấn**: danh sách thành `SectionCard` + `ListRow`; chi tiết dùng `SectionCard` (nút Chế độ đọc ở `action`), Sửa/Xóa của Admin trong `StickyActions` ở điện thoại. **Trợ lý**: chỉ đổi tiêu đề đoạn chat sang 18px/700 primary (bố cục chat, ô soạn dính đáy đã đúng mẫu). **Thông báo**: hộp thư là `SectionCard` + `ListRow` (chưa đọc: chuông chấm, tiêu đề đậm); Cài đặt thông báo và `PushCard` dùng `SectionCard`, ô tick dùng `Checkbox` chung (vùng chạm 44px), Lưu trong `StickyActions`; `GuestPushPage` tương tự.
+**Trang trong Thêm**: Đề xuất của tôi (`SectionCard` + `ListRow`, icon theo loại, `Badge` trạng thái), Tôi là ai (`Card` riêng → `SectionCard`, badge ở `action`), Tài liệu chung, Xuất dữ liệu (`SectionCard`, ô Năm thành `FormField` 44px, bỏ lề thừa). `docs/DESIGN.md` mục 9 thêm `inSheet` và mô tả Đợt 48.
+Việc nên làm thêm: Composer của Trợ lý dính ở `4.75rem` (hơi cao hơn `StickyActions` 4.25rem + 1px); chuỗi UI của Thông báo, Đề xuất, Tài liệu chung, Xuất dữ liệu vẫn viết thẳng trong trang, chưa gom vào `strings.ts` (có từ trước).
 
 ---
 

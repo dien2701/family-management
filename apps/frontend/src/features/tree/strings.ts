@@ -36,6 +36,7 @@ export const treeStrings = {
     horizontalView: 'Hiển thị ngang',
     resetNodes: 'Đặt lại các ô',
     sizeGroup: 'Cỡ ô',
+    moreTools: 'Tùy chọn hiển thị',
     sizeSmall: 'Nhỏ',
     sizeMedium: 'Vừa',
     sizeLarge: 'Lớn',

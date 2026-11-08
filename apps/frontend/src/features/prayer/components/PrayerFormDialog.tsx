@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Alert } from '@/components/shared/Alert'
 import { FormField } from '@/components/shared/FormField'
+import { StickyActions } from '@/components/shared/StickyActions'
 import { ModalDialog } from '@/components/shared/ModalDialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -90,14 +91,14 @@ function PrayerForm({ prayer, onClose, onSaved }: Omit<PrayerFormDialogProps, 'o
         )}
       </section>
 
-      <div className="flex flex-col-reverse gap-2 md:flex-row md:justify-end">
+      <StickyActions inSheet>
         <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
           {s.cancel}
         </Button>
         <Button type="submit" loading={isSubmitting}>
           {s.save}
         </Button>
-      </div>
+      </StickyActions>
     </form>
   )
 }

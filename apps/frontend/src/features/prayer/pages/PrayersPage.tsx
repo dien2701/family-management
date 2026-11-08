@@ -1,9 +1,11 @@
-import { ChevronRight, Loader2, Plus, ScrollText, SearchX } from 'lucide-react'
+import { Loader2, Plus, ScrollText, SearchX } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router'
+import { useNavigate, useSearchParams } from 'react-router'
 import { Alert } from '@/components/shared/Alert'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { FormField } from '@/components/shared/FormField'
+import { ListGroup, ListRow } from '@/components/shared/ListRow'
+import { SectionCard } from '@/components/shared/SectionCard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -68,7 +70,7 @@ export function PrayersPage() {
         )}
       </div>
 
-      <div className="grid gap-3 rounded-card border border-border bg-surface p-4 shadow-card md:grid-cols-[1fr_200px]">
+      <div className="grid gap-3 rounded-card border border-border bg-surface p-4 shadow-card md:grid-cols-[1fr_200px] md:p-6">
         <FormField label={s.searchLabel} hint={s.searchHint}>
           <Input
             type="search"
@@ -104,27 +106,23 @@ export function PrayersPage() {
       ) : visible.length === 0 ? (
         <EmptyState icon={SearchX} title={s.noMatchTitle} description={s.noMatchHint} />
       ) : (
-        <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
-          {visible.map((prayer) => (
-            <li key={prayer.id} className="border-b border-border last:border-b-0">
-              <Link
+        <SectionCard title={s.count(visible.length)} icon={ScrollText}>
+          <ListGroup>
+            {visible.map((prayer) => (
+              <ListRow
+                key={prayer.id}
                 to={`/bai-khan/${prayer.id}`}
-                className="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors duration-200 ease-out hover:bg-surface-muted"
-              >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-fg">
-                  <ScrollText className="size-5" aria-hidden="true" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-semibold">{prayer.title}</span>
-                  <span className="block text-sm text-text-muted">
-                    {s.updated(formatDate(prayer.updatedAt))}
+                leading={
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-field bg-secondary text-secondary-fg">
+                    <ScrollText className="size-5" aria-hidden="true" />
                   </span>
-                </span>
-                <ChevronRight className="size-5 shrink-0 text-text-muted" aria-hidden="true" />
-              </Link>
-            </li>
-          ))}
-        </ul>
+                }
+                label={prayer.title}
+                description={s.updated(formatDate(prayer.updatedAt))}
+              />
+            ))}
+          </ListGroup>
+        </SectionCard>
       )}
 
       <PrayerFormDialog

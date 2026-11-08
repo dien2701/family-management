@@ -1,6 +1,7 @@
 import { Bell, Smartphone } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { Alert } from '@/components/shared/Alert'
+import { SectionCard } from '@/components/shared/SectionCard'
 import { Button } from '@/components/ui/button'
 import { useTestPush } from '../hooks'
 import { disablePush, enablePush, getPushState, needsHomeScreenInstall, type PushState } from '../push'
@@ -36,10 +37,7 @@ export function PushCard() {
   }
 
   return (
-    <section className="rounded-lg border border-border bg-surface p-6 shadow-sm">
-      <h2 className="mb-2 flex items-center gap-2 text-lg font-semibold">
-        <Smartphone className="size-5" aria-hidden="true" /> Thông báo đẩy trên thiết bị này
-      </h2>
+    <SectionCard title="Thông báo đẩy trên thiết bị này" icon={Smartphone}>
       <p className="mb-1 text-base text-text-muted">
         Nhận nhắc lịch ngay trên màn hình, kể cả khi không mở ứng dụng. Mỗi thiết bị bật riêng.
       </p>
@@ -106,6 +104,6 @@ export function PushCard() {
           </>
         )}
       </div>
-    </section>
+    </SectionCard>
   )
 }

@@ -24,6 +24,7 @@ import { NodeMenuDialog, type MenuAction } from '../components/NodeMenuDialog'
 import { PairDialog } from '../components/PairDialog'
 import { ReorderDialog } from '../components/ReorderDialog'
 import { TreeCanvas, type ViewRequest } from '../components/TreeCanvas'
+import { TreePhoneTools } from '../components/TreePhoneTools'
 import { TreePreviewScreen } from '../components/TreePreviewScreen'
 import { TreeToolbar, type ViewStatus } from '../components/TreeToolbar'
 import { layoutTree } from '../layout/layoutTree'
@@ -474,7 +475,7 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
         )}
         {editing && isDesktop && <p className="text-sm text-text-muted">{t.toolbar.dragHint}</p>}
 
-        <div className="h-[68dvh] min-h-[420px] md:h-[calc(100dvh-17rem)]">
+        <div className="relative h-[68dvh] min-h-[420px] md:h-[calc(100dvh-17rem)]">
           <TreeCanvas
             layout={layout}
             ui={canvasUi}
@@ -485,6 +486,16 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
             onDragEnd={() => setDragId(null)}
             onDrop={onDrop}
             onPaneClick={() => setSelectedId(null)}
+          />
+          <TreePhoneTools
+            isAdmin={editing}
+            prefs={prefs}
+            onPrefsChange={setPrefs}
+            hasNodeOverrides={Object.keys(overrides).length > 0}
+            onResetNodes={resetNodes}
+            onAddRoot={() => openFlow({ kind: 'add', mode: { kind: 'root' } })}
+            onMyAncestors={showMyAncestors}
+            onPrint={() => setPrintOpen(true)}
           />
         </div>
       </div>

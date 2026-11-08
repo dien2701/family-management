@@ -10,6 +10,7 @@ export const prayerStrings = {
     sortLabel: 'Sắp xếp',
     sort: { az: 'A–Z', oldest: 'Cũ nhất', newest: 'Mới nhất' },
     updated: (date: string) => `Cập nhật ${date}`,
+    count: (n: number) => `${n} bài khấn`,
     emptyTitle: 'Chưa có bài khấn',
     emptyAdmin: 'Hãy thêm bài khấn đầu tiên cho gia đình.',
     emptyGuest: 'Quản trị viên chưa soạn bài khấn nào.',

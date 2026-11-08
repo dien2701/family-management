@@ -1,9 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { BookOpen, Cake, Flower2, Phone, UserRound, type LucideIcon } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { Alert } from '@/components/shared/Alert'
 import { AvatarUpload } from '@/components/shared/AvatarUpload'
 import { FormField } from '@/components/shared/FormField'
+import { SectionCard } from '@/components/shared/SectionCard'
+import { StickyActions } from '@/components/shared/StickyActions'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DualDateInput } from '@/components/ui/DualDateInput'
@@ -70,7 +73,7 @@ export function MemberForm({
     <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4">
       {errors.root?.server && <Alert>{errors.root.server.message}</Alert>}
 
-      <Section title={s.sections.basic}>
+      <Section title={s.sections.basic} icon={UserRound}>
         <AvatarUpload
           label={memberStrings.avatar.label}
           name={fullName || member?.fullName || ''}
@@ -99,7 +102,7 @@ export function MemberForm({
         </FormField>
       </Section>
 
-      <Section title={s.sections.birth}>
+      <Section title={s.sections.birth} icon={Cake}>
         <Controller
           control={control}
           name="birth"
@@ -116,7 +119,7 @@ export function MemberForm({
         />
       </Section>
 
-      <Section title={s.sections.contact}>
+      <Section title={s.sections.contact} icon={Phone}>
         <p className="-mt-2 text-sm text-text-muted">{s.contactHint}</p>
         <FormField label={s.phone} error={errors.phone?.message}>
           <Input {...register('phone')} type="tel" inputMode="tel" autoComplete="off" />
@@ -126,13 +129,13 @@ export function MemberForm({
         </FormField>
       </Section>
 
-      <Section title={s.sections.biography}>
+      <Section title={s.sections.biography} icon={BookOpen}>
         <FormField label={s.biography} error={errors.biography?.message}>
           <Textarea {...register('biography')} rows={5} />
         </FormField>
       </Section>
 
-      <Section title={s.sections.death}>
+      <Section title={s.sections.death} icon={Flower2}>
         {lockDeathFields && <Alert variant="info">{s.deathLocked}</Alert>}
         {/* Nhóm "đã mất" dùng Controller (giá trị nằm trong form, không đọc từ DOM) để khóa được mà vẫn gửi nguyên giá trị cũ */}
         <Controller
@@ -221,23 +224,22 @@ export function MemberForm({
         )}
       </Section>
 
-      <div className="flex flex-col-reverse gap-2 md:flex-row md:justify-end">
+      <StickyActions>
         <Button type="button" variant="secondary" disabled={isSubmitting} onClick={onCancel}>
           {s.cancel}
         </Button>
         <Button type="submit" loading={isSubmitting}>
           {submitLabel}
         </Button>
-      </div>
+      </StickyActions>
     </form>
   )
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, icon, children }: { title: string; icon: LucideIcon; children: ReactNode }) {
   return (
-    <section className="flex flex-col gap-4 rounded-card border border-border bg-surface p-4 shadow-card md:p-6">
-      <h2 className="text-lg leading-tight font-semibold">{title}</h2>
-      {children}
-    </section>
+    <SectionCard title={title} icon={icon}>
+      <div className="flex flex-col gap-4">{children}</div>
+    </SectionCard>
   )
 }

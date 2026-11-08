@@ -52,6 +52,28 @@ function statusText(status: ViewStatus): string {
   }
 }
 
+/** Nhóm chọn cỡ ô Nhỏ/Vừa/Lớn, dùng ở thanh công cụ máy tính và bảng tùy chọn điện thoại. */
+export function SizeGroup({ size, onChange }: { size: TreeSize; onChange: (size: TreeSize) => void }) {
+  return (
+    <div role="group" aria-label={s.sizeGroup} className="flex items-center gap-1 rounded-button bg-secondary p-1">
+      {SIZE_OPTIONS.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          aria-pressed={size === option.value}
+          onClick={() => onChange(option.value)}
+          className={cn(
+            'min-h-9 min-w-11 flex-1 cursor-pointer rounded-button px-3 text-base font-semibold transition-colors duration-200 ease-out',
+            size === option.value ? 'bg-primary text-primary-fg' : 'text-secondary-fg hover:bg-secondary-hover',
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 /** Ô tìm trên cây (nhảy tới người và làm nổi bật), tổ tiên của tôi, thêm người gốc (Admin) và trạng thái đang xem. */
 export function TreeToolbar({
   index,
@@ -152,7 +174,8 @@ export function TreeToolbar({
           )}
         </div>
 
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 md:mx-0 md:flex-1 md:flex-wrap md:overflow-visible md:px-0 md:pb-0 [&>*]:shrink-0">
+        {/* Điện thoại: các nút này nổi trên sơ đồ (TreePhoneTools) */}
+        <div className="hidden flex-1 flex-wrap gap-2 md:flex">
           <Button variant="secondary" onClick={onMyAncestors}>
             <UserRound aria-hidden="true" />
             {s.myAncestors}
@@ -169,24 +192,7 @@ export function TreeToolbar({
             {prefs.vertical ? <RectangleHorizontal aria-hidden="true" /> : <RectangleVertical aria-hidden="true" />}
             {prefs.vertical ? s.horizontalView : s.verticalView}
           </Button>
-          <div role="group" aria-label={s.sizeGroup} className="flex items-center gap-1 rounded-button bg-secondary p-1">
-            {SIZE_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                aria-pressed={prefs.size === option.value}
-                onClick={() => onPrefsChange({ size: option.value })}
-                className={cn(
-                  'min-h-9 min-w-11 cursor-pointer rounded-button px-3 text-base font-semibold transition-colors duration-200 ease-out',
-                  prefs.size === option.value
-                    ? 'bg-primary text-primary-fg'
-                    : 'text-secondary-fg hover:bg-secondary-hover',
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+          <SizeGroup size={prefs.size} onChange={(size) => onPrefsChange({ size })} />
           {hasNodeOverrides && (
             <Button variant="ghost" onClick={onResetNodes}>
               <RotateCcw aria-hidden="true" />

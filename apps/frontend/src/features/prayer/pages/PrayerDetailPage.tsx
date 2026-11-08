@@ -1,10 +1,12 @@
-import { BookOpen, Loader2, Pencil, ScrollText, Trash2 } from 'lucide-react'
+import { BookOpen, Loader2, Pencil, ScrollText, Trash2, UserRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Alert } from '@/components/shared/Alert'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { FormField } from '@/components/shared/FormField'
+import { SectionCard } from '@/components/shared/SectionCard'
+import { StickyActions } from '@/components/shared/StickyActions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { isAdmin, isApproved } from '@/features/auth/routing'
@@ -76,23 +78,25 @@ export function PrayerDetailPage() {
   // Tài khoản đã duyệt đọc từ server, còn lại từ máy này. Chờ server xong mới dựng khối điền để lấy đúng giá trị đầu.
   const waitingFill = approved && fill.isPending
   const fillFailed = approved && fill.isError
+  const adminActions = isAdmin(user) && (
+    <>
+      <Button variant="secondary" onClick={() => setEditing(true)}>
+        <Pencil aria-hidden="true" />
+        {s.edit}
+      </Button>
+      <Button variant="ghost" className="text-danger" onClick={() => setConfirming(true)}>
+        <Trash2 aria-hidden="true" />
+        {s.delete}
+      </Button>
+    </>
+  )
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <h1 className="min-w-0 text-xl leading-tight font-bold md:text-2xl">{data.title}</h1>
-        {isAdmin(user) && (
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => setEditing(true)}>
-              <Pencil aria-hidden="true" />
-              {s.edit}
-            </Button>
-            <Button variant="ghost" className="text-danger" onClick={() => setConfirming(true)}>
-              <Trash2 aria-hidden="true" />
-              {s.delete}
-            </Button>
-          </div>
-        )}
+        {/* Máy tính: nút ở đầu trang; điện thoại: thanh nút dính ở cuối (StickyActions) */}
+        {adminActions && <div className="hidden gap-2 md:flex">{adminActions}</div>}
       </div>
 
       {waitingFill ? (
@@ -110,6 +114,8 @@ export function PrayerDetailPage() {
           fillFailed={fillFailed}
         />
       )}
+
+      {adminActions && <StickyActions className="md:hidden">{adminActions}</StickyActions>}
 
       <PrayerFormDialog open={editing} prayer={data} onClose={() => setEditing(false)} />
       <ConfirmDialog
@@ -175,13 +181,7 @@ function FillPanel({ prayer, initial, approved, loggedIn, fillFailed }: FillPane
 
   return (
     <>
-      <section
-        aria-labelledby="prayer-info"
-        className="flex flex-col gap-4 rounded-card border border-border bg-surface p-4 shadow-card md:p-6"
-      >
-        <h2 id="prayer-info" className="text-lg leading-tight font-semibold">
-          {s.yourInfo}
-        </h2>
+      <SectionCard title={s.yourInfo} icon={UserRound}>
 
         {slots.length === 0 ? (
           <p className="text-text-muted">{s.noSlots}</p>
@@ -220,23 +220,20 @@ function FillPanel({ prayer, initial, approved, loggedIn, fillFailed }: FillPane
             </div>
           </form>
         )}
-      </section>
+      </SectionCard>
 
-      <section
-        aria-labelledby="prayer-content"
-        className="flex flex-col gap-4 rounded-card border border-border bg-surface p-4 shadow-card md:p-6"
-      >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 id="prayer-content" className="text-lg leading-tight font-semibold">
-            {s.content}
-          </h2>
-          <Button variant="secondary" onClick={() => setReading(true)}>
+      <SectionCard
+        title={s.content}
+        icon={ScrollText}
+        action={
+          <Button variant="secondary" className="shrink-0" onClick={() => setReading(true)}>
             <BookOpen aria-hidden="true" />
             {s.readerOpen}
           </Button>
-        </div>
+        }
+      >
         <p className="text-lg leading-relaxed whitespace-pre-wrap">{text}</p>
-      </section>
+      </SectionCard>
 
       {reading && (
         <ReaderMode title={prayer.title} text={text} onClose={() => setReading(false)} />

@@ -1,9 +1,25 @@
 import { formatDateTime } from '@/utils/date'
+import { CalendarCog, CalendarPlus, CalendarX, Send } from 'lucide-react'
 import { useSearchParams } from 'react-router'
+import { Badge } from '@/components/shared/Badge'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ListGroup, ListRow } from '@/components/shared/ListRow'
 import { Pagination } from '@/components/shared/Pagination'
+import { SectionCard } from '@/components/shared/SectionCard'
 import { Button } from '@/components/ui/button'
 import { useMyProposals } from '../hooks'
+
+const ACTIONS = {
+  CREATE: { label: 'Thêm mới sự kiện', icon: CalendarPlus },
+  UPDATE: { label: 'Sửa sự kiện', icon: CalendarCog },
+  DELETE: { label: 'Xóa sự kiện', icon: CalendarX },
+} as const
+
+const STATUS = {
+  PENDING: { label: 'Chờ duyệt', tone: 'warning' },
+  APPROVED: { label: 'Đã duyệt', tone: 'success' },
+  REJECTED: { label: 'Từ chối', tone: 'danger' },
+} as const
 
 export function MyProposalsPage() {
   const [params, setParams] = useSearchParams()
@@ -19,45 +35,49 @@ export function MyProposalsPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Đề xuất của tôi</h1>
-      
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+      <h1 className="text-2xl font-bold">Đề xuất của tôi</h1>
+
       {isPending ? (
         <p className="text-text-muted">Đang tải...</p>
       ) : isError ? (
         <EmptyState title="Không tải được danh sách đề xuất" action={<Button onClick={() => void refetch()}>Thử lại</Button>} />
       ) : data.items.length === 0 ? (
-        <EmptyState title="Bạn chưa có đề xuất nào" description="Các đề xuất thay đổi lịch sẽ hiển thị tại đây." />
+        <EmptyState icon={Send} title="Bạn chưa có đề xuất nào" description="Các đề xuất thay đổi lịch sẽ hiển thị tại đây." />
       ) : (
         <>
-          <div className="flex flex-col gap-4">
-            {data.items.map(p => (
-              <div key={p.id} className="rounded-lg bg-surface p-4 border shadow-sm">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-lg">
-                    {p.action === 'CREATE' ? 'Thêm mới sự kiện' : p.action === 'UPDATE' ? 'Sửa sự kiện' : 'Xóa sự kiện'}
-                  </h3>
-                  <span className={`px-2 py-1 rounded text-sm font-medium ${
-                    p.status === 'PENDING' ? 'bg-warning/20 text-warning-fg' : 
-                    p.status === 'APPROVED' ? 'bg-primary/20 text-primary-fg' : 
-                    'bg-danger/20 text-danger-fg'
-                  }`}>
-                    {p.status === 'PENDING' ? 'Chờ duyệt' : p.status === 'APPROVED' ? 'Đã duyệt' : 'Từ chối'}
-                  </span>
-                </div>
-                {typeof p.payload?.title === 'string' && (
-                  <p className="mt-1 font-medium">{p.payload.title}</p>
-                )}
-                {p.note && p.status === 'REJECTED' && (
-                  <p className="mt-2 text-danger">Lý do từ chối: {p.note}</p>
-                )}
-                <p className="mt-4 text-xs text-text-muted">
-                  Gửi lúc {formatDateTime(p.createdAt)}
-                </p>
-              </div>
-            ))}
-          </div>
-          
+          <SectionCard title="Đã gửi" icon={Send}>
+            <ListGroup>
+              {data.items.map((p) => {
+                const action = ACTIONS[p.action as keyof typeof ACTIONS] ?? ACTIONS.UPDATE
+                const status = STATUS[p.status as keyof typeof STATUS] ?? STATUS.PENDING
+                const title = typeof p.payload?.title === 'string' ? p.payload.title : null
+                const Icon = action.icon
+                return (
+                  <ListRow
+                    key={p.id}
+                    leading={
+                      <span className="flex size-10 shrink-0 items-center justify-center self-start rounded-field bg-secondary text-primary">
+                        <Icon className="size-5" aria-hidden="true" />
+                      </span>
+                    }
+                    label={title ?? action.label}
+                    description={
+                      <>
+                        {title && <span className="block">{action.label}</span>}
+                        {p.note && p.status === 'REJECTED' && (
+                          <span className="block text-danger">Lý do từ chối: {p.note}</span>
+                        )}
+                        <span className="block tabular-nums">Gửi lúc {formatDateTime(p.createdAt)}</span>
+                      </>
+                    }
+                    trailing={<Badge tone={status.tone} className="self-start">{status.label}</Badge>}
+                  />
+                )
+              })}
+            </ListGroup>
+          </SectionCard>
+
           <Pagination
             page={page - 1}
             totalPages={data.totalPages}

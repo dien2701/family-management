@@ -1,10 +1,11 @@
-import { Clock, Pencil, Search, UserCheck, UserX } from 'lucide-react'
+import { Clock, Pencil, Search, UserCheck, UserX, type LucideIcon } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Alert } from '@/components/shared/Alert'
 import { Badge } from '@/components/shared/Badge'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { MemberIdentity } from '@/components/shared/MemberIdentity'
+import { SectionCard } from '@/components/shared/SectionCard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
@@ -21,13 +22,12 @@ function errorMessage(error: unknown): string {
   return s.genericError
 }
 
-const Card = ({ children, label }: { children: ReactNode; label: string }) => (
-  <section
-    aria-label={label}
-    className="flex flex-col gap-4 rounded-card border border-border bg-surface p-4 shadow-card md:p-6"
-  >
-    {children}
-  </section>
+type CardProps = { title: string; icon: LucideIcon; badge?: ReactNode; children: ReactNode }
+
+const Card = ({ title, icon, badge, children }: CardProps) => (
+  <SectionCard title={title} icon={icon} action={badge}>
+    <div className="flex flex-col gap-4">{children}</div>
+  </SectionCard>
 )
 
 /** "Tôi là ai" (IDEA §6.3): xem trạng thái liên kết, gửi yêu cầu "Đây là tôi" hoặc hủy liên kết. */
@@ -98,14 +98,7 @@ function LinkedCard({ memberId }: { memberId: number }) {
   }
 
   return (
-    <Card label={s.linked.title}>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="flex size-10 items-center justify-center rounded-full bg-success-bg text-success">
-          <UserCheck className="size-5" aria-hidden="true" />
-        </span>
-        <h2 className="text-lg leading-tight font-semibold">{s.linked.title}</h2>
-        <Badge tone="success">{s.linked.you}</Badge>
-      </div>
+    <Card title={s.linked.title} icon={UserCheck} badge={<Badge tone="success">{s.linked.you}</Badge>}>
       <div>
         <p className="text-text-muted">{s.linked.description}</p>
         <p className="mt-1 text-xl font-bold [overflow-wrap:anywhere]">{name}</p>
@@ -143,14 +136,7 @@ function LinkedCard({ memberId }: { memberId: number }) {
 
 function PendingCard({ request }: { request: LinkRequest }) {
   return (
-    <Card label={s.pending.title}>
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="flex size-10 items-center justify-center rounded-full bg-warning-bg text-warning">
-          <Clock className="size-5" aria-hidden="true" />
-        </span>
-        <h2 className="text-lg leading-tight font-semibold">{s.pending.title}</h2>
-        <Badge tone="warning">{s.pending.badge}</Badge>
-      </div>
+    <Card title={s.pending.title} icon={Clock} badge={<Badge tone="warning">{s.pending.badge}</Badge>}>
       <div>
         <p>{s.pending.description(request.member.fullName)}</p>
         <p className="text-sm text-text-muted">{s.pending.sentAt(formatDate(request.createdAt))}</p>
@@ -175,8 +161,7 @@ function SearchCard() {
   }
 
   return (
-    <Card label={s.search.title}>
-      <h2 className="text-lg leading-tight font-semibold">{s.search.title}</h2>
+    <Card title={s.search.title} icon={Search}>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="identity-search" className="text-base font-medium">
           {s.search.label}
