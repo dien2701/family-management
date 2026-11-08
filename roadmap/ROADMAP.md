@@ -80,8 +80,13 @@
 | 43 | Khách nhận Web Push không cần đăng nhập | Claude Code | Sonnet · high | ✅ 2026-10-15 |
 | 44 | Bài khấn: Admin soạn mẫu, người dùng điền thông tin cá nhân | Claude Code | Sonnet · high | ✅ 2026-10-15 |
 | 45 | Trợ lý AI: nhiều đoạn chat | Claude Code | Sonnet · high | ✅ 2026-10-15 |
+| **GĐ E** | **Làm lại giao diện ưu tiên điện thoại (DECISIONS #96)** | | | |
+| 46 | Token, khung chung (header, thanh dưới, thẻ dùng chung) và Trang chủ | Claude Code | Sonnet · high | ⬜ |
+| 47 | Thêm, Hồ sơ cá nhân, Cài đặt, Thành viên, Sự kiện | Claude Code | Sonnet · medium | ⬜ |
+| 48 | Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm | Claude Code | Sonnet · medium | ⬜ |
+| 49 | Quản trị và nhóm trang đăng nhập | Claude Code | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt tiếp theo: chưa có (Đợt 45 — Trợ lý AI nhiều đoạn chat đã xong ✅ 2026-10-15)
+## ▶️ Đợt tiếp theo: Đợt 46 — Token, khung chung và Trang chủ
 
 ---
 
@@ -1136,3 +1141,57 @@ DECISIONS #91, #92, **#94** · `.claude/rules/security.md` · FE đọc `docs/DE
 6. Tạo đủ 50 đoạn rồi tạo thêm: đoạn không ghim cũ nhất bị xóa. Ghim cả 50 rồi tạo thêm: báo lỗi 409, không tính lượt.
 7. Khách (ẩn danh): không thấy danh sách; "Đoạn chat mới" xóa cuộc trò chuyện hiện tại.
 8. Xem ở 375px (ngăn kéo) và 1280px (cột bên).
+
+---
+
+# GIAI ĐOẠN E — LÀM LẠI GIAO DIỆN ƯU TIÊN ĐIỆN THOẠI
+
+> **Chốt 2026-11-08 (DECISIONS #96).** Tham khảo bố cục 5 ảnh trong `image/` (không lấy nội dung bán hàng). Giữ navy và token cũ, thêm token mới; máy tính đổi theo token nhưng giữ bố cục.
+> Mọi đợt: gọi skill `ui-ux-pro-max`, đọc `docs/DESIGN.md` (sau Đợt 46 đã có mục 9), không đổi API, không đổi logic hay quyền. Kiểm tay ở 375px, 1280px, sáng và tối, không cuộn ngang.
+
+### Đợt 46 — Token, khung chung và Trang chủ
+DECISIONS #96 · `docs/DESIGN.md` · ảnh `image/`
+- [ ] **Token** (`src/index.css`, cả `:root.dark`): nền header xanh nhạt, nền thẻ chào chuyển màu nhạt, bóng thẻ mềm hơn. Cập nhật `docs/DESIGN.md` (bảng token, mục 3, 4, 6) và thêm **mục 9 "Mẫu điện thoại"** mô tả các thành phần dưới đây.
+- [ ] **Header** (`layout/Header.tsx`): nền xanh nhạt. Ở `/` trên điện thoại là header thương hiệu (logo `favicon.svg` + "Tộc Phả", không khẩu hiệu); trang khác giữ quay lại + tên trang. Máy tính giữ bố cục.
+- [ ] **Thanh dưới** (`layout/BottomNav.tsx`): bỏ tô kín; mục đang chọn icon + chữ màu primary, chữ 600, nền nhạt quanh icon. Giữ 5 mục, vùng chạm ≥ 44px, safe area.
+- [ ] **Thành phần dùng chung** (`components/shared`), chỉ thêm khi ≥ 2 trang dùng:
+  - `SectionCard`: thẻ có tiêu đề mục (18px/700 primary) và link "Xem tất cả" tùy chọn bên phải.
+  - `ListRow`: icon trái, nhãn + mô tả, chevron phải, cao ≥ 56px; nhóm nhiều dòng trong một thẻ, ngăn bằng đường kẻ.
+  - `IconTile`: ô lối tắt (icon trong ô bo 12px nền secondary + nhãn 14px tối đa 2 dòng), dùng trong lưới 4 cột.
+  - `StickyActions`: thanh nút dính ngay trên thanh dưới ở điện thoại (như nút "Đặt hàng" của mẫu), tĩnh ở máy tính.
+- [ ] **Trang chủ** (`DashboardPage`): thẻ chào không ảnh (lời chào theo tài khoản hoặc khách, sự kiện gần nhất, nút "Xem cây" và "Xem lịch") → thẻ "Lối tắt" lưới 4 cột `IconTile` (thay `QuickLinkTile`) → số liệu → Sắp tới / Mới diễn ra trong `SectionCard`. Giữ đúng dữ liệu và quyền hiện có.
+
+**✅ Đã làm:** (điền khi xong)
+
+---
+
+### Đợt 47 — Thêm, Hồ sơ cá nhân, Cài đặt, Thành viên, Sự kiện
+DECISIONS #96 · `docs/DESIGN.md` mục 9
+- [ ] **Thêm** (`pages/MorePage.tsx`): thẻ tài khoản ở đầu trang (như tab Tài khoản của mẫu), các mục chia nhóm `ListRow` (Tiện ích · Gia đình · Quản trị (Admin) · Khác), giữ mục cài ứng dụng.
+- [ ] **Hồ sơ cá nhân, Cài đặt** (`features/account`): nhóm thành thẻ `SectionCard`/`ListRow`.
+- [ ] **Thành viên** (`MembersPage`): ô tìm + hàng chip lọc có icon, cuộn ngang trong thẻ (không làm trang cuộn ngang); điện thoại là lưới 2 cột thẻ thành viên (ảnh đại diện, tên tối đa 2 dòng, năm sinh – mất, badge); máy tính giữ bảng.
+- [ ] **Hồ sơ thành viên** (`MemberDetailPage`): giữ thẻ navy, các khối dưới dùng `SectionCard`; nút Sửa/Xóa vào `StickyActions` ở điện thoại.
+- [ ] **Sự kiện** (`CalendarPage`, `LunarConverterPage`): thanh lọc/chip giống Thành viên, danh sách và lịch tháng trong `SectionCard`.
+
+**✅ Đã làm:** (điền khi xong)
+
+---
+
+### Đợt 48 — Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm
+DECISIONS #96 · `docs/DESIGN.md` mục 9
+- [ ] **Form** (`MemberFormPage`, form sự kiện, form hồ sơ, form bài khấn): chia nhóm trường thành `SectionCard`, nút Lưu/Hủy vào `StickyActions`.
+- [ ] **Cây** (`TreePage`): thanh công cụ điện thoại gọn (nút tròn 44px nổi trên sơ đồ), không đổi thuật toán layout.
+- [ ] **Bài khấn, Trợ lý AI, Thông báo** (`PrayersPage`, `PrayerDetailPage`, `AssistantPage`, `InboxPage`, cài đặt thông báo, `GuestPushPage`).
+- [ ] **Trang trong Thêm:** Đề xuất của tôi, Tôi là ai, Tài liệu chung, Xuất dữ liệu.
+
+**✅ Đã làm:** (điền khi xong)
+
+---
+
+### Đợt 49 — Quản trị và nhóm trang đăng nhập
+DECISIONS #96 · `docs/DESIGN.md` mục 9
+- [ ] **Quản trị** (`features/admin/pages`): trang vào Quản trị dạng lưới `IconTile`; Tài khoản, Yêu cầu liên kết, Đề xuất, Đã xóa là danh sách thẻ ở điện thoại (bảng ở máy tính), thao tác chính trong `StickyActions` hoặc menu của thẻ; Cấu hình dùng `SectionCard`.
+- [ ] **Đăng nhập** (`PlainLayout`, Đăng nhập, Đăng ký, Xác thực OTP, Quên mật khẩu, Chờ duyệt, Không được duyệt, Chính sách bảo mật): header thương hiệu, form trong một thẻ, nút chính rộng toàn bộ.
+- [ ] Rà lần cuối mọi trang ở 375px: không cuộn ngang, vùng chạm ≥ 44px, chữ nền ≥ 16px.
+
+**✅ Đã làm:** (điền khi xong)

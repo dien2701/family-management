@@ -455,6 +455,18 @@
     - **Nút Sửa và Xóa ở từng dòng** (Sắp tới, Lịch tháng, bảng chi tiết ngày) cho Admin; sự kiện chung có thêm nút Xóa ngay ở dòng (trước chỉ xóa được trong form sửa). User đã duyệt vẫn chỉ đề xuất sự kiện chung (#77).
     - **Không thêm giỗ/sinh nhật từ Lịch:** muốn có thì nhập ngày trong hồ sơ; nút "Thêm sự kiện" vẫn chỉ thêm sự kiện chung.
 
+## U. Làm lại giao diện ưu tiên điện thoại (chốt 2026-11-08, hỏi đáp với người dùng)
+
+96. **Làm lại toàn bộ giao diện theo phong cách ảnh mẫu `image/` (app Baroas Life): header nền xanh nhạt, thẻ bo tròn bóng mềm, lưới lối tắt icon, danh sách có chevron, thanh dưới chỉ đổi màu mục đang chọn** (bổ sung DESIGN.md; không đổi API, không đổi quyền)
+    → **Chốt:**
+    - **Chỉ lấy bố cục và cảm giác của mẫu, không lấy nội dung** (mẫu là app bán hàng: giỏ hàng, sản phẩm, điểm tích lũy không áp dụng).
+    - **Màu:** giữ primary navy `#24466F` và mọi token cũ. Thêm token: nền header xanh nhạt, nền thẻ chào chuyển màu nhạt, bóng thẻ mềm hơn; tiêu đề mục trong thẻ 18px/700 màu primary. Có bản giao diện tối tương ứng.
+    - **Header điện thoại:** Trang chủ (`/`) dùng header thương hiệu: logo là `favicon.svg` + chữ "Tộc Phả", **không có khẩu hiệu**. Các trang khác giữ nút quay lại + tên trang. Nút bên phải (giao diện, chuông, tài khoản/Đăng nhập) giữ nguyên.
+    - **Thanh dưới:** vẫn đúng 5 mục như cũ (#88 cho khách). Bỏ tô kín nền navy; mục đang chọn có icon + chữ màu primary, chữ đậm, nền nhạt quanh icon.
+    - **Trang chủ:** **thẻ chào không ảnh** (nền chuyển màu nhạt, lời chào, sự kiện gần nhất, 2 nút "Xem cây" và "Xem lịch"), không dùng ảnh minh họa; bên dưới là thẻ lưới lối tắt 4 cột (icon trong ô bo tròn + nhãn), rồi số liệu và danh sách sắp tới.
+    - **Máy tính (≥768px):** đổi theo token mới (thẻ, nền, tiêu đề mục), **giữ nguyên bố cục** sidebar, header máy tính, lưới cột.
+    - **Phạm vi:** mọi trang của khách, User và Admin, chia 4 đợt Claude Code (46–49 trong ROADMAP).
+
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.
 - Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt. Cần cập nhật khi duyệt: Trợ lý AI nay mở cho khách (#91) và giọng nói do trình duyệt xử lý (#92).
