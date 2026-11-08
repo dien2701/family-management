@@ -1,15 +1,15 @@
 import { Pencil, Trash2 } from 'lucide-react'
-import { Link } from 'react-router'
-import { Badge } from '@/components/shared/Badge'
 import { Button } from '@/components/ui/button'
 import type { CalendarOccurrence } from '@/types/api'
 import { cn } from '@/utils/cn'
 import { EVENT_TYPE_META } from '../eventMeta'
-import { daysLabel, occurrenceDateLine, ordinalLabel } from '../format'
-import { calendarStrings } from '../strings'
+import { occurrenceActions, occurrenceDateLine, typeLine } from '../format'
+import { DaysTile } from './DaysTile'
 
 type OccurrenceRowProps = {
   occurrence: CalendarOccurrence
+  /** Bấm vào hàng (ô số ngày + chữ) để xem chi tiết. */
+  onOpen?: (occurrence: CalendarOccurrence) => void
   /** Sự kiện chung: ai được truyền thì thấy nút Sửa (User gửi đề xuất). Giỗ và sinh nhật: chỉ Admin. */
   onEdit?: (occurrence: CalendarOccurrence) => void
   /** Chỉ Admin mới thấy nút Xóa, ở cả sự kiện chung, giỗ và sinh nhật. */
@@ -20,74 +20,71 @@ type OccurrenceRowProps = {
   className?: string
 }
 
-/** Một lần xảy ra: icon và nhãn theo loại (không chỉ màu), tên, ngày dương – âm, "còn N ngày", "giỗ lần thứ N", "tròn N tuổi". */
+/**
+ * Một lần xảy ra: ô số ngày còn lại nổi bật bên trái, tên, dòng loại (chấm màu + chữ), dòng ngày dương – âm, ghi chú.
+ * Cả phần này là một nút mở chi tiết; nút Sửa/Xóa đứng riêng bên phải.
+ */
 export function OccurrenceRow({
   occurrence: o,
+  onOpen,
   onEdit,
   onDelete,
   isAdmin,
   hideDate,
   className,
 }: OccurrenceRowProps) {
-  const meta = EVENT_TYPE_META[o.type]
-  const Icon = meta.icon
-  const ordinal = ordinalLabel(o)
-  const custom = o.eventId !== null
-  const editable = custom || (isAdmin === true && o.memberId !== null)
-  const showEdit = onEdit !== undefined && editable
-  const showDelete = onDelete !== undefined && isAdmin === true && editable
-  const t = calendarStrings.occurrence
-  const labels = custom
-    ? { edit: t.edit, delete: t.delete }
-    : o.type === 'BIRTHDAY'
-      ? { edit: t.editBirthday, delete: t.deleteBirthday }
-      : { edit: t.editMemorial, delete: t.deleteMemorial }
+  const { showEdit, showDelete, labels } = occurrenceActions(o, {
+    isAdmin,
+    canEdit: onEdit !== undefined,
+    canDelete: onDelete !== undefined,
+  })
+
+  const body = (
+    <>
+      <DaysTile daysUntil={o.daysUntil} className="self-stretch" />
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="text-base leading-snug font-semibold break-words text-text group-hover:text-accent-text">
+          {o.title}
+        </span>
+        <span className="flex items-center gap-1.5 text-sm font-medium text-text">
+          <span className={cn('size-2.5 shrink-0 rounded-full', EVENT_TYPE_META[o.type].dot)} aria-hidden="true" />
+          {typeLine(o)}
+        </span>
+        {!hideDate && <span className="text-sm text-text-muted">{occurrenceDateLine(o)}</span>}
+        {o.description && (
+          <span className="line-clamp-2 text-sm break-words text-text-muted">{o.description}</span>
+        )}
+      </span>
+    </>
+  )
 
   return (
     <li
       className={cn(
-        'flex items-start gap-3 rounded-card border border-border bg-surface p-4 shadow-card transition-colors hover:border-accent',
+        'flex items-start gap-2 rounded-card border border-border bg-surface p-4 shadow-card',
         className,
       )}
     >
-      <span
-        className={cn('flex size-11 shrink-0 items-center justify-center rounded-full', meta.soft)}
-      >
-        <Icon className={cn('size-6', meta.text)} aria-hidden="true" />
-      </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <h3 className="text-base leading-snug font-semibold break-words">
-          {o.memberId !== null ? (
-            <Link
-              to={`/thanh-vien/${o.memberId}`}
-              className="cursor-pointer hover:text-accent-text hover:underline"
-            >
-              {o.title}
-            </Link>
-          ) : (
-            o.title
-          )}
-        </h3>
-        {!hideDate && <p className="text-sm text-text-muted">{occurrenceDateLine(o)}</p>}
-        {o.description && <p className="text-sm break-words text-text-muted">{o.description}</p>}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <Badge>{meta.label}</Badge>
-          {ordinal && <Badge>{ordinal}</Badge>}
-          <Badge
-            tone={o.daysUntil === 0 ? 'warning' : 'neutral'}
-            className="tabular-nums"
-          >
-            {daysLabel(o.daysUntil)}
-          </Badge>
-        </div>
-      </div>
+      {onOpen ? (
+        <button
+          type="button"
+          aria-haspopup="dialog"
+          onClick={() => onOpen(o)}
+          className="group flex min-w-0 flex-1 cursor-pointer items-start gap-3 rounded-field text-left transition-colors duration-200 ease-out focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          {body}
+        </button>
+      ) : (
+        <div className="flex min-w-0 flex-1 items-start gap-3">{body}</div>
+      )}
       {(showEdit || showDelete) && (
-        <div className="-mt-1 -mr-1 flex shrink-0 items-center">
+        <div className="-my-2 -mr-2 flex shrink-0 items-center">
           {showEdit && (
             <Button
               variant="ghost"
               size="icon"
               aria-label={`${labels.edit}: ${o.title}`}
+              className="text-text-muted hover:text-text"
               onClick={() => onEdit!(o)}
             >
               <Pencil />
@@ -98,7 +95,7 @@ export function OccurrenceRow({
               variant="ghost"
               size="icon"
               aria-label={`${labels.delete}: ${o.title}`}
-              className="text-danger"
+              className="text-danger hover:bg-danger-bg"
               onClick={() => onDelete!(o)}
             >
               <Trash2 />

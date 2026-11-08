@@ -1,13 +1,4 @@
-import {
-  ArrowUpDown,
-  CalendarClock,
-  CalendarRange,
-  CalendarX2,
-  Loader2,
-  Search,
-  Shapes,
-  X,
-} from 'lucide-react'
+import { CalendarX2, Loader2, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -22,7 +13,6 @@ import { EVENT_TYPES, EVENT_TYPE_META } from '../eventMeta'
 import { useUpcoming } from '../hooks'
 import { calendarStrings } from '../strings'
 import { filterUpcoming } from '../upcomingFilter'
-import { EventLegend } from './EventLegend'
 import { OccurrenceRow } from './OccurrenceRow'
 
 const s = calendarStrings.upcoming
@@ -31,6 +21,7 @@ const PAGE_SIZE = 10
 
 type UpcomingTabProps = {
   isAdmin: boolean
+  onOpen: (occurrence: CalendarOccurrence) => void
   onEdit: (occurrence: CalendarOccurrence) => void
   onDelete: (occurrence: CalendarOccurrence) => void
 }
@@ -39,7 +30,7 @@ type UpcomingTabProps = {
  * Tab "Sắp tới": chọn khoảng thời gian, lọc theo loại, sắp xếp (IDEA §6.5); thêm tìm theo tên (DECISIONS #88).
  * Từ khóa nằm trên URL (`?q=`) để chia sẻ được.
  */
-export function UpcomingTab({ isAdmin, onEdit, onDelete }: UpcomingTabProps) {
+export function UpcomingTab({ isAdmin, onOpen, onEdit, onDelete }: UpcomingTabProps) {
   const [params, setParams] = useSearchParams()
   const q = params.get('q') ?? ''
   const searching = q.trim() !== ''
@@ -132,7 +123,6 @@ export function UpcomingTab({ isAdmin, onEdit, onDelete }: UpcomingTabProps) {
         }
       >
         <FilterChip
-          icon={CalendarRange}
           widthClass="w-auto shrink-0 md:w-44"
           label={s.range}
           face={s.days[rangeValue]}
@@ -144,7 +134,6 @@ export function UpcomingTab({ isAdmin, onEdit, onDelete }: UpcomingTabProps) {
         />
 
         <FilterChip
-          icon={Shapes}
           widthClass="w-auto shrink-0 md:w-48"
           label={s.type}
           face={typeValue === 'all' ? s.type : EVENT_TYPE_META[typeValue].label}
@@ -158,7 +147,6 @@ export function UpcomingTab({ isAdmin, onEdit, onDelete }: UpcomingTabProps) {
         />
 
         <FilterChip
-          icon={ArrowUpDown}
           widthClass="w-auto shrink-0 md:w-48"
           label={s.sort}
           face={sort === 'asc' ? s.sortAsc : s.sortDesc}
@@ -212,8 +200,7 @@ export function UpcomingTab({ isAdmin, onEdit, onDelete }: UpcomingTabProps) {
           />
         )
       ) : (
-        <SectionCard title={searching ? s.resultsTitle : s.days[rangeValue]} icon={CalendarClock}>
-          <EventLegend className="mb-3" />
+        <SectionCard title={searching ? s.resultsTitle : s.days[rangeValue]}>
           {searching && (
             <p role="status" className="mb-2 text-sm text-text-muted">
               {s.found(items.length)}
@@ -229,6 +216,7 @@ export function UpcomingTab({ isAdmin, onEdit, onDelete }: UpcomingTabProps) {
                 key={o.eventKey}
                 occurrence={o}
                 isAdmin={isAdmin}
+                onOpen={onOpen}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 className="rounded-none border-0 bg-transparent px-0 py-3 shadow-none"

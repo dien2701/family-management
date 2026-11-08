@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { ModalDialog } from '@/components/shared/ModalDialog'
 import { IconTile } from '@/components/shared/IconTile'
 import { ListGroup, ListRow } from '@/components/shared/ListRow'
 import { Pagination } from '@/components/shared/Pagination'
@@ -12,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useDashboard } from '../hooks'
 import type { CalendarOccurrence } from '@/types/api'
 import { daysLabel, dualDateLine } from '@/features/calendar/format'
-import { OccurrenceRow } from '@/features/calendar/components/OccurrenceRow'
+import { OccurrenceDetailDialog } from '@/features/calendar/components/OccurrenceDetailDialog'
 import { prayerStrings } from '@/features/prayer/strings'
 import { dashboardStrings as t } from '../strings'
 
@@ -88,13 +87,7 @@ function GreetingCard({ name, guest, event }: { name?: string; guest: boolean; e
         </Button>
       </div>
 
-      <ModalDialog open={open && !!event} title={t.eventDetail} onClose={() => setOpen(false)}>
-        {event && (
-          <ul>
-            <OccurrenceRow occurrence={event} />
-          </ul>
-        )}
-      </ModalDialog>
+      <OccurrenceDetailDialog occurrence={open && event ? event : null} onClose={() => setOpen(false)} />
     </section>
   )
 }

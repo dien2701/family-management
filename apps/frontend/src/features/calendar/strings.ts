@@ -69,6 +69,14 @@ export const calendarStrings = {
     noEvents: 'Không có sự kiện',
     weekOf: (from: string, to: string) => `Tuần ${from} – ${to}`,
   },
+  detail: {
+    title: 'Chi tiết sự kiện',
+    solar: 'Dương lịch',
+    lunar: 'Âm lịch',
+    note: 'Ghi chú',
+    edit: 'Sửa',
+    delete: 'Xóa',
+  },
   day: {
     empty: 'Ngày này chưa có sự kiện nào.',
     addHere: 'Thêm sự kiện vào ngày này',

@@ -73,11 +73,10 @@ export function WeekList({ days, mode, today, onSelect }: WeekListProps) {
                         ) : (
                           day.occurrences.map((o) => {
                             const meta = EVENT_TYPE_META[o.type]
-                            const Icon = meta.icon
                             return (
                               <span key={o.eventKey} className="flex items-start gap-2 text-base">
-                                <Icon
-                                  className={cn('mt-0.5 size-5 shrink-0', meta.text)}
+                                <span
+                                  className={cn('mt-2 size-2.5 shrink-0 rounded-full', meta.dot)}
                                   aria-hidden="true"
                                 />
                                 <span className="min-w-0 break-words">

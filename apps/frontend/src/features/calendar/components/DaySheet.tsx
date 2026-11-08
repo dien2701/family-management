@@ -12,6 +12,7 @@ type DaySheetProps = {
   /** `null` là đóng. */
   day: CalendarDay | null
   isAdmin: boolean
+  onOpen: (occurrence: CalendarOccurrence) => void
   onEdit: (occurrence: CalendarOccurrence) => void
   onDelete: (occurrence: CalendarOccurrence) => void
   /** Không truyền thì không có nút thêm (khách và tài khoản chưa duyệt chỉ xem). */
@@ -20,7 +21,7 @@ type DaySheetProps = {
 }
 
 /** Danh sách sự kiện của một ngày: bottom sheet trên điện thoại, modal từ 768px (DESIGN §6). */
-export function DaySheet({ day, isAdmin, onEdit, onDelete, onAdd, onClose }: DaySheetProps) {
+export function DaySheet({ day, isAdmin, onOpen, onEdit, onDelete, onAdd, onClose }: DaySheetProps) {
   return (
     <ModalDialog
       open={day !== null}
@@ -40,6 +41,7 @@ export function DaySheet({ day, isAdmin, onEdit, onDelete, onAdd, onClose }: Day
                   occurrence={o}
                   hideDate
                   isAdmin={isAdmin}
+                  onOpen={onOpen}
                   onEdit={onEdit}
                   onDelete={onDelete}
                 />

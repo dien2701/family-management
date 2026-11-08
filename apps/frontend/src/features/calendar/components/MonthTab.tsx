@@ -1,6 +1,4 @@
 import {
-  CalendarCheck,
-  CalendarDays,
   CalendarX2,
   ChevronLeft,
   ChevronRight,
@@ -26,6 +24,7 @@ const s = calendarStrings.month
 
 type MonthTabProps = {
   isAdmin: boolean
+  onOpen: (occurrence: CalendarOccurrence) => void
   onEdit: (occurrence: CalendarOccurrence) => void
   onDelete: (occurrence: CalendarOccurrence) => void
   /** Thêm sự kiện vào ngày đã chọn; `mode` là lịch đang xem để điền sẵn đúng lịch. Không truyền thì chỉ xem. */
@@ -33,7 +32,7 @@ type MonthTabProps = {
 }
 
 /** Tab "Lịch tháng": lưới từ 768px, danh sách theo tuần bên dưới; nút gạt "Xem theo âm" (IDEA §6.5). */
-export function MonthTab({ isAdmin, onEdit, onDelete, onAdd }: MonthTabProps) {
+export function MonthTab({ isAdmin, onOpen, onEdit, onDelete, onAdd }: MonthTabProps) {
   const [today] = useState(todayInVietnam)
   const [mode, setMode] = useState<CalendarMode>('solar')
   // Một ngày nằm trong tháng đang xem; đổi dương/âm vẫn giữ đúng thời điểm
@@ -59,7 +58,6 @@ export function MonthTab({ isAdmin, onEdit, onDelete, onAdd }: MonthTabProps) {
     <div className="flex flex-col gap-4">
       <SectionCard
         title={<span aria-live="polite">{title}</span>}
-        icon={CalendarDays}
         action={
           <div className="-my-1 flex shrink-0 items-center gap-1">
             <Button
@@ -86,7 +84,6 @@ export function MonthTab({ isAdmin, onEdit, onDelete, onAdd }: MonthTabProps) {
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Button variant="ghost" className="-ml-2" onClick={() => setFocus(today)}>
-              <CalendarCheck aria-hidden="true" />
               {s.today}
             </Button>
             <LunarSwitch
@@ -138,6 +135,10 @@ export function MonthTab({ isAdmin, onEdit, onDelete, onAdd }: MonthTabProps) {
         day={selectedDay}
         isAdmin={isAdmin}
         onClose={() => setSelected(null)}
+        onOpen={(o) => {
+          setSelected(null)
+          onOpen(o)
+        }}
         onEdit={(o) => {
           setSelected(null)
           onEdit(o)

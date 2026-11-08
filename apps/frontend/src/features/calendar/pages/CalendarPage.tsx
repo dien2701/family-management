@@ -9,6 +9,7 @@ import type { DualDateValue } from '@/utils/lunar'
 import { EventFormDialog, prefillDate } from '../components/EventFormDialog'
 import { MemberDateDialog } from '../components/MemberDateDialog'
 import { MonthTab } from '../components/MonthTab'
+import { OccurrenceDetailDialog } from '../components/OccurrenceDetailDialog'
 import { OccurrenceDeleteDialog } from '../components/OccurrenceDeleteDialog'
 import { UpcomingTab } from '../components/UpcomingTab'
 import { calendarStrings } from '../strings'
@@ -39,6 +40,7 @@ export function CalendarPage() {
   const openCreate = (initialDate?: DualDateValue) => setForm({ open: true, eventId: null, initialDate })
   const [memberDate, setMemberDate] = useState<MemberDateState>({ open: false, memberId: null, kind: 'MEMORIAL' })
   const [deleting, setDeleting] = useState<CalendarOccurrence | null>(null)
+  const [viewing, setViewing] = useState<CalendarOccurrence | null>(null)
 
   // Sự kiện chung mở form sự kiện; giỗ và sinh nhật (chỉ Admin) mở form ngày trong hồ sơ
   const openEdit = (o: CalendarOccurrence) => {
@@ -88,10 +90,11 @@ export function CalendarPage() {
 
       <div role="tabpanel" id="calendar-panel" aria-labelledby={`calendar-tab-${tab}`}>
         {tab === 'sap-toi' ? (
-          <UpcomingTab isAdmin={isAdmin} onEdit={openEdit} onDelete={setDeleting} />
+          <UpcomingTab isAdmin={isAdmin} onOpen={setViewing} onEdit={openEdit} onDelete={setDeleting} />
         ) : (
           <MonthTab
             isAdmin={isAdmin}
+            onOpen={setViewing}
             onEdit={openEdit}
             onDelete={setDeleting}
             onAdd={
@@ -103,6 +106,28 @@ export function CalendarPage() {
         )}
       </div>
 
+      {/* Sửa/Xóa từ chi tiết: đóng chi tiết rồi mở form hoặc hộp xác nhận như nút ở hàng */}
+      <OccurrenceDetailDialog
+        occurrence={viewing}
+        isAdmin={isAdmin}
+        onClose={() => setViewing(null)}
+        onEdit={
+          canWrite
+            ? (o) => {
+                setViewing(null)
+                openEdit(o)
+              }
+            : undefined
+        }
+        onDelete={
+          isAdmin
+            ? (o) => {
+                setViewing(null)
+                setDeleting(o)
+              }
+            : undefined
+        }
+      />
       {canWrite && (
         <EventFormDialog
           open={form.open}
