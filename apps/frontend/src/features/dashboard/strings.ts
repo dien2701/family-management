@@ -8,7 +8,8 @@ export const dashboardStrings = {
   nextEvent: 'Sự kiện gần nhất',
   noNextEvent: 'Chưa có sự kiện sắp tới.',
   viewTree: 'Xem cây',
-  viewCalendar: 'Xem lịch',
+  viewEvents: 'Xem sự kiện',
+  eventDetail: 'Chi tiết sự kiện',
   shortcuts: 'Lối tắt',
   stats: 'Gia phả',
 }

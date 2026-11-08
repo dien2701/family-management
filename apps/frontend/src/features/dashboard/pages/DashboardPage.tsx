@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { ModalDialog } from '@/components/shared/ModalDialog'
 import { IconTile } from '@/components/shared/IconTile'
 import { ListGroup, ListRow } from '@/components/shared/ListRow'
 import { Pagination } from '@/components/shared/Pagination'
@@ -11,6 +12,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useDashboard } from '../hooks'
 import type { CalendarOccurrence } from '@/types/api'
 import { daysLabel, dualDateLine } from '@/features/calendar/format'
+import { OccurrenceRow } from '@/features/calendar/components/OccurrenceRow'
 import { prayerStrings } from '@/features/prayer/strings'
 import { dashboardStrings as t } from '../strings'
 
@@ -28,8 +30,9 @@ function EventIcon({ type }: { type: CalendarOccurrence['type'] }) {
   return <CalendarHeart className="size-5 shrink-0 text-event-custom" aria-hidden="true" />
 }
 
-// Thẻ chào không ảnh (DECISIONS #96): lời chào, sự kiện gần nhất, nút Xem cây và Xem lịch
+// Thẻ chào không ảnh (DECISIONS #96): lời chào, sự kiện gần nhất (bấm để xem chi tiết), nút Xem cây và Xem sự kiện
 function GreetingCard({ name, guest, event }: { name?: string; guest: boolean; event?: CalendarOccurrence }) {
+  const [open, setOpen] = useState(false)
   return (
     <section
       aria-labelledby="greeting-title"
@@ -43,13 +46,18 @@ function GreetingCard({ name, guest, event }: { name?: string; guest: boolean; e
       <div className="mt-4 rounded-field bg-surface/80 p-3">
         <p className="text-sm font-medium text-text-muted">{t.nextEvent}</p>
         {event ? (
-          <div className="mt-1 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label={`${t.eventDetail}: ${event.title}`}
+            className="mt-1 flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-field text-left transition-colors hover:text-accent-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
             <EventIcon type={event.type} />
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-text">{event.title}</p>
-              <p className="text-sm text-text-muted">{dualDateLine(event)}</p>
-            </div>
-            <div className="shrink-0 text-right">
+            <span className="min-w-0 flex-1">
+              <span className="block font-semibold text-text">{event.title}</span>
+              <span className="block text-sm text-text-muted">{dualDateLine(event)}</span>
+            </span>
+            <span className="shrink-0 text-right">
               {event.daysUntil === 0 ? (
                 <span className="font-bold text-primary">Hôm nay</span>
               ) : (
@@ -58,8 +66,8 @@ function GreetingCard({ name, guest, event }: { name?: string; guest: boolean; e
                   <span className="block text-sm text-text-muted">ngày nữa</span>
                 </>
               )}
-            </div>
-          </div>
+            </span>
+          </button>
         ) : (
           <p className="mt-1 text-text">{t.noNextEvent}</p>
         )}
@@ -75,10 +83,18 @@ function GreetingCard({ name, guest, event }: { name?: string; guest: boolean; e
         <Button asChild variant="secondary" className="bg-surface hover:bg-surface-muted">
           <Link to="/lich">
             <CalendarDays aria-hidden="true" />
-            {t.viewCalendar}
+            {t.viewEvents}
           </Link>
         </Button>
       </div>
+
+      <ModalDialog open={open && !!event} title={t.eventDetail} onClose={() => setOpen(false)}>
+        {event && (
+          <ul>
+            <OccurrenceRow occurrence={event} />
+          </ul>
+        )}
+      </ModalDialog>
     </section>
   )
 }
