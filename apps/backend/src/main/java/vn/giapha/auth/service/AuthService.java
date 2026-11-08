@@ -51,6 +51,10 @@ import vn.giapha.config.AppProperties;
 public class AuthService {
 
     /** Kết quả đăng nhập: body trả JSON và refresh token thô để controller đặt vào cookie. */
+    /** Kết quả đăng ký: đã gửi OTP ({@code auth} null), hoặc tắt OTP thì đã đăng nhập luôn ({@code otpSent} null). */
+    public record RegisterResult(OtpSentResponse otpSent, AuthResult auth) {
+    }
+
     public record AuthResult(AuthResponse body, String refreshToken) {
     }
 
@@ -75,6 +79,7 @@ public class AuthService {
     private final Clock clock;
     private final Policy loginPerIpPolicy;
     private final boolean requireApproval;
+    private final boolean requireEmailVerification;
     /** Băm một mật khẩu giả khi email không tồn tại để thời gian phản hồi không lộ email nào có thật. */
     private final String dummyHash;
 
@@ -100,14 +105,18 @@ public class AuthService {
         this.loginPerIpPolicy = new Policy("login-ip", props.auth().loginPerMinutePerIp(),
                 Duration.ofMinutes(1));
         this.requireApproval = props.auth().requireApproval();
+        this.requireEmailVerification = props.auth().requireEmailVerification();
         this.dummyHash = passwordEncoder.encode("dummy-password-for-timing");
     }
 
     // ---------- Đăng ký + OTP ----------
 
-    /** Tạo (hoặc làm mới) tài khoản PENDING rồi gửi OTP. Email đã có tài khoản chính thức thì báo lỗi ở trường email. */
+    /**
+     * Tạo (hoặc làm mới) tài khoản PENDING rồi gửi OTP. Email đã có tài khoản chính thức thì báo lỗi ở trường email.
+     * Tắt xác thực email (DECISIONS #99) thì tài khoản ACTIVE ngay và đăng nhập luôn, không gửi OTP.
+     */
     @Transactional
-    public OtpSentResponse register(RegisterRequest req, String clientIp) {
+    public RegisterResult register(RegisterRequest req, String clientIp) {
         String email = normalize(req.email());
         requireMatchingPasswords(req.password(), req.confirmPassword(), "confirmPassword");
         requirePasswordFitsBcrypt(req.password(), "password");
@@ -118,7 +127,9 @@ public class AuthService {
             throw emailTaken();
         }
         // Hạn mức theo email chỉ áp dụng khi thật sự sắp gửi OTP
-        otpService.checkEmailAllowed(email, OtpPurpose.REGISTER);
+        if (requireEmailVerification) {
+            otpService.checkEmailAllowed(email, OtpPurpose.REGISTER);
+        }
         String hash = passwordEncoder.encode(req.password());
         if (user == null) {
             user = new UserAccount(email, req.fullName().trim(), AccountStatus.PENDING, Instant.now(clock));
@@ -134,8 +145,12 @@ public class AuthService {
         }
         // Đồng ý chính sách nằm ngay trong form đăng ký (DECISIONS #57), nên lưu cùng lúc với tài khoản
         consents.recordIfMissing(user.getId(), clientIp);
+        if (!requireEmailVerification) {
+            user.setStatus(AccountStatus.ACTIVE);
+            return new RegisterResult(null, authenticated(activated(user)));
+        }
         otpService.issue(email, OtpPurpose.REGISTER);
-        return otpSent(email);
+        return new RegisterResult(otpSent(email), null);
     }
 
     /** Gửi lại OTP đăng ký. Không cho biết email có tồn tại hay không. */

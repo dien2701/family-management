@@ -1,6 +1,8 @@
 package vn.giapha.auth.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -8,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +30,7 @@ import vn.giapha.auth.dto.ResetPasswordRequest;
 import vn.giapha.auth.dto.VerifyOtpRequest;
 import vn.giapha.auth.service.AuthService;
 import vn.giapha.auth.service.AuthService.AuthResult;
+import vn.giapha.auth.service.AuthService.RegisterResult;
 import vn.giapha.common.web.ApiRefs;
 import vn.giapha.config.AppProperties;
 
@@ -51,13 +55,23 @@ class AuthController {
         this.props = props;
     }
 
-    @Operation(operationId = "register", summary = "Đăng ký bằng email và gửi OTP")
-    @ApiResponse(responseCode = "200", description = "Thành công")
+    @Operation(operationId = "register", summary = "Đăng ký bằng email: gửi OTP, hoặc đăng nhập luôn khi tắt OTP")
+    @ApiResponse(responseCode = "200", description = "Đã gửi OTP",
+            content = @Content(schema = @Schema(implementation = OtpSentResponse.class)))
+    @ApiResponse(responseCode = "201", description = "Tắt xác thực email: đã tạo tài khoản và đăng nhập (DECISIONS #99)",
+            content = @Content(schema = @Schema(implementation = AuthResponse.class)))
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
     @ApiResponse(responseCode = "429", ref = ApiRefs.TOO_MANY_REQUESTS)
     @PostMapping("/register")
-    OtpSentResponse register(@Valid @RequestBody RegisterRequest req, HttpServletRequest http) {
-        return authService.register(req, http.getRemoteAddr());
+    ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req, HttpServletRequest http) {
+        RegisterResult result = authService.register(req, http.getRemoteAddr());
+        if (result.auth() == null) {
+            return ResponseEntity.ok(result.otpSent());
+        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .header(HttpHeaders.SET_COOKIE, cookies.create(result.auth().refreshToken()))
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .body(result.auth().body());
     }
 
     @Operation(operationId = "resendOtp", summary = "Gửi lại OTP đăng ký")

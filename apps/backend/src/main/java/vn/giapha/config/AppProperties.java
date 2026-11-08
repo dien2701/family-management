@@ -35,7 +35,9 @@ public record AppProperties(
             @DefaultValue("30") int loginPerMinutePerIp,
             @DefaultValue("7d") Duration pendingRetention,
             // false: tài khoản tự được duyệt khi kích hoạt (tắt tạm thời việc Admin duyệt); true: như thiết kế gốc
-            @DefaultValue("true") boolean requireApproval) {
+            @DefaultValue("true") boolean requireApproval,
+            // false: đăng ký bằng email tạo tài khoản và đăng nhập luôn, không gửi OTP (tạm tắt, DECISIONS #99)
+            @DefaultValue("true") boolean requireEmailVerification) {
     }
 
     /**

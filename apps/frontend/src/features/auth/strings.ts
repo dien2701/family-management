@@ -31,7 +31,6 @@ export const authStrings = {
   },
   register: {
     title: 'Tạo tài khoản',
-    description: 'Đăng ký để xem gia phả. Tài khoản mới cần Admin duyệt trước khi dùng.',
     submit: 'Đăng ký',
     haveAccount: 'Đã có tài khoản?',
     toLogin: 'Đăng nhập',

@@ -118,7 +118,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Đăng ký bằng email và gửi OTP */
+        /** Đăng ký bằng email: gửi OTP, hoặc đăng nhập luôn khi tắt OTP */
         post: operations["register"];
         delete?: never;
         options?: never;
@@ -3035,13 +3035,22 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Thành công */
+            /** @description Đã gửi OTP */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["OtpSentResponse"];
+                };
+            };
+            /** @description Tắt xác thực email (`REQUIRE_EMAIL_VERIFICATION=false`): đã tạo tài khoản và đăng nhập, kèm refresh cookie (DECISIONS #99) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthResponse"];
                 };
             };
             400: components["responses"]["ValidationError"];

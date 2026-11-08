@@ -196,7 +196,7 @@ paths:
     post:
       tags:
         - auth
-      summary: Đăng ký bằng email và gửi OTP
+      summary: 'Đăng ký bằng email: gửi OTP, hoặc đăng nhập luôn khi tắt OTP'
       operationId: register
       requestBody:
         content:
@@ -207,11 +207,17 @@ paths:
       security: []
       responses:
         '200':
-          description: Thành công
+          description: Đã gửi OTP
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/OtpSentResponse'
+        '201':
+          description: 'Tắt xác thực email (`REQUIRE_EMAIL_VERIFICATION=false`): đã tạo tài khoản và đăng nhập, kèm refresh cookie (DECISIONS #99)'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
         '400':
           $ref: '#/components/responses/ValidationError'
         '429':

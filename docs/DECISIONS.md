@@ -489,6 +489,16 @@
     - **Không có quyền riêng:** Admin gốc làm được đúng như mọi Admin.
     - **Giao diện:** `AccountAdminResponse.rootAdmin`; trang Người dùng hiện nhãn "Admin gốc" thay cho "Admin" và ẩn các nút bị chặn.
 
+## X. Tạm tắt OTP khi đăng ký (chốt 2026-11-08, hỏi đáp với người dùng)
+
+99. **Công tắc `REQUIRE_EMAIL_VERIFICATION`: tắt thì đăng ký bằng email tạo tài khoản và đăng nhập luôn, không gửi OTP** (tạm thời, chưa có nhà cung cấp email chính thức; giống cách làm của #93)
+    → **Chốt:**
+    - **Công tắc là biến môi trường** `REQUIRE_EMAIL_VERIFICATION` → `app.auth.require-email-verification`. Mặc định trong `application.yml` và compose là `false` (đang tắt). Đặt `true` rồi khởi động lại để bật lại OTP như cũ. Test cũ giữ `true`.
+    - **Khi tắt:** `POST /api/auth/register` tạo tài khoản ACTIVE, lưu đồng ý chính sách, trả **201 `AuthResponse`** kèm refresh cookie; bật thì như cũ trả 200 `OtpSentResponse`. Vẫn giữ hạn mức theo IP.
+    - **Không cần Admin duyệt:** dùng công tắc `REQUIRE_ACCOUNT_APPROVAL=false` sẵn có (#93).
+    - **Quên mật khẩu vẫn dùng OTP qua email.**
+    - **Giao diện:** trang Đăng ký bỏ câu mô tả; đăng ký xong vào thẳng app, không qua trang nhập mã.
+
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.
 - Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt. Cần cập nhật khi duyệt: Trợ lý AI nay mở cho khách (#91) và giọng nói do trình duyệt xử lý (#92).

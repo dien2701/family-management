@@ -14,7 +14,7 @@ import { AuthLayout } from '../components/AuthLayout'
 import { TextLink } from '../components/TextLink'
 import { GoogleButton } from '../components/GoogleButton'
 import { OrDivider } from '../components/OrDivider'
-import { useGoogleClientId, useRegister } from '../hooks'
+import { isSignedIn, useGoogleClientId, useRegister } from '../hooks'
 import { carryFrom } from '../routing'
 import { registerSchema, type RegisterValues } from '../schemas'
 import { authStrings as s } from '../strings'
@@ -46,6 +46,8 @@ export function RegisterPage() {
     setGoogleError(null)
     try {
       const sent = await registerAccount.mutateAsync(values)
+      // Tắt OTP: đã đăng nhập, guard tự chuyển trang như sau khi đăng nhập
+      if (isSignedIn(sent)) return
       // Email chỉ đi theo state của lịch sử (không đưa lên URL); mốc gửi lại giữ được khi F5
       void navigate('/xac-thuc', {
         state: {
@@ -68,7 +70,6 @@ export function RegisterPage() {
   return (
     <AuthLayout
       title={s.register.title}
-      description={s.register.description}
       footer={
         <p className="text-text-muted">
           {s.register.haveAccount}{' '}

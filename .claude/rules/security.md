@@ -1,6 +1,7 @@
 # Quy tắc bảo mật (áp dụng toàn repo)
 
 - Mật khẩu băm bằng **BCrypt cost 12**. Không lưu mật khẩu, OTP hay token ở dạng thô.
+- **Tạm tắt OTP đăng ký (DECISIONS #99):** `REQUIRE_EMAIL_VERIFICATION=false` thì đăng ký bằng email tạo tài khoản và đăng nhập luôn; Quên mật khẩu vẫn dùng OTP.
 - OTP 6 số lưu dạng hash, có `attempts` (tối đa 5 lần), hiệu lực 10 phút, 60 giây sau mới được gửi lại.
 - JWT HS256 ký bằng `JWT_SECRET`, dùng Spring Security OAuth2 Resource Server (Nimbus). Access token hiệu lực 15 phút.
 - Refresh token hiệu lực 30 ngày. DB chỉ lưu **SHA-256**. Cookie đặt `HttpOnly; Secure; SameSite=Strict; Path=/api/auth`. Token xoay vòng sau mỗi lần refresh. Đổi hoặc đặt lại mật khẩu, khóa tài khoản, từ chối duyệt, cấp hoặc gỡ quyền Admin đều **thu hồi toàn bộ** refresh token của người bị ảnh hưởng.

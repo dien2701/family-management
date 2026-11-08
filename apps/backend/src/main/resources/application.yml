@@ -56,4 +56,6 @@ app:
   auth:
     # false = tạm tắt việc Admin duyệt tài khoản: tài khoản mới vào dùng ngay, tài khoản đang chờ duyệt được tự duyệt khi khởi động
     require-approval: ${REQUIRE_ACCOUNT_APPROVAL:false}
+    # false = tạm tắt OTP khi đăng ký: tạo tài khoản và đăng nhập luôn (Quên mật khẩu vẫn dùng OTP)
+    require-email-verification: ${REQUIRE_EMAIL_VERIFICATION:false}
   root-admin-email: ${ROOT_ADMIN_EMAIL:}

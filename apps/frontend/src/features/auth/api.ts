@@ -2,7 +2,9 @@ import { api } from '@/services/client'
 import type { AuthResponse, Me, OtpSent, Schemas } from '@/types/api'
 
 export const authApi = {
-  register: (body: Schemas['RegisterRequest']) => api.post<OtpSent>('/auth/register', body),
+  // 200 OtpSent khi bật OTP; 201 AuthResponse (đã đăng nhập) khi tắt OTP (DECISIONS #99)
+  register: (body: Schemas['RegisterRequest']) =>
+    api.post<OtpSent | AuthResponse>('/auth/register', body),
   resendOtp: (body: Schemas['EmailRequest']) => api.post<OtpSent>('/auth/resend-otp', body),
   verifyOtp: (body: Schemas['VerifyOtpRequest']) =>
     api.post<AuthResponse>('/auth/verify-otp', body),

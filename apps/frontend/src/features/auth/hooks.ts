@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import type { AuthResponse } from '@/types/api'
 import { authApi } from './api'
 
 /** Chu kỳ tự hỏi lại trạng thái duyệt ở trang chờ duyệt (IDEA §5). */
@@ -11,10 +12,22 @@ const ME_KEY = ['me'] as const
 // Các hook đăng nhập tự lưu phiên vào AuthProvider khi thành công; điều hướng do route guard lo.
 
 export function useRegister() {
+  const { setSession } = useAuth()
   return useMutation({
-    meta: { successMessage: 'Đã gửi mã xác thực đến email của bạn.' },
+    meta: {
+      successMessage: (data) =>
+        isSignedIn(data) ? 'Đăng ký thành công.' : 'Đã gửi mã xác thực đến email của bạn.',
+    },
     mutationFn: authApi.register,
+    onSuccess: (data) => {
+      if (isSignedIn(data)) setSession(data)
+    },
   })
+}
+
+/** Đăng ký khi tắt OTP trả luôn phiên đăng nhập thay cho thông tin mã đã gửi. */
+export function isSignedIn(data: unknown): data is AuthResponse {
+  return typeof data === 'object' && data !== null && 'accessToken' in data
 }
 
 export function useResendOtp() {
