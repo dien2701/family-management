@@ -3,6 +3,7 @@ import { Users } from 'lucide-react'
 import type { MemberSummary } from '@/types/api'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Badge } from '@/components/shared/Badge'
+import { ListGroup, ListRow } from '@/components/shared/ListRow'
 import { Pagination } from '@/components/shared/Pagination'
 import { memberStrings } from '../strings'
 
@@ -30,37 +31,28 @@ function yearsLabel(m: MemberSummary): string {
   return `${m.birthYear ?? '?'} – ${m.deathYear ?? '?'}`
 }
 
-// Thẻ trong lưới 2 cột ở điện thoại (DESIGN §9): ảnh, tên tối đa 2 dòng, năm sinh – mất, badge trạng thái
-function MemberCard({ member }: { member: MemberSummary }) {
+// Một hàng trong danh sách dọc ở điện thoại: ảnh, tên, năm sinh – mất, badge trạng thái
+function MemberRow({ member }: { member: MemberSummary }) {
   return (
-    <Link
+    <ListRow
       to={`/thanh-vien/${member.id}`}
-      className="flex h-full cursor-pointer flex-col items-center gap-2 rounded-card border border-border bg-surface p-3 text-center shadow-card transition-colors duration-200 ease-out hover:border-accent focus-visible:outline-accent"
-    >
-      {member.avatarUrl ? (
-        <img
-          src={member.avatarUrl}
-          alt=""
-          loading="lazy"
-          className="size-16 rounded-full object-cover"
-        />
-      ) : (
-        <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-secondary text-2xl font-semibold text-secondary-fg">
-          {member.fullName.charAt(0).toUpperCase()}
-        </div>
-      )}
-      <h3 className="line-clamp-2 leading-snug font-semibold text-text [overflow-wrap:anywhere]">
-        {member.fullName}
-      </h3>
-      <p className="text-sm text-text-muted tabular-nums">{yearsLabel(member)}</p>
-      <span className="mt-auto">
-        {member.isDeceased ? (
-          <Badge tone="warning">Đã mất</Badge>
+      leading={
+        member.avatarUrl ? (
+          <img src={member.avatarUrl} alt="" loading="lazy" className="size-11 shrink-0 rounded-full object-cover" />
         ) : (
-          <Badge tone="success">Còn sống</Badge>
-        )}
-      </span>
-    </Link>
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-lg font-semibold text-secondary-fg">
+            {member.fullName.charAt(0).toUpperCase()}
+          </span>
+        )
+      }
+      label={<span className="[overflow-wrap:anywhere]">{member.fullName}</span>}
+      description={<span className="tabular-nums">{yearsLabel(member)}</span>}
+      trailing={
+        <span className="shrink-0">
+          {member.isDeceased ? <Badge tone="warning">Đã mất</Badge> : <Badge tone="success">Còn sống</Badge>}
+        </span>
+      }
+    />
   )
 }
 
@@ -163,11 +155,13 @@ export function MemberList({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Điện thoại: lưới 2 cột thẻ thành viên */}
-      <div className="grid grid-cols-2 gap-3 md:hidden">
-        {members.map((m) => (
-          <MemberCard key={m.id} member={m} />
-        ))}
+      {/* Điện thoại: danh sách dọc, mỗi thành viên một hàng */}
+      <div className="rounded-card border border-border bg-surface px-4 shadow-card md:hidden">
+        <ListGroup>
+          {members.map((m) => (
+            <MemberRow key={m.id} member={m} />
+          ))}
+        </ListGroup>
       </div>
 
       {/* Máy tính: bảng */}
