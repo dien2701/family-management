@@ -1,8 +1,9 @@
-import { Pencil, Plus, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2, Users } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { Alert } from '@/components/shared/Alert'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
+import { SectionCard } from '@/components/shared/SectionCard'
 import { Button } from '@/components/ui/button'
 import { ApiError } from '@/services/client'
 import type { Relative } from '@/types/api'
@@ -50,17 +51,14 @@ export function RelativesSection({ memberId, canEdit }: RelativesSectionProps) {
   }
 
   return (
-    <section
-      aria-labelledby="relatives-title"
-      className="rounded-card border border-border bg-surface p-4 shadow-card md:p-6"
-    >
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="relatives-title" className="text-lg font-semibold">
-          {s.title}
-        </h2>
-        {canEdit && (
+    <SectionCard
+      title={s.title}
+      icon={Users}
+      action={
+        canEdit && (
           <Button
             variant="secondary"
+            className="-my-1 shrink-0"
             onClick={() => {
               setAddSession((n) => n + 1)
               setAdding(true)
@@ -69,14 +67,18 @@ export function RelativesSection({ memberId, canEdit }: RelativesSectionProps) {
             <Plus aria-hidden="true" />
             {s.add}
           </Button>
-        )}
-      </div>
-
-      <div className="mt-3">
+        )
+      }
+    >
+      <div>
         {relatives.isPending ? (
           <div role="status" aria-label={s.loading} className="flex flex-col gap-2">
             {[0, 1].map((i) => (
-              <div key={i} aria-hidden="true" className="h-12 animate-pulse rounded-field bg-surface-muted" />
+              <div
+                key={i}
+                aria-hidden="true"
+                className="h-12 animate-pulse rounded-field bg-surface-muted"
+              />
             ))}
           </div>
         ) : relatives.isError ? (
@@ -135,7 +137,9 @@ export function RelativesSection({ memberId, canEdit }: RelativesSectionProps) {
             ))}
           </ul>
         )}
-        {canEdit && !relatives.isError && <p className="mt-3 text-sm text-text-muted">{s.oneWayHint}</p>}
+        {canEdit && !relatives.isError && (
+          <p className="mt-3 text-sm text-text-muted">{s.oneWayHint}</p>
+        )}
       </div>
 
       <AddRelativeDialog
@@ -155,7 +159,9 @@ export function RelativesSection({ memberId, canEdit }: RelativesSectionProps) {
         open={removing !== null}
         danger
         title={s.removeTitle}
-        description={removing ? s.removeDescription(removing.relative.fullName, removing.label) : ''}
+        description={
+          removing ? s.removeDescription(removing.relative.fullName, removing.label) : ''
+        }
         confirmLabel={s.removeConfirm}
         cancelLabel={s.removeCancel}
         loading={remove.isPending}
@@ -163,6 +169,6 @@ export function RelativesSection({ memberId, canEdit }: RelativesSectionProps) {
         onConfirm={() => void confirmRemove()}
         onCancel={closeRemove}
       />
-    </section>
+    </SectionCard>
   )
 }

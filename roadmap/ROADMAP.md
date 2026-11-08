@@ -82,11 +82,11 @@
 | 45 | Trợ lý AI: nhiều đoạn chat | Claude Code | Sonnet · high | ✅ 2026-10-15 |
 | **GĐ E** | **Làm lại giao diện ưu tiên điện thoại (DECISIONS #96)** | | | |
 | 46 | Token, khung chung (header, thanh dưới, thẻ dùng chung) và Trang chủ | Claude Code | Sonnet · high | ✅ 2026-11-08 |
-| 47 | Thêm, Hồ sơ cá nhân, Cài đặt, Thành viên, Sự kiện | Claude Code | Sonnet · medium | ⬜ |
+| 47 | Thêm, Hồ sơ cá nhân, Cài đặt, Thành viên, Sự kiện | Claude Code | Sonnet · medium | ✅ 2026-11-08 |
 | 48 | Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm | Claude Code | Sonnet · medium | ⬜ |
 | 49 | Quản trị và nhóm trang đăng nhập | Claude Code | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt tiếp theo: Đợt 47 — Thêm, Hồ sơ cá nhân, Cài đặt, Thành viên, Sự kiện
+## ▶️ Đợt tiếp theo: Đợt 48 — Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm
 
 ---
 
@@ -1167,15 +1167,18 @@ Việc nên làm thêm: `StickyActions` chưa trang nào dùng (Đợt 47–48 d
 
 ---
 
-### Đợt 47 — Thêm, Hồ sơ cá nhân, Cài đặt, Thành viên, Sự kiện
+### Đợt 47 — Thêm, Hồ sơ cá nhân, Cài đặt, Thành viên, Sự kiện ✅ 2026-11-08
 DECISIONS #96 · `docs/DESIGN.md` mục 9
-- [ ] **Thêm** (`pages/MorePage.tsx`): thẻ tài khoản ở đầu trang (như tab Tài khoản của mẫu), các mục chia nhóm `ListRow` (Tiện ích · Gia đình · Quản trị (Admin) · Khác), giữ mục cài ứng dụng.
-- [ ] **Hồ sơ cá nhân, Cài đặt** (`features/account`): nhóm thành thẻ `SectionCard`/`ListRow`.
-- [ ] **Thành viên** (`MembersPage`): ô tìm + hàng chip lọc có icon, cuộn ngang trong thẻ (không làm trang cuộn ngang); điện thoại là lưới 2 cột thẻ thành viên (ảnh đại diện, tên tối đa 2 dòng, năm sinh – mất, badge); máy tính giữ bảng.
-- [ ] **Hồ sơ thành viên** (`MemberDetailPage`): giữ thẻ navy, các khối dưới dùng `SectionCard`; nút Sửa/Xóa vào `StickyActions` ở điện thoại.
-- [ ] **Sự kiện** (`CalendarPage`, `LunarConverterPage`): thanh lọc/chip giống Thành viên, danh sách và lịch tháng trong `SectionCard`.
+- [x] **Thêm** (`pages/MorePage.tsx`): thẻ tài khoản ở đầu trang (như tab Tài khoản của mẫu), các mục chia nhóm `ListRow` (Tiện ích · Gia đình · Quản trị (Admin) · Khác), giữ mục cài ứng dụng. ✅ 2026-11-08
+- [x] **Hồ sơ cá nhân, Cài đặt** (`features/account`): nhóm thành thẻ `SectionCard`/`ListRow`. ✅ 2026-11-08
+- [x] **Thành viên** (`MembersPage`): ô tìm + hàng chip lọc có icon, cuộn ngang trong thẻ (không làm trang cuộn ngang); điện thoại là lưới 2 cột thẻ thành viên (ảnh đại diện, tên tối đa 2 dòng, năm sinh – mất, badge); máy tính giữ bảng. ✅ 2026-11-08
+- [x] **Hồ sơ thành viên** (`MemberDetailPage`): giữ thẻ navy, các khối dưới dùng `SectionCard`; nút Sửa/Xóa vào `StickyActions` ở điện thoại. ✅ 2026-11-08
+- [x] **Sự kiện** (`CalendarPage`, `LunarConverterPage`): thanh lọc/chip giống Thành viên, danh sách và lịch tháng trong `SectionCard`. ✅ 2026-11-08
 
-**✅ Đã làm:** (điền khi xong)
+**✅ Đã làm:** **Thêm** (`pages/MorePage.tsx`, `auth/components/AccountCard.tsx`): thẻ tài khoản (ảnh, tên, email, badge vai trò, dòng "Hồ sơ cá nhân"), 4 nhóm `SectionCard` + `ListRow` (Tiện ích: Trợ lý, Bài khấn, Đổi lịch, Xuất dữ liệu · Gia đình: Tôi là ai, Đề xuất của tôi, Tài liệu chung · Quản trị (Admin) · Khác: cài ứng dụng, Cài đặt, Chính sách), Đăng xuất ở cuối; `InstallAppItem` thành `ListRow`. **Hồ sơ cá nhân, Cài đặt**: thẻ `SectionCard` có icon, lối tắt thành `ListRow`.
+**Thành viên**: thêm `components/shared/FilterBar.tsx` (ô tìm + hàng chip cuộn ngang trong thẻ, một hàng từ md), chip có icon; điện thoại lưới 2 cột thẻ (`MemberList.tsx`), máy tính giữ bảng. **Hồ sơ thành viên**: Tiểu sử, Người thân, Trên cây, Tệp đính kèm dùng `SectionCard` (thêm prop `action`, `title` nhận ReactNode); Sửa/Xóa trong `StickyActions` ở điện thoại, đầu trang ở máy tính.
+**Sự kiện**: tab Sắp tới dùng `FilterBar`, danh sách trong `SectionCard` (tiêu đề theo khoảng/kết quả tìm, dòng ngăn bằng đường kẻ); Lịch tháng trong `SectionCard` (tiêu đề tháng + nút trước/sau), `MonthGrid`/`WeekList` bỏ lớp thẻ ngoài; Đổi lịch trong `SectionCard`. `docs/DESIGN.md` mục 9 thêm `FilterBar`, `action`, mô tả Đợt 47.
+Việc nên làm thêm: `EmptyState` vẫn là thẻ riêng nên trạng thái rỗng/lỗi của Sự kiện nằm ngoài `SectionCard`; hộp hướng dẫn cài iOS trong `InstallAppItem` là `div` nằm trong `ul` (có từ trước).
 
 ---
 

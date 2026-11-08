@@ -4,25 +4,41 @@ import { Link } from 'react-router'
 import { cn } from '@/utils/cn'
 
 type SectionCardProps = {
-  title: string
+  title: ReactNode
   icon?: LucideIcon
   /** Có thì hiện link "Xem tất cả" (hoặc `moreLabel`) bên phải tiêu đề. */
   moreTo?: string
   moreLabel?: string
+  /** Nút/thao tác tự vẽ bên phải tiêu đề (thay cho link "Xem tất cả"). */
+  action?: ReactNode
   className?: string
   children: ReactNode
 }
 
 // Thẻ có tiêu đề mục 18px/700 màu primary (DESIGN §9)
-export function SectionCard({ title, icon: Icon, moreTo, moreLabel = 'Xem tất cả', className, children }: SectionCardProps) {
+export function SectionCard({
+  title,
+  icon: Icon,
+  moreTo,
+  moreLabel = 'Xem tất cả',
+  action,
+  className,
+  children,
+}: SectionCardProps) {
   const id = useId()
   return (
     <section
       aria-labelledby={id}
-      className={cn('rounded-card border border-border bg-surface p-4 shadow-card md:p-6', className)}
+      className={cn(
+        'rounded-card border border-border bg-surface p-4 shadow-card md:p-6',
+        className,
+      )}
     >
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 id={id} className="flex min-w-0 items-center gap-2 text-lg leading-tight font-bold text-primary">
+        <h2
+          id={id}
+          className="flex min-w-0 items-center gap-2 text-lg leading-tight font-bold text-primary"
+        >
           {Icon && <Icon className="size-5 shrink-0" aria-hidden="true" />}
           {title}
         </h2>
@@ -35,6 +51,7 @@ export function SectionCard({ title, icon: Icon, moreTo, moreLabel = 'Xem tất 
             <ChevronRight className="size-4" aria-hidden="true" />
           </Link>
         )}
+        {action}
       </div>
       {children}
     </section>

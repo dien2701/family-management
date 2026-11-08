@@ -29,7 +29,7 @@ type WeekListProps = {
 /** Lịch tháng dưới 768px: danh sách theo tuần, mỗi ngày một dòng kèm tên các sự kiện của ngày đó. */
 export function WeekList({ days, mode, today, onSelect }: WeekListProps) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {splitWeeks(days).map((week) => {
         const first = week[0]!
         const last = week[week.length - 1]!
@@ -37,7 +37,7 @@ export function WeekList({ days, mode, today, onSelect }: WeekListProps) {
           <section
             key={toJdn(first.solar)}
             aria-label={s.weekOf(shortSolar(first.solar), shortSolar(last.solar))}
-            className="overflow-hidden rounded-card border border-border bg-surface shadow-card"
+            className="overflow-hidden rounded-field border border-border"
           >
             <h3 className="border-b border-border bg-surface-muted px-4 py-2 text-sm font-semibold text-text-muted">
               {s.weekOf(shortSolar(first.solar), shortSolar(last.solar))}

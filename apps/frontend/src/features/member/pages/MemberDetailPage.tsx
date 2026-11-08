@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { AlertCircle, Pencil, Trash2 } from 'lucide-react'
+import { AlertCircle, BookOpen, Pencil, Trash2 } from 'lucide-react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { Alert } from '@/components/shared/Alert'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { FullPageSpinner } from '@/components/shared/FullPageSpinner'
+import { SectionCard } from '@/components/shared/SectionCard'
+import { StickyActions } from '@/components/shared/StickyActions'
 import { Button } from '@/components/ui/button'
 import { isApproved } from '@/features/auth/routing'
 import { useAuth } from '@/hooks/useAuth'
@@ -35,14 +37,14 @@ export function MemberDetailPage() {
   const { detail: str, remove } = memberStrings
 
   if (isLoading) return <FullPageSpinner />
-  
+
   if (isError || !member) {
     return (
       <div className="mx-auto max-w-2xl px-4 py-12">
-        <EmptyState 
-          icon={AlertCircle} 
-          title="Không tìm thấy thành viên" 
-          description="Người này có thể đã bị xóa hoặc không tồn tại." 
+        <EmptyState
+          icon={AlertCircle}
+          title="Không tìm thấy thành viên"
+          description="Người này có thể đã bị xóa hoặc không tồn tại."
         />
       </div>
     )
@@ -69,36 +71,38 @@ export function MemberDetailPage() {
     }
   }
 
+  const actions = (isAdmin || isSelf) && (
+    <>
+      <Button asChild variant="secondary">
+        <Link to={`/thanh-vien/${member.id}/sua`}>
+          <Pencil aria-hidden="true" />
+          {isAdmin ? memberStrings.actions.edit : memberStrings.actions.editMine}
+        </Link>
+      </Button>
+      {isAdmin && (
+        <Button variant="danger" onClick={() => setConfirming(true)}>
+          <Trash2 aria-hidden="true" />
+          {memberStrings.actions.remove}
+        </Button>
+      )}
+    </>
+  )
+
   return (
     <div className="mx-auto max-w-2xl px-4 py-6 md:py-8 space-y-6">
       {notice && <Alert variant="info">{notice}</Alert>}
 
-      {(isAdmin || isSelf) && (
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button asChild variant="secondary">
-            <Link to={`/thanh-vien/${member.id}/sua`}>
-              <Pencil aria-hidden="true" />
-              {isAdmin ? memberStrings.actions.edit : memberStrings.actions.editMine}
-            </Link>
-          </Button>
-          {isAdmin && (
-            <Button variant="danger" onClick={() => setConfirming(true)}>
-              <Trash2 aria-hidden="true" />
-              {memberStrings.actions.remove}
-            </Button>
-          )}
-        </div>
-      )}
+      {/* Máy tính: nút ở đầu trang như cũ; điện thoại: thanh nút dính ở cuối (StickyActions) */}
+      {actions && <div className="hidden flex-wrap justify-end gap-2 md:flex">{actions}</div>}
 
       <MemberProfileCard member={member} isSelf={isSelf} />
 
       {member.biography && (
-        <section className="rounded-card border border-border bg-surface p-4 shadow-card md:p-6">
-          <h2 className="font-semibold text-lg">{str.biography}</h2>
-          <p className="mt-2 whitespace-pre-line">{member.biography}</p>
-        </section>
+        <SectionCard title={str.biography} icon={BookOpen}>
+          <p className="whitespace-pre-line">{member.biography}</p>
+        </SectionCard>
       )}
-      
+
       <RelativesSection memberId={member.id} canEdit={isAdmin || isSelf} />
 
       <TreeSection memberId={member.id} isAdmin={isAdmin} />
@@ -106,9 +110,7 @@ export function MemberDetailPage() {
       {/* Tệp đính kèm cần đăng nhập và đã duyệt; khách chỉ xem phần hồ sơ (DECISIONS #88) */}
       {isApproved(user) && <AttachmentsSection memberId={member.id} canEdit={isAdmin || isSelf} />}
 
-
-
-
+      {actions && <StickyActions className="md:hidden">{actions}</StickyActions>}
 
       <ConfirmDialog
         open={confirming}

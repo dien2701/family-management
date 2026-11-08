@@ -1,53 +1,40 @@
 import {
   ArrowLeftRight,
-  ChevronRight,
+  FileDown,
+  Files,
+  FileText,
+  LayoutGrid,
+  MoreHorizontal,
+  Settings,
   ShieldCheck,
   Sparkles,
   UserCheck,
   UserCog,
-  Files,
-  FileDown,
+  Users,
   ScrollText,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Link } from 'react-router'
+import { ListGroup, ListRow } from '@/components/shared/ListRow'
+import { SectionCard } from '@/components/shared/SectionCard'
 import { adminStrings } from '@/features/admin/strings'
 import { aiStrings } from '@/features/ai/strings'
 import { AccountCard } from '@/features/auth/components/AccountCard'
+import { LogoutButton } from '@/features/auth/components/LogoutButton'
 import { isAdmin } from '@/features/auth/routing'
 import { linkStrings } from '@/features/link/strings'
 import { prayerStrings } from '@/features/prayer/strings'
-import { useAuth } from '@/hooks/useAuth'
 import { InstallAppItem } from '@/features/pwa/components/InstallAppItem'
+import { useAuth } from '@/hooks/useAuth'
 
 type Item = { to: string; label: string; description: string; icon: LucideIcon }
 
-// Chỉ Admin thấy; trên điện thoại thanh dưới chỉ có 5 mục nên Quản trị vào từ đây (Sidebar và rail có mục riêng)
-const ADMIN_ITEM: Item = {
-  to: '/quan-tri',
-  label: adminStrings.menu,
-  description: adminStrings.menuDescription,
-  icon: UserCog,
-}
-
-const ITEMS: Item[] = [
+const UTILITIES: Item[] = [
+  { to: '/tro-ly', label: aiStrings.menu, description: aiStrings.menuDescription, icon: Sparkles },
   {
-    to: '/tro-ly',
-    label: aiStrings.menu,
-    description: aiStrings.menuDescription,
-    icon: Sparkles,
-  },
-  {
-    to: '/de-xuat',
-    label: 'Đề xuất của tôi',
-    description: 'Quản lý các đề xuất thay đổi sự kiện',
-    icon: UserCog,
-  },
-  {
-    to: '/them/toi-la-ai',
-    label: linkStrings.menu,
-    description: linkStrings.menuDescription,
-    icon: UserCheck,
+    to: '/bai-khan',
+    label: prayerStrings.menu,
+    description: prayerStrings.menuDescription,
+    icon: ScrollText,
   },
   {
     to: '/them/doi-lich',
@@ -56,10 +43,25 @@ const ITEMS: Item[] = [
     icon: ArrowLeftRight,
   },
   {
-    to: '/bai-khan',
-    label: prayerStrings.menu,
-    description: prayerStrings.menuDescription,
-    icon: ScrollText,
+    to: '/them/xuat-du-lieu',
+    label: 'Xuất dữ liệu',
+    description: 'Tải báo cáo thành viên, sự kiện và lịch giỗ',
+    icon: FileDown,
+  },
+]
+
+const FAMILY: Item[] = [
+  {
+    to: '/them/toi-la-ai',
+    label: linkStrings.menu,
+    description: linkStrings.menuDescription,
+    icon: UserCheck,
+  },
+  {
+    to: '/de-xuat',
+    label: 'Đề xuất của tôi',
+    description: 'Quản lý các đề xuất thay đổi sự kiện',
+    icon: FileText,
   },
   {
     to: '/them/tai-lieu-chung',
@@ -67,12 +69,10 @@ const ITEMS: Item[] = [
     description: 'Các tài liệu, biểu mẫu chung của gia đình',
     icon: Files,
   },
-  {
-    to: '/them/xuat-du-lieu',
-    label: 'Xuất dữ liệu',
-    description: 'Tải báo cáo thành viên, sự kiện và lịch giỗ',
-    icon: FileDown,
-  },
+]
+
+const OTHER: Item[] = [
+  { to: '/cai-dat', label: 'Cài đặt', description: 'Giao diện, cỡ chữ, thông báo', icon: Settings },
   {
     to: '/chinh-sach-bao-mat',
     label: 'Chính sách bảo mật',
@@ -81,35 +81,50 @@ const ITEMS: Item[] = [
   },
 ]
 
-// Thẻ tài khoản + Đăng xuất (Đợt 3), mục Quản trị cho Admin (Đợt 10); các mục khác được thêm ở các đợt sau
+function Rows({ items }: { items: Item[] }) {
+  return items.map(({ to, label, description, icon }) => (
+    <ListRow key={to} to={to} icon={icon} label={label} description={description} />
+  ))
+}
+
+// Tab Thêm (DESIGN §9): thẻ tài khoản ở đầu, các mục chia nhóm; Quản trị chỉ Admin thấy
+// (trên điện thoại thanh dưới chỉ có 5 mục nên Quản trị vào từ đây; Sidebar và rail có mục riêng)
 export function MorePage() {
   const { user } = useAuth()
-  const items = isAdmin(user) ? [ADMIN_ITEM, ...ITEMS] : ITEMS
   return (
-    <div className="mx-auto w-full max-w-3xl">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <AccountCard />
-      <nav aria-label="Các mục khác">
-        <ul className="overflow-hidden rounded-card border border-border bg-surface shadow-card">
-          <InstallAppItem />
-          {items.map(({ to, label, description, icon: Icon }) => (
-            <li key={to} className="border-b border-border last:border-b-0">
-              <Link
-                to={to}
-                className="flex min-h-16 items-center gap-3 px-4 py-3 transition-colors duration-200 ease-out hover:bg-surface-muted"
-              >
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-fg">
-                  <Icon className="size-5" aria-hidden="true" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-semibold">{label}</span>
-                  <span className="block text-sm text-text-muted">{description}</span>
-                </span>
-                <ChevronRight className="size-5 shrink-0 text-text-muted" aria-hidden="true" />
-              </Link>
-            </li>
-          ))}
-        </ul>
+      <nav aria-label="Các mục khác" className="flex flex-col gap-4">
+        <SectionCard title="Tiện ích" icon={LayoutGrid}>
+          <ListGroup>
+            <Rows items={UTILITIES} />
+          </ListGroup>
+        </SectionCard>
+        <SectionCard title="Gia đình" icon={Users}>
+          <ListGroup>
+            <Rows items={FAMILY} />
+          </ListGroup>
+        </SectionCard>
+        {isAdmin(user) && (
+          <SectionCard title={adminStrings.menu} icon={UserCog}>
+            <ListGroup>
+              <ListRow
+                to="/quan-tri"
+                icon={UserCog}
+                label={adminStrings.menu}
+                description={adminStrings.menuDescription}
+              />
+            </ListGroup>
+          </SectionCard>
+        )}
+        <SectionCard title="Khác" icon={MoreHorizontal}>
+          <ListGroup>
+            <InstallAppItem />
+            <Rows items={OTHER} />
+          </ListGroup>
+        </SectionCard>
       </nav>
+      <LogoutButton className="w-full md:w-auto" />
     </div>
   )
 }

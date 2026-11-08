@@ -1,6 +1,7 @@
 import { Network } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
+import { SectionCard } from '@/components/shared/SectionCard'
 import { Button } from '@/components/ui/button'
 import { useTree, useTreeModel } from '@/hooks/useTree'
 import type { TreeNode } from '@/types/api'
@@ -14,7 +15,10 @@ function Person({ node, suffix }: { node: TreeNode; suffix?: string }) {
   return (
     <>
       {node.memberId !== null && node.member ? (
-        <Link to={`/thanh-vien/${node.memberId}`} className="font-medium text-accent-text underline-offset-2 hover:underline">
+        <Link
+          to={`/thanh-vien/${node.memberId}`}
+          className="font-medium text-accent-text underline-offset-2 hover:underline"
+        >
           {node.member.fullName}
         </Link>
       ) : (
@@ -59,8 +63,18 @@ function relationsOf(index: TreeIndex, node: TreeNode) {
 
   // Ô vợ/chồng: người kia là vợ/chồng; ô thuộc dòng: các vợ/chồng theo thứ tự
   const spouses = owner
-    ? [{ node: owner, suffix: s.spouseOrder((index.spousesOf.get(owner.id) ?? []).find((sp) => sp.node.id === node.id)?.order ?? 1) }]
-    : (index.spousesOf.get(node.id) ?? []).map((sp) => ({ node: sp.node, suffix: s.spouseOrder(sp.order) }))
+    ? [
+        {
+          node: owner,
+          suffix: s.spouseOrder(
+            (index.spousesOf.get(owner.id) ?? []).find((sp) => sp.node.id === node.id)?.order ?? 1,
+          ),
+        },
+      ]
+    : (index.spousesOf.get(node.id) ?? []).map((sp) => ({
+        node: sp.node,
+        suffix: s.spouseOrder(sp.order),
+      }))
 
   // Ô vợ/chồng: con của cặp này; ô thuộc dòng: mọi con của người đó
   const children = (index.childrenOf.get(owner ? owner.id : node.id) ?? [])
@@ -80,54 +94,51 @@ export function TreeSection({ memberId, isAdmin }: TreeSectionProps) {
   const node = nodeId === undefined ? undefined : model?.index.nodes.get(nodeId)
 
   return (
-    <section
-      aria-labelledby="member-tree-title"
-      className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4 shadow-card md:p-6"
-    >
-      <h2 id="member-tree-title" className="text-lg font-semibold">
-        {memberStrings.detail.sections.tree}
-      </h2>
-
-      {tree.isLoading ? (
-        <p role="status" className="text-text-muted">
-          {s.loading}
-        </p>
-      ) : tree.isError || !model ? (
-        <p role="alert" className="text-danger">
-          {s.loadFailed}
-        </p>
-      ) : !node ? (
-        <p className="text-text-muted">{isAdmin ? s.notOnTreeAdmin : s.notOnTree}</p>
-      ) : (
-        (() => {
-          const { parents, spouses, children } = relationsOf(model.index, node)
-          const generation = model.generations.get(node.id)
-          return (
-            <>
-              <dl className="flex flex-col gap-2">
-                {generation !== undefined && <Row label={s.generation}>{String(generation).padStart(2, '0')}</Row>}
-                <Row label={s.parents}>
-                  <List people={parents} />
-                </Row>
-                <Row label={s.spouses}>
-                  <List people={spouses} />
-                </Row>
-                <Row label={s.children}>
-                  <List people={children} />
-                </Row>
-              </dl>
-              <div>
-                <Button asChild variant="secondary">
-                  <Link to={`/cay?o=${node.id}`}>
-                    <Network aria-hidden="true" />
-                    {s.viewOnTree}
-                  </Link>
-                </Button>
-              </div>
-            </>
-          )
-        })()
-      )}
-    </section>
+    <SectionCard title={memberStrings.detail.sections.tree} icon={Network}>
+      <div className="flex flex-col gap-3">
+        {tree.isLoading ? (
+          <p role="status" className="text-text-muted">
+            {s.loading}
+          </p>
+        ) : tree.isError || !model ? (
+          <p role="alert" className="text-danger">
+            {s.loadFailed}
+          </p>
+        ) : !node ? (
+          <p className="text-text-muted">{isAdmin ? s.notOnTreeAdmin : s.notOnTree}</p>
+        ) : (
+          (() => {
+            const { parents, spouses, children } = relationsOf(model.index, node)
+            const generation = model.generations.get(node.id)
+            return (
+              <>
+                <dl className="flex flex-col gap-2">
+                  {generation !== undefined && (
+                    <Row label={s.generation}>{String(generation).padStart(2, '0')}</Row>
+                  )}
+                  <Row label={s.parents}>
+                    <List people={parents} />
+                  </Row>
+                  <Row label={s.spouses}>
+                    <List people={spouses} />
+                  </Row>
+                  <Row label={s.children}>
+                    <List people={children} />
+                  </Row>
+                </dl>
+                <div>
+                  <Button asChild variant="secondary">
+                    <Link to={`/cay?o=${node.id}`}>
+                      <Network aria-hidden="true" />
+                      {s.viewOnTree}
+                    </Link>
+                  </Button>
+                </div>
+              </>
+            )
+          })()
+        )}
+      </div>
+    </SectionCard>
   )
 }

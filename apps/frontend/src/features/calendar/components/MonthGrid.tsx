@@ -14,7 +14,8 @@ import { calendarStrings } from '../strings'
 /** Số lớn và số nhỏ của một ô ngày: chế độ dương thì số dương lớn, chế độ âm thì ngược lại. Mùng 1 kèm tháng. */
 export function dayNumbers(day: CalendarDay, mode: CalendarMode): { main: string; sub: string } {
   const { solar, lunar } = day
-  const lunarText = lunar.day === 1 ? `${lunar.day}/${lunar.month}${lunar.leap ? 'n' : ''}` : `${lunar.day}`
+  const lunarText =
+    lunar.day === 1 ? `${lunar.day}/${lunar.month}${lunar.leap ? 'n' : ''}` : `${lunar.day}`
   const solarText = solar.day === 1 ? `${solar.day}/${solar.month}` : `${solar.day}`
   return mode === 'solar'
     ? { main: String(solar.day), sub: lunarText }
@@ -45,7 +46,7 @@ export function MonthGrid({ days, mode, today, onSelect }: MonthGridProps) {
   const blanks = days.length > 0 ? mondayIndex(weekday(days[0]!.solar)) : 0
 
   return (
-    <div className="rounded-card border border-border bg-surface p-3 shadow-card md:p-4">
+    <div>
       <div className="grid grid-cols-7 gap-1">
         {calendarStrings.month.weekdays.map((w, i) => (
           <div

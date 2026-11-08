@@ -1,8 +1,19 @@
-import { ArrowUpDown, CalendarX2, Loader2, Search, X } from 'lucide-react'
+import {
+  ArrowUpDown,
+  CalendarClock,
+  CalendarRange,
+  CalendarX2,
+  Loader2,
+  Search,
+  Shapes,
+  X,
+} from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { EmptyState } from '@/components/shared/EmptyState'
+import { FilterBar } from '@/components/shared/FilterBar'
 import { FilterChip } from '@/components/shared/FilterChip'
+import { SectionCard } from '@/components/shared/SectionCard'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { CalendarOccurrence, EventType } from '@/types/api'
@@ -99,10 +110,11 @@ export function UpcomingTab({ isAdmin, onEdit, onDelete }: UpcomingTabProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Cùng kiểu trang Thành viên: điện thoại lưới 2 cột, từ md một hàng với chip rộng cố định */}
-      <div className="flex flex-col gap-2">
-        <div className="grid grid-cols-2 items-center gap-2 md:flex">
-          <div className="relative col-span-2 min-w-0 md:min-w-40 md:flex-1">
+      {/* Cùng kiểu trang Thành viên: ô tìm + hàng chip cuộn ngang trong thẻ ở điện thoại, một hàng từ md */}
+      <FilterBar
+        label={s.filtersLabel}
+        search={
+          <>
             <Search className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-text-muted" />
             <Input
               type="search"
@@ -116,62 +128,62 @@ export function UpcomingTab({ isAdmin, onEdit, onDelete }: UpcomingTabProps) {
               onChange={(e) => setText(e.target.value)}
               className="pl-10"
             />
-          </div>
+          </>
+        }
+      >
+        <FilterChip
+          icon={CalendarRange}
+          widthClass="w-auto shrink-0 md:w-44"
+          label={s.range}
+          face={s.days[rangeValue]}
+          active={rangeValue !== 30}
+          disabled={searching}
+          value={String(rangeValue)}
+          options={DAYS.map((d) => ({ value: String(d), text: s.days[d] }))}
+          onChange={(v) => setDays(Number(v) as UpcomingQuery['days'])}
+        />
 
-          <FilterChip
-            widthClass="md:w-40"
-            label={s.range}
-            face={s.days[rangeValue]}
-            active={rangeValue !== 30}
-            disabled={searching}
-            value={String(rangeValue)}
-            options={DAYS.map((d) => ({ value: String(d), text: s.days[d] }))}
-            onChange={(v) => setDays(Number(v) as UpcomingQuery['days'])}
-          />
+        <FilterChip
+          icon={Shapes}
+          widthClass="w-auto shrink-0 md:w-48"
+          label={s.type}
+          face={typeValue === 'all' ? s.type : EVENT_TYPE_META[typeValue].label}
+          active={typeValue !== 'all'}
+          value={typeValue}
+          options={[
+            { value: 'all', text: s.allTypes },
+            ...EVENT_TYPES.map((t) => ({ value: t, text: EVENT_TYPE_META[t].label })),
+          ]}
+          onChange={(v) => setType(v === 'all' ? '' : (v as EventType))}
+        />
 
-          <FilterChip
-            widthClass="md:w-44"
-            label={s.type}
-            face={typeValue === 'all' ? s.type : EVENT_TYPE_META[typeValue].label}
-            active={typeValue !== 'all'}
-            value={typeValue}
-            options={[
-              { value: 'all', text: s.allTypes },
-              ...EVENT_TYPES.map((t) => ({ value: t, text: EVENT_TYPE_META[t].label })),
-            ]}
-            onChange={(v) => setType(v === 'all' ? '' : (v as EventType))}
-          />
+        <FilterChip
+          icon={ArrowUpDown}
+          widthClass="w-auto shrink-0 md:w-48"
+          label={s.sort}
+          face={sort === 'asc' ? s.sortAsc : s.sortDesc}
+          active={sort === 'desc'}
+          value={sort}
+          options={[
+            { value: 'asc', text: s.sortAsc },
+            { value: 'desc', text: s.sortDesc },
+          ]}
+          onChange={(v) => setSort(v as UpcomingQuery['sort'])}
+        />
 
-          <FilterChip
-            icon={ArrowUpDown}
-            widthClass="md:w-48"
-            label={s.sort}
-            face={sort === 'asc' ? s.sortAsc : s.sortDesc}
-            active={sort === 'desc'}
-            value={sort}
-            options={[
-              { value: 'asc', text: s.sortAsc },
-              { value: 'desc', text: s.sortDesc },
-            ]}
-            onChange={(v) => setSort(v as UpcomingQuery['sort'])}
-          />
-
-          {/* Luôn giữ chỗ, mờ khi chưa tìm; từ md chỉ còn biểu tượng */}
-          <Button
-            variant="ghost"
-            disabled={!searching}
-            aria-label={s.clearFilters}
-            title={s.clearFilters}
-            className="col-span-2 md:w-11 md:shrink-0 md:px-0"
-            onClick={clearFilters}
-          >
-            <X aria-hidden />
-            <span className="md:sr-only">{s.clearFilters}</span>
-          </Button>
-        </div>
-      </div>
-
-      <EventLegend />
+        {/* Luôn giữ chỗ, mờ khi chưa tìm; từ md chỉ còn biểu tượng */}
+        <Button
+          variant="ghost"
+          disabled={!searching}
+          aria-label={s.clearFilters}
+          title={s.clearFilters}
+          className="shrink-0 md:w-11 md:px-0"
+          onClick={clearFilters}
+        >
+          <X aria-hidden />
+          <span className="md:sr-only">{s.clearFilters}</span>
+        </Button>
+      </FilterBar>
 
       {query.isPending ? (
         <p role="status" className="flex items-center gap-2 py-8 text-text-muted">
@@ -200,15 +212,16 @@ export function UpcomingTab({ isAdmin, onEdit, onDelete }: UpcomingTabProps) {
           />
         )
       ) : (
-        <>
+        <SectionCard title={searching ? s.resultsTitle : s.days[rangeValue]} icon={CalendarClock}>
+          <EventLegend className="mb-3" />
           {searching && (
-            <p role="status" className="text-sm text-text-muted">
+            <p role="status" className="mb-2 text-sm text-text-muted">
               {s.found(items.length)}
             </p>
           )}
           <ul
             aria-busy={query.isFetching}
-            className="flex flex-col gap-2 data-[busy=true]:opacity-60"
+            className="divide-y divide-border data-[busy=true]:opacity-60"
             data-busy={query.isFetching && query.isPlaceholderData}
           >
             {items.slice(0, shown).map((o) => (
@@ -218,11 +231,12 @@ export function UpcomingTab({ isAdmin, onEdit, onDelete }: UpcomingTabProps) {
                 isAdmin={isAdmin}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                className="rounded-none border-0 bg-transparent px-0 py-3 shadow-none"
               />
             ))}
           </ul>
           {items.length > PAGE_SIZE && (
-            <div className="flex flex-col items-center gap-2">
+            <div className="mt-3 flex flex-col items-center gap-2">
               <p role="status" className="text-sm text-text-muted">
                 {s.showing(Math.min(shown, items.length), items.length)}
               </p>
@@ -236,7 +250,7 @@ export function UpcomingTab({ isAdmin, onEdit, onDelete }: UpcomingTabProps) {
               )}
             </div>
           )}
-        </>
+        </SectionCard>
       )}
     </div>
   )

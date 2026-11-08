@@ -23,35 +23,43 @@ function ageLabel(m: MemberSummary): string | null {
   return String(new Date().getFullYear() - m.birthYear)
 }
 
+// Năm sinh – mất cho thẻ điện thoại; thiếu năm nào thì để "?" (còn sống chỉ ghi năm sinh)
+function yearsLabel(m: MemberSummary): string {
+  if (!m.birthYear && !m.deathYear) return '—'
+  if (!m.isDeceased) return m.birthYear ? `Sinh ${m.birthYear}` : '—'
+  return `${m.birthYear ?? '?'} – ${m.deathYear ?? '?'}`
+}
+
+// Thẻ trong lưới 2 cột ở điện thoại (DESIGN §9): ảnh, tên tối đa 2 dòng, năm sinh – mất, badge trạng thái
 function MemberCard({ member }: { member: MemberSummary }) {
   return (
     <Link
       to={`/thanh-vien/${member.id}`}
-      className="block rounded-card border border-border bg-surface p-4 shadow-card hover:border-accent transition-colors focus-visible:outline-accent"
+      className="flex h-full cursor-pointer flex-col items-center gap-2 rounded-card border border-border bg-surface p-3 text-center shadow-card transition-colors duration-200 ease-out hover:border-accent focus-visible:outline-accent"
     >
-      <div className="flex gap-4">
-        {member.avatarUrl ? (
-          <img src={member.avatarUrl} alt="" className="size-12 rounded-full object-cover" />
-        ) : (
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-fg font-semibold text-lg">
-            {member.fullName.charAt(0).toUpperCase()}
-          </div>
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="min-w-0 font-semibold text-text [overflow-wrap:anywhere]">{member.fullName}</h3>
-            {member.isDeceased && (
-              <span className="shrink-0"><Badge tone="warning">Đã mất</Badge></span>
-            )}
-          </div>
-          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-text-muted">
-            {member.generation && <span>Đời: {member.generation}</span>}
-            {member.birthYear && <span>Sinh: {member.birthYear}</span>}
-            {member.deathYear && <span>Mất: {member.deathYear}</span>}
-            {ageLabel(member) && <span>Tuổi: {ageLabel(member)}</span>}
-          </div>
+      {member.avatarUrl ? (
+        <img
+          src={member.avatarUrl}
+          alt=""
+          loading="lazy"
+          className="size-16 rounded-full object-cover"
+        />
+      ) : (
+        <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-secondary text-2xl font-semibold text-secondary-fg">
+          {member.fullName.charAt(0).toUpperCase()}
         </div>
-      </div>
+      )}
+      <h3 className="line-clamp-2 leading-snug font-semibold text-text [overflow-wrap:anywhere]">
+        {member.fullName}
+      </h3>
+      <p className="text-sm text-text-muted tabular-nums">{yearsLabel(member)}</p>
+      <span className="mt-auto">
+        {member.isDeceased ? (
+          <Badge tone="warning">Đã mất</Badge>
+        ) : (
+          <Badge tone="success">Còn sống</Badge>
+        )}
+      </span>
     </Link>
   )
 }
@@ -74,9 +82,16 @@ function MemberTable({ members }: { members: MemberSummary[] }) {
           {members.map((m) => (
             <tr key={m.id} className="hover:bg-surface-muted transition-colors">
               <td className="px-4 py-3">
-                <Link to={`/thanh-vien/${m.id}`} className="flex items-center gap-3 hover:text-accent-text focus-visible:outline-accent">
+                <Link
+                  to={`/thanh-vien/${m.id}`}
+                  className="flex items-center gap-3 hover:text-accent-text focus-visible:outline-accent"
+                >
                   {m.avatarUrl ? (
-                    <img src={m.avatarUrl} alt="" className="size-8 shrink-0 rounded-full object-cover" />
+                    <img
+                      src={m.avatarUrl}
+                      alt=""
+                      className="size-8 shrink-0 rounded-full object-cover"
+                    />
                   ) : (
                     <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-fg font-medium text-xs">
                       {m.fullName.charAt(0).toUpperCase()}
@@ -90,7 +105,11 @@ function MemberTable({ members }: { members: MemberSummary[] }) {
               <td className="px-4 py-3">{m.deathYear || '-'}</td>
               <td className="px-4 py-3">{ageLabel(m) ?? '-'}</td>
               <td className="px-4 py-3">
-                {m.isDeceased ? <Badge tone="warning">Đã mất</Badge> : <Badge tone="success">Còn sống</Badge>}
+                {m.isDeceased ? (
+                  <Badge tone="warning">Đã mất</Badge>
+                ) : (
+                  <Badge tone="success">Còn sống</Badge>
+                )}
               </td>
             </tr>
           ))}
@@ -112,7 +131,13 @@ export function MemberList({
   const { list: str } = memberStrings
 
   if (isError) {
-    return <EmptyState icon={Users} title="Đã có lỗi xảy ra" description="Không thể tải danh sách thành viên." />
+    return (
+      <EmptyState
+        icon={Users}
+        title="Đã có lỗi xảy ra"
+        description="Không thể tải danh sách thành viên."
+      />
+    )
   }
 
   if (isLoading) {
@@ -138,17 +163,24 @@ export function MemberList({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Mobile list */}
-      <div className="flex flex-col gap-3 md:hidden">
-        {members.map(m => <MemberCard key={m.id} member={m} />)}
+      {/* Điện thoại: lưới 2 cột thẻ thành viên */}
+      <div className="grid grid-cols-2 gap-3 md:hidden">
+        {members.map((m) => (
+          <MemberCard key={m.id} member={m} />
+        ))}
       </div>
 
-      {/* Desktop table */}
+      {/* Máy tính: bảng */}
       <MemberTable members={members} />
 
       {totalPages > 1 && (
         <div className="mt-4">
-          <Pagination page={currentPage} totalPages={totalPages} onChange={onPageChange} labels={paginationLabels} />
+          <Pagination
+            page={currentPage}
+            totalPages={totalPages}
+            onChange={onPageChange}
+            labels={paginationLabels}
+          />
         </div>
       )}
     </div>

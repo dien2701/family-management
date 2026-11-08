@@ -205,11 +205,14 @@ Lấy bố cục và cảm giác của 5 ảnh mẫu trong `image/` (header nề
 |---|---|
 | **Header** (`layout/Header.tsx`) | Nền `--color-header`, viền dưới mờ. Điện thoại ở `/`: logo `favicon.svg` 36px + "Tộc Phả" (20px/700 primary), **không khẩu hiệu**; tên trang vẫn có `h1` cho trình đọc màn hình. Trang khác: quay lại + tên trang. Máy tính giữ bố cục cũ. |
 | **Thanh dưới** (`layout/BottomNav.tsx`) | Nền `--color-surface`, viền trên. Mục đang chọn: icon trong viên thuốc 56×32px nền `--color-secondary`, icon + chữ `--color-primary`, chữ 600. Mục khác: `--color-text-muted`, chữ 500. Mỗi mục cao ≥ 56px. |
-| **`SectionCard`** | Thẻ (Card) có tiêu đề mục **18px/700 màu primary** (icon 20px tùy chọn bên trái) và link "Xem tất cả" + chevron tùy chọn bên phải (`moreTo`), chữ 14px `--color-accent-text`, vùng chạm 44px. Padding 16px (24px ở ≥768px). |
+| **`SectionCard`** | Thẻ (Card) có tiêu đề mục **18px/700 màu primary** (icon 20px tùy chọn bên trái) và link "Xem tất cả" + chevron tùy chọn bên phải (`moreTo`), chữ 14px `--color-accent-text`, vùng chạm 44px; hoặc nút tự vẽ (`action`, ví dụ "Thêm", tháng trước/sau). Padding 16px (24px ở ≥768px). Thẻ con bên trong thì bỏ bóng (danh sách ngăn bằng đường kẻ, khối viền `rounded-field`), không lồng thẻ có bóng. |
+| **`FilterBar`** | Thanh lọc trong một thẻ (Thành viên, Sự kiện): điện thoại là ô tìm rồi **hàng chip có icon cuộn ngang trong thẻ** (chip `shrink-0`, giữ đủ chữ, trang không cuộn ngang); từ 768px tất cả một hàng, chip rộng cố định. |
 | **`ListRow`** / **`ListGroup`** | Dòng cao ≥ 56px: icon 24px primary (hoặc phần tử `leading`) · nhãn 16px/500 + mô tả 14px muted · chevron phải (hoặc `trailing`). Có `to`/`onClick` thì cả dòng bấm được, hover `--color-surface-muted` bo 12px. Nhiều dòng bọc trong `ListGroup` (một thẻ), ngăn bằng đường kẻ `--color-border` thụt theo lề nội dung. |
 | **`IconTile`** | Ô lối tắt: icon 24px trong ô 48px bo 12px nền `--color-secondary` + nhãn 14px/500 tối đa 2 dòng, căn giữa. Đặt trong lưới **4 cột** của một `SectionCard`. |
 | **`StickyActions`** | Thanh nút dính ngay trên thanh dưới ở điện thoại (`sticky`, nền surface, viền trên, các nút chia đều chiều ngang); tĩnh, căn phải ở máy tính. Đặt ở cuối nội dung trang. |
 | **Thẻ chào (Trang chủ)** | Không ảnh. Nền chuyển màu `--color-hero-from` → `--color-hero-to`, lời chào 24px/700 primary (theo tên tài khoản, khách chỉ "Xin chào") + một câu phụ, ô "Sự kiện gần nhất" nền surface 80% (icon loại, tên, ngày dương/âm, số ngày còn lại), 2 nút "Xem cây" (primary) và "Xem lịch" (nền surface). |
+
+Đợt 47: **Thêm** = thẻ tài khoản (ảnh 64px, tên 20px/700 primary, email, badge vai trò, dòng "Hồ sơ cá nhân") → nhóm `SectionCard` + `ListRow`: Tiện ích · Gia đình · Quản trị (Admin) · Khác → nút Đăng xuất. **Thành viên** điện thoại: lưới 2 cột thẻ (ảnh 64px, tên tối đa 2 dòng, năm sinh – mất, badge); máy tính giữ bảng. **Hồ sơ thành viên**: nút Sửa/Xóa trong `StickyActions` ở điện thoại, đầu trang ở máy tính.
 
 Thứ tự Trang chủ: thẻ chào → việc chờ Admin (nếu có) → "Lối tắt" (`IconTile`) → "Gia phả" (số liệu) → "Sắp tới (30 ngày)" và "Mới diễn ra" (`SectionCard` + `ListRow`).
 
