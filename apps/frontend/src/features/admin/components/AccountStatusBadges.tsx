@@ -18,5 +18,5 @@ export function AccountStatusBadge({ account }: { account: AccountAdmin }) {
 
 export function AccountRoleBadge({ account }: { account: AccountAdmin }) {
   const role = account.systemRole ?? 'USER'
-  return <Badge>{s.role[role]}</Badge>
+  return <Badge>{account.rootAdmin ? s.rootAdmin : s.role[role]}</Badge>
 }

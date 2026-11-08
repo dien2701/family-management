@@ -23,13 +23,16 @@ export function actionsFor(account: AccountAdmin, selfId: number | undefined): A
     case 'deleted':
       return ['restore']
     case 'waiting':
-      return isSelf ? [] : ['approve', 'reject']
+      if (isSelf) return []
+      return account.rootAdmin ? ['approve'] : ['approve', 'reject']
     case 'rejected':
       return ['approve']
     case 'locked':
       return ['unlock']
     case 'approved': {
+      // Admin gốc không bị gỡ quyền hay khóa (backend chặn bằng `ROOT_ADMIN_PROTECTED`, DECISIONS #98)
       if (isSelf) return []
+      if (account.rootAdmin) return account.systemRole === 'ADMIN' ? [] : ['grant-admin']
       return account.systemRole === 'ADMIN' ? ['revoke-admin', 'lock'] : ['grant-admin', 'lock']
     }
   }
@@ -53,7 +56,7 @@ export function linkActionFor(account: AccountAdmin, selfId: number | undefined)
  */
 export function canDelete(account: AccountAdmin, selfId: number | undefined): boolean {
   if (account.id !== undefined && account.id === selfId) return false
-  return !account.deletedAt && (account.systemRole ?? 'USER') === 'USER'
+  return !account.rootAdmin && !account.deletedAt && (account.systemRole ?? 'USER') === 'USER'
 }
 
 /** Giá trị của ô lọc "Trạng thái" ở tab Tất cả. */

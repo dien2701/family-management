@@ -49,7 +49,7 @@ public class OpenApiConfig {
                                         + "`TREE_NODE_NOT_FOUND`, `RELATIVE_NOT_FOUND`, `LINK_REQUEST_NOT_FOUND`, "
                                         + "`AUDIT_NOT_FOUND`)"))
                         .addResponses("Conflict", problem(
-                                "Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `INVALID_ACCOUNT_STATE`, "
+                                "Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `ROOT_ADMIN_PROTECTED`, `INVALID_ACCOUNT_STATE`, "
                                         + "`MEMBER_ON_TREE`, `RELATIVE_EXISTS`, `MEMBER_ALREADY_LINKED`, "
                                         + "`ACCOUNT_ALREADY_LINKED`, `LINK_REQUEST_EXISTS`, `LINK_REQUEST_NOT_PENDING`, "
                                         + "`NOT_LINKED`, các mã cây `MEMBER_ALREADY_ON_TREE`, `TREE_*`)"))

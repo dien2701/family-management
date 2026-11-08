@@ -17,5 +17,6 @@ public interface UserAccountMapper {
 
     /** {@code member} cần tên từ module member nên {@code AdminAccountService} gắn sau bằng {@code withMember}. */
     @Mapping(target = "member", ignore = true)
+    @Mapping(target = "rootAdmin", ignore = true)
     AccountAdminResponse toAdminView(UserAccount user);
 }

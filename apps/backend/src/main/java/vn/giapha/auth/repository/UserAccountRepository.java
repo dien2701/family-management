@@ -25,14 +25,6 @@ public interface UserAccountRepository
     /** Tài khoản thật (đã xác thực OTP), chưa bị xóa, đang ở một trạng thái duyệt; dùng cho thẻ "chờ duyệt" ở dashboard. */
     long countByApprovalStatusAndStatusNotAndDeletedAtIsNull(ApprovalStatus approvalStatus, AccountStatus status);
 
-    /** Có Admin dùng được (ACTIVE và đã duyệt) hay chưa; Admin bị khóa/từ chối không tính. */
-    @Query("""
-            select count(u) > 0 from UserAccount u
-            where u.systemRole = vn.giapha.auth.entity.SystemRole.ADMIN
-              and u.status = vn.giapha.auth.entity.AccountStatus.ACTIVE
-              and u.approvalStatus = vn.giapha.auth.entity.ApprovalStatus.APPROVED""")
-    boolean existsUsableAdmin();
-
     /** Id các Admin dùng được (ACTIVE và đã duyệt); dùng để báo mọi Admin (thông báo, Đợt 34). */
     @Query("""
             select u.id from UserAccount u

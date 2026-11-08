@@ -62,7 +62,9 @@ export function AccountList({ accounts, selfId, onOpen, onAction }: AccountListP
                 {(status !== 'approved' || account.systemRole === 'ADMIN') && (
                   <span className="flex flex-wrap gap-1.5">
                     {status !== 'approved' && <AccountStatusBadge account={account} />}
-                    {account.systemRole === 'ADMIN' && <Badge>{s.role.ADMIN}</Badge>}
+                    {account.systemRole === 'ADMIN' && (
+                      <Badge>{account.rootAdmin ? s.rootAdmin : s.role.ADMIN}</Badge>
+                    )}
                   </span>
                 )}
               </span>

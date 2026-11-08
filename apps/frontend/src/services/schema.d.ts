@@ -2194,6 +2194,8 @@ export interface components {
              * @description Thời điểm Admin xóa tài khoản; `null` khi chưa xóa (DECISIONS
              */
             deletedAt?: string | null;
+            /** @description Admin gốc (email `ROOT_ADMIN_EMAIL`); Admin khác không gỡ quyền, khóa, từ chối hay xóa được (DECISIONS */
+            rootAdmin?: boolean;
         };
         LunarMonthInfoResponse: {
             /** Format: int32 */
@@ -2825,7 +2827,7 @@ export interface components {
                 "application/problem+json": components["schemas"]["ProblemDetail"];
             };
         };
-        /** @description Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `INVALID_ACCOUNT_STATE`, `MEMBER_ON_TREE`, `RELATIVE_EXISTS`, `MEMBER_ALREADY_LINKED`, `ACCOUNT_ALREADY_LINKED`, `LINK_REQUEST_EXISTS`, `LINK_REQUEST_NOT_PENDING`, `NOT_LINKED`, các mã cây `MEMBER_ALREADY_ON_TREE`, `TREE_*`) */
+        /** @description Xung đột trạng thái (`SELF_ACTION_FORBIDDEN`, `LAST_ADMIN`, `ROOT_ADMIN_PROTECTED`, `INVALID_ACCOUNT_STATE`, `MEMBER_ON_TREE`, `RELATIVE_EXISTS`, `MEMBER_ALREADY_LINKED`, `ACCOUNT_ALREADY_LINKED`, `LINK_REQUEST_EXISTS`, `LINK_REQUEST_NOT_PENDING`, `NOT_LINKED`, các mã cây `MEMBER_ALREADY_ON_TREE`, `TREE_*`) */
         Conflict: {
             headers: {
                 [name: string]: unknown;

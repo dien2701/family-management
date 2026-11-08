@@ -56,11 +56,12 @@ public class AdminAccountService {
     private final AccountLinking linking;
     private final MemberDirectory members;
     private final ApplicationEventPublisher events;
+    private final RootAdminService root;
     private final Clock clock;
 
     AdminAccountService(UserAccountRepository users, RefreshTokenService refreshTokens, AuditLogWriter audit,
             UserAccountMapper mapper, AccountLinking linking, MemberDirectory members,
-            ApplicationEventPublisher events, Clock clock) {
+            ApplicationEventPublisher events, RootAdminService root, Clock clock) {
         this.users = users;
         this.refreshTokens = refreshTokens;
         this.audit = audit;
@@ -68,6 +69,7 @@ public class AdminAccountService {
         this.linking = linking;
         this.members = members;
         this.events = events;
+        this.root = root;
         this.clock = clock;
     }
 
@@ -85,7 +87,8 @@ public class AdminAccountService {
         requireAdmin(users.findById(actorId).orElse(null));
         Page<UserAccount> result = users.findAll(specOf(filter),
                 PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id"))));
-        PageResponse<AccountAdminResponse> response = PageResponse.of(result, mapper::toAdminView);
+        PageResponse<AccountAdminResponse> response = PageResponse.of(result,
+                u -> mapper.toAdminView(u).withRootAdmin(root.isRoot(u)));
         Map<Long, String> names = members.fullNames(
                 response.items().stream().map(AccountAdminResponse::memberId).filter(Objects::nonNull).toList());
         return new PageResponse<>(response.items().stream().map(item -> withMember(item, names)).toList(), response.page(),
@@ -109,6 +112,7 @@ public class AdminAccountService {
     public AccountAdminResponse reject(Long actorId, Long targetId) {
         return mutate(actorId, targetId, "REJECT", (actor, target, admins) -> {
             forbidSelf(actor, target);
+            forbidRoot(target);
             requireApproval(target, ApprovalStatus.WAITING, ApprovalStatus.APPROVED);
             assertNotLastAdmin(target, admins);
             target.reject();
@@ -122,6 +126,7 @@ public class AdminAccountService {
     public AccountAdminResponse lock(Long actorId, Long targetId) {
         return mutate(actorId, targetId, "LOCK", (actor, target, admins) -> {
             forbidSelf(actor, target);
+            forbidRoot(target);
             requireStatus(target, AccountStatus.ACTIVE);
             assertNotLastAdmin(target, admins);
             target.setStatus(AccountStatus.LOCKED);
@@ -158,6 +163,7 @@ public class AdminAccountService {
     public AccountAdminResponse revokeAdmin(Long actorId, Long targetId) {
         return mutate(actorId, targetId, "REVOKE_ADMIN", (actor, target, admins) -> {
             forbidSelf(actor, target);
+            forbidRoot(target);
             if (target.getSystemRole() != SystemRole.ADMIN) {
                 throw invalidState();
             }
@@ -177,6 +183,7 @@ public class AdminAccountService {
     public AccountAdminResponse delete(Long actorId, Long targetId) {
         return mutate(actorId, targetId, "DELETE", (actor, target, admins) -> {
             forbidSelf(actor, target);
+            forbidRoot(target);
             if (target.getSystemRole() != SystemRole.USER) {
                 throw invalidState();
             }
@@ -237,7 +244,7 @@ public class AdminAccountService {
     }
 
     private AccountAdminResponse view(UserAccount user) {
-        AccountAdminResponse response = mapper.toAdminView(user);
+        AccountAdminResponse response = mapper.toAdminView(user).withRootAdmin(root.isRoot(user));
         if (user.getMemberId() == null) {
             return response;
         }
@@ -264,6 +271,14 @@ public class AdminAccountService {
         if (actor.getId().equals(target.getId())) {
             throw new BusinessException(HttpStatus.CONFLICT, "SELF_ACTION_FORBIDDEN",
                     "Bạn không thể tự thực hiện thao tác này với chính mình.");
+        }
+    }
+
+    /** Admin gốc không bị Admin khác hạ cấp (DECISIONS #98). */
+    private void forbidRoot(UserAccount target) {
+        if (root.isRoot(target)) {
+            throw new BusinessException(HttpStatus.CONFLICT, "ROOT_ADMIN_PROTECTED",
+                    "Đây là Admin gốc của hệ thống, không thể gỡ quyền, khóa, từ chối hay xóa.");
         }
     }
 

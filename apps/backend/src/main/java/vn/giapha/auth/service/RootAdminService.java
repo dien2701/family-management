@@ -20,8 +20,9 @@ import vn.giapha.common.audit.AuditLogWriter;
 import vn.giapha.config.AppProperties;
 
 /**
- * Admin gốc (IDEA §3, DECISIONS #55): email khai ở {@code ROOT_ADMIN_EMAIL} tự thành ADMIN + APPROVED khi xác thực OTP
- * hoặc đăng nhập (mật khẩu, Google), nhưng chỉ khi hệ thống chưa có Admin nào. Sau đó là Admin như mọi Admin khác.
+ * Admin gốc (IDEA §3, DECISIONS #55, #98): email khai ở {@code ROOT_ADMIN_EMAIL} tự thành ADMIN + APPROVED mỗi khi
+ * xác thực OTP hoặc đăng nhập (mật khẩu, Google), kể cả khi đã có Admin khác. Quyền như mọi Admin, nhưng Admin khác
+ * không gỡ quyền, khóa, từ chối hay xóa được (chặn ở {@code AdminAccountService}).
  */
 @Service
 public class RootAdminService {
@@ -41,26 +42,28 @@ public class RootAdminService {
         this.rootEmail = props.rootAdminEmail().trim().toLowerCase(Locale.ROOT);
     }
 
+    /** Tài khoản này có phải Admin gốc (email trùng {@code ROOT_ADMIN_EMAIL}) không. */
+    public boolean isRoot(UserAccount user) {
+        return !rootEmail.isEmpty() && rootEmail.equals(user.getEmail());
+    }
+
     /**
-     * Nâng {@code user} lên Admin nếu là email gốc và chưa có Admin dùng được nào (ACTIVE, đã duyệt; Admin bị khóa/từ chối không tính, để Admin gốc còn cứu được hệ thống); trả bản để phát token.
+     * Nâng {@code user} lên ADMIN + APPROVED nếu là email gốc và chưa đủ cả hai; trả bản để phát token.
      *
-     * <p>Đã có Admin thì thoát ngay, không khóa gì (trường hợp thường gặp). Chưa có thì khóa dòng tài khoản, đọc lại
-     * bằng đọc-khóa (thấy thay đổi mới nhất của request song song, không dùng snapshot của transaction) rồi mới quyết,
-     * nên hai request cùng email chỉ nâng một lần. Chỉ một email khai được là Admin gốc nên không có hai tài khoản
-     * khác nhau cùng được nâng.
+     * <p>Đã là Admin đã duyệt thì thoát ngay, không khóa gì (trường hợp thường gặp). Chưa thì khóa dòng tài khoản, đọc
+     * lại bằng đọc-khóa (thấy thay đổi mới nhất của request song song, không dùng snapshot của transaction) rồi mới
+     * quyết, nên hai request cùng email chỉ nâng một lần.
      */
     @Transactional
     public UserAccount promoteIfRoot(UserAccount user) {
-        if (rootEmail.isEmpty() || !rootEmail.equals(user.getEmail()) || user.getStatus() != AccountStatus.ACTIVE
-                || users.existsUsableAdmin()) {
+        if (!isRoot(user) || user.getStatus() != AccountStatus.ACTIVE || isPromoted(user)) {
             return user;
         }
         UserAccount locked = users.findById(user.getId()).orElse(user);
         // Đẩy thay đổi chưa ghi của transaction gọi (vd. vừa chuyển ACTIVE) xuống DB trước khi khóa và đọc lại
         users.flush();
         em.refresh(locked, LockModeType.PESSIMISTIC_WRITE);
-        if (locked.getStatus() != AccountStatus.ACTIVE || locked.getSystemRole() == SystemRole.ADMIN
-                || users.lockAllAdmins().stream().anyMatch(UserAccount::isActiveAndApproved)) {
+        if (locked.getStatus() != AccountStatus.ACTIVE || isPromoted(locked)) {
             return locked;
         }
         Map<String, Object> before = Map.of("systemRole", locked.getSystemRole(),
@@ -70,5 +73,9 @@ public class RootAdminService {
         audit.write(locked.getId(), "ROOT_ADMIN_PROMOTE", "ACCOUNT", locked.getId(), before,
                 Map.of("systemRole", SystemRole.ADMIN, "approvalStatus", ApprovalStatus.APPROVED));
         return locked;
+    }
+
+    private static boolean isPromoted(UserAccount u) {
+        return u.getSystemRole() == SystemRole.ADMIN && u.getApprovalStatus() == ApprovalStatus.APPROVED;
     }
 }

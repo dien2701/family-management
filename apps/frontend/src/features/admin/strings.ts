@@ -118,6 +118,7 @@ export const adminStrings = {
     deleted: 'Đã xóa',
   },
   role: { ADMIN: 'Admin', USER: 'User' },
+  rootAdmin: 'Admin gốc',
   pagination: {
     label: 'Phân trang',
     first: 'Về trang đầu',
@@ -206,6 +207,7 @@ export const accountActionText: Record<AccountAction, ActionText> = {
 export const accountErrorText: Record<string, string> = {
   LAST_ADMIN:
     'Đây là Admin cuối cùng của hệ thống. Hãy cấp quyền Admin cho người khác trước.',
+  ROOT_ADMIN_PROTECTED: 'Đây là Admin gốc của hệ thống, không thể gỡ quyền, khóa, từ chối hay xóa.',
   SELF_ACTION_FORBIDDEN: 'Bạn không thể tự thực hiện thao tác này với chính mình.',
   INVALID_ACCOUNT_STATE:
     'Trạng thái tài khoản đã thay đổi nên không thực hiện được. Danh sách đã được tải lại.',

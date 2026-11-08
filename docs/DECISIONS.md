@@ -479,6 +479,16 @@
     - **Tài khoản đã xóa** không hiện ở tab Chờ duyệt/Tất cả, không tính vào số chờ duyệt; mọi thao tác khác ngoài Khôi phục trả 409 `INVALID_ACCOUNT_STATE`.
     - **Giao diện:** tab thứ 3 "Đã xóa" ở trang Người dùng (luôn có, kể cả khi tắt duyệt), nút Khôi phục ngay dưới hàng; nút "Xóa tài khoản" màu đỏ ở cuối hộp chi tiết tài khoản.
 
+## W. Admin gốc (chốt 2026-11-08, hỏi đáp với người dùng)
+
+98. **Tài khoản có email `ROOT_ADMIN_EMAIL` là Admin gốc: luôn là Admin, Admin khác không hạ cấp được** (thay phần "chỉ nâng khi chưa có Admin" của #55; không đổi schema)
+    → **Chốt:**
+    - **Email:** `dientrinh2701@gmail.com`, đặt ở `ROOT_ADMIN_EMAIL` trong `.env` (dev và VPS).
+    - **Luôn là Admin:** mỗi lần xác thực OTP, đăng nhập mật khẩu hoặc Google, tài khoản ACTIVE có email này được nâng lên ADMIN + APPROVED nếu chưa đủ, kể cả khi đã có Admin khác (ghi audit `ROOT_ADMIN_PROMOTE`).
+    - **Được bảo vệ:** Admin khác không gỡ quyền, khóa, từ chối duyệt hay xóa được (409 `ROOT_ADMIN_PROTECTED`). Các thao tác khác (duyệt, mở khóa, gán/hủy liên kết) vẫn như cũ.
+    - **Không có quyền riêng:** Admin gốc làm được đúng như mọi Admin.
+    - **Giao diện:** `AccountAdminResponse.rootAdmin`; trang Người dùng hiện nhãn "Admin gốc" thay cho "Admin" và ẩn các nút bị chặn.
+
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.
 - Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt. Cần cập nhật khi duyệt: Trợ lý AI nay mở cho khách (#91) và giọng nói do trình duyệt xử lý (#92).

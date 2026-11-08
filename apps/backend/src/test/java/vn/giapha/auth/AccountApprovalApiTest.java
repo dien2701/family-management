@@ -142,21 +142,6 @@ class AccountApprovalApiTest {
     }
 
     @Test
-    void rootEmailIsNotPromotedWhileAnotherAdminExists() throws Exception {
-        long rootId = insertActiveRoot();
-        accounts.admin();
-
-        MvcResult verified = registerAndVerifyOther();
-        loginRoot().andExpect(status().isOk()).andExpect(jsonPath("$.user.systemRole").value("USER"));
-
-        assertThat(verified.getResponse().getContentAsString()).contains("\"systemRole\":\"USER\"");
-        assertThat(roleOf(ROOT_EMAIL)).isEqualTo("USER");
-        assertThat(approvalOf(ROOT_EMAIL)).isEqualTo("WAITING");
-        assertThat(count("SELECT COUNT(*) FROM audit_log WHERE action = 'ROOT_ADMIN_PROMOTE' AND actor_id = ?",
-                rootId)).isZero();
-    }
-
-    @Test
     void lockedOrRejectedAdminsDoNotBlockRootPromotion() throws Exception {
         insertActiveRoot();
         Session locked = accounts.admin();
