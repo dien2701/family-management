@@ -81,12 +81,12 @@
 | 44 | Bài khấn: Admin soạn mẫu, người dùng điền thông tin cá nhân | Claude Code | Sonnet · high | ✅ 2026-10-15 |
 | 45 | Trợ lý AI: nhiều đoạn chat | Claude Code | Sonnet · high | ✅ 2026-10-15 |
 | **GĐ E** | **Làm lại giao diện ưu tiên điện thoại (DECISIONS #96)** | | | |
-| 46 | Token, khung chung (header, thanh dưới, thẻ dùng chung) và Trang chủ | Claude Code | Sonnet · high | ⬜ |
+| 46 | Token, khung chung (header, thanh dưới, thẻ dùng chung) và Trang chủ | Claude Code | Sonnet · high | ✅ 2026-11-08 |
 | 47 | Thêm, Hồ sơ cá nhân, Cài đặt, Thành viên, Sự kiện | Claude Code | Sonnet · medium | ⬜ |
 | 48 | Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm | Claude Code | Sonnet · medium | ⬜ |
 | 49 | Quản trị và nhóm trang đăng nhập | Claude Code | Sonnet · medium | ⬜ |
 
-## ▶️ Đợt tiếp theo: Đợt 46 — Token, khung chung và Trang chủ
+## ▶️ Đợt tiếp theo: Đợt 47 — Thêm, Hồ sơ cá nhân, Cài đặt, Thành viên, Sự kiện
 
 ---
 
@@ -1149,19 +1149,21 @@ DECISIONS #91, #92, **#94** · `.claude/rules/security.md` · FE đọc `docs/DE
 > **Chốt 2026-11-08 (DECISIONS #96).** Tham khảo bố cục 5 ảnh trong `image/` (không lấy nội dung bán hàng). Giữ navy và token cũ, thêm token mới; máy tính đổi theo token nhưng giữ bố cục.
 > Mọi đợt: gọi skill `ui-ux-pro-max`, đọc `docs/DESIGN.md` (sau Đợt 46 đã có mục 9), không đổi API, không đổi logic hay quyền. Kiểm tay ở 375px, 1280px, sáng và tối, không cuộn ngang.
 
-### Đợt 46 — Token, khung chung và Trang chủ
+### Đợt 46 — Token, khung chung và Trang chủ ✅ 2026-11-08
 DECISIONS #96 · `docs/DESIGN.md` · ảnh `image/`
-- [ ] **Token** (`src/index.css`, cả `:root.dark`): nền header xanh nhạt, nền thẻ chào chuyển màu nhạt, bóng thẻ mềm hơn. Cập nhật `docs/DESIGN.md` (bảng token, mục 3, 4, 6) và thêm **mục 9 "Mẫu điện thoại"** mô tả các thành phần dưới đây.
-- [ ] **Header** (`layout/Header.tsx`): nền xanh nhạt. Ở `/` trên điện thoại là header thương hiệu (logo `favicon.svg` + "Tộc Phả", không khẩu hiệu); trang khác giữ quay lại + tên trang. Máy tính giữ bố cục.
-- [ ] **Thanh dưới** (`layout/BottomNav.tsx`): bỏ tô kín; mục đang chọn icon + chữ màu primary, chữ 600, nền nhạt quanh icon. Giữ 5 mục, vùng chạm ≥ 44px, safe area.
-- [ ] **Thành phần dùng chung** (`components/shared`), chỉ thêm khi ≥ 2 trang dùng:
+- [x] **Token** (`src/index.css`, cả `:root.dark`): nền header xanh nhạt, nền thẻ chào chuyển màu nhạt, bóng thẻ mềm hơn. Cập nhật `docs/DESIGN.md` (bảng token, mục 3, 4, 6) và thêm **mục 9 "Mẫu điện thoại"** mô tả các thành phần dưới đây. ✅ 2026-11-08
+- [x] **Header** (`layout/Header.tsx`): nền xanh nhạt. Ở `/` trên điện thoại là header thương hiệu (logo `favicon.svg` + "Tộc Phả", không khẩu hiệu); trang khác giữ quay lại + tên trang. Máy tính giữ bố cục. ✅ 2026-11-08
+- [x] **Thanh dưới** (`layout/BottomNav.tsx`): bỏ tô kín; mục đang chọn icon + chữ màu primary, chữ 600, nền nhạt quanh icon. Giữ 5 mục, vùng chạm ≥ 44px, safe area. ✅ 2026-11-08
+- [x] **Thành phần dùng chung** (`components/shared`), chỉ thêm khi ≥ 2 trang dùng: ✅ 2026-11-08
   - `SectionCard`: thẻ có tiêu đề mục (18px/700 primary) và link "Xem tất cả" tùy chọn bên phải.
   - `ListRow`: icon trái, nhãn + mô tả, chevron phải, cao ≥ 56px; nhóm nhiều dòng trong một thẻ, ngăn bằng đường kẻ.
   - `IconTile`: ô lối tắt (icon trong ô bo 12px nền secondary + nhãn 14px tối đa 2 dòng), dùng trong lưới 4 cột.
   - `StickyActions`: thanh nút dính ngay trên thanh dưới ở điện thoại (như nút "Đặt hàng" của mẫu), tĩnh ở máy tính.
-- [ ] **Trang chủ** (`DashboardPage`): thẻ chào không ảnh (lời chào theo tài khoản hoặc khách, sự kiện gần nhất, nút "Xem cây" và "Xem lịch") → thẻ "Lối tắt" lưới 4 cột `IconTile` (thay `QuickLinkTile`) → số liệu → Sắp tới / Mới diễn ra trong `SectionCard`. Giữ đúng dữ liệu và quyền hiện có.
+- [x] **Trang chủ** (`DashboardPage`): thẻ chào không ảnh (lời chào theo tài khoản hoặc khách, sự kiện gần nhất, nút "Xem cây" và "Xem lịch") → thẻ "Lối tắt" lưới 4 cột `IconTile` (thay `QuickLinkTile`) → số liệu → Sắp tới / Mới diễn ra trong `SectionCard`. Giữ đúng dữ liệu và quyền hiện có. ✅ 2026-11-08
 
-**✅ Đã làm:** (điền khi xong)
+**✅ Đã làm:** Token mới `--color-header`, `--color-hero-from/-to`, `--shadow-card` mềm hơn (sáng + tối) trong `src/index.css`; `docs/DESIGN.md` cập nhật bảng token, mục 3, 4, 6, 8.1 và thêm mục 9. Header nền xanh nhạt, header thương hiệu ở `/` trên điện thoại (`h1` tên trang vẫn còn cho trình đọc màn hình); thanh dưới bỏ tô kín, viên thuốc nền secondary quanh icon.
+Thêm `components/shared/{SectionCard,ListRow,IconTile,StickyActions}.tsx` (`ListRow.tsx` có kèm `ListGroup`). `DashboardPage`: thẻ chào chuyển màu (thay thẻ navy "Sự kiện sắp tới") → việc chờ Admin → Lối tắt 4 ô (Thành viên, Bài khấn, Trợ lý AI, Đổi lịch âm – dương; Cây và Sự kiện thành 2 nút ở thẻ chào) → số liệu → Sắp tới / Mới diễn ra trong `SectionCard` + `ListRow` có link "Xem tất cả" tới `/lich`. Bỏ `QuickLinkTile`, gọn `dashboard/strings.ts`.
+Việc nên làm thêm: `StickyActions` chưa trang nào dùng (Đợt 47–48 dùng); `text-danger-fg` ở chấm đếm chuông và `ProposalsPage`/`MyProposalsPage` chưa có token tương ứng (đã có từ trước, không sửa ở đợt này).
 
 ---
 

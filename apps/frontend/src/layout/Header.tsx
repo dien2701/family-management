@@ -6,6 +6,7 @@ import { isApproved } from '@/features/auth/routing'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouteTitle } from '@/hooks/useRouteTitle'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { cn } from '@/utils/cn'
 import { useUnreadCount } from '@/features/notification/hooks'
 import { ThemeToggle } from './ThemeToggle'
 import { UserMenu } from './UserMenu'
@@ -51,23 +52,45 @@ export function Header() {
   const { user } = useAuth()
   // key='default' nghĩa là trang đầu tiên của phiên, chưa có gì để quay lại trong app
   const canGoBack = location.key !== 'default'
+  // Trang chủ trên điện thoại: header thương hiệu thay cho quay lại + tên trang (DECISIONS #96)
+  const isHome = location.pathname === '/'
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-surface">
+    <header className="sticky top-0 z-30 border-b border-border/60 bg-header">
       <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-2 px-4 md:px-6 lg:h-16 lg:gap-4">
+        {isHome && (
+          <Link
+            to="/"
+            aria-label="Tộc Phả – về Trang chủ"
+            className="-ml-1 flex min-h-11 items-center gap-2 rounded-button pr-2 md:hidden"
+          >
+            <img src="/favicon.svg" alt="" width={36} height={36} className="size-9" />
+            <span className="text-xl leading-tight font-bold text-primary">Tộc Phả</span>
+          </Link>
+        )}
+
         {canGoBack && (
           <Button
             variant="ghost"
             size="icon"
             aria-label="Quay lại"
-            className="-ml-2"
+            className={cn('-ml-2', isHome && 'max-md:hidden')}
             onClick={() => void navigate(-1)}
           >
             <ArrowLeft />
           </Button>
         )}
 
-        <h1 className="min-w-0 flex-1 truncate text-xl leading-tight font-bold md:text-2xl">{title}</h1>
+        {/* Ở trang chủ trên điện thoại tên trang chỉ còn cho trình đọc màn hình, chỗ trống đẩy nút sang phải */}
+        <h1
+          className={cn(
+            'min-w-0 flex-1 truncate text-xl leading-tight font-bold md:text-2xl',
+            isHome && 'max-md:sr-only',
+          )}
+        >
+          {title}
+        </h1>
+        {isHome && <span className="flex-1 md:hidden" aria-hidden="true" />}
 
         <ThemeToggle />
 

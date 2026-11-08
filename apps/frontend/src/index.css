@@ -30,11 +30,15 @@
   --color-event-memorial: #6d4aa8;
   --color-event-birthday: #1c9be6;
   --color-event-custom: #c77700;
+  /* Mẫu điện thoại (DECISIONS #96, DESIGN §9) */
+  --color-header: #d6e6f5;
+  --color-hero-from: #d9e8f7;
+  --color-hero-to: #f7fafd;
 
   --radius-button: 10px;
   --radius-field: 12px;
   --radius-card: 16px;
-  --shadow-card: 0 1px 2px rgb(15 27 45 / 0.06);
+  --shadow-card: 0 2px 12px rgb(36 70 111 / 0.08);
   --shadow-overlay: 0 8px 24px rgb(15 27 45 / 0.16);
 
   --breakpoint-md: 768px;
@@ -94,7 +98,10 @@
   --color-event-memorial: #b79af0;
   --color-event-birthday: #4db4f2;
   --color-event-custom: #f0a94a;
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+  --color-header: #172539;
+  --color-hero-from: #1e3352;
+  --color-hero-to: #16202f;
+  --shadow-card: 0 2px 12px rgb(0 0 0 / 0.35);
   --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
 }
 

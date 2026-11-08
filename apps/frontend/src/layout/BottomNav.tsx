@@ -3,7 +3,8 @@ import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/utils/cn'
 import { navItemsFor } from './navItems'
 
-// <768px: đúng 5 mục, icon 24px + nhãn 12px, chừa vùng an toàn của tai thỏ (DESIGN §4, §6)
+// <768px: đúng 5 mục, icon 24px + nhãn 12px, chừa vùng an toàn của tai thỏ (DESIGN §4, §6).
+// Mục đang chọn không tô kín: icon + chữ màu primary, nền nhạt quanh icon (DECISIONS #96, DESIGN §9)
 export function BottomNav() {
   const { pathname } = useLocation()
   const { user } = useAuth()
@@ -21,17 +22,24 @@ export function BottomNav() {
               <NavLink
                 to={to}
                 end={end}
-                className={({ isActive }) =>
-                  cn(
-                    'flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-button text-xs font-medium whitespace-nowrap transition-colors duration-200 ease-out',
-                    isActive || inside
-                      ? 'bg-primary text-primary-fg'
-                      : 'text-text-muted hover:bg-surface-muted hover:text-text',
-                  )
-                }
+                className="group flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-button text-xs whitespace-nowrap"
               >
-                <Icon className="size-6" aria-hidden="true" />
-                <span>{label}</span>
+                {({ isActive }) => {
+                  const on = isActive || inside
+                  return (
+                    <>
+                      <span
+                        className={cn(
+                          'flex h-8 w-14 items-center justify-center rounded-full transition-colors duration-200 ease-out',
+                          on ? 'bg-secondary text-primary' : 'text-text-muted group-hover:bg-surface-muted',
+                        )}
+                      >
+                        <Icon className="size-6" aria-hidden="true" />
+                      </span>
+                      <span className={on ? 'font-semibold text-primary' : 'font-medium text-text-muted'}>{label}</span>
+                    </>
+                  )
+                }}
               </NavLink>
             </li>
           )
