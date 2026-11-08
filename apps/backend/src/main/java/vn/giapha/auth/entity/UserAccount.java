@@ -70,6 +70,12 @@ public class UserAccount {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
+
     protected UserAccount() {
     }
 
@@ -191,5 +197,36 @@ public class UserAccount {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
+
+    /**
+     * Xóa mềm (DECISIONS #97): đang mở thì khóa với lý do DELETED; đang bị khóa vì lý do khác thì giữ nguyên lý do đó
+     * để khôi phục về đúng trạng thái cũ. Liên kết "Tôi là ai" giữ nguyên.
+     */
+    public void markDeleted(Long adminId, Instant at) {
+        this.deletedAt = at;
+        this.deletedBy = adminId;
+        if (status == AccountStatus.ACTIVE) {
+            this.status = AccountStatus.LOCKED;
+            this.lockReason = LockReason.DELETED;
+        }
+    }
+
+    /** Khôi phục: chỉ mở khóa khi khóa là do xóa. */
+    public void restore() {
+        this.deletedAt = null;
+        this.deletedBy = null;
+        if (lockReason == LockReason.DELETED) {
+            this.status = AccountStatus.ACTIVE;
+            this.lockReason = null;
+        }
     }
 }

@@ -20,6 +20,12 @@ import { useAccountParams, type AccountTab } from '../useAccountParams'
 
 const SEARCH_DEBOUNCE_MS = 300
 
+const TAB_LABEL: Record<AccountTab, string> = {
+  waiting: s.accounts.tabWaiting,
+  all: s.accounts.tabAll,
+  deleted: s.accounts.tabDeleted,
+}
+
 type Pending = { account: AccountAdmin; action: AccountAction }
 
 function errorMessage(error: unknown): string {
@@ -29,12 +35,15 @@ function errorMessage(error: unknown): string {
   return 'Có lỗi xảy ra, vui lòng thử lại.'
 }
 
-// Quản trị > Tài khoản (IDEA §6.10): duyệt, từ chối, khóa, mở khóa, cấp/gỡ Admin. Quyền do backend quyết định.
+// Quản trị > Người dùng (IDEA §6.10): duyệt, từ chối, khóa, mở khóa, cấp/gỡ Admin, xóa và khôi phục (DECISIONS #97).
+// Quyền do backend quyết định.
 export function AccountsPage() {
   const { user } = useAuth()
   // Backend tắt duyệt tài khoản (`approvalRequired` false): không có tab Chờ duyệt, tài khoản mới tự vào dùng
   const approvalRequired = user?.approvalRequired !== false
   const { tab, q, status, role, page, query, update } = useAccountParams(approvalRequired)
+  // Tắt duyệt thì không có tab Chờ duyệt; tab Đã xóa luôn có (DECISIONS #97)
+  const tabs: AccountTab[] = approvalRequired ? ['waiting', 'all', 'deleted'] : ['all', 'deleted']
   const accounts = useAccounts(query)
   const waitingCount = useWaitingCount()
   const action = useAccountAction()
@@ -104,36 +113,38 @@ export function AccountsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {approvalRequired && (
       <div
         role="tablist"
         aria-label={s.accounts.tabsLabel}
         onKeyDown={(e) => {
           if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return
           e.preventDefault()
-          // Chỉ có hai tab nên mũi tên nào cũng chuyển sang tab còn lại; Home/End về đầu/cuối
-          const next: AccountTab =
-            e.key === 'Home' ? 'waiting' : e.key === 'End' ? 'all' : tab === 'waiting' ? 'all' : 'waiting'
+          const i = tabs.indexOf(tab)
+          const next =
+            e.key === 'Home'
+              ? tabs[0]!
+              : e.key === 'End'
+                ? tabs[tabs.length - 1]!
+                : tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length]!
           update({ tab: next })
           document.getElementById(`accounts-tab-${next}`)?.focus()
         }}
-        className="grid grid-cols-2 gap-1 rounded-card border border-border bg-surface p-1 shadow-card md:inline-grid md:w-fit"
+        className={cn(
+          'grid gap-1 rounded-card border border-border bg-surface p-1 shadow-card md:inline-grid md:w-fit',
+          tabs.length === 3 ? 'grid-cols-3' : 'grid-cols-2',
+        )}
       >
-        <TabButton
-          id="waiting"
-          current={tab}
-          onSelect={(next) => update({ tab: next })}
-          label={s.accounts.tabWaiting}
-          count={waitingCount.data}
-        />
-        <TabButton
-          id="all"
-          current={tab}
-          onSelect={(next) => update({ tab: next })}
-          label={s.accounts.tabAll}
-        />
+        {tabs.map((id) => (
+          <TabButton
+            key={id}
+            id={id}
+            current={tab}
+            onSelect={(next) => update({ tab: next })}
+            label={TAB_LABEL[id]}
+            count={id === 'waiting' ? waitingCount.data : undefined}
+          />
+        ))}
       </div>
-      )}
 
       <AccountFilters
         search={search}
@@ -158,10 +169,20 @@ export function AccountsPage() {
           </div>
         ) : items.length === 0 ? (
           <EmptyState
-            icon={tab === 'waiting' && !hasFilter ? Users : UserSearch}
-            title={tab === 'waiting' && !hasFilter ? s.accounts.emptyWaiting : s.accounts.emptyAll}
+            icon={tab !== 'all' && !hasFilter ? Users : UserSearch}
+            title={
+              hasFilter || tab === 'all'
+                ? s.accounts.emptyAll
+                : tab === 'waiting'
+                  ? s.accounts.emptyWaiting
+                  : s.accounts.emptyDeleted
+            }
             description={
-              tab === 'waiting' && !hasFilter ? s.accounts.emptyWaitingHint : s.accounts.emptyAllHint
+              hasFilter || tab === 'all'
+                ? s.accounts.emptyAllHint
+                : tab === 'waiting'
+                  ? s.accounts.emptyWaitingHint
+                  : s.accounts.emptyDeletedHint
             }
             action={
               // Địa chỉ có `page` quá lớn (link cũ, danh sách vừa ngắn đi): cho về trang đầu
@@ -262,7 +283,7 @@ function TabButton({
       tabIndex={selected ? 0 : -1}
       onClick={() => onSelect(id)}
       className={cn(
-        'flex min-h-11 items-center justify-center gap-2 rounded-button px-4 text-base font-semibold transition-colors duration-200 ease-out md:min-w-40',
+        'flex min-h-11 items-center justify-center gap-2 rounded-button px-2 text-base font-semibold whitespace-nowrap transition-colors duration-200 ease-out md:min-w-36 md:px-4',
         selected
           ? 'bg-primary text-primary-fg'
           : 'text-text-muted hover:bg-surface-muted hover:text-text',

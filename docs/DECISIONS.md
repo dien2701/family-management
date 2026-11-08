@@ -467,6 +467,18 @@
     - **Máy tính (≥768px):** đổi theo token mới (thẻ, nền, tiêu đề mục), **giữ nguyên bố cục** sidebar, header máy tính, lưới cột.
     - **Phạm vi:** mọi trang của khách, User và Admin, chia 4 đợt Claude Code (46–49 trong ROADMAP).
 
+## V. Admin xóa và khôi phục tài khoản (chốt 2026-11-08, hỏi đáp với người dùng)
+
+97. **Admin xóa được tài khoản User; tài khoản bị xóa chuyển vào tab "Đã xóa" của trang Người dùng, đồng thời bị khóa; Admin khôi phục được** (V22, `POST /api/admin/accounts/{id}/delete` và `/restore`, tham số `deleted` ở danh sách)
+    → **Chốt:**
+    - **Xóa mềm:** cột `deleted_at`, `deleted_by`. Không xóa dòng, không đổi email nên email đó không đăng ký lại được.
+    - **Khóa:** tài khoản đang mở thành `LOCKED` với `lock_reason = DELETED`; đang bị khóa vì lý do khác thì giữ nguyên. Thu hồi mọi refresh token. Mọi chỗ chặn tài khoản khóa (đăng nhập, Google, refresh, cổng duyệt) tự áp dụng.
+    - **Khôi phục về đúng trạng thái trước khi xóa:** xóa `deleted_at`, chỉ mở khóa khi `lock_reason = DELETED`. Duyệt, vai trò, liên kết không đổi.
+    - **Chỉ xóa User:** Admin phải được gỡ quyền trước (409 `INVALID_ACCOUNT_STATE`), nên không bao giờ xóa mất Admin cuối cùng. Không tự xóa mình (409 `SELF_ACTION_FORBIDDEN`).
+    - **Giữ liên kết "Tôi là ai"** khi xóa; thành viên đó vẫn bị giữ cho tới khi Admin hủy liên kết (làm được sau khi khôi phục).
+    - **Tài khoản đã xóa** không hiện ở tab Chờ duyệt/Tất cả, không tính vào số chờ duyệt; mọi thao tác khác ngoài Khôi phục trả 409 `INVALID_ACCOUNT_STATE`.
+    - **Giao diện:** tab thứ 3 "Đã xóa" ở trang Người dùng (luôn có, kể cả khi tắt duyệt), nút Khôi phục ngay dưới hàng; nút "Xóa tài khoản" màu đỏ ở cuối hộp chi tiết tài khoản.
+
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.
 - Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt. Cần cập nhật khi duyệt: Trợ lý AI nay mở cho khách (#91) và giọng nói do trình duyệt xử lý (#92).

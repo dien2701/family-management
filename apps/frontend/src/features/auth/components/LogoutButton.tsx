@@ -23,7 +23,7 @@ export function LogoutButton({ className }: { className?: string }) {
   return (
     <div className="flex flex-col items-center gap-2">
       <Button
-        variant="secondary"
+        variant="danger"
         className={className}
         loading={loading}
         onClick={() => void handleClick()}

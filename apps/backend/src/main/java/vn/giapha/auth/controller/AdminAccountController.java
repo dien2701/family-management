@@ -55,11 +55,13 @@ class AdminAccountController {
             @RequestParam(required = false) SystemRole role,
             @Parameter(description = "Tìm theo họ tên (không phân biệt hoa thường, dấu) hoặc email")
             @RequestParam(required = false) String q,
+            @Parameter(description = "false: chỉ tài khoản chưa xóa; true: chỉ tài khoản đã xóa (DECISIONS #97)")
+            @RequestParam(defaultValue = "false") boolean deleted,
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "Trang phải từ 0.") int page,
             @RequestParam(defaultValue = "20")
             @Min(value = 1, message = "Kích thước trang phải từ 1.")
             @Max(value = 100, message = "Kích thước trang tối đa 100.") int size) {
-        return service.list(current.userId(), new AccountFilter(approval, status, role, q), page, size);
+        return service.list(current.userId(), new AccountFilter(approval, status, role, q, deleted), page, size);
     }
 
     @Operation(operationId = "approve", summary = "Duyệt tài khoản")
@@ -126,6 +128,31 @@ class AdminAccountController {
     @PostMapping("/{id}/revoke-admin")
     AccountAdminResponse revokeAdmin(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id) {
         return service.revokeAdmin(current.userId(), id);
+    }
+
+    @Operation(operationId = "deleteAccount", summary = "Xóa tài khoản (chuyển vào \"Đã xóa\")",
+            description = "Xóa mềm và khóa, thu hồi refresh token, giữ liên kết. Chỉ tài khoản User, không xóa chính mình "
+                    + "(DECISIONS #97).")
+    @ApiResponse(responseCode = "200", description = "Thành công")
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
+    @ApiResponse(responseCode = "409", ref = ApiRefs.CONFLICT)
+    @PostMapping("/{id}/delete")
+    AccountAdminResponse delete(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id) {
+        return service.delete(current.userId(), id);
+    }
+
+    @Operation(operationId = "restoreAccount", summary = "Khôi phục tài khoản đã xóa",
+            description = "Về đúng trạng thái trước khi xóa (DECISIONS #97).")
+    @ApiResponse(responseCode = "200", description = "Thành công")
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
+    @ApiResponse(responseCode = "409", ref = ApiRefs.CONFLICT)
+    @PostMapping("/{id}/restore")
+    AccountAdminResponse restore(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id) {
+        return service.restore(current.userId(), id);
     }
 
     @Operation(operationId = "adminLinkMember", summary = "Admin gán thành viên cho tài khoản",

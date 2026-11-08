@@ -8,7 +8,7 @@ import {
   type StatusFilter,
 } from './accountRules'
 
-export type AccountTab = 'waiting' | 'all'
+export type AccountTab = 'waiting' | 'all' | 'deleted'
 
 export const ACCOUNT_PAGE_SIZE = 20
 
@@ -22,14 +22,16 @@ type Patch = Partial<{
 }>
 
 /**
- * Bộ lọc của trang Tài khoản nằm trên URL (`?tab=all&q=an&status=LOCKED&role=ADMIN&page=1`) để tải lại
+ * Bộ lọc của trang Tài khoản nằm trên URL (`?tab=all|deleted&q=an&status=LOCKED&role=ADMIN&page=1`) để tải lại
  * hoặc gửi link vẫn giữ nguyên màn hình. Đổi bất kỳ bộ lọc nào ngoài `page` thì về trang đầu.
  */
 export function useAccountParams(approvalRequired = true) {
   const [params, setParams] = useSearchParams()
 
-  // Tắt duyệt tài khoản thì không còn tab Chờ duyệt, luôn ở tab Tất cả
-  const tab: AccountTab = !approvalRequired || params.get('tab') === 'all' ? 'all' : 'waiting'
+  // Tắt duyệt tài khoản thì không còn tab Chờ duyệt, mặc định ở tab Tất cả
+  const tabParam = params.get('tab')
+  const tab: AccountTab =
+    tabParam === 'deleted' ? 'deleted' : !approvalRequired || tabParam === 'all' ? 'all' : 'waiting'
   const q = params.get('q') ?? ''
   const statusParam = params.get('status')
   const roleParam = params.get('role')
@@ -66,7 +68,11 @@ export function useAccountParams(approvalRequired = true) {
   )
 
   const query: AccountListQuery = {
-    ...(tab === 'waiting' ? { approval: 'WAITING' as const } : { ...statusFilterToQuery(status), role }),
+    ...(tab === 'waiting'
+      ? { approval: 'WAITING' as const }
+      : tab === 'deleted'
+        ? { deleted: true }
+        : { ...statusFilterToQuery(status), role }),
     q: q.trim() || undefined,
     page,
     size: ACCOUNT_PAGE_SIZE,

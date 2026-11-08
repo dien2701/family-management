@@ -22,8 +22,8 @@ public interface UserAccountRepository
 
     Optional<UserAccount> findByEmail(String email);
 
-    /** Tài khoản thật (đã xác thực OTP) đang ở một trạng thái duyệt; dùng cho thẻ "chờ duyệt" ở dashboard. */
-    long countByApprovalStatusAndStatusNot(ApprovalStatus approvalStatus, AccountStatus status);
+    /** Tài khoản thật (đã xác thực OTP), chưa bị xóa, đang ở một trạng thái duyệt; dùng cho thẻ "chờ duyệt" ở dashboard. */
+    long countByApprovalStatusAndStatusNotAndDeletedAtIsNull(ApprovalStatus approvalStatus, AccountStatus status);
 
     /** Có Admin dùng được (ACTIVE và đã duyệt) hay chưa; Admin bị khóa/từ chối không tính. */
     @Query("""

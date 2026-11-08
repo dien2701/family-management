@@ -55,6 +55,12 @@ export function AccountSheet({ account, selfId, onClose, onAction, onLinkAction 
             </dd>
             <dt className="text-text-muted">{s.accounts.columns.createdAt}</dt>
             <dd className="tabular-nums">{formatDate(account.createdAt)}</dd>
+            {account.deletedAt && (
+              <>
+                <dt className="text-text-muted">{s.accounts.deletedAt}</dt>
+                <dd className="tabular-nums">{formatDate(account.deletedAt)}</dd>
+              </>
+            )}
           </dl>
 
           <AccountActions

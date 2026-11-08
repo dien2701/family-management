@@ -67,7 +67,7 @@ public class AuthFacade implements AccountAccessLookup {
     /** Số tài khoản đang chờ Admin duyệt (dashboard, IDEA §6.8). */
     @Transactional(readOnly = true)
     public long pendingAccountCount() {
-        return users.countByApprovalStatusAndStatusNot(ApprovalStatus.WAITING, AccountStatus.PENDING);
+        return users.countByApprovalStatusAndStatusNotAndDeletedAtIsNull(ApprovalStatus.WAITING, AccountStatus.PENDING);
     }
 
     /** Id các Admin dùng được, để báo mọi Admin (thông báo, Đợt 34). */

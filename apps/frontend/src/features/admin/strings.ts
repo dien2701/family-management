@@ -17,6 +17,10 @@ export const adminStrings = {
     tabsLabel: 'Nhóm tài khoản',
     tabWaiting: 'Chờ duyệt',
     tabAll: 'Tất cả',
+    tabDeleted: 'Đã xóa',
+    emptyDeleted: 'Chưa có tài khoản nào bị xóa',
+    emptyDeletedHint: 'Tài khoản bị xóa sẽ nằm ở đây và khôi phục được bất cứ lúc nào.',
+    deletedAt: 'Ngày xóa',
     search: 'Tìm tài khoản',
     searchPlaceholder: 'Họ tên hoặc email',
     statusFilter: 'Trạng thái',
@@ -110,6 +114,7 @@ export const adminStrings = {
     approved: 'Đã duyệt',
     rejected: 'Không được duyệt',
     locked: 'Bị khóa',
+    deleted: 'Đã xóa',
   },
   role: { ADMIN: 'Admin', USER: 'User' },
   pagination: {
@@ -177,6 +182,22 @@ export const accountActionText: Record<AccountAction, ActionText> = {
     description: 'Người này trở thành User thường và cần đăng nhập lại.',
     confirm: 'Gỡ Admin',
     danger: true,
+  },
+  delete: {
+    label: 'Xóa tài khoản',
+    title: (name) => `Xóa tài khoản ${name}?`,
+    description:
+      'Tài khoản chuyển sang tab "Đã xóa" và bị khóa: người này bị đăng xuất khỏi mọi thiết bị, không đăng nhập được. Liên kết thành viên vẫn giữ. Bạn có thể khôi phục lại bất cứ lúc nào.',
+    confirm: 'Xóa',
+    danger: true,
+  },
+  restore: {
+    label: 'Khôi phục',
+    title: (name) => `Khôi phục tài khoản ${name}?`,
+    description:
+      'Tài khoản trở về đúng trạng thái trước khi xóa: đang dùng được thì dùng lại được ngay, đang bị khóa hay chờ duyệt thì vẫn vậy.',
+    confirm: 'Khôi phục',
+    danger: false,
   },
 }
 

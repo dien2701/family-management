@@ -8,6 +8,7 @@ const STATUS_TONE: Record<AccountDisplayStatus, 'success' | 'warning' | 'danger'
   approved: 'success',
   rejected: 'danger',
   locked: 'danger',
+  deleted: 'danger',
 }
 
 export function AccountStatusBadge({ account }: { account: AccountAdmin }) {

@@ -29,7 +29,7 @@ export function AccountAvatar({ name }: { name?: string }) {
 /**
  * Danh sách gọn, một dạng cho mọi khổ màn hình: mỗi hàng là ảnh chữ cái, họ tên, email; chỉ hiện nhãn khi khác
  * thường (chờ duyệt, bị từ chối, bị khóa, Admin). Bấm hàng mở hộp chi tiết có mọi thao tác. Riêng tài khoản chờ
- * duyệt có sẵn Duyệt/Từ chối ngay dưới hàng vì đó là việc làm thường xuyên nhất.
+ * duyệt có sẵn Duyệt/Từ chối, tài khoản đã xóa có sẵn Khôi phục ngay dưới hàng.
  */
 export function AccountList({ accounts, selfId, onOpen, onAction }: AccountListProps) {
   return (
@@ -40,7 +40,8 @@ export function AccountList({ accounts, selfId, onOpen, onAction }: AccountListP
       {accounts.map((account) => {
         const isSelf = account.id === selfId
         const status = displayStatusOf(account)
-        const quick = status === 'waiting' ? actionsFor(account, selfId) : []
+        // Việc làm thường xuyên có sẵn dưới hàng: Duyệt/Từ chối khi chờ duyệt, Khôi phục ở tab Đã xóa
+        const quick = status === 'waiting' || status === 'deleted' ? actionsFor(account, selfId) : []
         const name = account.fullName ?? ''
         return (
           <li key={account.id} className="flex flex-col gap-2 py-3">
@@ -72,8 +73,8 @@ export function AccountList({ accounts, selfId, onOpen, onAction }: AccountListP
                 {quick.map((action) => (
                   <Button
                     key={action}
-                    variant={action === 'approve' ? 'primary' : 'outline'}
-                    className={action === 'approve' ? undefined : 'text-danger'}
+                    variant={action === 'reject' ? 'outline' : 'primary'}
+                    className={action === 'reject' ? 'text-danger' : undefined}
                     aria-label={`${accountActionText[action].label} ${name}`.trim()}
                     onClick={() => onAction(account, action)}
                   >

@@ -2,9 +2,10 @@ import type { AccountAdmin, AccountListQuery } from '@/types/api'
 import type { AccountAction, LinkAction } from './api'
 
 /** Trạng thái hiển thị: khóa được ưu tiên vì tài khoản khóa vẫn giữ `approvalStatus` cũ. */
-export type AccountDisplayStatus = 'waiting' | 'approved' | 'rejected' | 'locked'
+export type AccountDisplayStatus = 'waiting' | 'approved' | 'rejected' | 'locked' | 'deleted'
 
 export function displayStatusOf(account: AccountAdmin): AccountDisplayStatus {
+  if (account.deletedAt) return 'deleted'
   if (account.status === 'LOCKED') return 'locked'
   if (account.approvalStatus === 'REJECTED') return 'rejected'
   if (account.approvalStatus === 'APPROVED') return 'approved'
@@ -19,6 +20,8 @@ export function displayStatusOf(account: AccountAdmin): AccountDisplayStatus {
 export function actionsFor(account: AccountAdmin, selfId: number | undefined): AccountAction[] {
   const isSelf = account.id !== undefined && account.id === selfId
   switch (displayStatusOf(account)) {
+    case 'deleted':
+      return ['restore']
     case 'waiting':
       return isSelf ? [] : ['approve', 'reject']
     case 'rejected':
@@ -39,8 +42,18 @@ export function actionsFor(account: AccountAdmin, selfId: number | undefined): A
  */
 export function linkActionFor(account: AccountAdmin, selfId: number | undefined): LinkAction | null {
   if (account.id !== undefined && account.id === selfId) return null
+  if (account.deletedAt) return null
   if (account.member) return 'unlink'
   return displayStatusOf(account) === 'approved' ? 'link' : null
+}
+
+/**
+ * Xóa tài khoản (DECISIONS #97): chỉ tài khoản User chưa xóa, không phải chính mình. Admin phải gỡ quyền trước
+ * (backend cũng chặn bằng `INVALID_ACCOUNT_STATE`/`SELF_ACTION_FORBIDDEN`).
+ */
+export function canDelete(account: AccountAdmin, selfId: number | undefined): boolean {
+  if (account.id !== undefined && account.id === selfId) return false
+  return !account.deletedAt && (account.systemRole ?? 'USER') === 'USER'
 }
 
 /** Giá trị của ô lọc "Trạng thái" ở tab Tất cả. */

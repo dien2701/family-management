@@ -228,6 +228,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/accounts/{id}/delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Xóa tài khoản (chuyển vào "Đã xóa")
+         * @description Xóa mềm (DECISIONS #97): ghi `deletedAt`, tài khoản đang mở thì khóa với `lockReason=DELETED`, thu hồi mọi refresh token. Giữ liên kết "Tôi là ai". Chỉ xóa được tài khoản User, không xóa chính mình (409 `SELF_ACTION_FORBIDDEN`), không xóa Admin (409 `INVALID_ACCOUNT_STATE`, gỡ Admin trước). Tài khoản đã xóa thì mọi thao tác khác trả 409 `INVALID_ACCOUNT_STATE` cho tới khi khôi phục.
+         */
+        post: operations["deleteAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Khôi phục tài khoản đã xóa
+         * @description Xóa `deletedAt`; chỉ mở khóa khi lý do khóa là `DELETED`, nên tài khoản về đúng trạng thái trước khi xóa (DECISIONS #97). 409 `INVALID_ACCOUNT_STATE` khi tài khoản chưa bị xóa.
+         */
+        post: operations["restoreAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/accounts/{id}/unlock": {
         parameters: {
             query?: never;
@@ -2136,7 +2176,7 @@ export interface components {
             /** @enum {string} */
             status?: "PENDING" | "ACTIVE" | "LOCKED";
             /** @enum {string} */
-            lockReason?: "MANUAL" | "MEMBER_LOCKED";
+            lockReason?: "MANUAL" | "MEMBER_LOCKED" | "DELETED";
             /** @enum {string} */
             approvalStatus?: "WAITING" | "APPROVED" | "REJECTED";
             /** Format: int64 */
@@ -2149,6 +2189,11 @@ export interface components {
             member?: components["schemas"]["LinkedMember"] | null;
             /** Format: date-time */
             createdAt?: string;
+            /**
+             * Format: date-time
+             * @description Thời điểm Admin xóa tài khoản; `null` khi chưa xóa (DECISIONS
+             */
+            deletedAt?: string | null;
         };
         LunarMonthInfoResponse: {
             /** Format: int32 */
@@ -3145,6 +3190,58 @@ export interface operations {
             429: components["responses"]["TooManyRequests"];
         };
     };
+    deleteAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    restoreAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
     unlock: {
         parameters: {
             query?: never;
@@ -3388,6 +3485,8 @@ export interface operations {
                 role?: "ADMIN" | "USER";
                 /** @description Tìm theo họ tên (không phân biệt hoa thường, dấu) hoặc email */
                 q?: string;
+                /** @description `false` (mặc định): chỉ tài khoản chưa xóa. `true`: chỉ tài khoản đã xóa (tab "Đã xóa", DECISIONS #97) */
+                deleted?: boolean;
                 page?: number;
                 size?: number;
             };

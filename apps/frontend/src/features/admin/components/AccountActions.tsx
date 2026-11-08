@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import type { AccountAdmin } from '@/types/api'
-import { actionsFor, linkActionFor } from '../accountRules'
+import { actionsFor, canDelete, linkActionFor } from '../accountRules'
 import type { AccountAction, LinkAction } from '../api'
 import { accountActionText, adminStrings } from '../strings'
 
@@ -11,13 +11,15 @@ type AccountActionsProps = {
   onLinkAction: (account: AccountAdmin, action: LinkAction) => void
 }
 
-// Nút thường lên trên, nút nguy hiểm (Từ chối, Khóa) xuống cuối để khó bấm nhầm
-const ORDER: AccountAction[] = ['approve', 'unlock', 'grant-admin', 'revoke-admin', 'reject', 'lock']
-const DANGER = new Set<AccountAction>(['reject', 'lock'])
+// Nút thường lên trên, nút nguy hiểm (Từ chối, Khóa, Xóa) xuống cuối để khó bấm nhầm
+const ORDER: AccountAction[] = ['restore', 'approve', 'unlock', 'grant-admin', 'revoke-admin', 'reject', 'lock', 'delete']
+const DANGER = new Set<AccountAction>(['reject', 'lock', 'delete'])
 
 /** Các thao tác trong hộp chi tiết tài khoản: xếp dọc, rộng hết hộp; bấm chỉ mở hộp xác nhận. */
 export function AccountActions({ account, selfId, onAction, onLinkAction }: AccountActionsProps) {
-  const actions = actionsFor(account, selfId).sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b))
+  const actions = [...actionsFor(account, selfId), ...(canDelete(account, selfId) ? (['delete'] as const) : [])].sort(
+    (a, b) => ORDER.indexOf(a) - ORDER.indexOf(b),
+  )
   const linkAction = linkActionFor(account, selfId)
   if (actions.length === 0 && linkAction === null) return null
   const name = account.fullName ?? ''
@@ -27,7 +29,7 @@ export function AccountActions({ account, selfId, onAction, onLinkAction }: Acco
   const actionButton = (action: AccountAction) => (
     <Button
       key={action}
-      variant={action === 'approve' ? 'primary' : DANGER.has(action) ? 'danger' : 'secondary'}
+      variant={action === 'approve' || action === 'restore' ? 'primary' : DANGER.has(action) ? 'danger' : 'secondary'}
       aria-label={`${accountActionText[action].label} ${name}`.trim()}
       onClick={() => onAction(account, action)}
     >

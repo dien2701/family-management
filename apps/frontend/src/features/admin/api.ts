@@ -16,6 +16,8 @@ export type AccountAction =
   | 'unlock'
   | 'grant-admin'
   | 'revoke-admin'
+  | 'delete'
+  | 'restore'
 
 /** Gán hoặc hủy liên kết "Tôi là ai" ngay trên dòng tài khoản (DECISIONS #80). */
 export type LinkAction = 'link' | 'unlink'

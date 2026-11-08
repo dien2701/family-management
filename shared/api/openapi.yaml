@@ -346,6 +346,64 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/TooManyRequests'
+  /api/admin/accounts/{id}/delete:
+    post:
+      tags:
+        - admin-accounts
+      summary: Xóa tài khoản (chuyển vào "Đã xóa")
+      description: "Xóa mềm (DECISIONS #97): ghi `deletedAt`, tài khoản đang mở thì khóa với `lockReason=DELETED`, thu hồi mọi refresh token. Giữ liên kết \"Tôi là ai\". Chỉ xóa được tài khoản User, không xóa chính mình (409 `SELF_ACTION_FORBIDDEN`), không xóa Admin (409 `INVALID_ACCOUNT_STATE`, gỡ Admin trước). Tài khoản đã xóa thì mọi thao tác khác trả 409 `INVALID_ACCOUNT_STATE` cho tới khi khôi phục."
+      operationId: deleteAccount
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/admin/accounts/{id}/restore:
+    post:
+      tags:
+        - admin-accounts
+      summary: Khôi phục tài khoản đã xóa
+      description: "Xóa `deletedAt`; chỉ mở khóa khi lý do khóa là `DELETED`, nên tài khoản về đúng trạng thái trước khi xóa (DECISIONS #97). 409 `INVALID_ACCOUNT_STATE` khi tài khoản chưa bị xóa."
+      operationId: restoreAccount
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/admin/accounts/{id}/unlock:
     post:
       tags:
@@ -660,6 +718,13 @@ paths:
           required: false
           schema:
             type: string
+        - name: deleted
+          in: query
+          description: '`false` (mặc định): chỉ tài khoản chưa xóa. `true`: chỉ tài khoản đã xóa (tab "Đã xóa", DECISIONS #97)'
+          required: false
+          schema:
+            type: boolean
+            default: false
         - name: page
           in: query
           required: false
@@ -3866,6 +3931,7 @@ components:
           enum:
             - MANUAL
             - MEMBER_LOCKED
+            - DELETED
         approvalStatus:
           type: string
           enum:
@@ -3889,6 +3955,12 @@ components:
         createdAt:
           type: string
           format: date-time
+        deletedAt:
+          type:
+            - string
+            - 'null'
+          format: date-time
+          description: Thời điểm Admin xóa tài khoản; `null` khi chưa xóa (DECISIONS #97).
     LunarMonthInfoResponse:
       type: object
       properties:

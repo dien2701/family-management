@@ -167,6 +167,30 @@ public class AdminAccountService {
         });
     }
 
+    // ---------- Xóa mềm (DECISIONS #97) ----------
+
+    /**
+     * Chuyển tài khoản vào "Đã xóa" và khóa (xem {@link UserAccount#markDeleted}), thu hồi mọi refresh token. Chỉ xóa
+     * tài khoản User: Admin phải được gỡ quyền trước, nên không bao giờ xóa mất Admin cuối cùng.
+     */
+    @Transactional
+    public AccountAdminResponse delete(Long actorId, Long targetId) {
+        return mutate(actorId, targetId, "DELETE", (actor, target, admins) -> {
+            forbidSelf(actor, target);
+            if (target.getSystemRole() != SystemRole.USER) {
+                throw invalidState();
+            }
+            target.markDeleted(actor.getId(), Instant.now(clock));
+            refreshTokens.revokeAll(target.getId());
+        });
+    }
+
+    /** Khôi phục về đúng trạng thái trước khi xóa (xem {@link UserAccount#restore}). */
+    @Transactional
+    public AccountAdminResponse restore(Long actorId, Long targetId) {
+        return mutate(actorId, targetId, "RESTORE", (actor, target, admins) -> target.restore());
+    }
+
     // ---------- Liên kết "Tôi là ai" (DECISIONS #80, #81) ----------
 
     /**
@@ -202,6 +226,10 @@ public class AdminAccountService {
                 .filter(u -> u.getStatus() != AccountStatus.PENDING)
                 .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "ACCOUNT_NOT_FOUND",
                         "Không tìm thấy tài khoản này."));
+        // Tài khoản đã xóa chỉ được khôi phục; chưa xóa thì không khôi phục được
+        if (target.isDeleted() != "RESTORE".equals(action)) {
+            throw invalidState();
+        }
         Map<String, Object> before = snapshot(target);
         change.apply(actor, target, admins);
         audit.write(actor.getId(), action, TARGET_TYPE, target.getId(), before, snapshot(target));
@@ -279,6 +307,8 @@ public class AdminAccountService {
         m.put("status", u.getStatus());
         m.put("approvalStatus", u.getApprovalStatus());
         m.put("memberId", u.getMemberId());
+        m.put("lockReason", u.getLockReason());
+        m.put("deletedAt", u.getDeletedAt());
         return m;
     }
 
@@ -286,6 +316,7 @@ public class AdminAccountService {
         return (root, query, cb) -> {
             List<Predicate> all = new ArrayList<>();
             all.add(cb.notEqual(root.get("status"), AccountStatus.PENDING));
+            all.add(f.deleted() ? cb.isNotNull(root.get("deletedAt")) : cb.isNull(root.get("deletedAt")));
             if (f.approval() != null) {
                 all.add(cb.equal(root.get("approvalStatus"), f.approval()));
             }

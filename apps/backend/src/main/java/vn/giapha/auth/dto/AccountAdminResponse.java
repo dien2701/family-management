@@ -11,6 +11,7 @@ import vn.giapha.common.web.LinkedMember;
 /**
  * Tài khoản trong màn quản trị (chỉ Admin thấy nên có email). Không có hash, google_sub hay token.
  * {@code member}: thành viên đang liên kết, {@code null} khi chưa liên kết (DECISIONS #80).
+ * {@code deletedAt}: Admin đã xóa lúc nào, {@code null} khi chưa xóa (DECISIONS #97).
  */
 public record AccountAdminResponse(
         Long id,
@@ -25,10 +26,11 @@ public record AccountAdminResponse(
         Instant approvedAt,
         Long memberId,
         LinkedMember member,
-        Instant createdAt) {
+        Instant createdAt,
+        Instant deletedAt) {
 
     public AccountAdminResponse withMember(LinkedMember member) {
         return new AccountAdminResponse(id, email, fullName, avatarUrl, systemRole, status, lockReason, approvalStatus,
-                approvedBy, approvedAt, memberId, member, createdAt);
+                approvedBy, approvedAt, memberId, member, createdAt, deletedAt);
     }
 }
