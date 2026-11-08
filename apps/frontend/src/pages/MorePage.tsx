@@ -1,20 +1,7 @@
-import {
-  ArrowLeftRight,
-  FileDown,
-  Files,
-  FileText,
-  LayoutGrid,
-  MoreHorizontal,
-  Settings,
-  ShieldCheck,
-  Sparkles,
-  UserCheck,
-  UserCog,
-  Users,
-  ScrollText,
-} from 'lucide-react'
+import { FileDown, Files, FileText, Settings, ShieldCheck, Sparkles, UserCheck, UserCog, ScrollText, ArrowLeftRight } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { ListGroup, ListRow } from '@/components/shared/ListRow'
+import type { ReactNode } from 'react'
+import { IconTile } from '@/components/shared/IconTile'
 import { SectionCard } from '@/components/shared/SectionCard'
 import { adminStrings } from '@/features/admin/strings'
 import { aiStrings } from '@/features/ai/strings'
@@ -26,68 +13,38 @@ import { prayerStrings } from '@/features/prayer/strings'
 import { InstallAppItem } from '@/features/pwa/components/InstallAppItem'
 import { useAuth } from '@/hooks/useAuth'
 
-type Item = { to: string; label: string; description: string; icon: LucideIcon }
+type Item = { to: string; label: string; icon: LucideIcon }
 
 const UTILITIES: Item[] = [
-  { to: '/tro-ly', label: aiStrings.menu, description: aiStrings.menuDescription, icon: Sparkles },
-  {
-    to: '/bai-khan',
-    label: prayerStrings.menu,
-    description: prayerStrings.menuDescription,
-    icon: ScrollText,
-  },
-  {
-    to: '/them/doi-lich',
-    label: 'Đổi lịch âm – dương',
-    description: 'Tra ngày âm lịch và dương lịch tương ứng',
-    icon: ArrowLeftRight,
-  },
-  {
-    to: '/them/xuat-du-lieu',
-    label: 'Xuất dữ liệu',
-    description: 'Tải báo cáo thành viên, sự kiện và lịch giỗ',
-    icon: FileDown,
-  },
+  { to: '/tro-ly', label: aiStrings.menu, icon: Sparkles },
+  { to: '/bai-khan', label: prayerStrings.menu, icon: ScrollText },
+  { to: '/them/doi-lich', label: 'Đổi lịch âm – dương', icon: ArrowLeftRight },
+  { to: '/them/xuat-du-lieu', label: 'Xuất dữ liệu', icon: FileDown },
 ]
 
 const FAMILY: Item[] = [
-  {
-    to: '/them/toi-la-ai',
-    label: linkStrings.menu,
-    description: linkStrings.menuDescription,
-    icon: UserCheck,
-  },
-  {
-    to: '/de-xuat',
-    label: 'Đề xuất của tôi',
-    description: 'Quản lý các đề xuất thay đổi sự kiện',
-    icon: FileText,
-  },
-  {
-    to: '/them/tai-lieu-chung',
-    label: 'Tài liệu chung',
-    description: 'Các tài liệu, biểu mẫu chung của gia đình',
-    icon: Files,
-  },
+  { to: '/them/toi-la-ai', label: linkStrings.menu, icon: UserCheck },
+  { to: '/de-xuat', label: 'Đề xuất của tôi', icon: FileText },
+  { to: '/them/tai-lieu-chung', label: 'Tài liệu chung', icon: Files },
 ]
 
 const OTHER: Item[] = [
-  { to: '/cai-dat', label: 'Cài đặt', description: 'Giao diện, cỡ chữ, thông báo', icon: Settings },
-  {
-    to: '/chinh-sach-bao-mat',
-    label: 'Chính sách bảo mật',
-    description: 'Dữ liệu được thu thập và sử dụng ra sao',
-    icon: ShieldCheck,
-  },
+  { to: '/cai-dat', label: 'Cài đặt', icon: Settings },
+  { to: '/chinh-sach-bao-mat', label: 'Chính sách bảo mật', icon: ShieldCheck },
 ]
 
-function Rows({ items }: { items: Item[] }) {
-  return items.map(({ to, label, description, icon }) => (
-    <ListRow key={to} to={to} icon={icon} label={label} description={description} />
-  ))
+function Tiles({ items, children }: { items: Item[]; children?: ReactNode }) {
+  return (
+    <div className="grid grid-cols-4 gap-2">
+      {children}
+      {items.map((item) => (
+        <IconTile key={item.to} boxed {...item} />
+      ))}
+    </div>
+  )
 }
 
-// Tab Thêm (DESIGN §9): thẻ tài khoản ở đầu, các mục chia nhóm; Quản trị chỉ Admin thấy
+// Tab Thêm (DESIGN §9): thẻ tài khoản ở đầu, các mục chia nhóm thành lưới ô 4 cột; Quản trị chỉ Admin thấy
 // (trên điện thoại thanh dưới chỉ có 5 mục nên Quản trị vào từ đây; Sidebar và rail có mục riêng)
 export function MorePage() {
   const { user } = useAuth()
@@ -95,33 +52,21 @@ export function MorePage() {
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
       <AccountCard />
       <nav aria-label="Các mục khác" className="flex flex-col gap-4">
-        <SectionCard title="Tiện ích" icon={LayoutGrid}>
-          <ListGroup>
-            <Rows items={UTILITIES} />
-          </ListGroup>
+        <SectionCard title="Tiện ích">
+          <Tiles items={UTILITIES} />
         </SectionCard>
-        <SectionCard title="Gia đình" icon={Users}>
-          <ListGroup>
-            <Rows items={FAMILY} />
-          </ListGroup>
+        <SectionCard title="Gia đình">
+          <Tiles items={FAMILY} />
         </SectionCard>
         {isAdmin(user) && (
-          <SectionCard title={adminStrings.menu} icon={UserCog}>
-            <ListGroup>
-              <ListRow
-                to="/quan-tri"
-                icon={UserCog}
-                label={adminStrings.menu}
-                description={adminStrings.menuDescription}
-              />
-            </ListGroup>
+          <SectionCard title={adminStrings.menu}>
+            <Tiles items={[{ to: '/quan-tri', label: adminStrings.menu, icon: UserCog }]} />
           </SectionCard>
         )}
-        <SectionCard title="Khác" icon={MoreHorizontal}>
-          <ListGroup>
+        <SectionCard title="Khác">
+          <Tiles items={OTHER}>
             <InstallAppItem />
-            <Rows items={OTHER} />
-          </ListGroup>
+          </Tiles>
         </SectionCard>
       </nav>
       <LogoutButton className="w-full md:w-auto" />

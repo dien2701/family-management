@@ -1,6 +1,6 @@
-import { Download, MonitorSmartphone, Share, PlusSquare, X } from 'lucide-react'
+import { Download, Share, PlusSquare, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { ListRow } from '@/components/shared/ListRow'
+import { IconTile } from '@/components/shared/IconTile'
 
 type InstallPromptEvent = Event & {
   prompt: () => Promise<void>
@@ -50,15 +50,7 @@ export function InstallAppItem() {
 
   return (
     <>
-      <ListRow
-        icon={Download}
-        label="Cài đặt ứng dụng"
-        description="Cài ứng dụng vào màn hình chính để truy cập nhanh"
-        onClick={() => void handleInstallClick()}
-        trailing={
-          <MonitorSmartphone className="size-5 shrink-0 text-text-muted" aria-hidden="true" />
-        }
-      />
+      <IconTile boxed icon={Download} label="Cài đặt ứng dụng" onClick={() => void handleInstallClick()} />
 
       {showIOSInstruction && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-4">

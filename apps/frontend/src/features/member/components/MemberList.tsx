@@ -174,6 +174,7 @@ export function MemberList({
             totalPages={totalPages}
             onChange={onPageChange}
             labels={paginationLabels}
+            numbered
           />
         </div>
       )}
