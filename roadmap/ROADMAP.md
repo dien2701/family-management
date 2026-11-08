@@ -84,9 +84,9 @@
 | 46 | Token, khung chung (header, thanh dưới, thẻ dùng chung) và Trang chủ | Claude Code | Sonnet · high | ✅ 2026-11-08 |
 | 47 | Thêm, Hồ sơ cá nhân, Cài đặt, Thành viên, Sự kiện | Claude Code | Sonnet · medium | ✅ 2026-11-08 |
 | 48 | Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm | Claude Code | Sonnet · medium | ✅ 2026-11-08 |
-| 49 | Quản trị và nhóm trang đăng nhập | Claude Code | Sonnet · medium | ⬜ |
+| 49 | Quản trị và nhóm trang đăng nhập | Claude Code | Sonnet · medium | ✅ 2026-11-08 |
 
-## ▶️ Đợt tiếp theo: Đợt 49 — Quản trị và nhóm trang đăng nhập
+## ▶️ Đợt tiếp theo: GĐ E đã xong, chưa có đợt mới
 
 ---
 
@@ -1197,10 +1197,13 @@ Việc nên làm thêm: Composer của Trợ lý dính ở `4.75rem` (hơi cao h
 
 ---
 
-### Đợt 49 — Quản trị và nhóm trang đăng nhập
+### Đợt 49 — Quản trị và nhóm trang đăng nhập ✅ 2026-11-08
 DECISIONS #96 · `docs/DESIGN.md` mục 9
-- [ ] **Quản trị** (`features/admin/pages`): trang vào Quản trị dạng lưới `IconTile`; Tài khoản, Yêu cầu liên kết, Đề xuất, Đã xóa là danh sách thẻ ở điện thoại (bảng ở máy tính), thao tác chính trong `StickyActions` hoặc menu của thẻ; Cấu hình dùng `SectionCard`.
-- [ ] **Đăng nhập** (`PlainLayout`, Đăng nhập, Đăng ký, Xác thực OTP, Quên mật khẩu, Chờ duyệt, Không được duyệt, Chính sách bảo mật): header thương hiệu, form trong một thẻ, nút chính rộng toàn bộ.
-- [ ] Rà lần cuối mọi trang ở 375px: không cuộn ngang, vùng chạm ≥ 44px, chữ nền ≥ 16px.
+- [x] **Quản trị** (`features/admin/pages`): trang vào Quản trị dạng lưới `IconTile`; Tài khoản, Yêu cầu liên kết, Đề xuất, Đã xóa là danh sách thẻ ở điện thoại (bảng ở máy tính), thao tác chính trong `StickyActions` hoặc menu của thẻ; Cấu hình dùng `SectionCard`. ✅ 2026-11-08
+- [x] **Đăng nhập** (`PlainLayout`, Đăng nhập, Đăng ký, Xác thực OTP, Quên mật khẩu, Chờ duyệt, Không được duyệt, Chính sách bảo mật): header thương hiệu, form trong một thẻ, nút chính rộng toàn bộ. ✅ 2026-11-08
+- [x] Rà lần cuối mọi trang ở 375px: không cuộn ngang, vùng chạm ≥ 44px, chữ nền ≥ 16px. ✅ 2026-11-08
 
-**✅ Đã làm:** (điền khi xong)
+**✅ Đã làm:** **Quản trị**: `/quan-tri` thành trang vào `AdminHomePage` (lưới `IconTile` 4 cột, chấm số việc chờ cho Tài khoản, Yêu cầu liên kết, Duyệt đề xuất; `IconTile` thêm prop `count`); `AdminLayout` ẩn hàng chip ở điện thoại và ở trang vào. Tài khoản, Yêu cầu liên kết: thao tác ở chân thẻ, nút chia đều bề ngang (điện thoại), bảng giữ nguyên ở máy tính. `ProposalsPage` viết lại: thẻ ở điện thoại, bảng ở máy tính (nội dung mở bằng `<details>` "Xem nội dung"), trạng thái dùng `Badge` (bỏ các lớp màu không có token như `text-danger-fg`), bỏ `h1` trùng header. `DeletedMembersPage`: `SectionCard` + `ListRow` ở điện thoại, bảng ở máy tính. `SettingsPage` (Cấu hình): 3 `SectionCard` có icon, Hủy/Lưu trong `StickyActions`, bỏ `h1` trùng.
+**Đăng nhập**: thêm `components/shared/BrandHeader.tsx` (nền header, `favicon.svg` + "Tộc Phả"), dùng ở `PlainLayout`, `AuthLayout` (logo là link về Trang chủ, form trong một thẻ, tiêu đề 24px/700 primary) và `PolicyPage`; tiêu đề `ApprovalStatusCard` 20px/700 primary. Nút chính trong các form đã rộng toàn bộ (form là cột flex).
+**Rà 375px** (đọc mã, chưa mở app): đổi `text-xs` → `text-sm` ở hộp chi tiết thành viên đã xóa, thả xuống thông báo, đính kèm, tải tệp, đồng hồ dung lượng. `docs/DESIGN.md` mục 9 thêm `BrandHeader`, `IconTile count` và mô tả Đợt 49.
+Việc nên làm thêm: điện thoại vào thẳng `/quan-tri/...` từ link ngoài (không có lịch sử) thì không có nút quay lại về lưới, phải qua Thêm → Quản trị; `TreeToolbar` máy tính còn nút `min-h-9`; chuỗi UI của Đề xuất, Đã xóa, Cấu hình vẫn viết thẳng trong trang (có từ trước).

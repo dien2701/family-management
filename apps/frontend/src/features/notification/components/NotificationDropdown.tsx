@@ -60,7 +60,7 @@ export function NotificationDropdown({ onClose }: Props) {
             >
               <h4 className={`text-sm ${n.isRead ? 'font-medium text-foreground' : 'font-semibold text-primary'}`}>{n.title}</h4>
               <p className="mt-1 text-sm whitespace-pre-line text-text-muted">{n.body}</p>
-              <p className="text-xs text-text-muted mt-2">{formatDateTime(n.createdAt).slice(0, -5)}</p>
+              <p className="text-sm text-text-muted mt-2">{formatDateTime(n.createdAt).slice(0, -5)}</p>
             </div>
           ))
         )}

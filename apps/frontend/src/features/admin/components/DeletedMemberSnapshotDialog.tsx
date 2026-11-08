@@ -110,7 +110,7 @@ export function DeletedMemberSnapshotDialog({ auditId, onClose }: DeletedMemberS
                     >
                       {att.fileName}
                     </a>
-                    <span className="text-xs text-text-muted">
+                    <span className="text-sm text-text-muted">
                       ({(att.sizeBytes / 1024).toFixed(1)} KB)
                     </span>
                   </li>

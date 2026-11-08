@@ -8,6 +8,9 @@ export const adminStrings = {
     label: 'Khu quản trị',
     accounts: 'Người dùng',
     linkRequests: 'Yêu cầu liên kết',
+    proposals: 'Duyệt đề xuất',
+    deleted: 'Thành viên đã xóa',
+    settings: 'Cấu hình',
   },
   accounts: {
     title: 'Người dùng',

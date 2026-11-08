@@ -1,5 +1,6 @@
-import { ArrowLeft, TreeDeciduous } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Link } from 'react-router'
+import { BrandHeader } from '@/components/shared/BrandHeader'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouteTitle } from '@/hooks/useRouteTitle'
 import { policySections } from '../policyContent'
@@ -15,14 +16,7 @@ export function PolicyPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex h-14 max-w-3xl items-center gap-3 px-4 md:px-6">
-          <span className="flex size-10 items-center justify-center rounded-button bg-primary text-primary-fg">
-            <TreeDeciduous className="size-6" aria-hidden="true" />
-          </span>
-          <span className="text-lg leading-tight font-bold text-primary">Tộc Phả</span>
-        </div>
-      </header>
+      <BrandHeader className="max-w-3xl" />
 
       <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 md:px-6">
         <Link
@@ -34,7 +28,7 @@ export function PolicyPage() {
         </Link>
 
         <article className="mt-2 rounded-card border border-border bg-surface p-4 shadow-card md:p-6">
-          <h1 className="text-xl leading-tight font-bold md:text-2xl">Chính sách bảo mật</h1>
+          <h1 className="text-2xl leading-tight font-bold text-primary">Chính sách bảo mật</h1>
           <p className="mt-2 text-sm text-text-muted">
             Phiên bản {POLICY_VERSION} · Áp dụng theo Nghị định 13/2023/NĐ-CP về bảo vệ dữ liệu cá
             nhân
@@ -43,7 +37,7 @@ export function PolicyPage() {
           <div className="mt-6 flex flex-col gap-6">
             {policySections.map((section) => (
               <section key={section.title} aria-labelledby={section.id}>
-                <h2 id={section.id} className="text-lg leading-tight font-semibold">
+                <h2 id={section.id} className="text-lg leading-tight font-bold text-primary">
                   {section.title}
                 </h2>
                 {section.intro && <p className="mt-2">{section.intro}</p>}

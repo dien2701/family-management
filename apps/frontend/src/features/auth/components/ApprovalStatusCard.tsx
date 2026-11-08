@@ -32,7 +32,7 @@ export function ApprovalStatusCard({
       >
         <Icon className="size-8" aria-hidden="true" />
       </span>
-      <h2 id="approval-title" className="text-lg leading-tight font-semibold">
+      <h2 id="approval-title" className="text-xl leading-tight font-bold text-primary">
         {title}
       </h2>
       <p className="text-text-muted">{description}</p>

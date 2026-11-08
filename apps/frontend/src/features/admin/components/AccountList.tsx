@@ -83,6 +83,7 @@ export function AccountList({ accounts, selfId, onAction, onLinkAction }: Accoun
               selfId={selfId}
               onAction={onAction}
               onLinkAction={onLinkAction}
+              className="border-t border-border pt-3"
             />
           </li>
         ))}

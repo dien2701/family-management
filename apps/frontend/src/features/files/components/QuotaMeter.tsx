@@ -39,9 +39,9 @@ export function QuotaMeter({ usedMb, limitMb, className }: QuotaMeterProps) {
         {usedMb.toFixed(1)} MB / {limitMb.toFixed(0)} MB
       </meter>
       {isCritical ? (
-        <p className="text-xs text-destructive">Dung lượng sắp hết, vui lòng dọn dẹp bớt tài liệu.</p>
+        <p className="text-sm text-destructive">Dung lượng sắp hết, vui lòng dọn dẹp bớt tài liệu.</p>
       ) : isWarning ? (
-        <p className="text-xs text-warning">Dung lượng đã sử dụng hơn 80%.</p>
+        <p className="text-sm text-warning">Dung lượng đã sử dụng hơn 80%.</p>
       ) : null}
     </div>
   )

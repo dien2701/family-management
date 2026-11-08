@@ -1,5 +1,6 @@
 import { Link2, Unlink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/utils/cn'
 import type { AccountAdmin } from '@/types/api'
 import { actionsFor, linkActionFor } from '../accountRules'
 import type { AccountAction, LinkAction } from '../api'
@@ -10,6 +11,7 @@ type AccountActionsProps = {
   selfId: number | undefined
   onAction: (account: AccountAdmin, action: AccountAction) => void
   onLinkAction: (account: AccountAdmin, action: LinkAction) => void
+  className?: string
 }
 
 const VARIANT = {
@@ -22,13 +24,14 @@ const VARIANT = {
 } as const satisfies Record<AccountAction, 'primary' | 'danger' | 'secondary'>
 
 // Mỗi nút có aria-label kèm tên để trình đọc màn hình phân biệt các dòng; bấm chỉ mở hộp xác nhận
-export function AccountActions({ account, selfId, onAction, onLinkAction }: AccountActionsProps) {
+export function AccountActions({ account, selfId, onAction, onLinkAction, className }: AccountActionsProps) {
   const actions = actionsFor(account, selfId)
   const linkAction = linkActionFor(account, selfId)
   if (actions.length === 0 && linkAction === null) return null
   const name = account.fullName ?? ''
   return (
-    <div className="flex flex-wrap gap-2 md:justify-end">
+    // Điện thoại: hàng nút chia đều bề ngang ở chân thẻ; máy tính: nút gọn căn phải trong ô bảng
+    <div className={cn('flex flex-wrap gap-2 *:flex-1 md:justify-end md:*:flex-none', className)}>
       {actions.map((action) => (
         <Button
           key={action}

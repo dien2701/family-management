@@ -135,7 +135,7 @@ export function FileUploadDropzone({ memberId, onUploadSuccess, className }: Fil
           <p className="mb-1 text-sm font-medium">
             Kéo thả tệp vào đây, hoặc click để chọn tệp
           </p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Hỗ trợ PNG, JPG, WEBP, PDF, DOCX, XLSX (tối đa 10MB)
           </p>
           <input
@@ -156,7 +156,7 @@ export function FileUploadDropzone({ memberId, onUploadSuccess, className }: Fil
               <span className="truncate text-sm font-medium" title={file.name}>
                 {file.name}
               </span>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-sm text-muted-foreground">
                 {(file.size / 1024 / 1024).toFixed(2)} MB
               </span>
             </div>
@@ -172,7 +172,7 @@ export function FileUploadDropzone({ memberId, onUploadSuccess, className }: Fil
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 rounded bg-destructive/10 p-2 text-xs text-destructive">
+            <div className="flex items-center gap-2 rounded bg-destructive/10 p-2 text-sm text-destructive">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>

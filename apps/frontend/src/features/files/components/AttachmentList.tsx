@@ -127,7 +127,7 @@ export function AttachmentList({ attachments, onDeleteSuccess, className }: Atta
                   <span className="truncate text-sm font-medium" title={doc.title || doc.fileName}>
                     {doc.title || doc.fileName}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-sm text-muted-foreground">
                     {(doc.sizeBytes / 1024 / 1024).toFixed(2)} MB • {new Date(doc.createdAt).toLocaleDateString('vi-VN')}
                   </span>
                 </div>

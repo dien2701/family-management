@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/utils/cn'
 import type { LinkRequest } from '@/types/api'
 import { formatDate } from '@/utils/date'
 import { initialOf } from '@/utils/text'
@@ -41,9 +42,18 @@ function MemberLink({ request }: { request: LinkRequest }) {
 }
 
 // Mỗi nút có aria-label kèm tên tài khoản để trình đọc màn hình phân biệt các dòng; bấm chỉ mở hộp xác nhận
-function Actions({ request, onDecide }: { request: LinkRequest; onDecide: LinkRequestListProps['onDecide'] }) {
+function Actions({
+  request,
+  onDecide,
+  className,
+}: {
+  request: LinkRequest
+  onDecide: LinkRequestListProps['onDecide']
+  className?: string
+}) {
   return (
-    <div className="flex flex-wrap gap-2 md:justify-end">
+    // Điện thoại: hai nút chia đều ở chân thẻ; máy tính: gọn, căn phải trong ô bảng
+    <div className={cn('flex gap-2 *:flex-1 md:justify-end md:*:flex-none', className)}>
       <Button
         aria-label={s.linkRequests.approveFor(request.accountFullName)}
         onClick={() => onDecide(request, 'approve')}
@@ -78,7 +88,7 @@ export function LinkRequestList({ requests, onDecide }: LinkRequestListProps) {
               <MemberLink request={request} />
             </div>
             <p className="text-sm text-text-muted">{s.linkRequests.sentAt(formatDate(request.createdAt))}</p>
-            <Actions request={request} onDecide={onDecide} />
+            <Actions request={request} onDecide={onDecide} className="border-t border-border pt-3" />
           </li>
         ))}
       </ul>

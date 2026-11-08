@@ -1,12 +1,13 @@
 import { AppSettingsPage } from '@/features/account/pages/AppSettingsPage'
 import { ProfilePage } from '@/features/account/pages/ProfilePage'
-import { Navigate, type RouteObject } from 'react-router'
+import type { RouteObject } from 'react-router'
 import { AdminProposalsPage } from '@/features/admin/pages/ProposalsPage'
 import { MyProposalsPage } from '@/features/proposal/pages/MyProposalsPage'
 import { InboxPage } from '@/features/notification/pages/InboxPage'
 import { GuestPushPage } from '@/features/notification/pages/GuestPushPage'
 import { SettingsPage } from '@/features/notification/pages/SettingsPage'
 import { AdminLayout } from '@/features/admin/components/AdminLayout'
+import { AdminHomePage } from '@/features/admin/pages/AdminHomePage'
 import { AccountsPage } from '@/features/admin/pages/AccountsPage'
 import { LinkRequestsPage } from '@/features/admin/pages/LinkRequestsPage'
 import { DeletedMembersPage } from '@/features/admin/pages/DeletedMembersPage'
@@ -170,7 +171,7 @@ export const routes: RouteObject[] = [
                       {
                         element: <AdminLayout />,
                         children: [
-                          { index: true, element: <Navigate to="/quan-tri/tai-khoan" replace /> },
+                          { index: true, element: <AdminHomePage />, handle: handle(adminStrings.menu) },
                           {
                             path: 'tai-khoan',
                             element: <AccountsPage />,

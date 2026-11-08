@@ -1,13 +1,15 @@
-import { NavLink, Outlet } from 'react-router'
+import { NavLink, Outlet, useLocation } from 'react-router'
 import { cn } from '@/utils/cn'
 import { usePendingLinkRequests } from '../hooks'
 import { adminStrings as s } from '../strings'
 
 import { usePendingProposalsCount } from '../../proposal/hooks'
 
-// Khung chung của khu Quản trị: hàng chọn mục ở trên, nội dung của mục ở dưới. Đề xuất, Thành viên đã xóa và
-// Cấu hình sẽ thêm vào đây ở các đợt sau. Quyền thật vẫn do backend kiểm tra; route đã chặn người không phải Admin.
+// Khung chung của khu Quản trị. `/quan-tri` là lưới ô lối tắt (AdminHomePage); ở các mục con, máy tính có hàng
+// chọn mục ở trên, điện thoại bỏ hàng này và quay về lưới bằng nút quay lại của header (DESIGN §9).
+// Quyền thật vẫn do backend kiểm tra; route đã chặn người không phải Admin.
 export function AdminLayout() {
+  const isHome = useLocation().pathname.replace(/\/$/, '') === '/quan-tri'
   const pending = usePendingLinkRequests()
   const pendingCount = pending.data?.length ?? 0
   const pendingProposalsQuery = usePendingProposalsCount()
@@ -15,7 +17,7 @@ export function AdminLayout() {
 
   return (
     <div className="flex flex-col gap-4">
-      <nav aria-label={s.nav.label}>
+      <nav aria-label={s.nav.label} className={cn('max-md:hidden', isHome && 'hidden')}>
         <ul className="flex flex-wrap gap-2">
           <li>
             <SectionLink to="/quan-tri/tai-khoan" label={s.nav.accounts} />
@@ -24,13 +26,13 @@ export function AdminLayout() {
             <SectionLink to="/quan-tri/yeu-cau-lien-ket" label={s.nav.linkRequests} count={pendingCount} />
           </li>
           <li>
-            <SectionLink to="/quan-tri/de-xuat" label="Duyệt đề xuất" count={pendingProposalsCount} />
+            <SectionLink to="/quan-tri/de-xuat" label={s.nav.proposals} count={pendingProposalsCount} />
           </li>
           <li>
-            <SectionLink to="/quan-tri/da-xoa" label="Thành viên đã xóa" />
+            <SectionLink to="/quan-tri/da-xoa" label={s.nav.deleted} />
           </li>
           <li>
-            <SectionLink to="/quan-tri/cau-hinh" label="Cấu hình" />
+            <SectionLink to="/quan-tri/cau-hinh" label={s.nav.settings} />
           </li>
         </ul>
       </nav>
