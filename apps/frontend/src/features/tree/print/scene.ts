@@ -4,6 +4,7 @@
 import type { TreeMember } from '@/types/api'
 import { initialOf } from '@/utils/text'
 import { cardTone, SHAPE_RADIUS, TONE_VARS, type CardLook, type CardTone, type TreePalette } from '../cardStyle'
+import { yearsText } from '../nodeText'
 import { treeStrings } from '../strings'
 import type { LayoutEdge, LayoutResult, PlacedNode } from '../layout/types'
 import { yieldToBrowser } from './async'
@@ -150,45 +151,17 @@ function textEl(
   })}>${escapeXml(content)}</text>`
 }
 
-const CROSS_W = 9
-
-/**
- * Năm sinh – năm mất; dấu ✝ vẽ bằng nét vì font không có ký tự này. `center` thì `x` là tâm dòng (ô dọc),
- * không thì là mép trái (ô ngang).
- */
+/** Năm sinh – năm mất như trên màn hình. `center` thì `x` là tâm dòng (ô dọc), không thì là mép trái (ô ngang). */
 function yearsSvg(member: TreeMember, x: number, baseline: number, size: number, colors: PrintColors, center = false): string {
-  const fill = colors.textMuted
-  if (!member.isDeceased) {
-    if (member.birthYear === null) return ''
-    return textEl(x, baseline, String(member.birthYear), size, false, fill, center ? 'middle' : undefined)
-  }
-  const k = size / 14
-  const crossW = CROSS_W * k
-  const prefix = member.birthYear === null ? '' : `${member.birthYear} – `
-  const death = String(member.deathYear ?? '?')
-  const prefixW = prefix ? measure(prefix, size, false) : 0
-  const width = prefixW + crossW + 3 * k + measure(death, size, false)
-  let cursor = center ? x - width / 2 : x
-  let out = ''
-  if (prefix) {
-    out += textEl(cursor, baseline, prefix, size, false, fill)
-    cursor += prefixW
-  }
-  out += `<path${attrs({
-    d: `M${num(cursor + crossW / 2)} ${num(baseline - 12 * k)}V${num(baseline)}M${num(cursor + k)} ${num(baseline - 8 * k)}H${num(cursor + crossW - k)}`,
-    fill: 'none',
-    stroke: fill,
-    'stroke-width': 1.6,
-  })}/>`
-  out += textEl(cursor + crossW + 3 * k, baseline, death, size, false, fill)
-  return out
+  const text = yearsText(member)
+  return text ? textEl(x, baseline, text, size, false, colors.textMuted, center ? 'middle' : undefined) : ''
 }
 
 /** Ảnh tròn (người đã mất dùng bản xám); không có ảnh thì chữ cái đầu trên nền theo tông như màn hình. */
 function avatarSvg(member: TreeMember, cx: number, cy: number, size: number, tone: CardTone, input: SceneInput): string {
   const { colors, photos } = input
   const url = member.avatarUrl
-  const photo = url && photos ? ((tone === 'gone' ? photos.get(grayKey(url)) : undefined) ?? photos.get(url)) : undefined
+  const photo = url && photos ? ((member.isDeceased ? photos.get(grayKey(url)) : undefined) ?? photos.get(url)) : undefined
   if (photo) {
     const x = cx - size / 2
     const y = cy - size / 2
@@ -275,7 +248,7 @@ function nodeSvg(placed: PlacedNode, ox: number, oy: number, input: SceneInput):
   if (withAvatar) out += avatarSvg(member, x + AVATAR_PAD + AVATAR / 2, y + H / 2, AVATAR, tone, input)
 
   const lines = wrapName(member.fullName, textWidth, 16)
-  const hasYears = look.card.years && (member.isDeceased || member.birthYear !== null)
+  const hasYears = look.card.years && yearsText(member) !== ''
   const block = lines.length * 19 + (hasYears ? 18 : 0)
   const top = y + (H - block) / 2
   lines.forEach((line, i) => {

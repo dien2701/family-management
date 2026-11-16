@@ -48,13 +48,13 @@ function QuickAddButton({
 }
 
 /** Ảnh tròn; chưa có ảnh thì chữ cái đầu trên nền theo tông. Người đã mất ảnh xám (#100). */
-function Avatar({ name, url, tone, className }: { name: string; url: string | null; tone: CardTone; className: string }) {
+function Avatar({ name, url, tone, gone, className }: { name: string; url: string | null; tone: CardTone; gone: boolean; className: string }) {
   return url ? (
     <img
       src={url}
       alt=""
       draggable={false}
-      className={cn('shrink-0 rounded-full object-cover', tone === 'gone' && 'grayscale', className)}
+      className={cn('shrink-0 rounded-full object-cover', gone && 'grayscale', className)}
     />
   ) : (
     <span
@@ -160,7 +160,7 @@ function MemberNodeView({ data }: NodeProps<MemberFlowNode>) {
         ) : vertical ? (
           // Thẻ dọc kiểu mẫu: ảnh tròn 44px, tên 15px tối đa 2 dòng, năm 13px sát đáy (chữ nhãn sơ đồ, DESIGN §6)
           <>
-            {card.photo && <Avatar name={name} url={member.avatarUrl} tone={tone} className="mb-1.5 size-11" />}
+            {card.photo && <Avatar name={name} url={member.avatarUrl} tone={tone} gone={member.isDeceased} className="mb-1.5 size-11" />}
             <span className="line-clamp-2 w-full text-center text-[15px] leading-5 font-semibold [overflow-wrap:anywhere]">
               {name}
             </span>
@@ -172,7 +172,7 @@ function MemberNodeView({ data }: NodeProps<MemberFlowNode>) {
           </>
         ) : (
           <>
-            {card.photo && <Avatar name={name} url={member.avatarUrl} tone={tone} className="size-10" />}
+            {card.photo && <Avatar name={name} url={member.avatarUrl} tone={tone} gone={member.isDeceased} className="size-10" />}
             <span className="min-w-0 flex-1">
               <span className="block text-base leading-tight font-semibold [overflow-wrap:anywhere]">{name}</span>
               {years && <span className="block truncate text-sm text-text-muted tabular-nums">{years}</span>}

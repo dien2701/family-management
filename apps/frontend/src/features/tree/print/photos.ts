@@ -10,7 +10,8 @@ const BATCH = 6
 export const grayKey = (url: string) => `gray:${url}`
 
 async function toPng(url: string, gray: boolean, signal: AbortSignal): Promise<string | null> {
-  const response = await fetch(url, { signal })
+  // `reload`: bỏ qua bản cache do thẻ <img> (không CORS) để lại, nếu không fetch CORS sẽ hỏng
+  const response = await fetch(url, { signal, cache: 'reload' })
   if (!response.ok) return null
   const bitmap = await createImageBitmap(await response.blob())
   try {
@@ -49,8 +50,9 @@ export async function loadPhotos(
           const gray = grayUrls.has(url)
           const png = await toPng(url, gray, signal)
           if (png) result.set(gray ? grayKey(url) : url, png)
-        } catch {
+        } catch (error) {
           throwIfAborted(signal)
+          console.warn('Không tải được ảnh để in:', url, error)
         }
         done += 1
       }),

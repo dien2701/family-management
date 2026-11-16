@@ -2,7 +2,7 @@
 // (lớp Tailwind) lẫn bản in SVG (tên biến CSS), để hai bên không bao giờ lệch nhau.
 import type { TreeNode } from '@/types/api'
 
-/** Tông của một ô: theo giới tính, nhưng người đã mất luôn là `gone` (như bản mẫu). */
+/** Tông của một ô: theo giới tính, nhưng người đã mất luôn là `gone` (xám, như bản mẫu). */
 export type CardTone = 'male' | 'female' | 'unknown' | 'gone' | 'empty'
 
 export function cardTone(node: TreeNode): CardTone {

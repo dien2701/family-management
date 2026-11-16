@@ -505,7 +505,7 @@
     → **Chốt:**
     - **Thẻ dọc là mặc định:** ảnh tròn 44px trên cùng (chưa có ảnh thì chữ cái đầu, nền theo tông), tên 15px/600 căn giữa tối đa 2 dòng, năm sinh–mất 13px sát đáy. Thẻ ngang 200×72 vẫn giữ làm lựa chọn.
     - **Màu theo giới tính:** Nam `--color-tree-male`, Nữ `--color-tree-female`. **Chưa điền giới tính thì dùng màu trung tính** `--color-tree-unknown`; **không đoán giới tính theo tên đệm** ("Văn"/"Thị") vì 28 thành viên seed có tên không theo quy tắc đó. **Người đã mất luôn xám** (`--color-tree-gone`, ảnh `grayscale`), đè lên màu giới tính, đúng như bản mẫu.
-    - **Màu không bao giờ là tín hiệu duy nhất:** giới tính nằm trong nhãn đọc màn hình của ô, người đã mất luôn có dấu ✝, và có sẵn bảng màu **Trung tính** cho người khó phân biệt màu.
+    - **Màu không bao giờ là tín hiệu duy nhất:** giới tính nằm trong nhãn đọc màn hình của ô, người đã mất ~~luôn có dấu ✝~~ (🔁 #101: dòng năm `sinh – mất` và ảnh xám), và có sẵn bảng màu **Trung tính** cho người khó phân biệt màu.
     - **Đường hôn nhân** màu `--color-tree-marriage` (đỏ nhạt), **nét đứt** khi vợ/chồng không kề nhau; đường cha mẹ–con giữ `--color-tree-line`. Thuật toán layout **không đổi**, chỉ đổi cách vẽ.
     - **Cấu hình cây** (lưu trên máy, khóa `tocpha.tree.view`): lọc người (Tất cả · Chỉ Nam · Chỉ huyết thống), bật-tắt ảnh / danh hiệu / năm, 5 bảng màu, 4 hình dạng thẻ. **"Chỉ Nam" vẫn giữ người chưa điền giới tính**, nếu không cây gần như trống.
     - **Giữ nguyên mọi tùy chọn sẵn có:** ngang/dọc, cỡ Nhỏ/Vừa/Lớn, kéo đổi cỡ từng ô, thu gọn nhánh, ô trống, in khổ lớn, kéo-thả chuyển nhánh.
@@ -514,6 +514,15 @@
     - **Bản in** (`print/scene.ts`) phải đồng bộ với thẻ mới, nếu không PDF/PNG sẽ khác màn hình.
     - **Xưng hô** (Đợt 51): hàm thuần `utils/tree/kinship.ts`, tính hoàn toàn ở máy người dùng, **không có API và không có bản Java**; khách cũng dùng được (cây vốn công khai, #88). Thiếu giới tính thì trả dạng gộp ("Ông/Bà", "Anh/Chị") kèm gợi ý điền giới tính; thứ bậc anh/em lấy theo `sortOrder` trên cây.
     - **Không lấy từ mẫu:** nút "Nhập JSON" (không hợp với mô hình Admin dựng cây tay) và bộ ảnh minh họa theo giới tính/độ tuổi (giữ chữ cái đầu).
+
+## Z. Xem cây trước khi in và dòng năm (chốt 2026-11-16, hỏi đáp với người dùng)
+
+101. **Bỏ dấu ✝ ở dòng năm, sửa ảnh bản in, ẩn bảng tùy chọn khi xem trước** — Đợt 52 (thay một phần #100)
+    → **Chốt:**
+    - **Màu ô:** người đã mất **vẫn xám** như #100 (người dùng xác nhận lại sau khi thử bỏ).
+    - **Dòng năm** (cây, bản in, chọn người, menu ô): đã mất `1930 – 1990`, phần chưa rõ ghi `_` (`_ – 1990`, `1930 – _`, `_ – _`); còn sống chỉ năm sinh, chưa rõ thì để trống. Không còn dấu ✝. Việc đã mất vẫn có trong nhãn đọc màn hình của ô.
+    - **Ảnh trong bản in:** tải ảnh Cloudinary bằng `fetch(..., { cache: 'reload' })` để không dính bản cache không-CORS của thẻ `<img>`; CSP thêm `https://res.cloudinary.com` vào `connect-src`.
+    - **Màn Xem cây trước khi in:** bảng tùy chọn (người gốc, khổ giấy, hướng, định dạng, ảnh) **ẩn mặc định ở mọi khổ màn hình**, nút "Tùy chọn" ở chân màn để mở/đóng.
 
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.

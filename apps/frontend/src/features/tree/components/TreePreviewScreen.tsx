@@ -417,7 +417,7 @@ function PreviewBody({ graph, index, generations, defaultRootId, layoutOptions, 
 
         <aside
           className={cn(
-            'max-h-[45dvh] shrink-0 flex-col gap-4 overflow-y-auto border-t border-border p-4 md:flex md:max-h-none md:w-80 md:border-t-0 md:border-l',
+            'max-h-[45dvh] shrink-0 flex-col gap-4 overflow-y-auto border-t border-border p-4 md:max-h-none md:w-80 md:border-t-0 md:border-l',
             panelOpen ? 'flex' : 'hidden',
           )}
         >
@@ -508,7 +508,7 @@ function PreviewBody({ graph, index, generations, defaultRootId, layoutOptions, 
         )}
         {message && <Alert variant={message.variant}>{message.text}</Alert>}
         <div className="flex flex-wrap justify-end gap-2">
-          <Button variant="secondary" className="mr-auto md:hidden" onClick={() => setPanelOpen((v) => !v)}>
+          <Button variant="secondary" className="mr-auto" aria-expanded={panelOpen} onClick={() => setPanelOpen((v) => !v)}>
             <SlidersHorizontal aria-hidden="true" />
             {panelOpen ? p.hideOptions : p.options}
           </Button>

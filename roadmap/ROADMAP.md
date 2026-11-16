@@ -88,6 +88,7 @@
 | **GĐ F** | **Cây gia phả theo mẫu `giapha.top/demo` (DECISIONS #100)** | | | |
 | 50 | Cây: thẻ dọc kiểu mẫu, màu theo giới tính, MiniMap, hộp Cấu hình cây | Claude Code | Sonnet · high | ✅ 2026-11-16 |
 | 51 | Cây: tính xưng hô giữa hai người | Claude Code | **Opus** · high | ✅ 2026-11-16 |
+| 52 | Cây: ảnh trong Xem cây trước khi in, dòng năm không ✝, ẩn bảng tùy chọn | Claude Code | **Opus** · medium | ✅ 2026-11-16 |
 
 ## ▶️ Đợt tiếp theo: chưa có (GĐ F đã xong)
 
@@ -1317,3 +1318,19 @@ File chính: `utils/tree/{kinship,kinship.test}.ts`, `features/tree/components/{
 `features/tree/{strings.ts,pages/TreePage.tsx}`.
 Việc nên làm thêm: tên gọi theo miền (Bắc "Bác" cho anh/chị của mẹ, Nam "Cậu/Dì") và "Ông chú/Bà cô" cho em của ông bà
 hiện ghi gọn là "Ông/Bà"; hỏi lại người dùng nếu cần chi tiết hơn.
+
+### Đợt 52 - Cây: ảnh trong Xem cây trước khi in, dòng năm không ✝, ẩn bảng tùy chọn ✅ 2026-11-16
+DECISIONS #101 (thay một phần #100)
+
+- [x] **Ảnh trong bản in**: `print/photos.ts` tải bằng `fetch(url, { cache: 'reload' })` và `console.warn` URL lỗi;
+      CSP nginx thêm `https://res.cloudinary.com` vào `connect-src`. ✅ 2026-11-16
+- [x] **Màu người đã mất**: thử đổi sang màu giới tính rồi người dùng chốt **giữ xám** như #100; ảnh xám đọc
+      thẳng `member.isDeceased` (`MemberNode.tsx`, `print/scene.ts`). ✅ 2026-11-16
+- [x] **Dòng năm** `yearsText`: đã mất `sinh – mất`, phần chưa rõ ghi `_`; còn sống chỉ năm sinh. Bản in dùng chung
+      `yearsText`, bỏ dấu ✝ vẽ bằng nét. ✅ 2026-11-16
+- [x] **Bảng tùy chọn** ở `TreePreviewScreen.tsx` ẩn mặc định mọi khổ màn hình, nút "Tùy chọn" luôn có. ✅ 2026-11-16
+
+**✅ Đã làm:** như checklist. Xóa `yearsLines` (không còn dùng). Ô thiếu màu trong ảnh người dùng gửi là do cả 4 người đều đã mất (xám đúng thiết kế).
+File chính: `features/tree/{cardStyle,nodeText}.ts`, `features/tree/print/{photos,scene}.ts`,
+`features/tree/components/{MemberNode,TreePreviewScreen}.tsx`, `infra/nginx/security-headers.conf`, `docs/{DECISIONS,DESIGN}.md`.
+Việc nên làm thêm: `features/tree/dev/LayoutSvg.tsx` (trang dev) còn ghi `✝` ở dòng năm, chưa đổi vì ngoài phạm vi.
