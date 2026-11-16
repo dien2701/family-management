@@ -83,7 +83,13 @@ export function AccountsPage() {
     if (!pending?.account.id) return
     action.mutate(
       { id: pending.account.id, action: pending.action },
-      { onSuccess: () => setPending(null) },
+      {
+        onSuccess: () => {
+          // Tài khoản xóa vĩnh viễn không còn nên đóng luôn hộp chi tiết
+          if (pending.action === 'purge') setViewing(null)
+          setPending(null)
+        },
+      },
     )
   }
 

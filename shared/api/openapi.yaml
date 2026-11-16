@@ -410,6 +410,31 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/admin/accounts/{id}/purge:
+    post:
+      tags:
+        - admin-accounts
+      summary: Xóa vĩnh viễn tài khoản đã xóa
+      description: "Chỉ tài khoản đang ở \"Đã xóa\" (409 `INVALID_ACCOUNT_STATE` khi chưa xóa). Xóa hẳn tài khoản cùng dữ liệu riêng: phiên đăng nhập, đồng ý dữ liệu, yêu cầu liên kết, thông báo, Web Push, Trợ lý AI, bài khấn đã điền, ảnh đại diện tài khoản. Giữ đề xuất, nhật ký quản trị và dữ liệu gia phả. Không hoàn tác được; email được giải phóng để đăng ký lại."
+      operationId: purgeAccount
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Đã xóa vĩnh viễn
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/admin/accounts/{id}/unlock:
     post:
       tags:

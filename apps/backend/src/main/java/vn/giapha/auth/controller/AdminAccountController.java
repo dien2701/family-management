@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import vn.giapha.auth.dto.AccountAdminResponse;
@@ -153,6 +155,19 @@ class AdminAccountController {
     @PostMapping("/{id}/restore")
     AccountAdminResponse restore(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id) {
         return service.restore(current.userId(), id);
+    }
+
+    @Operation(operationId = "purgeAccount", summary = "Xóa vĩnh viễn tài khoản đã xóa",
+            description = "Chỉ tài khoản đang ở \"Đã xóa\". Xóa hẳn tài khoản cùng dữ liệu riêng, giữ đề xuất và audit.")
+    @ApiResponse(responseCode = "204", description = "Đã xóa vĩnh viễn")
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
+    @ApiResponse(responseCode = "409", ref = ApiRefs.CONFLICT)
+    @PostMapping("/{id}/purge")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void purge(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id) {
+        service.purge(current.userId(), id);
     }
 
     @Operation(operationId = "adminLinkMember", summary = "Admin gán thành viên cho tài khoản",

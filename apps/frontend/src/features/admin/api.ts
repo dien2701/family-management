@@ -18,6 +18,7 @@ export type AccountAction =
   | 'revoke-admin'
   | 'delete'
   | 'restore'
+  | 'purge'
 
 /** Gán hoặc hủy liên kết "Tôi là ai" ngay trên dòng tài khoản (DECISIONS #80). */
 export type LinkAction = 'link' | 'unlink'

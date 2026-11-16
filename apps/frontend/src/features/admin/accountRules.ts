@@ -21,7 +21,7 @@ export function actionsFor(account: AccountAdmin, selfId: number | undefined): A
   const isSelf = account.id !== undefined && account.id === selfId
   switch (displayStatusOf(account)) {
     case 'deleted':
-      return ['restore']
+      return ['restore', 'purge']
     case 'waiting':
       if (isSelf) return []
       return account.rootAdmin ? ['approve'] : ['approve', 'reject']

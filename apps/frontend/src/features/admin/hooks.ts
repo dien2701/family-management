@@ -21,6 +21,7 @@ const ACCOUNT_ACTION_DONE: Record<AccountAction, string> = {
   'revoke-admin': 'Đã gỡ quyền Admin.',
   delete: 'Đã xóa tài khoản.',
   restore: 'Đã khôi phục tài khoản.',
+  purge: 'Đã xóa vĩnh viễn tài khoản.',
 }
 
 /** Danh sách tài khoản; giữ trang cũ trên màn hình trong lúc tải trang/bộ lọc mới để không nháy skeleton. */

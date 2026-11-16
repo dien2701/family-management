@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import vn.giapha.auth.AccountApprovedEvent;
+import vn.giapha.auth.AccountPurgedEvent;
 import vn.giapha.auth.MemberDirectory;
 import vn.giapha.auth.dto.AccountAdminResponse;
 import vn.giapha.auth.dto.AccountFilter;
@@ -198,6 +199,26 @@ public class AdminAccountService {
         return mutate(actorId, targetId, "RESTORE", (actor, target, admins) -> target.restore());
     }
 
+    /**
+     * Xóa vĩnh viễn tài khoản đang ở "Đã xóa". Các module tự xóa dữ liệu riêng qua {@link AccountPurgedEvent}; bảng
+     * có FK (refresh token, đồng ý, yêu cầu liên kết, bài khấn đã điền) do DB xóa theo. Đề xuất và audit giữ nguyên.
+     */
+    @Transactional
+    public void purge(Long actorId, Long targetId) {
+        List<UserAccount> admins = users.lockAllAdmins();
+        UserAccount actor = requireAdmin(
+                admins.stream().filter(a -> a.getId().equals(actorId)).findFirst().orElse(null));
+        UserAccount target = findTarget(targetId);
+        forbidRoot(target);
+        if (!target.isDeleted()) {
+            throw invalidState();
+        }
+        Map<String, Object> before = snapshot(target);
+        events.publishEvent(new AccountPurgedEvent(target.getId()));
+        users.delete(target);
+        audit.write(actor.getId(), "PURGE", TARGET_TYPE, target.getId(), before, null);
+    }
+
     // ---------- Liên kết "Tôi là ai" (DECISIONS #80, #81) ----------
 
     /**
@@ -229,10 +250,7 @@ public class AdminAccountService {
         List<UserAccount> admins = users.lockAllAdmins();
         UserAccount actor = requireAdmin(
                 admins.stream().filter(a -> a.getId().equals(actorId)).findFirst().orElse(null));
-        UserAccount target = users.findByIdForUpdate(targetId)
-                .filter(u -> u.getStatus() != AccountStatus.PENDING)
-                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "ACCOUNT_NOT_FOUND",
-                        "Không tìm thấy tài khoản này."));
+        UserAccount target = findTarget(targetId);
         // Tài khoản đã xóa chỉ được khôi phục; chưa xóa thì không khôi phục được
         if (target.isDeleted() != "RESTORE".equals(action)) {
             throw invalidState();
@@ -241,6 +259,13 @@ public class AdminAccountService {
         change.apply(actor, target, admins);
         audit.write(actor.getId(), action, TARGET_TYPE, target.getId(), before, snapshot(target));
         return view(target);
+    }
+
+    private UserAccount findTarget(Long targetId) {
+        return users.findByIdForUpdate(targetId)
+                .filter(u -> u.getStatus() != AccountStatus.PENDING)
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "ACCOUNT_NOT_FOUND",
+                        "Không tìm thấy tài khoản này."));
     }
 
     private AccountAdminResponse view(UserAccount user) {

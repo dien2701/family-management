@@ -75,8 +75,8 @@ export function AccountList({ accounts, selfId, onOpen, onAction }: AccountListP
                 {quick.map((action) => (
                   <Button
                     key={action}
-                    variant={action === 'reject' ? 'outline' : 'primary'}
-                    className={action === 'reject' ? 'text-danger' : undefined}
+                    variant={action === 'reject' || action === 'purge' ? 'outline' : 'primary'}
+                    className={action === 'reject' || action === 'purge' ? 'text-danger' : undefined}
                     aria-label={`${accountActionText[action].label} ${name}`.trim()}
                     onClick={() => onAction(account, action)}
                   >

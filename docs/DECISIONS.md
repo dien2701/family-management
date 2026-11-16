@@ -537,6 +537,14 @@
     - Năm chưa rõ ghi `?` thay cho `_` (sửa #101). Còn sống chỉ năm sinh, chưa rõ thì để trống.
     - Bản in (`print/scene.ts`) dùng cùng số đo.
 
+## AB. Xóa vĩnh viễn tài khoản đã xóa (chốt 2026-11-16, hỏi đáp với người dùng)
+103. **Admin xóa vĩnh viễn tài khoản ở tab "Đã xóa"** (bổ sung #97)
+    → **Chốt:**
+    - Chỉ tài khoản đang ở "Đã xóa" (409 `INVALID_ACCOUNT_STATE` nếu chưa); Admin gốc vẫn được bảo vệ. `POST /api/admin/accounts/{id}/purge`, trả 204.
+    - Xóa hẳn dòng `user_account` và dữ liệu riêng: refresh token, đồng ý, yêu cầu liên kết, bài khấn đã điền (FK tự xóa theo), thông báo, tùy chọn nhận, Web Push, nhật ký gửi, Trợ lý AI (tin nhắn, đoạn chat, lượt dùng), ảnh đại diện tài khoản (cả tệp Cloudinary). Module tự xóa qua `AccountPurgedEvent` phát đồng bộ trong transaction.
+    - **Giữ** đề xuất đã gửi, audit (ghi `PURGE`) và dữ liệu gia phả do người đó tạo. Email được giải phóng, đăng ký lại là tài khoản mới.
+    - Giao diện: nút "Xóa vĩnh viễn" (viền đỏ) cạnh "Khôi phục" ở mỗi dòng và trong hộp chi tiết, bấm mở hộp xác nhận. Không có nút xóa tất cả.
+
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.
 - Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt. Cần cập nhật khi duyệt: Trợ lý AI nay mở cho khách (#91) và giọng nói do trình duyệt xử lý (#92).

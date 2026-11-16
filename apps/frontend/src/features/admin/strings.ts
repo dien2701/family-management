@@ -201,6 +201,14 @@ export const accountActionText: Record<AccountAction, ActionText> = {
     confirm: 'Khôi phục',
     danger: false,
   },
+  purge: {
+    label: 'Xóa vĩnh viễn',
+    title: (name) => `Xóa vĩnh viễn tài khoản ${name}?`,
+    description:
+      'Tài khoản bị xóa hẳn cùng thông báo, đăng ký nhận tin, đoạn chat Trợ lý AI, bài khấn đã điền và ảnh đại diện. Đề xuất đã gửi và thành viên đã liên kết vẫn giữ. Không thể hoàn tác; email này đăng ký lại sẽ là tài khoản mới.',
+    confirm: 'Xóa vĩnh viễn',
+    danger: true,
+  },
 }
 
 /** Thông báo theo mã lỗi của backend (AdminAccountService); mã lạ thì dùng thông báo máy chủ trả về. */

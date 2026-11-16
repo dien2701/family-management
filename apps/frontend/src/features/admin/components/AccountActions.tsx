@@ -13,7 +13,7 @@ type AccountActionsProps = {
 }
 
 const PRIMARY: AccountAction[] = ['restore', 'approve', 'unlock']
-const DANGER: AccountAction[] = ['reject', 'lock']
+const DANGER: AccountAction[] = ['reject', 'lock', 'purge']
 const dangerClass = 'border-danger/40 text-danger hover:bg-danger-bg'
 
 /**
