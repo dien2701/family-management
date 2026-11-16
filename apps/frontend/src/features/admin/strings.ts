@@ -1,3 +1,4 @@
+import { ROLE_LABEL } from '@/features/auth/strings'
 import type { AccountAction } from './api'
 
 // Chuỗi UI của module admin (không dùng i18n, chỉ tiếng Việt)
@@ -21,7 +22,7 @@ export const adminStrings = {
     emptyDeleted: 'Chưa có tài khoản nào bị xóa',
     emptyDeletedHint: 'Tài khoản bị xóa sẽ nằm ở đây và khôi phục được bất cứ lúc nào.',
     deletedAt: 'Ngày xóa',
-    deleteAdminHint: 'Muốn xóa tài khoản Admin thì gỡ quyền Admin trước.',
+    deleteAdminHint: 'Muốn xóa tài khoản Quản trị viên thì đổi sang vai trò khác trước.',
     search: 'Tìm tài khoản',
     searchPlaceholder: 'Họ tên hoặc email',
     statusFilter: 'Trạng thái',
@@ -117,8 +118,20 @@ export const adminStrings = {
     locked: 'Bị khóa',
     deleted: 'Đã xóa',
   },
-  role: { ADMIN: 'Admin', USER: 'User' },
-  rootAdmin: 'Admin gốc',
+  role: ROLE_LABEL,
+  /** Đổi vai trò bằng ô chọn trong hộp chi tiết (DECISIONS #106). */
+  roleChange: {
+    title: (name: string, role: string) => `Đổi vai trò của ${name} thành ${role}?`,
+    description: {
+      ADMIN:
+        'Quản trị viên có quyền như bạn: duyệt tài khoản, đổi vai trò và quản lý mọi dữ liệu. Người này cần đăng nhập lại để quyền có hiệu lực.',
+      BRANCH_HEAD:
+        'Trưởng chi được thêm thành viên, sửa và xóa hồ sơ do mình tạo, làm mọi thao tác trên cây và xem SĐT, email của thành viên. Người này cần đăng nhập lại để quyền có hiệu lực.',
+      USER: 'Người này chỉ còn quyền của Người dùng thường và cần đăng nhập lại.',
+    },
+    confirm: 'Đổi vai trò',
+  },
+  rootAdmin: 'Quản trị viên gốc',
   pagination: {
     label: 'Phân trang',
     first: 'Về trang đầu',
@@ -170,21 +183,6 @@ export const accountActionText: Record<AccountAction, ActionText> = {
     confirm: 'Mở khóa',
     danger: false,
   },
-  'grant-admin': {
-    label: 'Cấp Admin',
-    title: (name) => `Cấp quyền Admin cho ${name}?`,
-    description:
-      'Admin có quyền như bạn: duyệt tài khoản, cấp và gỡ quyền Admin. Người này cần đăng nhập lại để quyền có hiệu lực.',
-    confirm: 'Cấp Admin',
-    danger: false,
-  },
-  'revoke-admin': {
-    label: 'Gỡ Admin',
-    title: (name) => `Gỡ quyền Admin của ${name}?`,
-    description: 'Người này trở thành User thường và cần đăng nhập lại.',
-    confirm: 'Gỡ Admin',
-    danger: true,
-  },
   delete: {
     label: 'Xóa tài khoản',
     title: (name) => `Xóa tài khoản ${name}?`,
@@ -214,8 +212,8 @@ export const accountActionText: Record<AccountAction, ActionText> = {
 /** Thông báo theo mã lỗi của backend (AdminAccountService); mã lạ thì dùng thông báo máy chủ trả về. */
 export const accountErrorText: Record<string, string> = {
   LAST_ADMIN:
-    'Đây là Admin cuối cùng của hệ thống. Hãy cấp quyền Admin cho người khác trước.',
-  ROOT_ADMIN_PROTECTED: 'Đây là Admin gốc của hệ thống, không thể gỡ quyền, khóa, từ chối hay xóa.',
+    'Đây là Quản trị viên cuối cùng của hệ thống. Hãy cấp quyền Quản trị viên cho người khác trước.',
+  ROOT_ADMIN_PROTECTED: 'Đây là Quản trị viên gốc của hệ thống, không thể gỡ quyền, khóa, từ chối hay xóa.',
   SELF_ACTION_FORBIDDEN: 'Bạn không thể tự thực hiện thao tác này với chính mình.',
   INVALID_ACCOUNT_STATE:
     'Trạng thái tài khoản đã thay đổi nên không thực hiện được. Danh sách đã được tải lại.',

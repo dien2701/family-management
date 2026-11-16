@@ -173,7 +173,7 @@ public class ProposalService {
     private void requireAdmin(Long actorId) {
         boolean admin = auth.find(actorId).map(AuthFacade.Account::admin).orElse(false);
         if (!admin) {
-            throw new BusinessException(HttpStatus.FORBIDDEN, "FORBIDDEN", "Chỉ Admin được thực hiện thao tác này.");
+            throw new BusinessException(HttpStatus.FORBIDDEN, "FORBIDDEN", "Chỉ Quản trị viên được thực hiện thao tác này.");
         }
     }
 

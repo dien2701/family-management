@@ -115,13 +115,14 @@ public class SecurityConfig {
         return new SecretKeySpec(key, "HmacSHA256");
     }
 
-    /** Quyền theo claim: ROLE_ADMIN hoặc ROLE_USER. */
+    /** Quyền theo claim: ROLE_ADMIN, ROLE_BRANCH_HEAD hoặc ROLE_USER. */
     private Converter<Jwt, AbstractAuthenticationToken> jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             List<GrantedAuthority> authorities = new ArrayList<>();
-            boolean admin = CurrentUser.ROLE_ADMIN.equals(jwt.getClaimAsString(CurrentUser.CLAIM_SYSTEM_ROLE));
-            authorities.add(new SimpleGrantedAuthority(admin ? "ROLE_ADMIN" : "ROLE_USER"));
+            String role = jwt.getClaimAsString(CurrentUser.CLAIM_SYSTEM_ROLE);
+            boolean known = CurrentUser.ROLE_ADMIN.equals(role) || CurrentUser.ROLE_BRANCH_HEAD.equals(role);
+            authorities.add(new SimpleGrantedAuthority(known ? "ROLE_" + role : "ROLE_USER"));
             return authorities;
         });
         return converter;

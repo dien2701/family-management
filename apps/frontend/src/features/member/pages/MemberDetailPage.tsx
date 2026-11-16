@@ -8,7 +8,7 @@ import { FullPageSpinner } from '@/components/shared/FullPageSpinner'
 import { SectionCard } from '@/components/shared/SectionCard'
 import { StickyActions } from '@/components/shared/StickyActions'
 import { Button } from '@/components/ui/button'
-import { isApproved } from '@/features/auth/routing'
+import { canEditTree, isAdmin as isAdminUser, isApproved, isBranchHead } from '@/features/auth/routing'
 import { useAuth } from '@/hooks/useAuth'
 import { useMe } from '@/hooks/useMe'
 import { ApiError } from '@/services/client'
@@ -26,7 +26,7 @@ export function MemberDetailPage() {
   const { data: member, isLoading, isError } = useMemberDetail(memberId)
   const deleteMember = useDeleteMember()
   const { user } = useAuth()
-  const isAdmin = user?.systemRole === 'ADMIN'
+  const isAdmin = isAdminUser(user)
   // Hồ sơ của chính mình: tài khoản đã liên kết "Tôi là ai" với thành viên này (DECISIONS #76)
   const isSelf = useMe().data?.memberId === memberId
   const [confirming, setConfirming] = useState(false)
@@ -71,15 +71,18 @@ export function MemberDetailPage() {
     }
   }
 
-  const actions = (isAdmin || isSelf) && (
+  // Admin, hoặc Trưởng chi với hồ sơ do mình tạo: sửa mọi trường và xóa (DECISIONS #105)
+  const manages = isAdmin || (isBranchHead(user) && member.createdByMe)
+
+  const actions = (manages || isSelf) && (
     <>
       <Button asChild variant="secondary">
         <Link to={`/thanh-vien/${member.id}/sua`}>
           <Pencil aria-hidden="true" />
-          {isAdmin ? memberStrings.actions.edit : memberStrings.actions.editMine}
+          {manages ? memberStrings.actions.edit : memberStrings.actions.editMine}
         </Link>
       </Button>
-      {isAdmin && (
+      {manages && (
         <Button variant="danger" onClick={() => setConfirming(true)}>
           <Trash2 aria-hidden="true" />
           {memberStrings.actions.remove}
@@ -103,9 +106,9 @@ export function MemberDetailPage() {
         </SectionCard>
       )}
 
-      <RelativesSection memberId={member.id} canEdit={isAdmin || isSelf} />
+      <RelativesSection memberId={member.id} canEdit={manages || isSelf} />
 
-      <TreeSection memberId={member.id} isAdmin={isAdmin} />
+      <TreeSection memberId={member.id} isAdmin={canEditTree(user)} />
 
       {/* Tệp đính kèm cần đăng nhập và đã duyệt; khách chỉ xem phần hồ sơ (DECISIONS #88) */}
       {isApproved(user) && <AttachmentsSection memberId={member.id} canEdit={isAdmin || isSelf} />}

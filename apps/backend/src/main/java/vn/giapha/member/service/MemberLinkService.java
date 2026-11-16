@@ -91,7 +91,7 @@ public class MemberLinkService {
         }
         if (requests.existsByAccountIdAndStatus(actorId, LinkRequestStatus.PENDING)) {
             throw new BusinessException(HttpStatus.CONFLICT, "LINK_REQUEST_EXISTS",
-                    "Bạn đã gửi yêu cầu và đang chờ Admin duyệt. Hãy chờ kết quả hoặc nhờ Admin từ chối để gửi lại.");
+                    "Bạn đã gửi yêu cầu và đang chờ Quản trị viên duyệt. Hãy chờ kết quả hoặc nhờ Quản trị viên từ chối để gửi lại.");
         }
         MemberLinkRequest request = requests.save(new MemberLinkRequest(actorId, memberId, Instant.now(clock)));
         audit.write(actorId, "CREATE", REQUEST_TYPE, request.getId(), null, snapshot(request, null));
@@ -173,7 +173,7 @@ public class MemberLinkService {
         boolean admin = auth.find(actorId).filter(AuthFacade.Account::usable).map(AuthFacade.Account::admin)
                 .orElse(false);
         if (!admin) {
-            throw new BusinessException(HttpStatus.FORBIDDEN, "FORBIDDEN", "Chỉ Admin được thực hiện thao tác này.");
+            throw new BusinessException(HttpStatus.FORBIDDEN, "FORBIDDEN", "Chỉ Quản trị viên được thực hiện thao tác này.");
         }
     }
 

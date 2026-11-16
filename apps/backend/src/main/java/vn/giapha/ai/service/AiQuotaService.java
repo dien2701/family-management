@@ -20,6 +20,7 @@ import vn.giapha.ai.entity.AiUsage;
 import vn.giapha.ai.repository.AiUsageRepository;
 import vn.giapha.common.config.DynamicSettings;
 import vn.giapha.common.exception.BusinessException;
+import vn.giapha.common.security.CurrentUser;
 
 /**
  * Lượt hỏi AI trong ngày (IDEA §10; DECISIONS #73, #91): User 15, Admin 30, khách 15 (đọc từ {@link DynamicSettings},
@@ -41,8 +42,8 @@ public class AiQuotaService {
     }
 
     @Transactional(readOnly = true)
-    public AiQuota get(Long accountId, boolean admin) {
-        int limit = admin ? settings.aiQuotaAdmin() : settings.aiQuotaUser();
+    public AiQuota get(Long accountId, String systemRole) {
+        int limit = limitOf(systemRole);
         LocalDate today = today();
         int used = repository.findById(accountId).map(u -> u.usedOn(today)).orElse(0);
         return new AiQuota(limit, used, Math.max(0, limit - used), resetAt());
@@ -50,8 +51,8 @@ public class AiQuotaService {
 
     /** Kiểm tra rồi tăng lượt đã dùng; 429 {@code AI_QUOTA_EXCEEDED} khi hết lượt trong ngày. */
     @Transactional
-    public AiQuota checkAndIncrement(Long accountId, boolean admin) {
-        int limit = admin ? settings.aiQuotaAdmin() : settings.aiQuotaUser();
+    public AiQuota checkAndIncrement(Long accountId, String systemRole) {
+        int limit = limitOf(systemRole);
         LocalDate today = today();
         AiUsage usage = repository.findByIdForUpdate(accountId).orElseGet(() -> new AiUsage(accountId, today, 0,
                 Instant.now(clock)));
@@ -63,6 +64,14 @@ public class AiQuotaService {
         repository.save(usage);
         int used = usage.usedOn(today);
         return new AiQuota(limit, used, Math.max(0, limit - used), resetAt());
+    }
+
+    /** Hạn mức theo vai trò trong claim (ADMIN, BRANCH_HEAD, còn lại là USER). */
+    private int limitOf(String systemRole) {
+        if (CurrentUser.ROLE_ADMIN.equals(systemRole)) {
+            return settings.aiQuotaAdmin();
+        }
+        return CurrentUser.ROLE_BRANCH_HEAD.equals(systemRole) ? settings.aiQuotaBranchHead() : settings.aiQuotaUser();
     }
 
     /** Trả lại lượt đã trừ ở {@link #checkAndIncrement} khi Gemini lỗi, để người dùng không mất lượt oan. */

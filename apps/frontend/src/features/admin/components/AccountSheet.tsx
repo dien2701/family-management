@@ -1,8 +1,11 @@
+import { useId } from 'react'
 import { Link } from 'react-router'
 import { ModalDialog } from '@/components/shared/ModalDialog'
+import { Select } from '@/components/ui/select'
 import type { AccountAdmin } from '@/types/api'
 import { formatDate } from '@/utils/date'
-import type { AccountAction, LinkAction } from '../api'
+import { canChangeRole } from '../accountRules'
+import type { AccountAction, LinkAction, SystemRole } from '../api'
 import { adminStrings as s } from '../strings'
 import { AccountActions } from './AccountActions'
 import { AccountAvatar } from './AccountList'
@@ -15,10 +18,17 @@ type AccountSheetProps = {
   onClose: () => void
   onAction: (account: AccountAdmin, action: AccountAction) => void
   onLinkAction: (account: AccountAdmin, action: LinkAction) => void
+  /** Chọn vai trò khác trong ô chọn: trang mở hộp xác nhận chồng lên, hộp chi tiết vẫn mở. */
+  onRoleChange: (account: AccountAdmin, role: SystemRole) => void
 }
 
+/** Thứ tự từ ít quyền tới nhiều quyền. */
+const ROLES: SystemRole[] = ['USER', 'BRANCH_HEAD', 'ADMIN']
+
 /** Chi tiết một tài khoản: thông tin đầy đủ và mọi thao tác (bottom sheet ở điện thoại, modal từ 768px). */
-export function AccountSheet({ account, selfId, onClose, onAction, onLinkAction }: AccountSheetProps) {
+export function AccountSheet({ account, selfId, onClose, onAction, onLinkAction, onRoleChange }: AccountSheetProps) {
+  const roleId = useId()
+  const editableRole = account !== null && canChangeRole(account, selfId)
   return (
     <ModalDialog open={account !== null} title={s.accounts.details} onClose={onClose}>
       {account && (
@@ -36,9 +46,27 @@ export function AccountSheet({ account, selfId, onClose, onAction, onLinkAction 
             <dd>
               <AccountStatusBadge account={account} />
             </dd>
-            <dt className="text-text-muted">{s.accounts.columns.role}</dt>
+            <dt className="text-text-muted">
+              {editableRole ? <label htmlFor={roleId}>{s.accounts.columns.role}</label> : s.accounts.columns.role}
+            </dt>
             <dd>
-              <AccountRoleBadge account={account} />
+              {editableRole ? (
+                // Ô chọn có kiểm soát: hủy ở hộp xác nhận thì ô tự về vai trò hiện tại (DECISIONS #106)
+                <Select
+                  id={roleId}
+                  className="max-w-56 cursor-pointer"
+                  value={account.systemRole ?? 'USER'}
+                  onChange={(e) => onRoleChange(account, e.target.value as SystemRole)}
+                >
+                  {ROLES.map((role) => (
+                    <option key={role} value={role}>
+                      {s.role[role]}
+                    </option>
+                  ))}
+                </Select>
+              ) : (
+                <AccountRoleBadge account={account} />
+              )}
             </dd>
             <dt className="text-text-muted">{s.accounts.columns.member}</dt>
             <dd className="[overflow-wrap:anywhere]">

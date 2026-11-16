@@ -14,6 +14,9 @@ public interface DynamicSettings {
 
     int aiQuotaAdmin();
 
+    /** Lượt hỏi AI mỗi ngày của Trưởng chi (DECISIONS #105). */
+    int aiQuotaBranchHead();
+
     /** Lượt hỏi AI mỗi ngày của khách và tài khoản chưa duyệt (DECISIONS #91); 0 là tắt. */
     int aiQuotaGuest();
 

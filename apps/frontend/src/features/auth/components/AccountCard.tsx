@@ -3,7 +3,7 @@ import { Badge } from '@/components/shared/Badge'
 import { ListGroup, ListRow } from '@/components/shared/ListRow'
 import { UserAvatar } from '@/components/shared/UserAvatar'
 import { useAuth } from '@/hooks/useAuth'
-import { authStrings } from '../strings'
+import { ROLE_LABEL, authStrings } from '../strings'
 
 // Thẻ tài khoản đầu trang Thêm (DESIGN §9): ảnh, tên, email, vai trò và lối vào Hồ sơ cá nhân
 export function AccountCard() {
@@ -19,7 +19,7 @@ export function AccountCard() {
         <div className="min-w-0 flex-1">
           <p className="truncate text-xl leading-tight font-bold text-primary">{user.fullName}</p>
           <p className="truncate text-text-muted">{user.email}</p>
-          <Badge className="mt-1">{user.systemRole === 'ADMIN' ? 'Admin' : 'User'}</Badge>
+          <Badge className="mt-1">{ROLE_LABEL[user.systemRole ?? 'USER']}</Badge>
         </div>
       </div>
       <ListGroup className="rounded-field border border-border px-3">

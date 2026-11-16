@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/button'
+import { canEditTree } from '@/features/auth/routing'
 import { useAuth } from '@/hooks/useAuth'
 import { MemberFilters } from '../components/MemberFilters'
 import { MemberList } from '../components/MemberList'
@@ -9,7 +10,7 @@ import { memberStrings } from '../strings'
 
 export function MembersPage() {
   const { filters, setFilters } = useMemberFilters()
-  const isAdmin = useAuth().user?.systemRole === 'ADMIN'
+  const canAdd = canEditTree(useAuth().user)
   
   const { data, isLoading, isError } = useMembers(filters)
   
@@ -21,7 +22,7 @@ export function MembersPage() {
     <div className="mx-auto max-w-5xl px-4 py-6 md:py-8 space-y-6">
       <div className="flex items-center justify-between gap-3">
         <h1 className="shrink-0 text-2xl font-bold">{memberStrings.list.title}</h1>
-        {isAdmin && (
+        {canAdd && (
           <Button asChild>
             <Link to="/thanh-vien/them">
               <Plus aria-hidden="true" />

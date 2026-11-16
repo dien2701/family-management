@@ -2,6 +2,7 @@ import { AlertCircle, Lock } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { FullPageSpinner } from '@/components/shared/FullPageSpinner'
+import { isAdmin as isAdminUser, isBranchHead } from '@/features/auth/routing'
 import { useAuth } from '@/hooks/useAuth'
 import { useMe } from '@/hooks/useMe'
 import { ApiError } from '@/services/client'
@@ -33,7 +34,11 @@ export function MemberFormPage() {
   const updateMember = useUpdateMember()
   const uploadAvatar = useUploadAvatar()
   const removeAvatar = useRemoveAvatar()
-  const isAdmin = useAuth().user?.systemRole === 'ADMIN'
+  const { user } = useAuth()
+  const isAdmin = isAdminUser(user)
+  const branchHead = isBranchHead(user)
+  // Trưởng chi quản lý hồ sơ do mình tạo, kể cả khi đang thêm mới (DECISIONS #105)
+  const manages = isAdmin || (branchHead && (!editing || detail.data?.createdByMe === true))
   const me = useMe()
 
   const save = async (input: MemberInput, avatar: File | null, removeAvatarOnSave: boolean) => {
@@ -62,8 +67,8 @@ export function MemberFormPage() {
   }
 
   if (editing && !isAdmin) {
-    if (me.isPending) return <FullPageSpinner />
-    if (me.data?.memberId !== memberId) {
+    if (me.isPending || (branchHead && detail.isLoading)) return <FullPageSpinner />
+    if (me.data?.memberId !== memberId && !manages) {
       return (
         <div className="mx-auto max-w-2xl px-4 py-12">
           <EmptyState icon={Lock} title={s.forbidden} description={s.forbiddenDesc} />
@@ -84,7 +89,7 @@ export function MemberFormPage() {
     <div className="mx-auto w-full max-w-2xl">
       <MemberForm
         member={detail.data}
-        lockDeathFields={!isAdmin}
+        lockDeathFields={!manages}
         submitLabel={editing ? s.editSubmit : s.createSubmit}
         onSubmit={save}
         onCancel={() => void navigate(-1)}

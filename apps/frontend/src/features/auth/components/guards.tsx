@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { FullPageSpinner } from '@/components/shared/FullPageSpinner'
 import { useAuth } from '@/hooks/useAuth'
-import { approvalAreaOf, homePathFor, isAdmin, safeInternalPath, type ApprovalArea } from '../routing'
+import { approvalAreaOf, canEditTree, homePathFor, isAdmin, safeInternalPath, type ApprovalArea } from '../routing'
 
 /**
  * Chờ khôi phục phiên rồi mới vẽ trang. Các trang xem công khai (DECISIONS #88) không bắt đăng nhập nên phải đợi
@@ -46,6 +46,13 @@ export function ApprovalGuard({ area }: { area: ApprovalArea }) {
   const { user } = useAuth()
   if (!user) return null // RequireAuth bên ngoài đã xử lý
   if (approvalAreaOf(user) !== area) return <Navigate to={homePathFor(user)} replace />
+  return <Outlet />
+}
+
+/** Thêm thành viên: Admin hoặc Trưởng chi (DECISIONS #105); quyền thật do backend kiểm tra. */
+export function RequireTreeEditor() {
+  const { user } = useAuth()
+  if (!canEditTree(user)) return <Navigate to="/" replace />
   return <Outlet />
 }
 

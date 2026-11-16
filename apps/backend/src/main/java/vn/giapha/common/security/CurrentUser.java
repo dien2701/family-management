@@ -17,10 +17,16 @@ public record CurrentUser(Long userId, String systemRole, String approval, Long 
     public static final String CLAIM_MEMBER_ID = "memberId";
 
     public static final String ROLE_ADMIN = "ADMIN";
+    /** Trưởng chi (DECISIONS #105): thêm thành viên, dựng cây. */
+    public static final String ROLE_BRANCH_HEAD = "BRANCH_HEAD";
     public static final String APPROVAL_APPROVED = "APPROVED";
 
     public boolean isAdmin() {
         return ROLE_ADMIN.equals(systemRole);
+    }
+
+    public boolean isBranchHead() {
+        return ROLE_BRANCH_HEAD.equals(systemRole);
     }
 
     /** Theo claim, có thể cũ tới 15 phút. */

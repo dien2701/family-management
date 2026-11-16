@@ -25,7 +25,7 @@ export const treeStrings = {
 
   empty: {
     title: 'Cây chưa được dựng',
-    description: 'Admin sẽ đưa từng người vào cây. Khi có người trên cây, sơ đồ các đời sẽ hiện ở đây.',
+    description: 'Quản trị viên hoặc Trưởng chi sẽ đưa từng người vào cây. Khi có người trên cây, sơ đồ các đời sẽ hiện ở đây.',
     adminDescription: 'Bắt đầu bằng việc thêm người gốc, rồi thêm con, vợ/chồng từ các nút "+" trên ô.',
   },
 
@@ -54,7 +54,7 @@ export const treeStrings = {
     viewingDepth: (n: number) => `Đang hiện ${n} đời quanh người được chọn`,
     notLinked: 'Bạn chưa liên kết tài khoản với thành viên nào nên chưa biết tổ tiên của bạn là ai.',
     notLinkedAction: 'Liên kết "Tôi là ai"',
-    notOnTree: 'Bạn chưa có trên cây nên chưa xem được tổ tiên. Nhờ Admin thêm bạn vào cây.',
+    notOnTree: 'Bạn chưa có trên cây nên chưa xem được tổ tiên. Nhờ Quản trị viên hoặc Trưởng chi thêm bạn vào cây.',
     searchNotFound: 'Người này không còn trên cây.',
     dismiss: 'Đóng thông báo',
   },

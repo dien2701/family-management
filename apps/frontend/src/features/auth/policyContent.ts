@@ -16,11 +16,11 @@ export const policySections: PolicySection[] = [
     intro: 'Tộc Phả chỉ thu thập dữ liệu cần để quản lý gia phả:',
     items: [
       'Tài khoản: họ tên, email, ảnh đại diện (nếu đăng nhập bằng Google) và mật khẩu (chỉ lưu dạng băm, không lưu bản gốc).',
-      'Hồ sơ thành viên trong gia phả: họ tên, ngày sinh, ngày mất, giới tính, người thân, số điện thoại, email, nơi ở, nơi an táng, ghi chú và ảnh do Admin hoặc chính thành viên nhập.',
+      'Hồ sơ thành viên trong gia phả: họ tên, ngày sinh, ngày mất, giới tính, người thân, số điện thoại, email, nơi ở, nơi an táng, ghi chú và ảnh do Quản trị viên hoặc chính thành viên nhập.',
       'Sự kiện chung của gia phả: ngày giỗ, sinh nhật và các sự kiện khác.',
       'Việc bạn đồng ý chính sách này: thời điểm, địa chỉ IP và phiên bản chính sách.',
       'Thiết bị nhận thông báo đẩy: nếu bạn bật thông báo, chúng tôi chỉ lưu địa chỉ đăng ký do trình duyệt cấp cho thiết bị và các tùy chọn nhắc lịch của bạn, không gắn với họ tên hay tài khoản (trừ khi bạn đang đăng nhập).',
-      'Thông tin bạn điền cho các bài khấn: nếu có tài khoản đã được duyệt, thông tin được lưu theo tài khoản và chỉ bạn xem được (kể cả Admin cũng không xem được); nếu chưa đăng nhập, thông tin chỉ lưu trên thiết bị của bạn.',
+      'Thông tin bạn điền cho các bài khấn: nếu có tài khoản đã được duyệt, thông tin được lưu theo tài khoản và chỉ bạn xem được (kể cả Quản trị viên cũng không xem được); nếu chưa đăng nhập, thông tin chỉ lưu trên thiết bị của bạn.',
     ],
     outro:
       'Với thành viên trong gia phả, chỉ họ tên là bắt buộc. Mọi thông tin khác đều có thể để trống.',
@@ -30,8 +30,8 @@ export const policySections: PolicySection[] = [
     title: '2. Một gia phả chung và việc duyệt tài khoản',
     items: [
       'Hệ thống chỉ có một gia phả chung cho tất cả tài khoản.',
-      'Tài khoản mới phải được Admin duyệt mới dùng được các chức năng như trợ lý AI, xuất dữ liệu, tệp đính kèm, đề xuất và hộp thư thông báo. Trong lúc chờ duyệt, bạn chỉ xem được thông tin chung của gia phả và vẫn bật được thông báo nhắc lịch trên thiết bị.',
-      'Admin có thể từ chối hoặc khóa tài khoản. Khi đó bạn không đăng nhập hay dùng được các chức năng trên.',
+      'Tài khoản mới phải được Quản trị viên duyệt mới dùng được các chức năng như trợ lý AI, xuất dữ liệu, tệp đính kèm, đề xuất và hộp thư thông báo. Trong lúc chờ duyệt, bạn chỉ xem được thông tin chung của gia phả và vẫn bật được thông báo nhắc lịch trên thiết bị.',
+      'Quản trị viên có thể từ chối hoặc khóa tài khoản. Khi đó bạn không đăng nhập hay dùng được các chức năng trên.',
     ],
   },
   {
@@ -39,8 +39,8 @@ export const policySections: PolicySection[] = [
     title: '3. Ai được xem dữ liệu',
     items: [
       'Thông tin gia phả (danh sách thành viên, hồ sơ, người thân, cây gia phả, sự kiện và lịch), trừ số điện thoại và email, hiển thị công khai cho bất kỳ ai có đường dẫn, kể cả người chưa đăng nhập. Chúng tôi chặn công cụ tìm kiếm lập chỉ mục trang này.',
-      'Số điện thoại và email của thành viên chỉ hiển thị cho Admin và chính chủ (thành viên đã liên kết với tài khoản của họ).',
-      'Admin chỉ truy cập dữ liệu để vận hành, hỗ trợ và xử lý sự cố.',
+      'Số điện thoại và email của thành viên chỉ hiển thị cho Quản trị viên và chính chủ (thành viên đã liên kết với tài khoản của họ).',
+      'Quản trị viên chỉ truy cập dữ liệu để vận hành, hỗ trợ và xử lý sự cố.',
       'Chúng tôi không bán và không chia sẻ dữ liệu cá nhân cho bên thứ ba vì mục đích quảng cáo.',
     ],
   },
@@ -61,8 +61,8 @@ export const policySections: PolicySection[] = [
     title: '6. Quyền sửa và xóa dữ liệu của bạn',
     items: [
       'Bạn có quyền yêu cầu xem, sửa hoặc xóa dữ liệu cá nhân của mình, và rút lại sự đồng ý.',
-      'Nếu tài khoản của bạn đã liên kết với một thành viên ("Tôi là ai"), bạn tự sửa hồ sơ, người thân và ảnh đại diện của mình. Các thông tin về việc đã mất do Admin cập nhật.',
-      'Muốn xóa hồ sơ trong gia phả hoặc xóa hoàn toàn tài khoản và dữ liệu liên quan, hãy liên hệ Admin. Chúng tôi xử lý yêu cầu trong thời gian sớm nhất có thể.',
+      'Nếu tài khoản của bạn đã liên kết với một thành viên ("Tôi là ai"), bạn tự sửa hồ sơ, người thân và ảnh đại diện của mình. Các thông tin về việc đã mất do Quản trị viên cập nhật.',
+      'Muốn xóa hồ sơ trong gia phả hoặc xóa hoàn toàn tài khoản và dữ liệu liên quan, hãy liên hệ Quản trị viên. Chúng tôi xử lý yêu cầu trong thời gian sớm nhất có thể.',
     ],
   },
 ]

@@ -159,7 +159,7 @@ public class TreeService {
 
     @Transactional
     public TreeNodeDto addRoot(Long actorId, TreeMemberInput input) {
-        requireAdmin(actorId);
+        requireTreeEditor(actorId);
         Long memberId = requireMember(input.memberId());
         Locked tree = lock();
         TreeRules.checkAddRoot(tree.index, memberId);
@@ -170,7 +170,7 @@ public class TreeService {
 
     @Transactional
     public TreeNodeDto addChild(Long actorId, Long nodeId, TreeChildInput input) {
-        requireAdmin(actorId);
+        requireTreeEditor(actorId);
         Long memberId = requireMember(input.memberId());
         Long coParentNodeId = optionalNodeId(input.coParentNodeId(), "coParentNodeId");
         Locked tree = lock();
@@ -182,7 +182,7 @@ public class TreeService {
 
     @Transactional
     public TreeNodeDto addSpouse(Long actorId, Long nodeId, TreeMemberInput input) {
-        requireAdmin(actorId);
+        requireTreeEditor(actorId);
         Long memberId = requireMember(input.memberId());
         Locked tree = lock();
         int order = TreeRules.checkAddSpouse(tree.index, nodeId, memberId);
@@ -194,7 +194,7 @@ public class TreeService {
     /** Người mới thế vào chỗ của gốc cũ; gốc cũ thành con duy nhất (cả cây rời dịch xuống một đời). */
     @Transactional
     public TreeNodeDto addParent(Long actorId, Long nodeId, TreeMemberInput input) {
-        requireAdmin(actorId);
+        requireTreeEditor(actorId);
         Long memberId = requireMember(input.memberId());
         Locked tree = lock();
         TreeRules.checkAddParent(tree.index, nodeId, memberId);
@@ -206,7 +206,7 @@ public class TreeService {
 
     @Transactional
     public TreeNodeDto fillSlot(Long actorId, Long nodeId, TreeMemberInput input) {
-        requireAdmin(actorId);
+        requireTreeEditor(actorId);
         Long memberId = requireMember(input.memberId());
         Locked tree = lock();
         TreeRules.checkFillSlot(tree.index, nodeId, memberId);
@@ -218,7 +218,7 @@ public class TreeService {
 
     @Transactional
     public TreeNodeDto removeMember(Long actorId, Long nodeId) {
-        requireAdmin(actorId);
+        requireTreeEditor(actorId);
         Locked tree = lock();
         TreeRules.checkRemoveMember(tree.index, nodeId);
         TreeNode node = tree.index.node(nodeId);
@@ -233,7 +233,7 @@ public class TreeService {
      */
     @Transactional
     public void deleteNode(Long actorId, Long nodeId) {
-        requireAdmin(actorId);
+        requireTreeEditor(actorId);
         Locked tree = lock();
         TreeRules.checkDeleteSlot(tree.index, nodeId);
         TreeNode node = tree.index.node(nodeId);
@@ -244,7 +244,7 @@ public class TreeService {
 
     @Transactional
     public TreeNodeDto moveNode(Long actorId, Long nodeId, TreeMoveInput input) {
-        requireAdmin(actorId);
+        requireTreeEditor(actorId);
         Long newParentNodeId = optionalNodeId(input.newParentNodeId(), "newParentNodeId");
         Long coParentNodeId = optionalNodeId(input.coParentNodeId(), "coParentNodeId");
         Locked tree = lock();
@@ -259,7 +259,7 @@ public class TreeService {
 
     @Transactional
     public TreeNodeDto reorderNode(Long actorId, Long nodeId, TreeOrderInput input) {
-        requireAdmin(actorId);
+        requireTreeEditor(actorId);
         boolean left = switch (input.direction() == null ? "" : input.direction()) {
             case "LEFT" -> true;
             case "RIGHT" -> false;
@@ -278,7 +278,7 @@ public class TreeService {
 
     @Transactional
     public TreeNodeDto setCoParent(Long actorId, Long nodeId, TreeCoParentInput input) {
-        requireAdmin(actorId);
+        requireTreeEditor(actorId);
         Long coParentNodeId = optionalNodeId(input.coParentNodeId(), "coParentNodeId");
         Locked tree = lock();
         ChildPair pair = TreeRules.checkSetCoParent(tree.index, nodeId, coParentNodeId);
@@ -450,11 +450,13 @@ public class TreeService {
         return value;
     }
 
-    private void requireAdmin(Long actorId) {
-        boolean admin = auth.find(actorId).filter(AuthFacade.Account::usable).map(AuthFacade.Account::admin)
-                .orElse(false);
-        if (!admin) {
-            throw new BusinessException(HttpStatus.FORBIDDEN, "FORBIDDEN", "Chỉ Admin được thực hiện thao tác này.");
+    /** Admin hoặc Trưởng chi (DECISIONS #105), theo DB. */
+    private void requireTreeEditor(Long actorId) {
+        boolean allowed = auth.find(actorId).filter(AuthFacade.Account::usable)
+                .map(AuthFacade.Account::treeEditor).orElse(false);
+        if (!allowed) {
+            throw new BusinessException(HttpStatus.FORBIDDEN, "FORBIDDEN",
+                    "Chỉ Quản trị viên hoặc Trưởng chi được thực hiện thao tác này.");
         }
     }
 

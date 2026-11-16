@@ -7,6 +7,7 @@ import {
   adminSettingsApi,
   adminDeletedMembersApi,
   type AccountAction,
+  type SystemRole,
 } from './api'
 
 const ACCOUNTS_KEY = ['admin', 'accounts'] as const
@@ -17,8 +18,6 @@ const ACCOUNT_ACTION_DONE: Record<AccountAction, string> = {
   reject: 'Đã từ chối tài khoản.',
   lock: 'Đã khóa tài khoản.',
   unlock: 'Đã mở khóa tài khoản.',
-  'grant-admin': 'Đã cấp quyền Admin.',
-  'revoke-admin': 'Đã gỡ quyền Admin.',
   delete: 'Đã xóa tài khoản.',
   restore: 'Đã khôi phục tài khoản.',
   purge: 'Đã xóa vĩnh viễn tài khoản.',
@@ -57,6 +56,16 @@ export function useAccountAction() {
     },
     mutationFn: ({ id, action }: { id: number; action: AccountAction }) =>
       adminAccountsApi.act(id, action),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ACCOUNTS_KEY }),
+  })
+}
+
+/** Đổi vai trò (DECISIONS #106); lỗi 409 cũng tải lại danh sách để khớp máy chủ. */
+export function useChangeRole() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    meta: { successMessage: 'Đã đổi vai trò.' },
+    mutationFn: ({ id, role }: { id: number; role: SystemRole }) => adminAccountsApi.changeRole(id, role),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ACCOUNTS_KEY }),
   })
 }

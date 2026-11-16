@@ -40,7 +40,7 @@ public class UserAccount {
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.VARCHAR)
-    @Column(name = "system_role", nullable = false, length = 10)
+    @Column(name = "system_role", nullable = false, length = 20)
     private SystemRole systemRole = SystemRole.USER;
 
     @Enumerated(EnumType.STRING)

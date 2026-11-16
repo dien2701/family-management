@@ -12,7 +12,7 @@
    `docs/DECISIONS.md` thắng `roadmap/IDEA.md` khi mâu thuẫn.
 
 ## Thuật ngữ bắt buộc
-- **Tài khoản** (user): người đăng nhập, vai trò Admin hoặc User. **Thành viên** (member): người trong gia phả, là dữ liệu nội dung.
+- **Tài khoản** (user): người đăng nhập, vai trò Admin, Trưởng chi hoặc User (giao diện hiển thị "Quản trị viên" / "Trưởng chi" / "Người dùng", DECISIONS #104, #105; Trưởng chi thêm thành viên, làm mọi thao tác cây, sửa/xóa hồ sơ mình tạo). **Thành viên** (member): người trong gia phả, là dữ liệu nội dung.
 - Hai khái niệm khác nhau, liên kết 1–1 và không bắt buộc ("Tôi là ai"). Giao diện không dùng lẫn hai từ này.
 - Tài khoản mới phải được Admin duyệt mới dùng đầy đủ. Riêng Trang chủ, Thành viên, Cây, Sự kiện, Đổi lịch, Bài khấn (DECISIONS #90) thì khách và tài khoản chưa duyệt xem được chỉ-đọc (DECISIONS #88) và bật được Web Push nhận bản tin giỗ, sinh nhật, sự kiện (DECISIONS #89), và hỏi Trợ lý AI với hạn mức khách, không lưu lịch sử, không soạn bản nháp (DECISIONS #91).
 

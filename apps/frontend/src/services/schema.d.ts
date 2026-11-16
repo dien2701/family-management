@@ -239,7 +239,7 @@ export interface paths {
         put?: never;
         /**
          * Xóa tài khoản (chuyển vào "Đã xóa")
-         * @description Xóa mềm (DECISIONS #97): ghi `deletedAt`, tài khoản đang mở thì khóa với `lockReason=DELETED`, thu hồi mọi refresh token. Giữ liên kết "Tôi là ai". Chỉ xóa được tài khoản User, không xóa chính mình (409 `SELF_ACTION_FORBIDDEN`), không xóa Admin (409 `INVALID_ACCOUNT_STATE`, gỡ Admin trước). Tài khoản đã xóa thì mọi thao tác khác trả 409 `INVALID_ACCOUNT_STATE` cho tới khi khôi phục.
+         * @description Xóa mềm (DECISIONS #97): ghi `deletedAt`, tài khoản đang mở thì khóa với `lockReason=DELETED`, thu hồi mọi refresh token. Giữ liên kết "Tôi là ai". Chỉ xóa được tài khoản User hoặc Trưởng chi, không xóa chính mình (409 `SELF_ACTION_FORBIDDEN`), không xóa Admin (409 `INVALID_ACCOUNT_STATE`, gỡ Admin trước). Tài khoản đã xóa thì mọi thao tác khác trả 409 `INVALID_ACCOUNT_STATE` cho tới khi khôi phục.
          */
         post: operations["deleteAccount"];
         delete?: never;
@@ -262,6 +262,26 @@ export interface paths {
          * @description Xóa `deletedAt`; chỉ mở khóa khi lý do khóa là `DELETED`, nên tài khoản về đúng trạng thái trước khi xóa (DECISIONS #97). 409 `INVALID_ACCOUNT_STATE` khi tài khoản chưa bị xóa.
          */
         post: operations["restoreAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/purge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Xóa vĩnh viễn tài khoản đã xóa
+         * @description Chỉ tài khoản đang ở "Đã xóa" (409 `INVALID_ACCOUNT_STATE` khi chưa xóa). Xóa hẳn tài khoản cùng dữ liệu riêng: phiên đăng nhập, đồng ý dữ liệu, yêu cầu liên kết, thông báo, Web Push, Trợ lý AI, bài khấn đã điền, ảnh đại diện tài khoản. Giữ đề xuất, nhật ký quản trị và dữ liệu gia phả. Không hoàn tác được; email được giải phóng để đăng ký lại.
+         */
+        post: operations["purgeAccount"];
         delete?: never;
         options?: never;
         head?: never;
@@ -347,6 +367,46 @@ export interface paths {
         put?: never;
         /** Cấp quyền Admin */
         post: operations["grantAdmin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/grant-branch-head": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cấp quyền Trưởng chi
+         * @description Chỉ tài khoản Người dùng đã duyệt (409 `INVALID_ACCOUNT_STATE`). Thu hồi refresh token, người đó đăng nhập lại để quyền có hiệu lực (DECISIONS
+         */
+        post: operations["grantBranchHead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/accounts/{id}/revoke-branch-head": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Gỡ quyền Trưởng chi
+         * @description Chỉ tài khoản Trưởng chi (409 `INVALID_ACCOUNT_STATE`), trở về Người dùng. Thu hồi refresh token (DECISIONS
+         */
+        post: operations["revokeBranchHead"];
         delete?: never;
         options?: never;
         head?: never;
@@ -462,7 +522,7 @@ export interface paths {
         put?: never;
         /**
          * Thêm thành viên
-         * @description Chỉ Admin. Chỉ `fullName` là bắt buộc. Các trường về việc đã mất (`deathSolar`, `deathLunar`,
+         * @description Admin hoặc Trưởng chi (DECISIONS #105). Chỉ `fullName` là bắt buộc. Các trường về việc đã mất (`deathSolar`, `deathLunar`,
          *     `memorialOverride`, `burialPlace`) chỉ hợp lệ khi `isDeceased = true`, nếu không thì 400 `VALIDATION_ERROR`.
          *     Ngày mất gửi **một trong hai** (`deathSolar` hoặc `deathLunar`); có cả hai thì dùng `deathSolar`. Khi có năm, máy chủ
          *     tự tính ngày ở lịch còn lại và trả cả hai; `deathLunar` không có năm thì `deathSolar` là `null`.
@@ -489,7 +549,7 @@ export interface paths {
         get: operations["getMember"];
         /**
          * Sửa thành viên
-         * @description Admin sửa mọi hồ sơ. User đã liên kết "Tôi là ai" chỉ sửa hồ sơ của chính mình (`user.member_id`), có hiệu lực ngay,
+         * @description Admin sửa mọi hồ sơ; Trưởng chi sửa hồ sơ do mình tạo, kể cả nhóm "đã mất" (DECISIONS #105). User đã liên kết "Tôi là ai" chỉ sửa hồ sơ của chính mình (`user.member_id`), có hiệu lực ngay,
          *     và **không** được đổi nhóm "đã mất" (`isDeceased`, `deathSolar`, `deathLunar`, `memorialOverride`, `burialPlace`):
          *     khác giá trị hiện có thì 403 `DEATH_FIELDS_ADMIN_ONLY`. Người khác thì 403 `FORBIDDEN`.
          *     Ảnh đại diện không đổi qua API này mà qua `/api/files/confirm`. Quy tắc dữ liệu như `POST /api/members`.
@@ -498,7 +558,7 @@ export interface paths {
         post?: never;
         /**
          * Xóa thành viên
-         * @description Chỉ Admin. Bị chặn nếu người đó đang có trên cây (409 `MEMBER_ON_TREE`): phải gỡ khỏi cây trước.
+         * @description Admin, hoặc Trưởng chi với hồ sơ do mình tạo (DECISIONS #105). Bị chặn nếu người đó đang có trên cây (409 `MEMBER_ON_TREE`): phải gỡ khỏi cây trước.
          *     Khi xóa: xóa các dòng người thân liên quan, gỡ liên kết tài khoản, xóa tệp đính kèm; audit log giữ bản sao đầy đủ.
          */
         delete: operations["deleteMember"];
@@ -522,7 +582,7 @@ export interface paths {
         head?: never;
         /**
          * Đặt giới tính thành viên
-         * @description Chỉ Admin (kiểm từ DB). Chỉ đổi trường `gender`, các trường khác giữ nguyên, có ghi audit log (DECISIONS #100).
+         * @description Admin hoặc Trưởng chi (kiểm từ DB). Chỉ đổi trường `gender`, các trường khác giữ nguyên, có ghi audit log (DECISIONS #100).
          *     Dùng cho hàng Nam · Nữ · Chưa rõ trong menu ô trên cây.
          */
         patch: operations["updateMemberGender"];
@@ -539,7 +599,7 @@ export interface paths {
         put?: never;
         /**
          * Xin chữ ký để tải tệp lên Cloudinary
-         * @description Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`) và
+         * @description Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`) hoặc hồ sơ do Trưởng chi tạo, và
          *     `kind = ACCOUNT_AVATAR` cho ảnh của chính tài khoản đã duyệt.
          *     Máy chủ kiểm MIME (jpg, png, webp, pdf, docx, xlsx; ảnh đại diện chỉ jpg/png/webp), tối đa 10 MB mỗi tệp và 1 GB toàn hệ thống.
          *     Lỗi: 400 `VALIDATION_ERROR` (gồm hết dung lượng: `QUOTA_EXCEEDED`), 403 `FORBIDDEN`, 503 `STORAGE_NOT_CONFIGURED` khi chưa có khóa Cloudinary.
@@ -810,7 +870,7 @@ export interface paths {
         put?: never;
         /**
          * Thêm người thân vào hồ sơ
-         * @description Chủ hồ sơ (User đã liên kết, `user.member_id = id`) hoặc Admin; có hiệu lực ngay. `label` bắt buộc, cắt khoảng trắng hai đầu,
+         * @description Chủ hồ sơ (User đã liên kết, `user.member_id = id`), Trưởng chi đã tạo hồ sơ hoặc Admin; có hiệu lực ngay. `label` bắt buộc, cắt khoảng trắng hai đầu,
          *     tối đa 50 ký tự. Người thân phải là thành viên đã có. Lỗi: 400 `VALIDATION_ERROR` (nhãn, hoặc tự thêm chính mình),
          *     404 `MEMBER_NOT_FOUND`, 409 `RELATIVE_EXISTS` (người này đã có trong danh sách, muốn đổi nhãn thì sửa dòng cũ),
          *     403 `FORBIDDEN` (không phải chủ hồ sơ hay Admin).
@@ -953,6 +1013,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/accounts/{id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Đổi vai trò của tài khoản
+         * @description Đổi thẳng giữa Admin, Trưởng chi và User trong một giao dịch (DECISIONS #106). Chỉ tài khoản đã duyệt và đang hoạt động,
+         *     vai trò mới phải khác vai trò hiện tại (409 `INVALID_ACCOUNT_STATE`). Không đổi vai trò của chính mình (409 `SELF_ACTION_FORBIDDEN`),
+         *     Admin gốc chỉ là Admin (409 `ROOT_ADMIN_PROTECTED`), không hạ Admin cuối cùng (409 `LAST_ADMIN`). Thu hồi mọi refresh token
+         *     của người đó, họ đăng nhập lại để quyền có hiệu lực.
+         */
+        put: operations["changeAccountRole"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/accounts/{id}/member-link": {
         parameters: {
             query?: never;
@@ -1021,7 +1104,7 @@ export interface paths {
         put?: never;
         /**
          * Thêm người gốc
-         * @description Chỉ Admin. Đưa một thành viên chưa có trên cây vào làm gốc mới (Đời 01). Có thể có nhiều gốc; gốc mới xếp cuối.
+         * @description Admin hoặc Trưởng chi (DECISIONS #105). Đưa một thành viên chưa có trên cây vào làm gốc mới (Đời 01). Có thể có nhiều gốc; gốc mới xếp cuối.
          *     Lỗi: 409 `MEMBER_ALREADY_ON_TREE`.
          */
         post: operations["addTreeRoot"];
@@ -1042,7 +1125,7 @@ export interface paths {
         put?: never;
         /**
          * Thêm con vào một ô
-         * @description Chỉ Admin. Con mới xếp cuối các anh em. Cặp cha–mẹ được xác định như sau:
+         * @description Admin hoặc Trưởng chi (DECISIONS #105). Con mới xếp cuối các anh em. Cặp cha–mẹ được xác định như sau:
          *     - bấm trên **ô vợ/chồng** thì cặp là ô đó cùng người thuộc dòng của nó (`coParentNodeId`, nếu gửi, phải là chính ô đó);
          *     - bấm trên ô thuộc dòng có **≥ 2 vợ/chồng** thì bắt buộc gửi `coParentNodeId`, thiếu thì 409 `TREE_NEEDS_CO_PARENT`;
          *     - có đúng 1 vợ/chồng thì tự nhận cặp đó; không có thì con chỉ thuộc một mình cha/mẹ.
@@ -1067,7 +1150,7 @@ export interface paths {
         put?: never;
         /**
          * Thêm vợ/chồng cho một ô
-         * @description Chỉ Admin. Chỉ có trên ô **thuộc dòng** (ô vợ/chồng không có vợ/chồng riêng). Người mới xếp sau vợ/chồng cuối.
+         * @description Admin hoặc Trưởng chi (DECISIONS #105). Chỉ có trên ô **thuộc dòng** (ô vợ/chồng không có vợ/chồng riêng). Người mới xếp sau vợ/chồng cuối.
          *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SPOUSE_NOT_ALLOWED`, `MEMBER_ALREADY_ON_TREE`.
          */
         post: operations["addTreeSpouse"];
@@ -1088,7 +1171,7 @@ export interface paths {
         put?: never;
         /**
          * Thêm cha/mẹ cho người gốc
-         * @description Chỉ Admin. Chỉ có trên ô **thuộc dòng ở Đời 01** (gốc). Người mới trở thành gốc, thế vào chỗ của ô này
+         * @description Admin hoặc Trưởng chi (DECISIONS #105). Chỉ có trên ô **thuộc dòng ở Đời 01** (gốc). Người mới trở thành gốc, thế vào chỗ của ô này
          *     trong danh sách gốc; ô này thành con của người mới nên cả cây rời đó dịch xuống một đời. Không tự đặt giới tính.
          *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_PARENT_ONLY_AT_TOP`, `MEMBER_ALREADY_ON_TREE`.
          */
@@ -1109,13 +1192,13 @@ export interface paths {
         get?: never;
         /**
          * Điền người vào ô trống
-         * @description Chỉ Admin. Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người), `MEMBER_ALREADY_ON_TREE`.
+         * @description Admin hoặc Trưởng chi (DECISIONS #105). Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người), `MEMBER_ALREADY_ON_TREE`.
          */
         put: operations["fillTreeSlot"];
         post?: never;
         /**
          * Gỡ người khỏi cây (ô thành ô trống)
-         * @description Chỉ Admin. Ô thành **ô trống** nằm đúng chỗ cũ, con cháu và vợ/chồng không bị ảnh hưởng; thành viên vẫn còn nguyên.
+         * @description Admin hoặc Trưởng chi (DECISIONS #105). Ô thành **ô trống** nằm đúng chỗ cũ, con cháu và vợ/chồng không bị ảnh hưởng; thành viên vẫn còn nguyên.
          *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_EMPTY` (ô đã trống).
          */
         delete: operations["removeTreeMember"];
@@ -1136,7 +1219,7 @@ export interface paths {
         post?: never;
         /**
          * Xóa ô trống
-         * @description Chỉ Admin. Chỉ xóa được **ô trống** (đã gỡ người), kể cả khi ô còn con hoặc vợ/chồng; nhánh được giữ lại:
+         * @description Admin hoặc Trưởng chi (DECISIONS #105). Chỉ xóa được **ô trống** (đã gỡ người), kể cả khi ô còn con hoặc vợ/chồng; nhánh được giữ lại:
          *     - ô vợ/chồng: bị bỏ, con của cặp đó thành con của một mình người thuộc dòng, thứ tự các vợ/chồng còn lại đánh lại từ 1;
          *     - ô thuộc dòng có vợ/chồng: vợ/chồng thứ nhất thế vào đúng chỗ (cha/mẹ, cặp cha–mẹ, thứ tự anh em), nhận con cháu và các vợ/chồng còn lại;
          *     - ô thuộc dòng không có vợ/chồng: con cháu lên thế chỗ, làm con của cha/mẹ của ô bị xóa (hoặc thành gốc), cả nhánh dịch lên một đời.
@@ -1159,7 +1242,7 @@ export interface paths {
         put?: never;
         /**
          * Di chuyển nhánh
-         * @description Chỉ Admin. Một ô **thuộc dòng** đi kèm vợ/chồng và toàn bộ con cháu, tới làm con của `newParentNodeId`
+         * @description Admin hoặc Trưởng chi (DECISIONS #105). Một ô **thuộc dòng** đi kèm vợ/chồng và toàn bộ con cháu, tới làm con của `newParentNodeId`
          *     (ô thuộc dòng hoặc ô vợ/chồng; cặp cha–mẹ xác định như `POST /api/tree/nodes/{id}/children`) hoặc thành gốc mới
          *     khi `newParentNodeId` là `null`. Ô được chuyển xếp cuối các anh em ở nơi đến.
          *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_MOVE_LINEAGE_ONLY` (ô vợ/chồng), `TREE_CYCLE` (nơi đến nằm trong chính nhánh),
@@ -1182,7 +1265,7 @@ export interface paths {
         get?: never;
         /**
          * Đổi thứ tự anh em
-         * @description Chỉ Admin. Đổi chỗ ô thuộc dòng với người anh em kề bên (cùng cha/mẹ, hoặc cùng là gốc).
+         * @description Admin hoặc Trưởng chi (DECISIONS #105). Đổi chỗ ô thuộc dòng với người anh em kề bên (cùng cha/mẹ, hoặc cùng là gốc).
          *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_MOVE_LINEAGE_ONLY` (ô vợ/chồng), `TREE_ORDER_EDGE` (đã ở đầu hoặc cuối hàng).
          */
         put: operations["reorderTreeNode"];
@@ -1203,7 +1286,7 @@ export interface paths {
         get?: never;
         /**
          * Đổi cặp cha–mẹ của một người con
-         * @description Chỉ Admin. `coParentNodeId` phải là vợ/chồng của cha/mẹ hiện tại (`parentNodeId`). Cha/mẹ có đúng 1 vợ/chồng thì `null` tự nhận người đó;
+         * @description Admin hoặc Trưởng chi (DECISIONS #105). `coParentNodeId` phải là vợ/chồng của cha/mẹ hiện tại (`parentNodeId`). Cha/mẹ có đúng 1 vợ/chồng thì `null` tự nhận người đó;
          *     có ≥ 2 vợ/chồng thì bắt buộc chọn (409 `TREE_NEEDS_CO_PARENT`).
          *     Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_NOT_A_CHILD` (ô không có cha/mẹ), `TREE_INVALID_CO_PARENT`, `TREE_NEEDS_CO_PARENT`.
          */
@@ -2020,9 +2103,9 @@ export interface components {
         MemberDetail: components["schemas"]["MemberSummary"] & {
             /** @description Tên húy */
             tabooName: string | null;
-            /** @description Chỉ có khi người gọi là Admin hoặc chính chủ; người khác không nhận trường này. */
+            /** @description Chỉ có khi người gọi là Admin, Trưởng chi hoặc chính chủ; người khác không nhận trường này. */
             phone?: string | null;
-            /** @description Chỉ có khi người gọi là Admin hoặc chính chủ; người khác không nhận trường này. */
+            /** @description Chỉ có khi người gọi là Admin, Trưởng chi hoặc chính chủ; người khác không nhận trường này. */
             email?: string | null;
             biography: string | null;
             /** @description `null` khi chưa biết gì về ngày sinh */
@@ -2033,6 +2116,8 @@ export interface components {
             deathLunar: components["schemas"]["MemberLunarDate"] | null;
             memorialOverride: components["schemas"]["MemorialOverride"] | null;
             burialPlace: string | null;
+            /** @description Người gọi là người đã tạo hồ sơ này (Trưởng chi sửa/xóa được hồ sơ mình tạo, DECISIONS */
+            createdByMe: boolean;
             /** Format: date-time */
             updatedAt: string;
         };
@@ -2143,7 +2228,7 @@ export interface components {
             fullName?: string;
             avatarUrl?: string;
             /** @enum {string} */
-            systemRole?: "ADMIN" | "USER";
+            systemRole?: "ADMIN" | "BRANCH_HEAD" | "USER";
             /** @enum {string} */
             status?: "PENDING" | "ACTIVE" | "LOCKED";
             /** @enum {string} */
@@ -2219,7 +2304,7 @@ export interface components {
             fullName?: string;
             avatarUrl?: string;
             /** @enum {string} */
-            systemRole?: "ADMIN" | "USER";
+            systemRole?: "ADMIN" | "BRANCH_HEAD" | "USER";
             /** @enum {string} */
             status?: "PENDING" | "ACTIVE" | "LOCKED";
             /** @enum {string} */
@@ -2321,6 +2406,10 @@ export interface components {
         LinkRequestInput: {
             /** Format: int64 */
             memberId: number;
+        };
+        AccountRoleInput: {
+            /** @enum {string} */
+            systemRole: "ADMIN" | "BRANCH_HEAD" | "USER";
         };
         AdminMemberLinkInput: {
             /** Format: int64 */
@@ -2599,6 +2688,11 @@ export interface components {
             aiQuotaUser: number;
             /** Format: int32 */
             aiQuotaAdmin: number;
+            /**
+             * Format: int32
+             * @description Lượt hỏi AI mỗi ngày của Trưởng chi (DECISIONS
+             */
+            aiQuotaBranchHead: number;
             /**
              * Format: int32
              * @description Lượt hỏi AI mỗi ngày của khách và tài khoản chưa duyệt; 0 là tắt AI với khách
@@ -3300,6 +3394,30 @@ export interface operations {
             409: components["responses"]["Conflict"];
         };
     };
+    purgeAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Đã xóa vĩnh viễn */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
     unlock: {
         parameters: {
             query?: never;
@@ -3405,6 +3523,58 @@ export interface operations {
         };
     };
     grantAdmin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    grantBranchHead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    revokeBranchHead: {
         parameters: {
             query?: never;
             header?: never;
@@ -3540,7 +3710,7 @@ export interface operations {
             query?: {
                 approval?: "WAITING" | "APPROVED" | "REJECTED";
                 status?: "PENDING" | "ACTIVE" | "LOCKED";
-                role?: "ADMIN" | "USER";
+                role?: "ADMIN" | "BRANCH_HEAD" | "USER";
                 /** @description Tìm theo họ tên (không phân biệt hoa thường, dấu) hoặc email */
                 q?: string;
                 /** @description `false` (mặc định): chỉ tài khoản chưa xóa. `true`: chỉ tài khoản đã xóa (tab "Đã xóa", DECISIONS #97) */
@@ -4336,6 +4506,37 @@ export interface operations {
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    changeAccountRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AccountId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountRoleInput"];
+            };
+        };
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountAdminResponse"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
         };
     };

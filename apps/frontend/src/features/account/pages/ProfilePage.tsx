@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button'
 import { LogoutButton } from '@/features/auth/components/LogoutButton'
 import { useChangePassword } from '@/features/auth/hooks'
 import { changePasswordSchema } from '@/features/auth/schemas'
+import { ROLE_LABEL } from '@/features/auth/strings'
 import { useLinkedMember } from '@/features/link/hooks'
 import { useAuth } from '@/hooks/useAuth'
 import { ApiError } from '@/services/client'
@@ -209,7 +210,7 @@ export function ProfilePage() {
         </div>
         <dl className="flex flex-col gap-3 border-t border-border pt-4">
           <Row label="Vai trò">
-            <Badge>{user.systemRole === 'ADMIN' ? 'Admin' : 'User'}</Badge>
+            <Badge>{ROLE_LABEL[user.systemRole ?? 'USER']}</Badge>
           </Row>
           <Row label="Trạng thái">
             <Badge tone={user.status === 'ACTIVE' ? 'success' : 'warning'}>

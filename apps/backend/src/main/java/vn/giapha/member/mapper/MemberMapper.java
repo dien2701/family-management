@@ -39,19 +39,20 @@ public class MemberMapper {
 
     /** Không có thông tin cây: {@code generation = null}, {@code onTree = false}. */
     public MemberDetail toDetail(Member m, boolean includeContact) {
-        return toDetail(m, includeContact, null, false);
+        return toDetail(m, includeContact, null, false, false);
     }
 
     /**
-     * @param includeContact có đưa SĐT và email hay không (chỉ Admin và chính chủ)
+     * @param includeContact có đưa SĐT và email hay không (chỉ Admin, Trưởng chi và chính chủ)
      * @param generation     đời trên cây (gốc là 1), null khi chưa có trên cây
      */
-    public MemberDetail toDetail(Member m, boolean includeContact, Integer generation, boolean onTree) {
+    public MemberDetail toDetail(Member m, boolean includeContact, Integer generation, boolean onTree,
+            boolean createdByMe) {
         return new MemberDetail(m.getId(), m.getFullName(), m.getGender(), m.getAvatarUrl(), labelsOf(m),
                 m.getBirthYear(), m.isDeceased(), m.getDeathYear(), generation, onTree, m.getCreatedAt(),
                 m.getTabooName(), includeContact ? m.getPhone() : null, includeContact ? m.getEmail() : null,
                 m.getBiography(), birthOf(m), deathSolarOf(m), deathLunarOf(m), memorialOf(m), m.getBurialPlace(),
-                m.getUpdatedAt());
+                createdByMe, m.getUpdatedAt());
     }
 
     private List<String> labelsOf(Member m) {

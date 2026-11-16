@@ -30,7 +30,12 @@ public class AuthFacade implements AccountAccessLookup {
      * {@code usable}: ACTIVE và đã được duyệt.
      */
     public record Account(Long id, String email, String fullName, String avatarUrl, boolean admin, Long memberId,
-            boolean locked, boolean usable) {
+            boolean locked, boolean usable, boolean branchHead) {
+
+        /** Được thêm thành viên và làm mọi thao tác cây (DECISIONS #105). */
+        public boolean treeEditor() {
+            return admin || branchHead;
+        }
     }
 
     private final UserAccountRepository users;
@@ -151,6 +156,6 @@ public class AuthFacade implements AccountAccessLookup {
     private static Account toAccount(UserAccount u) {
         return new Account(u.getId(), u.getEmail(), u.getFullName(), u.getAvatarUrl(),
                 u.getSystemRole() == SystemRole.ADMIN, u.getMemberId(), u.getStatus() == AccountStatus.LOCKED,
-                u.isActiveAndApproved());
+                u.isActiveAndApproved(), u.getSystemRole() == SystemRole.BRANCH_HEAD);
     }
 }

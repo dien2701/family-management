@@ -52,7 +52,7 @@ class TreeController {
     }
 
     @Operation(operationId = "addTreeRoot", summary = "Thêm người gốc",
-            description = "Chỉ Admin. Đưa một thành viên chưa có trên cây vào làm gốc mới (Đời 01), xếp cuối các gốc. "
+            description = "Admin hoặc Trưởng chi (DECISIONS #105). Đưa một thành viên chưa có trên cây vào làm gốc mới (Đời 01), xếp cuối các gốc. "
                     + "Lỗi: 409 MEMBER_ALREADY_ON_TREE.")
     @ApiResponse(responseCode = "201", description = "Đã thêm, trả ô mới")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
@@ -67,7 +67,7 @@ class TreeController {
     }
 
     @Operation(operationId = "addTreeChild", summary = "Thêm con vào một ô",
-            description = "Chỉ Admin. Con mới xếp cuối các anh em; cặp cha–mẹ xác định theo số vợ/chồng của ô "
+            description = "Admin hoặc Trưởng chi (DECISIONS #105). Con mới xếp cuối các anh em; cặp cha–mẹ xác định theo số vợ/chồng của ô "
                     + "(bấm trên ô vợ/chồng thì cặp là ô đó cùng người thuộc dòng). Lỗi: 404 TREE_NODE_NOT_FOUND; "
                     + "409 MEMBER_ALREADY_ON_TREE, TREE_INVALID_CO_PARENT, TREE_NEEDS_CO_PARENT.")
     @ApiResponse(responseCode = "201", description = "Đã thêm, trả ô mới")
@@ -84,7 +84,7 @@ class TreeController {
     }
 
     @Operation(operationId = "addTreeSpouse", summary = "Thêm vợ/chồng cho một ô",
-            description = "Chỉ Admin. Chỉ có trên ô thuộc dòng; người mới xếp sau vợ/chồng cuối. Lỗi: 404 "
+            description = "Admin hoặc Trưởng chi (DECISIONS #105). Chỉ có trên ô thuộc dòng; người mới xếp sau vợ/chồng cuối. Lỗi: 404 "
                     + "TREE_NODE_NOT_FOUND; 409 TREE_SPOUSE_NOT_ALLOWED, MEMBER_ALREADY_ON_TREE.")
     @ApiResponse(responseCode = "201", description = "Đã thêm, trả ô vợ/chồng mới")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
@@ -100,7 +100,7 @@ class TreeController {
     }
 
     @Operation(operationId = "addTreeParent", summary = "Thêm cha/mẹ cho người gốc",
-            description = "Chỉ Admin. Chỉ có trên ô thuộc dòng ở Đời 01: người mới thành gốc, ô này thành con của "
+            description = "Admin hoặc Trưởng chi (DECISIONS #105). Chỉ có trên ô thuộc dòng ở Đời 01: người mới thành gốc, ô này thành con của "
                     + "người mới nên cả cây rời đó dịch xuống một đời. Lỗi: 404 TREE_NODE_NOT_FOUND; 409 "
                     + "TREE_PARENT_ONLY_AT_TOP, MEMBER_ALREADY_ON_TREE.")
     @ApiResponse(responseCode = "201", description = "Đã thêm, trả ô cha/mẹ mới")
@@ -117,7 +117,7 @@ class TreeController {
     }
 
     @Operation(operationId = "fillTreeSlot", summary = "Điền người vào ô trống",
-            description = "Chỉ Admin. Lỗi: 404 TREE_NODE_NOT_FOUND; 409 TREE_SLOT_NOT_EMPTY, MEMBER_ALREADY_ON_TREE.")
+            description = "Admin hoặc Trưởng chi (DECISIONS #105). Lỗi: 404 TREE_NODE_NOT_FOUND; 409 TREE_SLOT_NOT_EMPTY, MEMBER_ALREADY_ON_TREE.")
     @ApiResponse(responseCode = "200", description = "Thành công")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
     @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
@@ -131,7 +131,7 @@ class TreeController {
     }
 
     @Operation(operationId = "removeTreeMember", summary = "Gỡ người khỏi cây (ô thành ô trống)",
-            description = "Chỉ Admin. Ô thành ô trống nằm đúng chỗ cũ, con cháu và vợ/chồng không bị ảnh hưởng. "
+            description = "Admin hoặc Trưởng chi (DECISIONS #105). Ô thành ô trống nằm đúng chỗ cũ, con cháu và vợ/chồng không bị ảnh hưởng. "
                     + "Lỗi: 404 TREE_NODE_NOT_FOUND; 409 TREE_SLOT_EMPTY.")
     @ApiResponse(responseCode = "200", description = "Thành công, trả ô đã trống")
     @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
@@ -144,7 +144,7 @@ class TreeController {
     }
 
     @Operation(operationId = "deleteTreeNode", summary = "Xóa ô trống",
-            description = "Chỉ Admin. Chỉ xóa được ô trống; nhánh được giữ lại (vợ/chồng hoặc con cháu thế chỗ, "
+            description = "Admin hoặc Trưởng chi (DECISIONS #105). Chỉ xóa được ô trống; nhánh được giữ lại (vợ/chồng hoặc con cháu thế chỗ, "
                     + "thứ tự anh em đánh lại từ 1). Lỗi: 404 TREE_NODE_NOT_FOUND; 409 TREE_SLOT_NOT_EMPTY.")
     @ApiResponse(responseCode = "204", description = "Đã xóa")
     @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
@@ -158,7 +158,7 @@ class TreeController {
     }
 
     @Operation(operationId = "moveTreeNode", summary = "Di chuyển nhánh",
-            description = "Chỉ Admin. Một ô thuộc dòng đi kèm vợ/chồng và con cháu, tới làm con của newParentNodeId "
+            description = "Admin hoặc Trưởng chi (DECISIONS #105). Một ô thuộc dòng đi kèm vợ/chồng và con cháu, tới làm con của newParentNodeId "
                     + "hoặc thành gốc mới khi newParentNodeId là null; xếp cuối các anh em ở nơi đến. Lỗi: 404 "
                     + "TREE_NODE_NOT_FOUND; 409 TREE_MOVE_LINEAGE_ONLY, TREE_CYCLE, TREE_NEEDS_CO_PARENT, "
                     + "TREE_INVALID_CO_PARENT.")
@@ -175,7 +175,7 @@ class TreeController {
     }
 
     @Operation(operationId = "reorderTreeNode", summary = "Đổi thứ tự anh em",
-            description = "Chỉ Admin. Đổi chỗ ô thuộc dòng với người anh em kề bên. Lỗi: 404 TREE_NODE_NOT_FOUND; "
+            description = "Admin hoặc Trưởng chi (DECISIONS #105). Đổi chỗ ô thuộc dòng với người anh em kề bên. Lỗi: 404 TREE_NODE_NOT_FOUND; "
                     + "409 TREE_MOVE_LINEAGE_ONLY, TREE_ORDER_EDGE.")
     @ApiResponse(responseCode = "200", description = "Thành công, trả ô đã đổi chỗ")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
@@ -190,7 +190,7 @@ class TreeController {
     }
 
     @Operation(operationId = "setTreeCoParent", summary = "Đổi cặp cha–mẹ của một người con",
-            description = "Chỉ Admin. coParentNodeId phải là vợ/chồng của cha/mẹ hiện tại; cha/mẹ có đúng 1 vợ/chồng "
+            description = "Admin hoặc Trưởng chi (DECISIONS #105). coParentNodeId phải là vợ/chồng của cha/mẹ hiện tại; cha/mẹ có đúng 1 vợ/chồng "
                     + "thì null tự nhận người đó, từ 2 vợ/chồng thì bắt buộc chọn. Lỗi: 404 TREE_NODE_NOT_FOUND; "
                     + "409 TREE_NOT_A_CHILD, TREE_INVALID_CO_PARENT, TREE_NEEDS_CO_PARENT.")
     @ApiResponse(responseCode = "200", description = "Thành công, trả ô đã đổi cặp")

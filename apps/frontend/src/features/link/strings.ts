@@ -25,11 +25,11 @@ export const linkStrings = {
     you: 'Đây là bạn',
   },
   pending: {
-    badge: 'Đang chờ Admin duyệt',
+    badge: 'Đang chờ Quản trị viên duyệt',
     title: 'Yêu cầu đang chờ duyệt',
     description: (name: string) => `Bạn đã gửi yêu cầu liên kết với "${name}".`,
     sentAt: (date: string) => `Gửi ngày ${date}`,
-    hint: 'Khi Admin duyệt, hồ sơ sẽ có dấu "Đây là bạn" và bạn tự sửa được hồ sơ của mình. Nếu chọn nhầm người, nhờ Admin từ chối yêu cầu rồi gửi lại.',
+    hint: 'Khi Quản trị viên duyệt, hồ sơ sẽ có dấu "Đây là bạn" và bạn tự sửa được hồ sơ của mình. Nếu chọn nhầm người, nhờ Quản trị viên từ chối yêu cầu rồi gửi lại.',
   },
   rejected: (name: string, date: string) =>
     `Yêu cầu liên kết với "${name}" (${date}) không được duyệt. Bạn có thể chọn lại bên dưới.`,
@@ -50,14 +50,14 @@ export const linkStrings = {
   confirm: {
     title: 'Gửi yêu cầu liên kết?',
     description: (name: string) =>
-      `Bạn xác nhận tài khoản của mình là "${name}"? Admin sẽ xem và duyệt yêu cầu này.`,
+      `Bạn xác nhận tài khoản của mình là "${name}"? Quản trị viên sẽ xem và duyệt yêu cầu này.`,
     confirm: 'Gửi yêu cầu',
     cancel: 'Hủy',
-    sent: 'Đã gửi yêu cầu. Admin sẽ duyệt sớm.',
+    sent: 'Đã gửi yêu cầu. Quản trị viên sẽ duyệt sớm.',
   },
   errors: {
     ACCOUNT_ALREADY_LINKED: 'Tài khoản của bạn đã liên kết với một thành viên. Hãy hủy liên kết cũ trước.',
-    MEMBER_ALREADY_LINKED: 'Thành viên này đã có tài khoản khác liên kết. Nếu đây là bạn, hãy nhờ Admin xử lý.',
+    MEMBER_ALREADY_LINKED: 'Thành viên này đã có tài khoản khác liên kết. Nếu đây là bạn, hãy nhờ Quản trị viên xử lý.',
     LINK_REQUEST_EXISTS: 'Bạn đang có một yêu cầu chờ duyệt. Hãy chờ kết quả.',
     NOT_LINKED: 'Tài khoản của bạn hiện chưa liên kết với thành viên nào.',
     MEMBER_NOT_FOUND: 'Không tìm thấy thành viên này. Danh sách đã được tải lại.',

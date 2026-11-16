@@ -1,5 +1,5 @@
 package vn.giapha.auth.entity;
 
 public enum SystemRole {
-    ADMIN, USER
+    ADMIN, BRANCH_HEAD, USER
 }

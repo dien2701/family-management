@@ -57,7 +57,7 @@ export const memberStrings = {
     loading: 'Đang tải thông tin trên cây...',
     loadFailed: 'Không tải được thông tin trên cây.',
     notOnTree: 'Người này chưa có trên cây gia phả.',
-    notOnTreeAdmin: 'Người này chưa có trên cây gia phả. Admin thêm người này từ trang Cây.',
+    notOnTreeAdmin: 'Người này chưa có trên cây gia phả. Quản trị viên hoặc Trưởng chi thêm người này từ trang Cây.',
     generation: 'Đời',
     parents: 'Cha/mẹ',
     spouses: 'Vợ/chồng',
@@ -82,7 +82,7 @@ export const memberStrings = {
     notFound: 'Không tìm thấy thành viên',
     notFoundDesc: 'Người này có thể đã bị xóa hoặc không tồn tại.',
     forbidden: 'Bạn không sửa được hồ sơ này',
-    forbiddenDesc: 'Bạn chỉ sửa được hồ sơ của chính mình. Admin sửa được mọi hồ sơ.',
+    forbiddenDesc: 'Bạn chỉ sửa được hồ sơ của chính mình. Quản trị viên sửa được mọi hồ sơ.',
     sections: {
       basic: 'Thông tin cơ bản',
       birth: 'Ngày sinh',
@@ -102,10 +102,10 @@ export const memberStrings = {
       'Có thể chỉ nhập năm. Sinh nhật hằng năm tính theo lịch đang chọn ở trên (Dương hoặc Âm).',
     phone: 'Số điện thoại',
     email: 'Email liên hệ',
-    contactHint: 'Chỉ Admin và chính chủ hồ sơ xem được. Tách biệt với email đăng nhập.',
+    contactHint: 'Chỉ Quản trị viên và chính chủ hồ sơ xem được. Tách biệt với email đăng nhập.',
     biography: 'Tiểu sử',
     isDeceased: 'Đã qua đời',
-    deathLocked: 'Chỉ Admin sửa được phần này.',
+    deathLocked: 'Chỉ Quản trị viên sửa được phần này.',
     deathDate: 'Ngày mất',
     deathHint: 'Chỉ biết ngày/tháng âm thì chọn Âm lịch và bỏ trống năm.',
     memorialTitle: 'Ngày giỗ ghi đè (âm lịch)',
@@ -131,7 +131,7 @@ export const memberStrings = {
   remove: {
     title: 'Xóa thành viên này?',
     description: (name: string) =>
-      `Hồ sơ "${name}" sẽ bị xóa, kể cả các dòng người thân liên quan. Admin vẫn xem lại được bản sao ở mục "Thành viên đã xóa".`,
+      `Hồ sơ "${name}" sẽ bị xóa, kể cả các dòng người thân liên quan. Quản trị viên vẫn xem lại được bản sao ở mục "Thành viên đã xóa".`,
     confirm: 'Xóa thành viên',
     cancel: 'Hủy',
     onTree: 'Không xóa được vì người này đang có trên cây. Hãy gỡ người này khỏi cây trước.',
@@ -152,7 +152,7 @@ export const memberStrings = {
     oneWayHint: 'Dòng này chỉ nằm trong hồ sơ này, hồ sơ của người thân không tự có dòng ngược lại.',
     picker: {
       title: 'Thêm người thân',
-      description: 'Chọn một thành viên đã có, rồi nhập người đó là gì của chủ hồ sơ. Chưa có trong danh sách thì nhờ Admin tạo trước.',
+      description: 'Chọn một thành viên đã có, rồi nhập người đó là gì của chủ hồ sơ. Chưa có trong danh sách thì nhờ Quản trị viên tạo trước.',
       confirm: 'Thêm người thân',
       search: 'Tìm thành viên',
       searchPlaceholder: 'Gõ họ tên, không cần dấu',

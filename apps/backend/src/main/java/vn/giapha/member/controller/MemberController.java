@@ -82,7 +82,7 @@ class MemberController {
     }
 
     @Operation(operationId = "createMember", summary = "Thêm thành viên",
-            description = "Chỉ Admin. Chỉ fullName là bắt buộc. Các trường về việc đã mất chỉ hợp lệ khi isDeceased = true.")
+            description = "Admin hoặc Trưởng chi. Chỉ fullName là bắt buộc. Các trường về việc đã mất chỉ hợp lệ khi isDeceased = true.")
     @ApiResponse(responseCode = "201", description = "Đã tạo")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
     @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
@@ -94,7 +94,7 @@ class MemberController {
     }
 
     @Operation(operationId = "getMember", summary = "Chi tiết thành viên",
-            description = "Không cần đăng nhập (DECISIONS #88). phone và email chỉ có khi người gọi là Admin hoặc chính chủ hồ sơ.")
+            description = "Không cần đăng nhập (DECISIONS #88). phone và email chỉ có khi người gọi là Admin, Trưởng chi hoặc chính chủ hồ sơ.")
     @ApiResponse(responseCode = "200", description = "Thành công")
     @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
     @GetMapping("/{id}")
@@ -120,7 +120,7 @@ class MemberController {
     }
 
     @Operation(operationId = "updateMemberGender", summary = "Đặt giới tính thành viên",
-            description = "Chỉ Admin. Chỉ đổi gender (M, F hoặc null), có audit log (DECISIONS #100).")
+            description = "Admin hoặc Trưởng chi. Chỉ đổi gender (M, F hoặc null), có audit log (DECISIONS #100).")
     @ApiResponse(responseCode = "200", description = "Thành công")
     @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
     @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
@@ -134,7 +134,7 @@ class MemberController {
     }
 
     @Operation(operationId = "deleteMember", summary = "Xóa thành viên",
-            description = "Chỉ Admin. Bị chặn nếu người đó đang có trên cây (409 MEMBER_ON_TREE).")
+            description = "Admin, hoặc Trưởng chi với hồ sơ do mình tạo. Bị chặn nếu người đó đang có trên cây (409 MEMBER_ON_TREE).")
     @ApiResponse(responseCode = "204", description = "Đã xóa")
     @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
     @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)

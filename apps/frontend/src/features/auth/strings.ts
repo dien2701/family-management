@@ -4,6 +4,9 @@
 // nên khi đổi bên đó phải đổi cả ở đây.
 export const POLICY_VERSION = '1.0'
 
+/** Tên hiển thị của vai trò (DECISIONS #104, #105). */
+export const ROLE_LABEL = { ADMIN: 'Quản trị viên', BRANCH_HEAD: 'Trưởng chi', USER: 'Người dùng' } as const
+
 export const authStrings = {
   brand: 'Tộc Phả',
   backToDashboard: 'Về trang Tổng quan',
@@ -68,9 +71,9 @@ export const authStrings = {
     loadFailed: 'Không tải được nút đăng nhập Google. Bạn vẫn có thể dùng email và mật khẩu.',
   },
   waiting: {
-    title: 'Đang chờ Admin duyệt',
+    title: 'Đang chờ Quản trị viên duyệt',
     description:
-      'Tài khoản của bạn đã được tạo. Sau khi Admin duyệt, bạn sẽ xem được gia phả. Trang này tự kiểm tra lại mỗi 30 giây.',
+      'Tài khoản của bạn đã được tạo. Sau khi Quản trị viên duyệt, bạn sẽ xem được gia phả. Trang này tự kiểm tra lại mỗi 30 giây.',
     signedInAs: (email: string) => `Đăng nhập bằng ${email}`,
     checkNow: 'Kiểm tra lại',
     lastChecked: (time: string) => `Kiểm tra lần cuối lúc ${time}`,
@@ -89,7 +92,7 @@ export const authStrings = {
   rejected: {
     title: 'Tài khoản không được duyệt',
     description:
-      'Admin đã không duyệt tài khoản này nên bạn chưa xem được gia phả. Nếu nghĩ đây là nhầm lẫn, hãy liên hệ Admin.',
+      'Quản trị viên đã không duyệt tài khoản này nên bạn chưa xem được gia phả. Nếu nghĩ đây là nhầm lẫn, hãy liên hệ Quản trị viên.',
   },
   logout: 'Đăng xuất',
   logoutFailed: 'Không đăng xuất được. Hãy kiểm tra mạng rồi thử lại.',

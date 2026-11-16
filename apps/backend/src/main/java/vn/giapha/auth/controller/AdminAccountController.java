@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import vn.giapha.auth.dto.AccountAdminResponse;
 import vn.giapha.auth.dto.AccountFilter;
+import vn.giapha.auth.dto.AccountRoleInput;
 import vn.giapha.auth.dto.AdminMemberLinkInput;
 import vn.giapha.auth.entity.AccountStatus;
 import vn.giapha.auth.entity.ApprovalStatus;
@@ -132,8 +133,30 @@ class AdminAccountController {
         return service.revokeAdmin(current.userId(), id);
     }
 
+    @Operation(operationId = "grantBranchHead", summary = "Cấp quyền Trưởng chi")
+    @ApiResponse(responseCode = "200", description = "Thành công")
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
+    @ApiResponse(responseCode = "409", ref = ApiRefs.CONFLICT)
+    @PostMapping("/{id}/grant-branch-head")
+    AccountAdminResponse grantBranchHead(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id) {
+        return service.grantBranchHead(current.userId(), id);
+    }
+
+    @Operation(operationId = "revokeBranchHead", summary = "Gỡ quyền Trưởng chi")
+    @ApiResponse(responseCode = "200", description = "Thành công")
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
+    @ApiResponse(responseCode = "409", ref = ApiRefs.CONFLICT)
+    @PostMapping("/{id}/revoke-branch-head")
+    AccountAdminResponse revokeBranchHead(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id) {
+        return service.revokeBranchHead(current.userId(), id);
+    }
+
     @Operation(operationId = "deleteAccount", summary = "Xóa tài khoản (chuyển vào \"Đã xóa\")",
-            description = "Xóa mềm và khóa, thu hồi refresh token, giữ liên kết. Chỉ tài khoản User, không xóa chính mình "
+            description = "Xóa mềm và khóa, thu hồi refresh token, giữ liên kết. Chỉ tài khoản User hoặc Trưởng chi, không xóa chính mình "
                     + "(DECISIONS #97).")
     @ApiResponse(responseCode = "200", description = "Thành công")
     @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
@@ -168,6 +191,21 @@ class AdminAccountController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void purge(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id) {
         service.purge(current.userId(), id);
+    }
+
+    @Operation(operationId = "changeAccountRole", summary = "Đổi vai trò của tài khoản",
+            description = "Đổi thẳng giữa Admin, Trưởng chi và User (DECISIONS #106). 409 INVALID_ACCOUNT_STATE, "
+                    + "SELF_ACTION_FORBIDDEN, ROOT_ADMIN_PROTECTED, LAST_ADMIN. Thu hồi refresh token của người đó.")
+    @ApiResponse(responseCode = "200", description = "Thành công")
+    @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
+    @ApiResponse(responseCode = "409", ref = ApiRefs.CONFLICT)
+    @PutMapping("/{id}/role")
+    AccountAdminResponse changeRole(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id,
+            @Valid @RequestBody AccountRoleInput input) {
+        return service.changeRole(current.userId(), id, input.systemRole());
     }
 
     @Operation(operationId = "adminLinkMember", summary = "Admin gán thành viên cho tài khoản",

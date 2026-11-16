@@ -17,6 +17,7 @@ import {
   ApprovalGuard,
   GuestOnly,
   RequireAdmin,
+  RequireTreeEditor,
   RequireAuth,
   SessionReady,
 } from '@/features/auth/components/guards'
@@ -133,9 +134,9 @@ export const routes: RouteObject[] = [
               {
                 element: <ApprovalGuard area="app" />,
                 children: [
-                  // Thêm thành viên: chỉ Admin
+                  // Thêm thành viên: Admin hoặc Trưởng chi (DECISIONS #105)
                   {
-                    element: <RequireAdmin />,
+                    element: <RequireTreeEditor />,
                     children: [
                       { path: 'thanh-vien/them', element: <MemberFormPage />, handle: handle('Thêm thành viên') },
                     ],

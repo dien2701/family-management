@@ -23,6 +23,12 @@ export function homePathFor(user: Me): string {
 
 export const isAdmin = (user: Me | null): boolean => user?.systemRole === 'ADMIN'
 
+/** Trưởng chi (DECISIONS #105): thêm thành viên, dựng cây, sửa/xóa hồ sơ do mình tạo. */
+export const isBranchHead = (user: Me | null): boolean => user?.systemRole === 'BRANCH_HEAD'
+
+/** Được thêm thành viên và làm mọi thao tác cây: Admin hoặc Trưởng chi. */
+export const canEditTree = (user: Me | null): boolean => isAdmin(user) || isBranchHead(user)
+
 /** Đã đăng nhập và đã được duyệt: khách và tài khoản chưa duyệt chỉ xem được các trang công khai (DECISIONS #88). */
 export const isApproved = (user: Me | null): boolean => user !== null && approvalAreaOf(user) === 'app'
 

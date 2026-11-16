@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router'
 import type { AccountListQuery } from '@/types/api'
 import {
   isRoleFilter,
+  type RoleFilter,
   isStatusFilter,
   statusFilterToQuery,
   type StatusFilter,
@@ -12,7 +13,7 @@ export type AccountTab = 'waiting' | 'all' | 'deleted'
 
 export const ACCOUNT_PAGE_SIZE = 20
 
-type Role = 'ADMIN' | 'USER'
+type Role = RoleFilter
 type Patch = Partial<{
   tab: AccountTab
   q: string

@@ -30,15 +30,17 @@ public class SystemSettingsService implements DynamicSettings {
     private static final String POLICY_VERSION = "POLICY_VERSION";
     private static final String AI_QUOTA_USER = "AI_QUOTA_USER";
     private static final String AI_QUOTA_ADMIN = "AI_QUOTA_ADMIN";
+    private static final String AI_QUOTA_BRANCH_HEAD = "AI_QUOTA_BRANCH_HEAD";
     private static final String AI_QUOTA_GUEST = "AI_QUOTA_GUEST";
     private static final String UPLOAD_MAX_MB = "UPLOAD_MAX_MB";
     private static final String TOTAL_QUOTA_MB = "TOTAL_QUOTA_MB";
 
-    /** Giá trị mặc định khi bảng chưa có dòng tương ứng (không nên xảy ra sau V12/V20, chỉ để phòng hờ). */
+    /** Giá trị mặc định khi bảng chưa có dòng tương ứng (không nên xảy ra sau V12/V20/V23, chỉ để phòng hờ). */
     private static final Map<String, Integer> DEFAULTS = Map.of(
             POLICY_VERSION, 1,
             AI_QUOTA_USER, 15,
             AI_QUOTA_ADMIN, 30,
+            AI_QUOTA_BRANCH_HEAD, 15,
             AI_QUOTA_GUEST, 15,
             UPLOAD_MAX_MB, 10,
             TOTAL_QUOTA_MB, 1024);
@@ -70,6 +72,7 @@ public class SystemSettingsService implements DynamicSettings {
         save(POLICY_VERSION, input.policyVersion(), actorId, now);
         save(AI_QUOTA_USER, input.aiQuotaUser(), actorId, now);
         save(AI_QUOTA_ADMIN, input.aiQuotaAdmin(), actorId, now);
+        save(AI_QUOTA_BRANCH_HEAD, input.aiQuotaBranchHead(), actorId, now);
         save(AI_QUOTA_GUEST, input.aiQuotaGuest(), actorId, now);
         save(UPLOAD_MAX_MB, input.uploadMaxMb(), actorId, now);
         save(TOTAL_QUOTA_MB, input.totalQuotaMb(), actorId, now);
@@ -94,6 +97,11 @@ public class SystemSettingsService implements DynamicSettings {
     @Override
     public int aiQuotaAdmin() {
         return current().aiQuotaAdmin();
+    }
+
+    @Override
+    public int aiQuotaBranchHead() {
+        return current().aiQuotaBranchHead();
     }
 
     @Override
@@ -125,6 +133,7 @@ public class SystemSettingsService implements DynamicSettings {
                 intOf(values, POLICY_VERSION),
                 intOf(values, AI_QUOTA_USER),
                 intOf(values, AI_QUOTA_ADMIN),
+                intOf(values, AI_QUOTA_BRANCH_HEAD),
                 intOf(values, AI_QUOTA_GUEST),
                 intOf(values, UPLOAD_MAX_MB),
                 intOf(values, TOTAL_QUOTA_MB));

@@ -10,7 +10,7 @@ import vn.giapha.member.entity.Gender;
 
 /**
  * Hồ sơ đầy đủ của một thành viên: các trường của {@link MemberSummary} cộng thêm phần còn lại. {@code phone} và
- * {@code email} chỉ có khi người gọi là Admin hoặc chính chủ (DECISIONS #66); với người khác hai khóa này
+ * {@code email} chỉ có khi người gọi là Admin, Trưởng chi hoặc chính chủ (DECISIONS #66); với người khác hai khóa này
  * <b>không xuất hiện</b> trong JSON, nên chỉ hai trường này dùng {@code NON_NULL}.
  */
 public record MemberDetail(
@@ -34,5 +34,6 @@ public record MemberDetail(
         MemberLunarDate deathLunar,
         MemorialOverride memorialOverride,
         String burialPlace,
+        boolean createdByMe,
         Instant updatedAt) {
 }

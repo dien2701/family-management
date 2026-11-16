@@ -2,7 +2,7 @@ import { Search } from 'lucide-react'
 import { FilterBar } from '@/components/shared/FilterBar'
 import { FilterChip } from '@/components/shared/FilterChip'
 import { Input } from '@/components/ui/input'
-import { STATUS_FILTERS, isRoleFilter, isStatusFilter, type StatusFilter } from '../accountRules'
+import { STATUS_FILTERS, isRoleFilter, isStatusFilter, type RoleFilter, type StatusFilter } from '../accountRules'
 import { adminStrings as s } from '../strings'
 
 type AccountFiltersProps = {
@@ -13,9 +13,9 @@ type AccountFiltersProps = {
   /** Tắt duyệt tài khoản thì không còn trạng thái Chờ duyệt để lọc. */
   hideWaitingOption?: boolean
   status: StatusFilter | undefined
-  role: 'ADMIN' | 'USER' | undefined
+  role: RoleFilter | undefined
   onStatusChange: (value: StatusFilter | undefined) => void
-  onRoleChange: (value: 'ADMIN' | 'USER' | undefined) => void
+  onRoleChange: (value: RoleFilter | undefined) => void
 }
 
 const statusText = (value: StatusFilter) => s.status[value.toLowerCase() as keyof typeof s.status]
@@ -84,6 +84,7 @@ export function AccountFilters({
         options={[
           { value: 'all', text: s.accounts.allOption },
           { value: 'ADMIN', text: s.role.ADMIN },
+          { value: 'BRANCH_HEAD', text: s.role.BRANCH_HEAD },
           { value: 'USER', text: s.role.USER },
         ]}
         onChange={(v) => onRoleChange(isRoleFilter(v) ? v : undefined)}

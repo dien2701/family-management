@@ -249,14 +249,16 @@ public class AttachmentService {
     }
 
     /**
-     * Gỡ ảnh đại diện của thành viên: Admin gỡ mọi hồ sơ, User chỉ gỡ hồ sơ đã liên kết (DECISIONS #78).
+     * Gỡ ảnh đại diện của thành viên: Admin gỡ mọi hồ sơ, User chỉ gỡ hồ sơ đã liên kết (DECISIONS #78), Trưởng chi
+     * gỡ thêm hồ sơ do mình tạo (#105).
      * Xóa dòng ngay, xóa trên Cloudinary sau khi commit; {@code avatarUrl} về null.
      */
     @Transactional
     public void removeMemberAvatar(Long actorId, Long memberId) {
         AuthFacade.Account actor = auth.find(actorId).filter(AuthFacade.Account::usable).orElseThrow(
                 AttachmentService::forbidden);
-        if (!actor.admin() && !memberId.equals(actor.memberId())) {
+        if (!actor.admin() && !memberId.equals(actor.memberId())
+                && !(actor.branchHead() && members.isCreatedBy(memberId, actor.id()))) {
             throw forbidden();
         }
         if (!members.exists(memberId)) {
@@ -300,7 +302,8 @@ public class AttachmentService {
             throw validation(errors);
         }
         boolean allowed = account.admin() || kind == AttachmentKind.ACCOUNT_AVATAR
-                || (kind == AttachmentKind.AVATAR && account.memberId() != null && account.memberId().equals(memberId));
+                || (kind == AttachmentKind.AVATAR && account.memberId() != null && account.memberId().equals(memberId))
+                || (kind == AttachmentKind.AVATAR && account.branchHead() && members.isCreatedBy(memberId, account.id()));
         if (!allowed) {
             throw forbidden();
         }

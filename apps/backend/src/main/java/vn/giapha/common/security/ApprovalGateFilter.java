@@ -93,6 +93,6 @@ public class ApprovalGateFilter extends OncePerRequestFilter {
 
     private void notApproved(HttpServletResponse response) throws IOException {
         problems.write(response, HttpStatus.FORBIDDEN, "Không có quyền", "ACCOUNT_NOT_APPROVED",
-                "Tài khoản của bạn chưa được Admin duyệt.");
+                "Tài khoản của bạn chưa được Quản trị viên duyệt.");
     }
 }

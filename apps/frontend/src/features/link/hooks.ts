@@ -27,7 +27,7 @@ export function useLinkedMember(memberId: number | undefined) {
 export function useCreateLinkRequest() {
   const queryClient = useQueryClient()
   return useMutation({
-    meta: { successMessage: 'Đã gửi yêu cầu liên kết, chờ Admin duyệt.' },
+    meta: { successMessage: 'Đã gửi yêu cầu liên kết, chờ Quản trị viên duyệt.' },
     mutationFn: (memberId: number) => linkApi.createRequest(memberId),
     // Lỗi 409 (đã có yêu cầu, thành viên vừa được người khác nhận) cũng cần tải lại cho khớp máy chủ
     onSettled: () =>

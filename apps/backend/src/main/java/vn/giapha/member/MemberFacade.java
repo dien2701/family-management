@@ -117,6 +117,13 @@ public class MemberFacade {
         return repository.existsById(memberId);
     }
 
+    /** Hồ sơ do tài khoản này tạo: Trưởng chi sửa được ảnh của hồ sơ mình tạo (DECISIONS #105). */
+    @Transactional(readOnly = true)
+    public boolean isCreatedBy(Long memberId, Long accountId) {
+        return accountId != null && repository.findById(memberId)
+                .map(m -> accountId.equals(m.getCreatedBy())).orElse(false);
+    }
+
     @Transactional(readOnly = true)
     public Optional<MemberRef> find(Long memberId) {
         return repository.findById(memberId).map(MemberFacade::toRef);

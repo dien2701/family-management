@@ -17,6 +17,7 @@ const schema = z.object({
   policyVersion: z.number('Phải là số.').int().min(1, 'Phiên bản phải lớn hơn 0.'),
   aiQuotaUser: z.number('Phải là số.').int().min(0, 'Số lượt phải lớn hơn hoặc bằng 0.'),
   aiQuotaAdmin: z.number('Phải là số.').int().min(0, 'Số lượt phải lớn hơn hoặc bằng 0.'),
+  aiQuotaBranchHead: z.number('Phải là số.').int().min(1, 'Số lượt phải lớn hơn 0.'),
   aiQuotaGuest: z.number('Phải là số.').int().min(0, 'Số lượt phải lớn hơn hoặc bằng 0.'),
   uploadMaxMb: z.number('Phải là số.').int().min(1, 'Dung lượng phải lớn hơn 0.'),
   totalQuotaMb: z.number('Phải là số.').int().min(1, 'Dung lượng phải lớn hơn 0.'),
@@ -83,16 +84,22 @@ export function SettingsPage() {
 
         <SectionCard title="Giới hạn AI" icon={Sparkles}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FormField label="Lượt AI của User (mỗi ngày)" error={errors.aiQuotaUser?.message}>
+            <FormField label="Lượt AI của Người dùng (mỗi ngày)" error={errors.aiQuotaUser?.message}>
               <Input
                 type="number"
                 {...register('aiQuotaUser', { valueAsNumber: true })}
               />
             </FormField>
-            <FormField label="Lượt AI của Admin (mỗi ngày)" error={errors.aiQuotaAdmin?.message}>
+            <FormField label="Lượt AI của Quản trị viên (mỗi ngày)" error={errors.aiQuotaAdmin?.message}>
               <Input
                 type="number"
                 {...register('aiQuotaAdmin', { valueAsNumber: true })}
+              />
+            </FormField>
+            <FormField label="Lượt AI của Trưởng chi (mỗi ngày)" error={errors.aiQuotaBranchHead?.message}>
+              <Input
+                type="number"
+                {...register('aiQuotaBranchHead', { valueAsNumber: true })}
               />
             </FormField>
             <FormField

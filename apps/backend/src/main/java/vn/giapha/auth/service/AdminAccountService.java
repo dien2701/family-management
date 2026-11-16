@@ -151,7 +151,7 @@ public class AdminAccountService {
     @Transactional
     public AccountAdminResponse grantAdmin(Long actorId, Long targetId) {
         return mutate(actorId, targetId, "GRANT_ADMIN", (actor, target, admins) -> {
-            if (!target.isActiveAndApproved() || target.getSystemRole() != SystemRole.USER) {
+            if (!target.isActiveAndApproved() || target.getSystemRole() == SystemRole.ADMIN) {
                 throw invalidState();
             }
             target.setSystemRole(SystemRole.ADMIN);
@@ -174,18 +174,66 @@ public class AdminAccountService {
         });
     }
 
+    // ---------- Quyền Trưởng chi (DECISIONS #105) ----------
+
+    @Transactional
+    public AccountAdminResponse grantBranchHead(Long actorId, Long targetId) {
+        return mutate(actorId, targetId, "GRANT_BRANCH_HEAD", (actor, target, admins) -> {
+            if (!target.isActiveAndApproved() || target.getSystemRole() != SystemRole.USER) {
+                throw invalidState();
+            }
+            target.setSystemRole(SystemRole.BRANCH_HEAD);
+            refreshTokens.revokeAll(target.getId());
+        });
+    }
+
+    @Transactional
+    public AccountAdminResponse revokeBranchHead(Long actorId, Long targetId) {
+        return mutate(actorId, targetId, "REVOKE_BRANCH_HEAD", (actor, target, admins) -> {
+            if (target.getSystemRole() != SystemRole.BRANCH_HEAD) {
+                throw invalidState();
+            }
+            target.setSystemRole(SystemRole.USER);
+            refreshTokens.revokeAll(target.getId());
+        });
+    }
+
+    // ---------- Đổi vai trò bằng ô chọn (DECISIONS #106) ----------
+
+    /**
+     * Đổi thẳng sang vai trò bất kỳ trong một giao dịch, giữ đủ các chặn của cấp/gỡ quyền: không tự đổi, Admin gốc chỉ là
+     * Admin, không hạ Admin cuối cùng. Thu hồi refresh token để claim mới có hiệu lực.
+     */
+    @Transactional
+    public AccountAdminResponse changeRole(Long actorId, Long targetId, SystemRole role) {
+        return mutate(actorId, targetId, "CHANGE_ROLE", (actor, target, admins) -> {
+            forbidSelf(actor, target);
+            if (role != SystemRole.ADMIN) {
+                forbidRoot(target);
+            }
+            if (!target.isActiveAndApproved() || target.getSystemRole() == role) {
+                throw invalidState();
+            }
+            if (target.getSystemRole() == SystemRole.ADMIN) {
+                assertNotLastAdmin(target, admins);
+            }
+            target.setSystemRole(role);
+            refreshTokens.revokeAll(target.getId());
+        });
+    }
+
     // ---------- Xóa mềm (DECISIONS #97) ----------
 
     /**
      * Chuyển tài khoản vào "Đã xóa" và khóa (xem {@link UserAccount#markDeleted}), thu hồi mọi refresh token. Chỉ xóa
-     * tài khoản User: Admin phải được gỡ quyền trước, nên không bao giờ xóa mất Admin cuối cùng.
+     * tài khoản User hoặc Trưởng chi: Admin phải được gỡ quyền trước, nên không bao giờ xóa mất Admin cuối cùng.
      */
     @Transactional
     public AccountAdminResponse delete(Long actorId, Long targetId) {
         return mutate(actorId, targetId, "DELETE", (actor, target, admins) -> {
             forbidSelf(actor, target);
             forbidRoot(target);
-            if (target.getSystemRole() != SystemRole.USER) {
+            if (target.getSystemRole() == SystemRole.ADMIN) {
                 throw invalidState();
             }
             target.markDeleted(actor.getId(), Instant.now(clock));
@@ -303,7 +351,7 @@ public class AdminAccountService {
     private void forbidRoot(UserAccount target) {
         if (root.isRoot(target)) {
             throw new BusinessException(HttpStatus.CONFLICT, "ROOT_ADMIN_PROTECTED",
-                    "Đây là Admin gốc của hệ thống, không thể gỡ quyền, khóa, từ chối hay xóa.");
+                    "Đây là Quản trị viên gốc của hệ thống, không thể gỡ quyền, khóa, từ chối hay xóa.");
         }
     }
 
@@ -316,7 +364,7 @@ public class AdminAccountService {
                 .anyMatch(a -> !a.getId().equals(target.getId()) && a.isActiveAndApproved());
         if (!anotherActiveAdmin) {
             throw new BusinessException(HttpStatus.CONFLICT, "LAST_ADMIN",
-                    "Đây là Admin cuối cùng của hệ thống. Hãy cấp quyền Admin cho người khác trước.");
+                    "Đây là Quản trị viên cuối cùng của hệ thống. Hãy cấp quyền Quản trị viên cho người khác trước.");
         }
     }
 

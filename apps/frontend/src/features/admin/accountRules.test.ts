@@ -29,11 +29,6 @@ describe('actionsFor', () => {
     expect(actionsFor(account({ approvalStatus: 'REJECTED' }), 1)).toEqual(['approve'])
   })
 
-  it('đã duyệt: User được cấp Admin hoặc khóa; Admin được gỡ quyền hoặc khóa', () => {
-    expect(actionsFor(account({}), 1)).toEqual(['grant-admin', 'lock'])
-    expect(actionsFor(account({ systemRole: 'ADMIN' }), 1)).toEqual(['revoke-admin', 'lock'])
-  })
-
   it('đang khóa: chỉ mở khóa', () => {
     expect(actionsFor(account({ status: 'LOCKED' }), 1)).toEqual(['unlock'])
   })

@@ -34,7 +34,7 @@ export function usePendingProposalsCount() {
 export function useCreateProposal() {
   const queryClient = useQueryClient()
   return useMutation({
-    meta: { successMessage: 'Đã gửi đề xuất, chờ Admin duyệt.' },
+    meta: { successMessage: 'Đã gửi đề xuất, chờ Quản trị viên duyệt.' },
     mutationFn: (data: Schemas['ProposalInput']) => proposalApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: proposalKeys.all })

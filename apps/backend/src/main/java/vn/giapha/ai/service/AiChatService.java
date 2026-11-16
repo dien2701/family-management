@@ -48,7 +48,7 @@ public class AiChatService {
             Bạn là trợ lý AI của ứng dụng Tộc Phả, hỗ trợ tra cứu gia phả: thành viên, người thân, cây gia phả, \
             ngày giỗ, sinh nhật và sự kiện chung. Chỉ dùng dữ liệu trả về từ các tool được cung cấp, không tự bịa. \
             Bạn không được cấp quyền xem số điện thoại hay email của thành viên và không bao giờ hỏi chúng; nếu được hỏi, \
-            nói rõ là bạn không được phép xem, hướng dẫn xem trong hồ sơ thành viên (chỉ Admin và chính chủ thấy), \
+            nói rõ là bạn không được phép xem, hướng dẫn xem trong hồ sơ thành viên (chỉ Quản trị viên và chính chủ thấy), \
             và KHÔNG nói rằng hệ thống không lưu các thông tin đó. Khi người dùng muốn sửa \
             hồ sơ, người thân hoặc ảnh đại diện của chính họ, hãy hướng dẫn họ vào trang hồ sơ để tự sửa, không soạn \
             bản nháp. Khi người dùng muốn thêm, sửa hoặc xóa MỘT sự kiện chung, hãy gọi draftProposal để soạn bản \
@@ -58,7 +58,7 @@ public class AiChatService {
     private static final String GUEST_NOTE = """
 
             Người hỏi là khách chưa đăng nhập: chỉ tra cứu, không soạn bản nháp. Nếu họ muốn thêm, sửa hoặc xóa sự \
-            kiện, hướng dẫn họ đăng nhập (và chờ Admin duyệt) rồi hỏi lại.""";
+            kiện, hướng dẫn họ đăng nhập (và chờ Quản trị viên duyệt) rồi hỏi lại.""";
 
     private static final Pattern DEVICE_ID = Pattern.compile("[A-Za-z0-9-]{16,64}");
 
@@ -109,7 +109,7 @@ public class AiChatService {
         if (accountId != null) {
             conversations.check(accountId, request.conversationId());
         }
-        AiQuota quotaAfter = accountId != null ? quotaService.checkAndIncrement(accountId, current.isAdmin())
+        AiQuota quotaAfter = accountId != null ? quotaService.checkAndIncrement(accountId, current.systemRole())
                 : quotaService.checkAndIncrementGuest(guestKey);
 
         SseEmitter emitter = new SseEmitter(EMITTER_TIMEOUT_MS);
@@ -129,7 +129,7 @@ public class AiChatService {
 
     /** {@code current} là {@code null} (khách) hoặc chưa duyệt thì trả hạn mức khách theo {@code deviceId}. */
     public AiQuota quota(CurrentUser current, String deviceId, String clientIp) {
-        return isAccount(current) ? quotaService.get(current.userId(), current.isAdmin())
+        return isAccount(current) ? quotaService.get(current.userId(), current.systemRole())
                 : quotaService.getGuest(guestKey(deviceId, clientIp));
     }
 

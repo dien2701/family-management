@@ -9,12 +9,12 @@ import { useAuth } from '@/hooks/useAuth'
 import { ApiError } from '@/services/client'
 import type { AccountAdmin } from '@/types/api'
 import { cn } from '@/utils/cn'
-import type { AccountAction, LinkAction } from '../api'
+import type { AccountAction, LinkAction, SystemRole } from '../api'
 import { AccountFilters } from '../components/AccountFilters'
 import { AccountList } from '../components/AccountList'
 import { AccountSheet } from '../components/AccountSheet'
 import { AssignMemberDialog } from '../components/AssignMemberDialog'
-import { useAccountAction, useAccounts, useUnlinkMember, useWaitingCount } from '../hooks'
+import { useAccountAction, useAccounts, useChangeRole, useUnlinkMember, useWaitingCount } from '../hooks'
 import { accountActionText, accountErrorText, adminStrings as s } from '../strings'
 import { useAccountParams, type AccountTab } from '../useAccountParams'
 
@@ -27,6 +27,7 @@ const TAB_LABEL: Record<AccountTab, string> = {
 }
 
 type Pending = { account: AccountAdmin; action: AccountAction }
+type RoleChange = { account: AccountAdmin; role: SystemRole }
 
 function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
@@ -35,7 +36,7 @@ function errorMessage(error: unknown): string {
   return 'Có lỗi xảy ra, vui lòng thử lại.'
 }
 
-// Quản trị > Người dùng (IDEA §6.10): duyệt, từ chối, khóa, mở khóa, cấp/gỡ Admin, xóa và khôi phục (DECISIONS #97).
+// Quản trị > Người dùng (IDEA §6.10): duyệt, từ chối, khóa, mở khóa, đổi vai trò (#106), xóa và khôi phục (DECISIONS #97).
 // Quyền do backend quyết định.
 export function AccountsPage() {
   const { user } = useAuth()
@@ -55,6 +56,9 @@ export function AccountsPage() {
   const [unlinking, setUnlinking] = useState<AccountAdmin | null>(null)
   // Tài khoản đang xem trong hộp chi tiết
   const [viewing, setViewing] = useState<AccountAdmin | null>(null)
+  // Đổi vai trò từ ô chọn: hộp xác nhận chồng lên hộp chi tiết (<dialog> gốc xếp lớp được)
+  const changeRole = useChangeRole()
+  const [roleChange, setRoleChange] = useState<RoleChange | null>(null)
 
   // Ô tìm giữ chữ đang gõ riêng; chỉ ghi lên URL (và gọi API) sau khi ngừng gõ một lúc
   const [search, setSearch] = useState(q)
@@ -88,6 +92,31 @@ export function AccountsPage() {
           // Tài khoản xóa vĩnh viễn không còn nên đóng luôn hộp chi tiết
           if (pending.action === 'purge') setViewing(null)
           setPending(null)
+        },
+      },
+    )
+  }
+
+  function openRoleChange(account: AccountAdmin, role: SystemRole) {
+    changeRole.reset()
+    setRoleChange({ account, role })
+  }
+
+  function closeRoleChange() {
+    if (changeRole.isPending) return
+    changeRole.reset()
+    setRoleChange(null)
+  }
+
+  function confirmRoleChange() {
+    if (!roleChange?.account.id) return
+    changeRole.mutate(
+      { id: roleChange.account.id, role: roleChange.role },
+      {
+        onSuccess: (updated) => {
+          // Hộp chi tiết vẫn mở nên hiện ngay vai trò mới
+          setViewing(updated)
+          setRoleChange(null)
         },
       },
     )
@@ -231,6 +260,20 @@ export function AccountsPage() {
         onClose={() => setViewing(null)}
         onAction={openConfirm}
         onLinkAction={openLinkAction}
+        onRoleChange={openRoleChange}
+      />
+
+      <ConfirmDialog
+        open={roleChange !== null}
+        title={roleChange ? s.roleChange.title(roleChange.account.fullName ?? '', s.role[roleChange.role]) : ''}
+        description={roleChange ? s.roleChange.description[roleChange.role] : undefined}
+        confirmLabel={s.roleChange.confirm}
+        cancelLabel={s.dialog.cancel}
+        danger={roleChange?.account.systemRole === 'ADMIN'}
+        loading={changeRole.isPending}
+        error={changeRole.isError ? errorMessage(changeRole.error) : null}
+        onConfirm={confirmRoleChange}
+        onCancel={closeRoleChange}
       />
 
       <ConfirmDialog

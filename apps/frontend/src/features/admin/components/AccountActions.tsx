@@ -19,7 +19,7 @@ const dangerClass = 'border-danger/40 text-danger hover:bg-danger-bg'
 /**
  * Nút trong hộp chi tiết tài khoản, 3 tầng cho đỡ rối (ui-ux-pro-max: một nút chính, nút nguy hiểm tách riêng):
  * 1. Nút chính rộng hết hộp: Khôi phục / Duyệt / Mở khóa (nếu có).
- * 2. Nút phụ viền, lưới 2 cột: Cấp/Gỡ Admin, Gán/Hủy liên kết.
+ * 2. Nút phụ viền: Gán/Hủy liên kết (vai trò đổi bằng ô chọn ở trên, DECISIONS #106).
  * 3. Sau đường kẻ, "vùng nguy hiểm" chữ đỏ: Từ chối hoặc Khóa, và Xóa tài khoản. Admin thấy Xóa bị mờ kèm lời nhắc gỡ
  *    quyền trước (DECISIONS #97). Bấm nút nào cũng chỉ mở hộp xác nhận.
  */

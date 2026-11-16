@@ -111,7 +111,7 @@ public class MemberService {
     }
 
     /**
-     * SĐT và email chỉ có với Admin và chính chủ hồ sơ (DECISIONS #66). {@code viewerId} null (khách) hoặc tài khoản
+     * SĐT và email chỉ có với Admin, Trưởng chi (#105) và chính chủ hồ sơ (DECISIONS #66). {@code viewerId} null (khách) hoặc tài khoản
      * chưa duyệt/bị khóa thì coi như người ngoài (DECISIONS #88).
      */
     @Transactional(readOnly = true)
@@ -119,55 +119,57 @@ public class MemberService {
         Member member = find(id);
         boolean contact = viewerId != null && auth.find(viewerId)
                 .filter(AuthFacade.Account::usable)
-                .map(a -> a.admin() || id.equals(a.memberId())).orElse(false);
-        return detailOf(member, contact);
+                .map(a -> a.treeEditor() || id.equals(a.memberId())).orElse(false);
+        return detailOf(member, contact, viewerId);
     }
 
     // ---------- Ghi ----------
 
     @Transactional
     public MemberDetail create(Long actorId, MemberInput input) {
-        requireAdmin(actorId);
+        requireTreeEditor(actorId);
         MemberProfile profile = parser.parse(input);
         Instant now = Instant.now(clock);
         Member member = new Member(actorId, now);
         member.apply(profile, now);
         repository.save(member);
         audit.write(actorId, "CREATE", TARGET_TYPE, member.getId(), null, mapper.toDetail(member, false));
-        return mapper.toDetail(member, true);
+        return detailOf(member, true, actorId);
     }
 
     /**
      * Admin sửa mọi trường của mọi hồ sơ. User đã liên kết chỉ sửa hồ sơ của mình (theo {@code user.member_id} đọc từ DB,
      * không tin claim) và không đổi được nhóm "đã mất": gửi giá trị khác giá trị đang lưu thì 403
      * {@code DEATH_FIELDS_ADMIN_ONLY}, giữ nguyên thì bỏ qua để form gửi cả object vẫn hợp lệ (DECISIONS #76).
+     * Trưởng chi sửa mọi trường của hồ sơ do mình tạo (DECISIONS #105).
      */
     @Transactional
     public MemberDetail update(Long actorId, Long id, MemberInput input) {
         AuthFacade.Account actor = auth.find(actorId).filter(AuthFacade.Account::usable).orElseThrow(
                 () -> new BusinessException(HttpStatus.FORBIDDEN, "FORBIDDEN", "Bạn không có quyền sửa hồ sơ này."));
-        if (!actor.admin() && !id.equals(actor.memberId())) {
+        Member member = find(id);
+        boolean manager = canManage(actor, member);
+        if (!manager && !id.equals(actor.memberId())) {
             throw new BusinessException(HttpStatus.FORBIDDEN, "FORBIDDEN", "Bạn chỉ sửa được hồ sơ của chính mình.");
         }
-        Member member = find(id);
         MemberProfile profile = parser.parse(input);
-        if (!actor.admin() && !member.death().equals(profile.death())) {
+        if (!manager && !member.death().equals(profile.death())) {
             throw new BusinessException(HttpStatus.FORBIDDEN, "DEATH_FIELDS_ADMIN_ONLY",
-                    "Thông tin về việc đã mất chỉ Admin được sửa.");
+                    "Thông tin về việc đã mất chỉ Quản trị viên được sửa.");
         }
         MemberDetail before = mapper.toDetail(member, false);
         member.apply(profile, Instant.now(clock));
         audit.write(actorId, "UPDATE", TARGET_TYPE, id, before, mapper.toDetail(member, false));
-        return detailOf(member, true);
+        return detailOf(member, true, actorId);
     }
 
     /**
-     * Chỉ Admin đặt nhanh giới tính từ menu ô trên cây (DECISIONS #100). Chỉ đổi {@code gender} để không ghi đè nhầm các
+     * Admin hoặc Trưởng chi (#105) đặt nhanh giới tính từ menu ô trên cây (DECISIONS #100). Chỉ đổi {@code gender} để không ghi đè nhầm các
      * trường khác như khi gửi lại cả hồ sơ qua PUT.
      */
     @Transactional
     public MemberDetail updateGender(Long actorId, Long id, MemberGenderInput input) {
-        requireAdmin(actorId);
+        requireTreeEditor(actorId);
         String raw = input == null || input.gender() == null ? "" : input.gender().trim();
         Gender gender = switch (raw) {
             case "" -> null;
@@ -180,7 +182,7 @@ public class MemberService {
         MemberDetail before = mapper.toDetail(member, false);
         member.changeGender(gender, Instant.now(clock));
         audit.write(actorId, "UPDATE", TARGET_TYPE, id, before, mapper.toDetail(member, false));
-        return detailOf(member, true);
+        return detailOf(member, true, actorId);
     }
 
     /**
@@ -190,8 +192,13 @@ public class MemberService {
      */
     @Transactional
     public void delete(Long actorId, Long id) {
-        requireAdmin(actorId);
         Member member = find(id);
+        boolean allowed = auth.find(actorId).filter(AuthFacade.Account::usable)
+                .map(a -> canManage(a, member)).orElse(false);
+        if (!allowed) {
+            throw new BusinessException(HttpStatus.FORBIDDEN, "FORBIDDEN",
+                    "Chỉ Quản trị viên hoặc Trưởng chi đã tạo hồ sơ này được xóa.");
+        }
         guards.orderedStream().forEach(guard -> guard.check(id));
 
         Map<String, Object> snapshot = new LinkedHashMap<>();
@@ -208,11 +215,16 @@ public class MemberService {
 
     // ---------- Nội bộ ----------
 
-    /** Hồ sơ kèm đời và trạng thái trên cây. */
-    private MemberDetail detailOf(Member member, boolean includeContact) {
+    /** Hồ sơ kèm đời, trạng thái trên cây và cờ người xem đã tạo hồ sơ. */
+    private MemberDetail detailOf(Member member, boolean includeContact, Long viewerId) {
         Map<Long, Integer> generations = placement.generations();
         return mapper.toDetail(member, includeContact, generations.get(member.getId()),
-                generations.containsKey(member.getId()));
+                generations.containsKey(member.getId()), viewerId != null && viewerId.equals(member.getCreatedBy()));
+    }
+
+    /** Quản lý nội dung hồ sơ: Admin, hoặc Trưởng chi với hồ sơ do mình tạo (DECISIONS #105). */
+    static boolean canManage(AuthFacade.Account actor, Member member) {
+        return actor.admin() || (actor.branchHead() && actor.id().equals(member.getCreatedBy()));
     }
 
     private Member find(Long id) {
@@ -220,10 +232,12 @@ public class MemberService {
                 () -> new BusinessException(HttpStatus.NOT_FOUND, "MEMBER_NOT_FOUND", "Không tìm thấy thành viên."));
     }
 
-    private void requireAdmin(Long actorId) {
-        boolean admin = auth.find(actorId).map(AuthFacade.Account::admin).orElse(false);
-        if (!admin) {
-            throw new BusinessException(HttpStatus.FORBIDDEN, "FORBIDDEN", "Chỉ Admin được thực hiện thao tác này.");
+    private void requireTreeEditor(Long actorId) {
+        boolean allowed = auth.find(actorId).filter(AuthFacade.Account::usable)
+                .map(AuthFacade.Account::treeEditor).orElse(false);
+        if (!allowed) {
+            throw new BusinessException(HttpStatus.FORBIDDEN, "FORBIDDEN",
+                    "Chỉ Quản trị viên hoặc Trưởng chi được thực hiện thao tác này.");
         }
     }
 

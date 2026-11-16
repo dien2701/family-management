@@ -22,7 +22,7 @@ export function AccessBanner() {
       <span className="min-w-0 flex-1">
         {area === 'rejected'
           ? 'Tài khoản không được duyệt. Bạn chỉ xem được thông tin chung của gia phả.'
-          : 'Tài khoản đang chờ Admin duyệt. Bạn xem được thông tin chung; các chức năng khác mở sau khi được duyệt.'}
+          : 'Tài khoản đang chờ Quản trị viên duyệt. Bạn xem được thông tin chung; các chức năng khác mở sau khi được duyệt.'}
       </span>
       <Link
         to={homePathFor(user)}

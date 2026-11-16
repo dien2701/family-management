@@ -14,8 +14,8 @@ export function displayStatusOf(account: AccountAdmin): AccountDisplayStatus {
 
 /**
  * Các thao tác hợp lệ với một tài khoản, khớp `AdminAccountService`: chỉ duyệt/từ chối khi chờ duyệt,
- * duyệt lại khi bị từ chối, khóa/cấp/gỡ Admin khi đã duyệt, mở khóa khi đang khóa. Dòng của chính mình
- * không có từ chối, khóa, gỡ Admin (backend cũng chặn bằng `SELF_ACTION_FORBIDDEN`).
+ * duyệt lại khi bị từ chối, khóa khi đã duyệt, mở khóa khi đang khóa. Vai trò đổi bằng ô chọn ({@link canChangeRole}).
+ * Dòng của chính mình không có từ chối, khóa (backend cũng chặn bằng `SELF_ACTION_FORBIDDEN`).
  */
 export function actionsFor(account: AccountAdmin, selfId: number | undefined): AccountAction[] {
   const isSelf = account.id !== undefined && account.id === selfId
@@ -30,12 +30,20 @@ export function actionsFor(account: AccountAdmin, selfId: number | undefined): A
     case 'locked':
       return ['unlock']
     case 'approved': {
-      // Admin gốc không bị gỡ quyền hay khóa (backend chặn bằng `ROOT_ADMIN_PROTECTED`, DECISIONS #98)
-      if (isSelf) return []
-      if (account.rootAdmin) return account.systemRole === 'ADMIN' ? [] : ['grant-admin']
-      return account.systemRole === 'ADMIN' ? ['revoke-admin', 'lock'] : ['grant-admin', 'lock']
+      // Admin gốc không bị khóa (backend chặn bằng `ROOT_ADMIN_PROTECTED`, DECISIONS #98)
+      if (isSelf || account.rootAdmin) return []
+      return ['lock']
     }
   }
+}
+
+/**
+ * Ô chọn vai trò (DECISIONS #106) chỉ hiện với tài khoản đã duyệt, đang hoạt động, không phải chính mình và không phải
+ * Admin gốc; còn lại hiện huy hiệu. Khớp các chặn của `AdminAccountService.changeRole`.
+ */
+export function canChangeRole(account: AccountAdmin, selfId: number | undefined): boolean {
+  if (account.id !== undefined && account.id === selfId) return false
+  return !account.rootAdmin && displayStatusOf(account) === 'approved'
 }
 
 /**
@@ -51,12 +59,12 @@ export function linkActionFor(account: AccountAdmin, selfId: number | undefined)
 }
 
 /**
- * Xóa tài khoản (DECISIONS #97): chỉ tài khoản User chưa xóa, không phải chính mình. Admin phải gỡ quyền trước
+ * Xóa tài khoản (DECISIONS #97): chỉ tài khoản User hoặc Trưởng chi chưa xóa, không phải chính mình. Admin phải gỡ quyền trước
  * (backend cũng chặn bằng `INVALID_ACCOUNT_STATE`/`SELF_ACTION_FORBIDDEN`).
  */
 export function canDelete(account: AccountAdmin, selfId: number | undefined): boolean {
   if (account.id !== undefined && account.id === selfId) return false
-  return !account.rootAdmin && !account.deletedAt && (account.systemRole ?? 'USER') === 'USER'
+  return !account.rootAdmin && !account.deletedAt && account.systemRole !== 'ADMIN'
 }
 
 /** Giá trị của ô lọc "Trạng thái" ở tab Tất cả. */
@@ -67,8 +75,10 @@ export const STATUS_FILTERS: readonly StatusFilter[] = ['WAITING', 'APPROVED', '
 export const isStatusFilter = (value: string | null): value is StatusFilter =>
   STATUS_FILTERS.includes(value as StatusFilter)
 
-export const isRoleFilter = (value: string | null): value is 'ADMIN' | 'USER' =>
-  value === 'ADMIN' || value === 'USER'
+export type RoleFilter = 'ADMIN' | 'BRANCH_HEAD' | 'USER'
+
+export const isRoleFilter = (value: string | null): value is RoleFilter =>
+  value === 'ADMIN' || value === 'BRANCH_HEAD' || value === 'USER'
 
 /** Đổi ô lọc sang tham số API: "Đã duyệt" chỉ tính tài khoản đang hoạt động, "Bị khóa" lọc theo `status`. */
 export function statusFilterToQuery(filter: StatusFilter | undefined): AccountListQuery {

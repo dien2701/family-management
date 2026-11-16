@@ -59,12 +59,13 @@ export function AccountList({ accounts, selfId, onOpen, onAction }: AccountListP
                   {isSelf && <Badge>{s.accounts.you}</Badge>}
                 </span>
                 <span className="truncate text-sm text-text-muted">{account.email}</span>
-                {(status !== 'approved' || account.systemRole === 'ADMIN') && (
+                {(status !== 'approved' || account.systemRole !== 'USER') && (
                   <span className="flex flex-wrap gap-1.5">
                     {status !== 'approved' && <AccountStatusBadge account={account} />}
                     {account.systemRole === 'ADMIN' && (
                       <Badge>{account.rootAdmin ? s.rootAdmin : s.role.ADMIN}</Badge>
                     )}
+                    {account.systemRole === 'BRANCH_HEAD' && <Badge>{s.role.BRANCH_HEAD}</Badge>}
                   </span>
                 )}
               </span>

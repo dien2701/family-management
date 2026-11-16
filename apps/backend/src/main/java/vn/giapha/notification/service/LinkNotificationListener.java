@@ -36,7 +36,7 @@ class LinkNotificationListener {
                     "Yêu cầu \"Tôi là " + name + "\" đã bị từ chối.", PROFILE_LINK);
             case ASSIGNED -> notifications.notify(event.accountId(), NotificationType.LINK_ASSIGNED,
                     "Bạn đã được gán hồ sơ",
-                    "Admin đã gán tài khoản của bạn với hồ sơ " + name + ".", PROFILE_LINK);
+                    "Quản trị viên đã gán tài khoản của bạn với hồ sơ " + name + ".", PROFILE_LINK);
         }
     }
 }

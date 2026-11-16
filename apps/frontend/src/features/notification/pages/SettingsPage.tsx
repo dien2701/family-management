@@ -62,7 +62,7 @@ export function SettingsPage() {
         <SectionCard title="Nhận thông báo về" icon={BellRing}>
           {toggle('notifyEvents', 'Nhắc sự kiện (sinh nhật, sự kiện chung)')}
           {toggle('notifyMemorials', 'Nhắc ngày giỗ')}
-          {toggle('notifyProposals', 'Đề xuất thay đổi (dành cho Admin và người đề xuất)')}
+          {toggle('notifyProposals', 'Đề xuất thay đổi (dành cho Quản trị viên và người đề xuất)')}
         </SectionCard>
 
         <SectionCard title="Thời gian nhắc" icon={Clock}>

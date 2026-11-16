@@ -172,7 +172,8 @@ public class ReportService {
     // ---------------------------------------------------------------- Tiện ích
 
     private boolean isAdmin(Long actorId) {
-        return auth.find(actorId).map(AuthFacade.Account::admin).orElse(false);
+        // Admin hoặc Trưởng chi (DECISIONS #105) thấy cột SĐT và email
+        return auth.find(actorId).map(AuthFacade.Account::treeEditor).orElse(false);
     }
 
     private LocalDate today() {

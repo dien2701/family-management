@@ -50,7 +50,7 @@ class FakeAiProvider implements AiProvider {
         String cleaned = clean(userMessage);
 
         if (containsAny(cleaned, CONTACT_KEYWORDS)) {
-            return "Trợ lý không có số điện thoại hay email của thành viên. Bạn xem thông tin này trực tiếp trên hồ sơ (chỉ Admin hoặc chính chủ mới thấy).";
+            return "Trợ lý không có số điện thoại hay email của thành viên. Bạn xem thông tin này trực tiếp trên hồ sơ (chỉ Quản trị viên hoặc chính chủ mới thấy).";
         }
 
         if (isSelfEditRequest(cleaned)) {

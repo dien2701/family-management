@@ -357,7 +357,7 @@ paths:
       tags:
         - admin-accounts
       summary: Xóa tài khoản (chuyển vào "Đã xóa")
-      description: "Xóa mềm (DECISIONS #97): ghi `deletedAt`, tài khoản đang mở thì khóa với `lockReason=DELETED`, thu hồi mọi refresh token. Giữ liên kết \"Tôi là ai\". Chỉ xóa được tài khoản User, không xóa chính mình (409 `SELF_ACTION_FORBIDDEN`), không xóa Admin (409 `INVALID_ACCOUNT_STATE`, gỡ Admin trước). Tài khoản đã xóa thì mọi thao tác khác trả 409 `INVALID_ACCOUNT_STATE` cho tới khi khôi phục."
+      description: "Xóa mềm (DECISIONS #97): ghi `deletedAt`, tài khoản đang mở thì khóa với `lockReason=DELETED`, thu hồi mọi refresh token. Giữ liên kết \"Tôi là ai\". Chỉ xóa được tài khoản User hoặc Trưởng chi, không xóa chính mình (409 `SELF_ACTION_FORBIDDEN`), không xóa Admin (409 `INVALID_ACCOUNT_STATE`, gỡ Admin trước). Tài khoản đã xóa thì mọi thao tác khác trả 409 `INVALID_ACCOUNT_STATE` cho tới khi khôi phục."
       operationId: deleteAccount
       parameters:
         - name: id
@@ -575,6 +575,64 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/admin/accounts/{id}/grant-branch-head:
+    post:
+      tags:
+        - admin-accounts
+      summary: Cấp quyền Trưởng chi
+      operationId: grantBranchHead
+      description: Chỉ tài khoản Người dùng đã duyệt (409 `INVALID_ACCOUNT_STATE`). Thu hồi refresh token, người đó đăng nhập lại để quyền có hiệu lực (DECISIONS #105).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/admin/accounts/{id}/revoke-branch-head:
+    post:
+      tags:
+        - admin-accounts
+      summary: Gỡ quyền Trưởng chi
+      operationId: revokeBranchHead
+      description: Chỉ tài khoản Trưởng chi (409 `INVALID_ACCOUNT_STATE`), trở về Người dùng. Thu hồi refresh token (DECISIONS #105).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/admin/accounts/{id}/approve:
     post:
       tags:
@@ -742,6 +800,7 @@ paths:
             type: string
             enum:
               - ADMIN
+              - BRANCH_HEAD
               - USER
         - name: q
           in: query
@@ -902,7 +961,7 @@ paths:
         - members
       summary: Thêm thành viên
       description: |
-        Chỉ Admin. Chỉ `fullName` là bắt buộc. Các trường về việc đã mất (`deathSolar`, `deathLunar`,
+        Admin hoặc Trưởng chi (DECISIONS #105). Chỉ `fullName` là bắt buộc. Các trường về việc đã mất (`deathSolar`, `deathLunar`,
         `memorialOverride`, `burialPlace`) chỉ hợp lệ khi `isDeceased = true`, nếu không thì 400 `VALIDATION_ERROR`.
         Ngày mất gửi **một trong hai** (`deathSolar` hoặc `deathLunar`); có cả hai thì dùng `deathSolar`. Khi có năm, máy chủ
         tự tính ngày ở lịch còn lại và trả cả hai; `deathLunar` không có năm thì `deathSolar` là `null`.
@@ -960,7 +1019,7 @@ paths:
         - members
       summary: Sửa thành viên
       description: |
-        Admin sửa mọi hồ sơ. User đã liên kết "Tôi là ai" chỉ sửa hồ sơ của chính mình (`user.member_id`), có hiệu lực ngay,
+        Admin sửa mọi hồ sơ; Trưởng chi sửa hồ sơ do mình tạo, kể cả nhóm "đã mất" (DECISIONS #105). User đã liên kết "Tôi là ai" chỉ sửa hồ sơ của chính mình (`user.member_id`), có hiệu lực ngay,
         và **không** được đổi nhóm "đã mất" (`isDeceased`, `deathSolar`, `deathLunar`, `memorialOverride`, `burialPlace`):
         khác giá trị hiện có thì 403 `DEATH_FIELDS_ADMIN_ONLY`. Người khác thì 403 `FORBIDDEN`.
         Ảnh đại diện không đổi qua API này mà qua `/api/files/confirm`. Quy tắc dữ liệu như `POST /api/members`.
@@ -999,7 +1058,7 @@ paths:
         - members
       summary: Xóa thành viên
       description: |
-        Chỉ Admin. Bị chặn nếu người đó đang có trên cây (409 `MEMBER_ON_TREE`): phải gỡ khỏi cây trước.
+        Admin, hoặc Trưởng chi với hồ sơ do mình tạo (DECISIONS #105). Bị chặn nếu người đó đang có trên cây (409 `MEMBER_ON_TREE`): phải gỡ khỏi cây trước.
         Khi xóa: xóa các dòng người thân liên quan, gỡ liên kết tài khoản, xóa tệp đính kèm; audit log giữ bản sao đầy đủ.
       operationId: deleteMember
       parameters:
@@ -1027,7 +1086,7 @@ paths:
         - members
       summary: Đặt giới tính thành viên
       description: |
-        Chỉ Admin (kiểm từ DB). Chỉ đổi trường `gender`, các trường khác giữ nguyên, có ghi audit log (DECISIONS #100).
+        Admin hoặc Trưởng chi (kiểm từ DB). Chỉ đổi trường `gender`, các trường khác giữ nguyên, có ghi audit log (DECISIONS #100).
         Dùng cho hàng Nam · Nữ · Chưa rõ trong menu ô trên cây.
       operationId: updateMemberGender
       parameters:
@@ -1065,7 +1124,7 @@ paths:
         - files
       summary: Xin chữ ký để tải tệp lên Cloudinary
       description: |
-        Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`) và
+        Chỉ Admin, trừ `kind = AVATAR` cho hồ sơ của chính User đã liên kết (`memberId = user.member_id`) hoặc hồ sơ do Trưởng chi tạo, và
         `kind = ACCOUNT_AVATAR` cho ảnh của chính tài khoản đã duyệt.
         Máy chủ kiểm MIME (jpg, png, webp, pdf, docx, xlsx; ảnh đại diện chỉ jpg/png/webp), tối đa 10 MB mỗi tệp và 1 GB toàn hệ thống.
         Lỗi: 400 `VALIDATION_ERROR` (gồm hết dung lượng: `QUOTA_EXCEEDED`), 403 `FORBIDDEN`, 503 `STORAGE_NOT_CONFIGURED` khi chưa có khóa Cloudinary.
@@ -1404,7 +1463,7 @@ paths:
         - relatives
       summary: Thêm người thân vào hồ sơ
       description: |
-        Chủ hồ sơ (User đã liên kết, `user.member_id = id`) hoặc Admin; có hiệu lực ngay. `label` bắt buộc, cắt khoảng trắng hai đầu,
+        Chủ hồ sơ (User đã liên kết, `user.member_id = id`), Trưởng chi đã tạo hồ sơ hoặc Admin; có hiệu lực ngay. `label` bắt buộc, cắt khoảng trắng hai đầu,
         tối đa 50 ký tự. Người thân phải là thành viên đã có. Lỗi: 400 `VALIDATION_ERROR` (nhãn, hoặc tự thêm chính mình),
         404 `MEMBER_NOT_FOUND`, 409 `RELATIVE_EXISTS` (người này đã có trong danh sách, muốn đổi nhãn thì sửa dòng cũ),
         403 `FORBIDDEN` (không phải chủ hồ sơ hay Admin).
@@ -1629,6 +1688,42 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/admin/accounts/{id}/role:
+    put:
+      tags:
+        - admin-accounts
+      summary: Đổi vai trò của tài khoản
+      description: |
+        Đổi thẳng giữa Admin, Trưởng chi và User trong một giao dịch (DECISIONS #106). Chỉ tài khoản đã duyệt và đang hoạt động,
+        vai trò mới phải khác vai trò hiện tại (409 `INVALID_ACCOUNT_STATE`). Không đổi vai trò của chính mình (409 `SELF_ACTION_FORBIDDEN`),
+        Admin gốc chỉ là Admin (409 `ROOT_ADMIN_PROTECTED`), không hạ Admin cuối cùng (409 `LAST_ADMIN`). Thu hồi mọi refresh token
+        của người đó, họ đăng nhập lại để quyền có hiệu lực.
+      operationId: changeAccountRole
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountRoleInput'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAdminResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/admin/accounts/{id}/member-link:
     put:
       tags:
@@ -1724,7 +1819,7 @@ paths:
         - tree
       summary: Thêm người gốc
       description: |
-        Chỉ Admin. Đưa một thành viên chưa có trên cây vào làm gốc mới (Đời 01). Có thể có nhiều gốc; gốc mới xếp cuối.
+        Admin hoặc Trưởng chi (DECISIONS #105). Đưa một thành viên chưa có trên cây vào làm gốc mới (Đời 01). Có thể có nhiều gốc; gốc mới xếp cuối.
         Lỗi: 409 `MEMBER_ALREADY_ON_TREE`.
       operationId: addTreeRoot
       requestBody:
@@ -1756,7 +1851,7 @@ paths:
         - tree
       summary: Thêm con vào một ô
       description: |
-        Chỉ Admin. Con mới xếp cuối các anh em. Cặp cha–mẹ được xác định như sau:
+        Admin hoặc Trưởng chi (DECISIONS #105). Con mới xếp cuối các anh em. Cặp cha–mẹ được xác định như sau:
         - bấm trên **ô vợ/chồng** thì cặp là ô đó cùng người thuộc dòng của nó (`coParentNodeId`, nếu gửi, phải là chính ô đó);
         - bấm trên ô thuộc dòng có **≥ 2 vợ/chồng** thì bắt buộc gửi `coParentNodeId`, thiếu thì 409 `TREE_NEEDS_CO_PARENT`;
         - có đúng 1 vợ/chồng thì tự nhận cặp đó; không có thì con chỉ thuộc một mình cha/mẹ.
@@ -1794,7 +1889,7 @@ paths:
         - tree
       summary: Thêm vợ/chồng cho một ô
       description: |
-        Chỉ Admin. Chỉ có trên ô **thuộc dòng** (ô vợ/chồng không có vợ/chồng riêng). Người mới xếp sau vợ/chồng cuối.
+        Admin hoặc Trưởng chi (DECISIONS #105). Chỉ có trên ô **thuộc dòng** (ô vợ/chồng không có vợ/chồng riêng). Người mới xếp sau vợ/chồng cuối.
         Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SPOUSE_NOT_ALLOWED`, `MEMBER_ALREADY_ON_TREE`.
       operationId: addTreeSpouse
       parameters:
@@ -1828,7 +1923,7 @@ paths:
         - tree
       summary: Thêm cha/mẹ cho người gốc
       description: |
-        Chỉ Admin. Chỉ có trên ô **thuộc dòng ở Đời 01** (gốc). Người mới trở thành gốc, thế vào chỗ của ô này
+        Admin hoặc Trưởng chi (DECISIONS #105). Chỉ có trên ô **thuộc dòng ở Đời 01** (gốc). Người mới trở thành gốc, thế vào chỗ của ô này
         trong danh sách gốc; ô này thành con của người mới nên cả cây rời đó dịch xuống một đời. Không tự đặt giới tính.
         Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_PARENT_ONLY_AT_TOP`, `MEMBER_ALREADY_ON_TREE`.
       operationId: addTreeParent
@@ -1863,7 +1958,7 @@ paths:
         - tree
       summary: Điền người vào ô trống
       description: |
-        Chỉ Admin. Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người), `MEMBER_ALREADY_ON_TREE`.
+        Admin hoặc Trưởng chi (DECISIONS #105). Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_NOT_EMPTY` (ô đang có người), `MEMBER_ALREADY_ON_TREE`.
       operationId: fillTreeSlot
       parameters:
         - $ref: '#/components/parameters/TreeNodeId'
@@ -1895,7 +1990,7 @@ paths:
         - tree
       summary: Gỡ người khỏi cây (ô thành ô trống)
       description: |
-        Chỉ Admin. Ô thành **ô trống** nằm đúng chỗ cũ, con cháu và vợ/chồng không bị ảnh hưởng; thành viên vẫn còn nguyên.
+        Admin hoặc Trưởng chi (DECISIONS #105). Ô thành **ô trống** nằm đúng chỗ cũ, con cháu và vợ/chồng không bị ảnh hưởng; thành viên vẫn còn nguyên.
         Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_SLOT_EMPTY` (ô đã trống).
       operationId: removeTreeMember
       parameters:
@@ -1921,7 +2016,7 @@ paths:
         - tree
       summary: Xóa ô trống
       description: |
-        Chỉ Admin. Chỉ xóa được **ô trống** (đã gỡ người), kể cả khi ô còn con hoặc vợ/chồng; nhánh được giữ lại:
+        Admin hoặc Trưởng chi (DECISIONS #105). Chỉ xóa được **ô trống** (đã gỡ người), kể cả khi ô còn con hoặc vợ/chồng; nhánh được giữ lại:
         - ô vợ/chồng: bị bỏ, con của cặp đó thành con của một mình người thuộc dòng, thứ tự các vợ/chồng còn lại đánh lại từ 1;
         - ô thuộc dòng có vợ/chồng: vợ/chồng thứ nhất thế vào đúng chỗ (cha/mẹ, cặp cha–mẹ, thứ tự anh em), nhận con cháu và các vợ/chồng còn lại;
         - ô thuộc dòng không có vợ/chồng: con cháu lên thế chỗ, làm con của cha/mẹ của ô bị xóa (hoặc thành gốc), cả nhánh dịch lên một đời.
@@ -1946,7 +2041,7 @@ paths:
         - tree
       summary: Di chuyển nhánh
       description: |
-        Chỉ Admin. Một ô **thuộc dòng** đi kèm vợ/chồng và toàn bộ con cháu, tới làm con của `newParentNodeId`
+        Admin hoặc Trưởng chi (DECISIONS #105). Một ô **thuộc dòng** đi kèm vợ/chồng và toàn bộ con cháu, tới làm con của `newParentNodeId`
         (ô thuộc dòng hoặc ô vợ/chồng; cặp cha–mẹ xác định như `POST /api/tree/nodes/{id}/children`) hoặc thành gốc mới
         khi `newParentNodeId` là `null`. Ô được chuyển xếp cuối các anh em ở nơi đến.
         Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_MOVE_LINEAGE_ONLY` (ô vợ/chồng), `TREE_CYCLE` (nơi đến nằm trong chính nhánh),
@@ -1983,7 +2078,7 @@ paths:
         - tree
       summary: Đổi thứ tự anh em
       description: |
-        Chỉ Admin. Đổi chỗ ô thuộc dòng với người anh em kề bên (cùng cha/mẹ, hoặc cùng là gốc).
+        Admin hoặc Trưởng chi (DECISIONS #105). Đổi chỗ ô thuộc dòng với người anh em kề bên (cùng cha/mẹ, hoặc cùng là gốc).
         Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_MOVE_LINEAGE_ONLY` (ô vợ/chồng), `TREE_ORDER_EDGE` (đã ở đầu hoặc cuối hàng).
       operationId: reorderTreeNode
       parameters:
@@ -2017,7 +2112,7 @@ paths:
         - tree
       summary: Đổi cặp cha–mẹ của một người con
       description: |
-        Chỉ Admin. `coParentNodeId` phải là vợ/chồng của cha/mẹ hiện tại (`parentNodeId`). Cha/mẹ có đúng 1 vợ/chồng thì `null` tự nhận người đó;
+        Admin hoặc Trưởng chi (DECISIONS #105). `coParentNodeId` phải là vợ/chồng của cha/mẹ hiện tại (`parentNodeId`). Cha/mẹ có đúng 1 vợ/chồng thì `null` tự nhận người đó;
         có ≥ 2 vợ/chồng thì bắt buộc chọn (409 `TREE_NEEDS_CO_PARENT`).
         Lỗi: 404 `TREE_NODE_NOT_FOUND`; 409 `TREE_NOT_A_CHILD` (ô không có cha/mẹ), `TREE_INVALID_CO_PARENT`, `TREE_NEEDS_CO_PARENT`.
       operationId: setTreeCoParent
@@ -3516,12 +3611,12 @@ components:
               type:
                 - string
                 - 'null'
-              description: Chỉ có khi người gọi là Admin hoặc chính chủ; người khác không nhận trường này.
+              description: Chỉ có khi người gọi là Admin, Trưởng chi hoặc chính chủ; người khác không nhận trường này.
             email:
               type:
                 - string
                 - 'null'
-              description: Chỉ có khi người gọi là Admin hoặc chính chủ; người khác không nhận trường này.
+              description: Chỉ có khi người gọi là Admin, Trưởng chi hoặc chính chủ; người khác không nhận trường này.
             biography:
               type:
                 - string
@@ -3549,10 +3644,14 @@ components:
               type:
                 - string
                 - 'null'
+            createdByMe:
+              type: boolean
+              description: Người gọi là người đã tạo hồ sơ này (Trưởng chi sửa/xóa được hồ sơ mình tạo, DECISIONS #105).
             updatedAt:
               type: string
               format: date-time
           required:
+            - createdByMe
             - tabooName
             - biography
             - birth
@@ -3830,6 +3929,7 @@ components:
           type: string
           enum:
             - ADMIN
+            - BRANCH_HEAD
             - USER
         status:
           type: string
@@ -4022,6 +4122,7 @@ components:
           type: string
           enum:
             - ADMIN
+            - BRANCH_HEAD
             - USER
         status:
           type: string
@@ -4219,6 +4320,17 @@ components:
           minimum: 1
       required:
         - memberId
+    AccountRoleInput:
+      type: object
+      properties:
+        systemRole:
+          type: string
+          enum:
+            - ADMIN
+            - BRANCH_HEAD
+            - USER
+      required:
+        - systemRole
     AdminMemberLinkInput:
       type: object
       properties:
@@ -4741,6 +4853,10 @@ components:
         aiQuotaAdmin:
           type: integer
           format: int32
+        aiQuotaBranchHead:
+          type: integer
+          format: int32
+          description: Lượt hỏi AI mỗi ngày của Trưởng chi (DECISIONS #105)
         aiQuotaGuest:
           type: integer
           format: int32
@@ -4756,6 +4872,7 @@ components:
         - policyVersion
         - aiQuotaUser
         - aiQuotaAdmin
+        - aiQuotaBranchHead
         - aiQuotaGuest
         - uploadMaxMb
         - totalQuotaMb

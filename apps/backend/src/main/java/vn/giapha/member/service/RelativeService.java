@@ -136,13 +136,15 @@ public class RelativeService {
                 HttpStatus.NOT_FOUND, "RELATIVE_NOT_FOUND", "Không tìm thấy dòng người thân này."));
     }
 
-    /** Admin, hoặc User đã liên kết đúng với hồ sơ này theo DB. */
+    /** Admin, Trưởng chi đã tạo hồ sơ (#105), hoặc User đã liên kết đúng với hồ sơ này theo DB. */
     private void requireOwnerOrAdmin(Long actorId, Long memberId) {
         boolean allowed = auth.find(actorId).filter(AuthFacade.Account::usable)
-                .map(a -> a.admin() || memberId.equals(a.memberId())).orElse(false);
+                .map(a -> memberId.equals(a.memberId())
+                        || members.findById(memberId).map(m -> MemberService.canManage(a, m)).orElse(a.admin()))
+                .orElse(false);
         if (!allowed) {
             throw new BusinessException(HttpStatus.FORBIDDEN, "FORBIDDEN",
-                    "Chỉ chủ hồ sơ hoặc Admin mới sửa được danh sách người thân.");
+                    "Chỉ chủ hồ sơ, Trưởng chi đã tạo hồ sơ hoặc Quản trị viên mới sửa được danh sách người thân.");
         }
     }
 

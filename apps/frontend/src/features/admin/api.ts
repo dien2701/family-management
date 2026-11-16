@@ -14,11 +14,12 @@ export type AccountAction =
   | 'reject'
   | 'lock'
   | 'unlock'
-  | 'grant-admin'
-  | 'revoke-admin'
   | 'delete'
   | 'restore'
   | 'purge'
+
+/** Vai trò của tài khoản; đổi bằng ô chọn trong hộp chi tiết (DECISIONS #106). */
+export type SystemRole = Schemas['AccountRoleInput']['systemRole']
 
 /** Gán hoặc hủy liên kết "Tôi là ai" ngay trên dòng tài khoản (DECISIONS #80). */
 export type LinkAction = 'link' | 'unlink'
@@ -27,6 +28,8 @@ export const adminAccountsApi = {
   list: (query: AccountListQuery) => api.get<AccountAdminPage>('/admin/accounts', { query }),
   act: (id: number, action: AccountAction) =>
     api.post<AccountAdmin>(`/admin/accounts/${id}/${action}`),
+  changeRole: (id: number, systemRole: SystemRole) =>
+    api.put<AccountAdmin>(`/admin/accounts/${id}/role`, { systemRole }),
   linkMember: (id: number, memberId: number) =>
     api.put<AccountAdmin>(`/admin/accounts/${id}/member-link`, { memberId }),
   unlinkMember: (id: number) => api.delete<AccountAdmin>(`/admin/accounts/${id}/member-link`),

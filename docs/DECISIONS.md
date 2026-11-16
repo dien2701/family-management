@@ -545,6 +545,27 @@
     - **Giữ** đề xuất đã gửi, audit (ghi `PURGE`) và dữ liệu gia phả do người đó tạo. Email được giải phóng, đăng ký lại là tài khoản mới.
     - Giao diện: nút "Xóa vĩnh viễn" (viền đỏ) cạnh "Khôi phục" ở mỗi dòng và trong hộp chi tiết, bấm mở hộp xác nhận. Không có nút xóa tất cả.
 
+## AC. Tên hiển thị của vai trò (chốt 2026-11-16, hỏi đáp với người dùng)
+104. **Đổi tên vai trò trên giao diện**
+    → **Chốt:** Admin hiển thị là **"Quản trị viên"**, User hiển thị là **"Người dùng"** (không dùng "Thành viên" để khỏi lẫn với thành viên gia phả). Áp dụng cho mọi chữ người dùng thấy: huy hiệu vai trò, câu giao diện FE, thông báo lỗi và thông báo do BE trả, lời nhắc hệ thống của Trợ lý AI. Nút cấp/gỡ quyền ghi "Cấp quyền quản trị" / "Gỡ quyền quản trị". Mã `ADMIN`/`USER`, tên biến, comment, tài liệu nội bộ và mô tả OpenAPI giữ "Admin"/"User".
+
+## AD. Vai trò Trưởng chi (chốt 2026-11-16, hỏi đáp với người dùng)
+105. **Thêm vai trò thứ ba `BRANCH_HEAD`, hiển thị "Trưởng chi"** (bổ sung #54, #75–#78)
+    → **Chốt:**
+    - Mỗi tài khoản đúng một vai trò: Người dùng / Trưởng chi / Quản trị viên. Quản trị viên cấp (`POST /api/admin/accounts/{id}/grant-branch-head`, chỉ USER đã duyệt) và gỡ (`/revoke-branch-head`, về USER) ở trang Tài khoản; cả hai thu hồi refresh token, người đó đăng nhập lại. Cấp Quản trị viên nhận cả USER lẫn Trưởng chi; xóa mềm nhận USER và Trưởng chi.
+    - "Chi" chỉ là tên gọi: **toàn cây**, không có dữ liệu chi riêng.
+    - Trưởng chi được: thêm thành viên; **mọi thao tác cây** như Quản trị viên (thêm gốc/con/vợ chồng/cha mẹ, điền ô, gỡ người, xóa ô trống, di chuyển, đổi thứ tự, đổi cha/mẹ đồng hành) và đổi giới tính; sửa mọi trường (kể cả nhóm "đã mất"), người thân, ảnh đại diện và xóa mềm **hồ sơ do mình tạo** (`member.created_by`); xem SĐT/email của mọi thành viên; bản xuất Excel/PDF có cột SĐT/email.
+    - Không được: quản lý tài khoản, duyệt liên kết/đề xuất, sự kiện, bài khấn, tệp chung, cài đặt, Thành viên đã xóa. Hồ sơ người khác tạo thì như Người dùng (chỉ hồ sơ của chính mình nếu đã liên kết).
+    - API trả `MemberDetail.createdByMe` để giao diện biết hồ sơ do người xem tạo.
+    - Lượt hỏi AI riêng `aiQuotaBranchHead` (khóa `AI_QUOTA_BRANCH_HEAD`, V23, mặc định 15) trong Cài đặt hệ thống. Cột `user_account.system_role` nới lên `VARCHAR(20)` ở V24 vì `BRANCH_HEAD` dài 11 ký tự.
+
+## AE. Đổi vai trò bằng ô chọn (chốt 2026-11-16, hỏi đáp với người dùng)
+106. **Hộp chi tiết tài khoản đổi vai trò bằng ô chọn** (thay các nút Cấp/Gỡ quyền quản trị và Trưởng chi)
+    → **Chốt:**
+    - Mục "Vai trò" là ô chọn gốc của trình duyệt (Người dùng / Trưởng chi / Quản trị viên) khi tài khoản đã duyệt, đang hoạt động, không phải chính mình và không phải Admin gốc; còn lại giữ huy hiệu.
+    - Chọn vai trò khác thì mở hộp xác nhận chồng lên hộp chi tiết (nêu quyền của vai trò mới, người đó phải đăng nhập lại); Hủy thì ô về vai trò cũ, xong thì hộp chi tiết hiện vai trò mới.
+    - API mới `PUT /api/admin/accounts/{id}/role` (`{ systemRole }`) đổi thẳng mọi chiều trong một giao dịch, giữ các chặn: tự đổi (`SELF_ACTION_FORBIDDEN`), Admin gốc (`ROOT_ADMIN_PROTECTED`), Admin cuối cùng (`LAST_ADMIN`), chưa duyệt/khóa/cùng vai trò (`INVALID_ACCOUNT_STATE`); thu hồi refresh token, audit `CHANGE_ROLE`. Bốn API cấp/gỡ cũ giữ lại nhưng giao diện không dùng nữa.
+
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.
 - Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt. Cần cập nhật khi duyệt: Trợ lý AI nay mở cho khách (#91) và giọng nói do trình duyệt xử lý (#92).

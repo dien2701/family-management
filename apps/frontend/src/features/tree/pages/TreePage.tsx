@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import { Alert } from '@/components/shared/Alert'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Button } from '@/components/ui/button'
+import { canEditTree } from '@/features/auth/routing'
 import { useAuth } from '@/hooks/useAuth'
 import { useMe } from '@/hooks/useMe'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
@@ -602,7 +603,8 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
 export function TreePage() {
   const tree = useTree()
   const me = useMe()
-  const isAdmin = useAuth().user?.systemRole === 'ADMIN'
+  // Admin hoặc Trưởng chi làm được mọi thao tác cây (DECISIONS #105)
+  const isAdmin = canEditTree(useAuth().user)
   const model = useTreeModel(tree.data)
 
   if (tree.isLoading || me.isLoading) {
