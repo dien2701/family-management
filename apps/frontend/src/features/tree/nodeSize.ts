@@ -30,16 +30,21 @@ const FALLBACK_FAMILY = "'Be Vietnam Pro', system-ui, sans-serif"
 
 // Kích thước phần cố định của ô (theo pixel ở cỡ Vừa)
 const HORIZONTAL = { chrome: 68, minWidth: 160, minHeight: 72, lineHeight: 20, verticalPadding: 18 }
-// Ô dọc kiểu mẫu: ảnh tròn 44px trên cùng, tên tối đa 2 dòng ở giữa, năm sinh–mất sát đáy
+// Ô dọc kiểu mẫu (#102): ảnh tròn 44px trên cùng, tên ở giữa (mỗi dòng rộng cỡ "Bà Nguyễn", không giới hạn số dòng),
+// năm sinh–mất sát đáy
 const VERTICAL = {
   chrome: 16,
-  minWidth: 96,
+  minWidth: 72,
   minHeight: 96,
   nameLine: 20,
   yearsLine: 18,
   photo: 44,
   photoGap: 6,
   padding: 22,
+  /** Mẫu bề rộng một dòng tên: đủ hai chữ ngắn. */
+  sampleLine: 'Bà Nguyễn',
+  /** Luôn chừa chỗ cho ít nhất 3 dòng tên để mọi ô cao đều (kiểu "Bà / Nguyễn Thị / Khương"). */
+  minNameLines: 3,
 }
 const SLACK = 6
 
@@ -84,9 +89,11 @@ function linesFor(words: string[], col: number, font: string): number {
   return lines
 }
 
+const wordsOf = (name: string) => name.split(/\s+/).filter(Boolean)
+
 /** Cột chữ hẹp nhất để tên xuống dòng không quá 2 dòng. */
 function narrowestColumn(name: string, font: string): number {
-  const words = name.split(/\s+/).filter(Boolean)
+  const words = wordsOf(name)
   const full = widthOf(name, font)
   const longestWord = words.reduce((max, w) => Math.max(max, widthOf(w, font)), 0)
   let col = Math.ceil(longestWord)
@@ -105,18 +112,19 @@ export function fitNodeSizes(nodes: Iterable<TreeNode>, size: TreeSize, card: Tr
   const scale = SIZE_SCALE[size]
   let column = 0
   let yearsWidth = 0
-  let vColumn = 0
+  // Cột cố định cỡ "Bà Nguyễn"; chỉ nới ra khi có một chữ đơn (hoặc dòng năm) rộng hơn
+  let vColumn = Math.ceil(widthOf(VERTICAL.sampleLine, V_NAME_FONT))
   let vYearsWidth = 0
   const fulls: number[] = []
-  const vFulls: number[] = []
+  const names: string[] = []
   for (const node of nodes) {
     if (!node.member) continue
     const name = nodeName(node)
     const years = yearsText(node.member)
     fulls.push(widthOf(name, NAME_FONT))
-    vFulls.push(widthOf(name, V_NAME_FONT))
+    names.push(name)
     column = Math.max(column, narrowestColumn(name, NAME_FONT))
-    vColumn = Math.max(vColumn, narrowestColumn(name, V_NAME_FONT))
+    for (const word of wordsOf(name)) vColumn = Math.max(vColumn, Math.ceil(widthOf(word, V_NAME_FONT)))
     yearsWidth = Math.max(yearsWidth, widthOf(years, YEARS_FONT))
     vYearsWidth = Math.max(vYearsWidth, widthOf(years, V_YEARS_FONT))
   }
@@ -129,9 +137,12 @@ export function fitNodeSizes(nodes: Iterable<TreeNode>, size: TreeSize, card: Tr
     height: Math.max(HORIZONTAL.minHeight, HORIZONTAL.lineHeight * (lines + 1) + HORIZONTAL.verticalPadding),
   }
 
-  const vLines = vFulls.some((full) => full > vColumn) ? 2 : 1
+  // Số dòng thật của tên nhiều dòng nhất trong cột chung (không giới hạn) để mọi ô hiện đủ tên
+  // (tính trên cột thật: dòng năm rộng hơn thì tên cũng được dàn rộng theo, như trình duyệt)
+  const vText = Math.max(vColumn, card.years ? vYearsWidth : 0)
+  const vLines = names.reduce((max, name) => Math.max(max, linesFor(wordsOf(name), vText + SLACK, V_NAME_FONT)), VERTICAL.minNameLines)
   const vertical = {
-    width: Math.max(VERTICAL.minWidth, VERTICAL.chrome + Math.max(vColumn, card.years ? vYearsWidth : 0) + SLACK),
+    width: Math.max(VERTICAL.minWidth, VERTICAL.chrome + vText + SLACK),
     height: Math.max(
       VERTICAL.minHeight,
       VERTICAL.padding +

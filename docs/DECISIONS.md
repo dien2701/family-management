@@ -520,9 +520,22 @@
 101. **Bỏ dấu ✝ ở dòng năm, sửa ảnh bản in, ẩn bảng tùy chọn khi xem trước** — Đợt 52 (thay một phần #100)
     → **Chốt:**
     - **Màu ô:** người đã mất **vẫn xám** như #100 (người dùng xác nhận lại sau khi thử bỏ).
-    - **Dòng năm** (cây, bản in, chọn người, menu ô): đã mất `1930 – 1990`, phần chưa rõ ghi `_` (`_ – 1990`, `1930 – _`, `_ – _`); còn sống chỉ năm sinh, chưa rõ thì để trống. Không còn dấu ✝. Việc đã mất vẫn có trong nhãn đọc màn hình của ô.
+    - **Dòng năm** (cây, bản in, chọn người, menu ô): đã mất `1930 – 1990`, phần chưa rõ ghi `?` (`? – 1990`, `1930 – ?`, `? – ?`; 🔁 #102, trước ghi `_`); còn sống chỉ năm sinh, chưa rõ thì để trống. Không còn dấu ✝. Việc đã mất vẫn có trong nhãn đọc màn hình của ô.
     - **Ảnh trong bản in:** tải ảnh Cloudinary bằng `fetch(..., { cache: 'reload' })` để không dính bản cache không-CORS của thẻ `<img>`; CSP thêm `https://res.cloudinary.com` vào `connect-src`.
     - **Màn Xem cây trước khi in:** bảng tùy chọn (người gốc, khổ giấy, hướng, định dạng, ảnh) **ẩn mặc định ở mọi khổ màn hình**, nút "Tùy chọn" ở chân màn để mở/đóng.
+
+## AA. Ô dọc hẹp hơn (chốt 2026-11-16, hỏi đáp với người dùng)
+
+102. **Thu hẹp ô dọc trên cây và bản in** — Đợt 53 (thay phần cỡ ô dọc của #100)
+    → **Chốt:**
+    - **Chỉ ô dọc** (mặc định): ảnh, cỡ chữ và đệm giữ như #100 (ảnh 44px, tên 15px/600 dòng 20px, năm 13px). Ô ngang 200×72 giữ nguyên.
+    - **Bề rộng cố định cỡ "Bà Nguyễn"** (đủ hai chữ ngắn mỗi dòng); chỉ nới ra khi có một chữ đơn hoặc dòng năm rộng hơn. Cặp chữ dài hơn tự xuống một chữ một dòng.
+    - **Tên không giới hạn số dòng**, luôn hiện đủ; mọi ô vẫn cùng cỡ, cao theo tên nhiều dòng nhất trong cây và **luôn chừa ít nhất 3 dòng** (như ô "Bà Nguyễn Thị Khương").
+    - Đo chữ sau khi **chủ động tải** font Be Vietnam Pro (dải chữ tiếng Việt chỉ tải khi cần, đo bằng font dự phòng thì ô thiếu dòng).
+    - **Bản in** vẽ nội dung ô ở cỡ chuẩn rồi phóng theo cỡ Nhỏ/Vừa/Lớn như màn hình (trước đây chữ tràn khi chọn Nhỏ).
+    - Lần thử trước trong cùng đợt (ảnh 36px, chữ 14px, tối đa 3 dòng) đã bỏ theo ý người dùng.
+    - Năm chưa rõ ghi `?` thay cho `_` (sửa #101). Còn sống chỉ năm sinh, chưa rõ thì để trống.
+    - Bản in (`print/scene.ts`) dùng cùng số đo.
 
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.

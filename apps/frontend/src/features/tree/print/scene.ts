@@ -107,20 +107,19 @@ function fit(text: string, maxWidth: number, size: number, bold: boolean): strin
   return `${text.slice(0, end).trimEnd()}…`
 }
 
-/** Ngắt tối đa 2 dòng theo từ; dòng cuối dài quá thì cắt bằng "…". */
-function wrapName(name: string, maxWidth: number, size: number): string[] {
-  if (measure(name, size, true) <= maxWidth) return [name]
-  const words = name.split(/\s+/)
-  let first = ''
-  let used = 0
-  for (const word of words) {
-    const next = first ? `${first} ${word}` : word
-    if (first && measure(next, size, true) > maxWidth) break
-    first = next
-    used += 1
+/** Ngắt tối đa `maxLines` dòng theo từ; dòng cuối dài quá thì cắt bằng "…". */
+function wrapName(name: string, maxWidth: number, size: number, maxLines = 2): string[] {
+  const lines: string[] = []
+  let words = name.split(/\s+/).filter(Boolean)
+  while (words.length > 0 && lines.length < maxLines - 1) {
+    let line = words[0]!
+    let used = 1
+    while (used < words.length && measure(`${line} ${words[used]}`, size, true) <= maxWidth) line += ` ${words[used++]}`
+    lines.push(fit(line, maxWidth, size, true))
+    words = words.slice(used)
   }
-  const rest = words.slice(used).join(' ')
-  return rest ? [fit(first, maxWidth, size, true), fit(rest, maxWidth, size, true)] : [fit(first, maxWidth, size, true)]
+  if (words.length > 0) lines.push(fit(words.join(' '), maxWidth, size, true))
+  return lines
 }
 
 type Attrs = Record<string, string | number | undefined>
@@ -190,15 +189,14 @@ function labelSvg(member: TreeMember, x: number, y: number, W: number, vertical:
   )
 }
 
-// Khớp MemberNode/nodeSize.ts: ảnh 44, cách tên 6, tên 15px dòng 20, năm 13px dòng 18, đệm trên 10, dưới 12
+// Khớp MemberNode/nodeSize.ts (#102): ảnh 44, cách tên 6, tên 15px dòng 20 (đủ số dòng), năm 13px dòng 18, đệm trên 10, dưới 12
 const V_PHOTO = 44
 const V_TOP = 10
 const V_BOTTOM = 12
 
-/** Thẻ dọc kiểu mẫu (#100): ảnh tròn trên cùng, tên căn giữa tối đa 2 dòng, năm sinh–mất sát đáy. */
-function verticalNodeContent(placed: PlacedNode, member: TreeMember, x: number, y: number, tone: CardTone, input: SceneInput): string {
+/** Thẻ dọc hẹp (#100, #102): ảnh tròn trên cùng, tên căn giữa đủ số dòng, năm sinh–mất sát đáy. */
+function verticalNodeContent(member: TreeMember, x: number, y: number, W: number, H: number, tone: CardTone, input: SceneInput): string {
   const { colors, look } = input
-  const { width: W, height: H } = placed
   const cx = x + W / 2
   let out = ''
   let top = y + V_TOP
@@ -206,7 +204,7 @@ function verticalNodeContent(placed: PlacedNode, member: TreeMember, x: number, 
     out += avatarSvg(member, cx, top + V_PHOTO / 2, V_PHOTO, tone, input)
     top += V_PHOTO + 6
   }
-  wrapName(member.fullName, W - 16, 15).forEach((line, i) => {
+  wrapName(member.fullName, W - 16, 15, Infinity).forEach((line, i) => {
     out += textEl(cx, top + 15 + i * 20, line, 15, true, colors.text, 'middle')
   })
   if (look.card.years) out += yearsSvg(member, cx, y + H - V_BOTTOM - 4, 13, colors, true)
@@ -240,8 +238,20 @@ function nodeSvg(placed: PlacedNode, ox: number, oy: number, input: SceneInput):
 
   if (member === null) return out + textEl(x + W / 2, y + H / 2 + 5, treeStrings.emptySlot, 16, false, colors.textMuted, 'middle')
 
-  if (input.verticalOf(placed.id)) return out + verticalNodeContent(placed, member, x, y, tone, input)
+  // Như MemberNode: nội dung dựng ở cỡ chuẩn (khung W/k × H/k) rồi phóng theo cỡ Nhỏ/Vừa/Lớn
+  const k = look.scale
+  const content = input.verticalOf(placed.id)
+    ? verticalNodeContent(member, 0, 0, W / k, H / k, tone, input)
+    : horizontalNodeContent(member, W / k, H / k, tone, input)
+  return out + `<g transform="translate(${num(x)} ${num(y)}) scale(${num(k)})">${content}</g>`
+}
 
+/** Thẻ ngang: ảnh bên trái, tên và năm bên phải; tọa độ tính từ góc ô (0, 0). */
+function horizontalNodeContent(member: TreeMember, W: number, H: number, tone: CardTone, input: SceneInput): string {
+  const { colors, look } = input
+  const x = 0
+  const y = 0
+  let out = ''
   const withAvatar = look.card.photo
   const textX = withAvatar ? x + AVATAR_PAD + AVATAR + 8 : x + 12
   const textWidth = x + W - 8 - textX

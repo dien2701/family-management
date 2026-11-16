@@ -66,4 +66,10 @@ export type TreeCardFields = { photo: boolean; labels: boolean; years: boolean }
 export const DEFAULT_CARD: TreeCardFields = { photo: true, labels: true, years: true }
 
 /** Phần "hình thức" của ô mà bản in cần biết để giống màn hình. */
-export type CardLook = { palette: TreePalette; shape: TreeShape; card: TreeCardFields }
+export type CardLook = {
+  palette: TreePalette
+  shape: TreeShape
+  card: TreeCardFields
+  /** Cỡ chung Nhỏ/Vừa/Lớn: nội dung ô vẽ ở cỡ chuẩn rồi phóng theo hệ số này (như MemberNode). */
+  scale: number
+}

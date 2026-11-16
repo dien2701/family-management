@@ -158,10 +158,10 @@ function MemberNodeView({ data }: NodeProps<MemberFlowNode>) {
             {t.emptySlot}
           </span>
         ) : vertical ? (
-          // Thẻ dọc kiểu mẫu: ảnh tròn 44px, tên 15px tối đa 2 dòng, năm 13px sát đáy (chữ nhãn sơ đồ, DESIGN §6)
+          // Thẻ dọc hẹp (#102): ảnh tròn 44px, tên 15px mỗi dòng cỡ "Bà Nguyễn" (đủ số dòng), năm 13px sát đáy (DESIGN §6)
           <>
             {card.photo && <Avatar name={name} url={member.avatarUrl} tone={tone} gone={member.isDeceased} className="mb-1.5 size-11" />}
-            <span className="line-clamp-2 w-full text-center text-[15px] leading-5 font-semibold [overflow-wrap:anywhere]">
+            <span className="w-full text-center text-[15px] leading-5 font-semibold [overflow-wrap:anywhere]">
               {name}
             </span>
             {years && (

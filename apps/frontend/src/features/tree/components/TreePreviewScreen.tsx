@@ -308,7 +308,7 @@ function PreviewBody({ graph, index, generations, defaultRootId, layoutOptions, 
     return () => abort.abort()
     // `look` là object mới mỗi lần TreePage vẽ lại: so theo giá trị để không dựng lại vô ích
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layout, options.withPhotos, rootName, verticalOf, look.palette, look.shape, look.card])
+  }, [layout, options.withPhotos, rootName, verticalOf, look.palette, look.shape, look.card, look.scale])
 
   const sheet = prepared.status === 'ready' ? prepared.prepared.scene.sheet : sheetGeometry(layout)
   const plan = useMemo(() => planPages(sheet, options), [sheet, options])

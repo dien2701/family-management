@@ -89,6 +89,7 @@
 | 50 | Cây: thẻ dọc kiểu mẫu, màu theo giới tính, MiniMap, hộp Cấu hình cây | Claude Code | Sonnet · high | ✅ 2026-11-16 |
 | 51 | Cây: tính xưng hô giữa hai người | Claude Code | **Opus** · high | ✅ 2026-11-16 |
 | 52 | Cây: ảnh trong Xem cây trước khi in, dòng năm không ✝, ẩn bảng tùy chọn | Claude Code | **Opus** · medium | ✅ 2026-11-16 |
+| 53 | Cây: ô dọc hẹp hơn, tên đủ dòng, năm chưa rõ ghi ? | Claude Code | **Opus** · medium | ✅ 2026-11-16 |
 
 ## ▶️ Đợt tiếp theo: chưa có (GĐ F đã xong)
 
@@ -1334,3 +1335,18 @@ DECISIONS #101 (thay một phần #100)
 File chính: `features/tree/{cardStyle,nodeText}.ts`, `features/tree/print/{photos,scene}.ts`,
 `features/tree/components/{MemberNode,TreePreviewScreen}.tsx`, `infra/nginx/security-headers.conf`, `docs/{DECISIONS,DESIGN}.md`.
 Việc nên làm thêm: `features/tree/dev/LayoutSvg.tsx` (trang dev) còn ghi `✝` ở dòng năm, chưa đổi vì ngoài phạm vi.
+
+### Đợt 53 - Cây: ô dọc hẹp hơn, tên đủ dòng, năm chưa rõ ghi ? ✅ 2026-11-16
+DECISIONS #102
+
+- [x] **Ô dọc hẹp**: bề rộng cố định cỡ "Bà Nguyễn" (chỉ nới khi một chữ đơn hoặc dòng năm rộng hơn); ảnh, chữ, đệm giữ
+      như #100 (`MemberNode.tsx`, `nodeSize.ts`). ✅ 2026-11-16
+- [x] **Tên không giới hạn số dòng**: chiều cao theo số dòng thật của tên nhiều dòng nhất, tính trên đúng cột chữ. ✅ 2026-11-16
+- [x] **Bản in** khớp số đo; `wrapName` ngắt được N dòng (`print/scene.ts`). ✅ 2026-11-16
+- [x] **Năm chưa rõ** ghi `?` (`nodeText.ts`). ✅ 2026-11-16
+- [x] **Sửa sau khi người dùng thử**: chừa tối thiểu 3 dòng tên; tải font tiếng Việt trước khi đo (`TreePage.tsx`); bản in
+      phóng nội dung ô theo cỡ Nhỏ/Vừa/Lớn (`CardLook.scale`, `print/scene.ts`). ✅ 2026-11-16
+
+**✅ Đã làm:** như checklist. Lần thử đầu (ảnh 36px, chữ 14px, tối đa 3 dòng) đã bỏ theo ý người dùng. Ô ngang không đổi.
+Cỡ ô kéo tay đã lưu trên máy (nếu có) vẫn giữ cỡ cũ.
+File chính: `features/tree/{nodeSize,nodeText}.ts`, `features/tree/components/MemberNode.tsx`, `features/tree/print/scene.ts`, `docs/{DECISIONS,DESIGN}.md`.

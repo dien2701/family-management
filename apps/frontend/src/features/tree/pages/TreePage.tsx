@@ -151,7 +151,14 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
   const [fontsReady, setFontsReady] = useState(0)
   useEffect(() => {
     let alive = true
-    void document.fonts?.ready.then(() => alive && setFontsReady((n) => n + 1))
+    // Font tách theo dải chữ (latin/vietnamese) chỉ tải khi cần: chủ động tải đủ các nét dùng để đo, không thì
+    // canvas đo bằng font dự phòng (hẹp hơn) và ô thiếu dòng cho tên
+    const sample = 'Bà Nguyễn Thị Khương'
+    const fonts = document.fonts
+    if (!fonts) return
+    void Promise.all(['600 15px', '400 13px', '600 16px', '400 14px'].map((f) => fonts.load(`${f} 'Be Vietnam Pro'`, sample)))
+      .catch(() => undefined)
+      .then(() => alive && setFontsReady((n) => n + 1))
     return () => {
       alive = false
     }
@@ -159,6 +166,8 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
    
   const fitted = useMemo(
     () => fitNodeSizes(graph.nodes, prefs.size, prefs.card),
+    // fontsReady chỉ để đo lại sau khi font tải xong
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [graph.nodes, prefs.size, prefs.card, fontsReady],
   )
 
@@ -523,7 +532,7 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
         defaultRootId={viewRootId}
         layoutOptions={layoutOptions}
         verticalOf={verticalOf}
-        look={{ palette: prefs.palette, shape: prefs.shape, card: prefs.card }}
+        look={{ palette: prefs.palette, shape: prefs.shape, card: prefs.card, scale: SIZE_SCALE[prefs.size] }}
         onClose={() => setPrintOpen(false)}
       />
       <KinshipDialog
