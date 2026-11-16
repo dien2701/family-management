@@ -80,6 +80,12 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
     w: options.nodeSizes?.get(node.id)?.width ?? defaultW,
     h: options.nodeSizes?.get(node.id)?.height ?? defaultH,
   })
+  const filter = options.filter ?? 'all'
+  // Lọc của hộp Cấu hình cây: vợ/chồng Nữ và nhánh con gái bị ẩn ở chế độ "Chỉ Nam";
+  // "Chỉ huyết thống" bỏ hết ô vợ/chồng. Người chưa điền giới tính luôn được giữ.
+  const notFemale = (node: TreeNode) => node.member?.gender !== 'F'
+  const keepSpouse = (node: TreeNode) => (filter === 'bloodline' ? false : filter === 'male' ? notFemale(node) : true)
+  const keepChild = (node: TreeNode) => filter !== 'male' || notFemale(node)
   const index = buildTreeIndex(graph)
   const generations = computeGenerations(index)
 
@@ -113,7 +119,9 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
     // Vợ/chồng xen kẽ hai bên: thứ tự 1 bên trái, 2 bên phải, 3 bên trái (xa hơn)...
     const leftSpouses: SpouseEntry[] = []
     const rightSpouses: SpouseEntry[] = []
-    ;(index.spousesOf.get(lineage.id) ?? []).forEach((s, i) => (i % 2 === 0 ? leftSpouses : rightSpouses).push(s))
+    ;(index.spousesOf.get(lineage.id) ?? [])
+      .filter((s) => keepSpouse(s.node))
+      .forEach((s, i) => (i % 2 === 0 ? leftSpouses : rightSpouses).push(s))
     const slots = [
       ...leftSpouses.reverse().map((s) => ({ node: s.node, order: s.order as number | null })),
       { node: lineage, order: null as number | null },
@@ -148,7 +156,7 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
       sources.set(box.node.id, { x, distance: box.distance })
     })
 
-    const allChildren = index.childrenOf.get(lineage.id) ?? []
+    const allChildren = (index.childrenOf.get(lineage.id) ?? []).filter(keepChild)
     const expand =
       allChildren.length > 0 &&
       depth + 1 < maxDepth &&
@@ -157,7 +165,8 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
     const children = kids.map((kid) => buildUnit(kid, depth + 1, seen))
     const childSource = kids.map((kid) => {
       const co = kid.coParentNodeId
-      return co !== null && index.ownerOf.get(co) === lineage.id ? co : null
+      // Cặp bị bộ lọc ẩn mất thì con đi xuống thẳng từ ô thuộc dòng
+      return co !== null && index.ownerOf.get(co) === lineage.id && sources.has(co) ? co : null
     })
 
     // Đặt các cây con sát nhau nhất có thể: mỗi cây con so với đường viền gộp của các cây con đã đặt.

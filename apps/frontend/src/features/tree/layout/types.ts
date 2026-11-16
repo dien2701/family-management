@@ -1,3 +1,4 @@
+import type { TreeFilter } from '../cardStyle'
 import type { TreeNode } from '@/utils/tree'
 
 export type Point = { x: number; y: number }
@@ -16,6 +17,11 @@ export type LayoutOptions = {
   maxDepth?: number | null
   /** Ô bắt buộc phải hiện ra (tìm kiếm, "Xem trên cây"): tự mở các nhánh thu gọn chứa nó và nới `maxDepth`. */
   focusNodeId?: number | null
+  /**
+   * Lọc người hiện trên cây (hộp Cấu hình cây): `bloodline` bỏ mọi ô vợ/chồng, `male` bỏ ô đã đánh dấu Nữ
+   * (cả nhánh của con gái). Người chưa điền giới tính luôn được giữ. Bỏ trống thì hiện tất cả.
+   */
+  filter?: TreeFilter
 }
 
 export type PlacedNode = {

@@ -85,8 +85,11 @@
 | 47 | Thêm, Hồ sơ cá nhân, Cài đặt, Thành viên, Sự kiện | Claude Code | Sonnet · medium | ✅ 2026-11-08 |
 | 48 | Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm | Claude Code | Sonnet · medium | ✅ 2026-11-08 |
 | 49 | Quản trị và nhóm trang đăng nhập | Claude Code | Sonnet · medium | ✅ 2026-11-08 |
+| **GĐ F** | **Cây gia phả theo mẫu `giapha.top/demo` (DECISIONS #100)** | | | |
+| 50 | Cây: thẻ dọc kiểu mẫu, màu theo giới tính, MiniMap, hộp Cấu hình cây | Claude Code | Sonnet · high | ⬜ |
+| 51 | Cây: tính xưng hô giữa hai người | Claude Code | **Opus** · high | ⬜ |
 
-## ▶️ Đợt tiếp theo: GĐ E đã xong, chưa có đợt mới
+## ▶️ Đợt tiếp theo: Đợt 50 — Cây: thẻ dọc kiểu mẫu, màu theo giới tính, MiniMap, hộp Cấu hình cây
 
 ---
 
@@ -1207,3 +1210,91 @@ DECISIONS #96 · `docs/DESIGN.md` mục 9
 **Đăng nhập**: thêm `components/shared/BrandHeader.tsx` (nền header, `favicon.svg` + "Tộc Phả"), dùng ở `PlainLayout`, `AuthLayout` (logo là link về Trang chủ, form trong một thẻ, tiêu đề 24px/700 primary) và `PolicyPage`; tiêu đề `ApprovalStatusCard` 20px/700 primary. Nút chính trong các form đã rộng toàn bộ (form là cột flex).
 **Rà 375px** (đọc mã, chưa mở app): đổi `text-xs` → `text-sm` ở hộp chi tiết thành viên đã xóa, thả xuống thông báo, đính kèm, tải tệp, đồng hồ dung lượng. `docs/DESIGN.md` mục 9 thêm `BrandHeader`, `IconTile count` và mô tả Đợt 49.
 Việc nên làm thêm: điện thoại vào thẳng `/quan-tri/...` từ link ngoài (không có lịch sử) thì không có nút quay lại về lưới, phải qua Thêm → Quản trị; `TreeToolbar` máy tính còn nút `min-h-9`; chuỗi UI của Đề xuất, Đã xóa, Cấu hình vẫn viết thẳng trong trang (có từ trước).
+
+---
+
+# GIAI ĐOẠN F — CÂY GIA PHẢ THEO MẪU (DECISIONS #100)
+
+> Mẫu tham chiếu: `https://giapha.top/demo`. Thẻ dọc gọn (ảnh tròn trên cùng, tên 2 dòng, năm sinh-mất ở đáy),
+> tô màu theo giới tính, đường hôn nhân đỏ nhạt (nét đứt khi vợ/chồng không kề nhau), nhãn "Đời N" dạng viên
+> thuốc, MiniMap góc phải dưới, cụm nút zoom góc trái dưới, hộp "Cấu hình cây", nút "Xưng hô".
+> **Giữ nguyên mọi tùy chọn sẵn có**: ngang/dọc, cỡ Nhỏ/Vừa/Lớn, kéo đổi cỡ từng ô, thu gọn nhánh, ô trống,
+> in khổ lớn, kéo-thả chuyển nhánh.
+>
+> **Hai điểm đã chốt với người dùng:** (1) giới tính chưa điền thì ô dùng **màu trung tính**, không đoán theo
+> tên đệm; (2) chữ trong ô cây là nhãn sơ đồ (15px tên, 13px năm) nên **không** áp mức tối thiểu 16px của chữ
+> nền - ngoại lệ này ghi trong `docs/DESIGN.md` mục 6.
+
+### Đợt 50 - Cây: thẻ dọc kiểu mẫu, màu theo giới tính, MiniMap, hộp Cấu hình cây ⬜
+IDEA §8 · DECISIONS #88, #96, #100 · `docs/DESIGN.md` mục 1, 6 · `shared/api/openapi.yaml`
+
+- [ ] **Token màu** (`docs/DESIGN.md` trước, rồi `apps/frontend/src/index.css`): `--color-tree-male/-bg`,
+      `-female/-bg`, `-unknown/-bg`, `-gone/-bg`, `--color-tree-marriage`, đủ cả bản tối. 5 bảng màu
+      (Cổ điển · Trung tính · Ấm áp · Rừng xanh · Hoàng gia) ghi đè 4 biến Nam/Nữ qua `[data-tree-palette]`.
+      Cập nhật dòng "Nút thành viên trên cây" ở DESIGN mục 6.
+- [ ] **Thẻ dọc kiểu mẫu** (`nodeSize.ts`, `components/MemberNode.tsx`, `cardStyle.ts`): ảnh tròn 44px trên
+      cùng (chưa có ảnh thì chữ cái đầu, nền theo tông), tên 15px/600 căn giữa tối đa 2 dòng, năm sinh-mất
+      13px sát đáy. Tông theo `cardTone`: Nam / Nữ / chưa rõ / **đã mất (xám, đè lên màu giới tính, ảnh
+      `grayscale`)** / ô trống (viền đứt). Kiểu dọc thành **mặc định**; kiểu ngang giữ nguyên.
+- [ ] **Đường nối** (`components/TreeEdge.tsx`): đường hôn nhân màu `--color-tree-marriage`, **nét đứt** khi
+      cặp không kề nhau (`points.length > 2`); cha mẹ-con giữ `--color-tree-line`. Giữ nhãn thứ tự hôn nhân.
+- [ ] **Nhãn "Đời N"** (`components/GenerationGutter.tsx`): viên thuốc nền `surface`, có viền và đổ bóng.
+- [ ] **MiniMap và cụm điều khiển** (`components/TreeCanvas.tsx`): `MiniMap` của `@xyflow/react` ở góc phải
+      dưới (**chỉ từ `md` trở lên**, màu ô theo tông), dời cụm phóng to / thu nhỏ / vừa khung nhìn sang góc
+      trái dưới và thêm nút mở hộp Cấu hình cây.
+- [ ] **Hộp "Cấu hình cây"** (`components/TreeConfigDialog.tsx` mới, `useTreeViewPrefs.ts`, `layout/`): 4 nhóm -
+      *Hiển thị thành viên* (Tất cả · Chỉ Nam · Chỉ huyết thống, qua `LayoutOptions.filter`), *Hiển thị thông
+      tin thẻ* (ảnh · danh hiệu · năm), *Màu sắc thẻ* (5 bảng), *Hình dạng thẻ* (Vuông · Vừa · Bo góc · Tròn).
+      Lưu chung khóa `tocpha.tree.view`. "Chỉ Nam" **giữ** người chưa điền giới tính và ghi rõ điều đó trong
+      hộp. Con bị lọc phải bỏ khỏi `allChildren` **trước khi đếm** để không hiện pill "+N con" sai.
+- [ ] **Đặt giới tính nhanh trên cây**: `PATCH /api/members/{id}/gender` vào `shared/api/openapi.yaml` trước,
+      `npm run gen:api`, rồi lát cắt BE nhỏ trong `vn/giapha/member/` (chỉ Admin, có audit; **không cần
+      migration**, cột `gender` đã có ở `V6__member.sql`), và hàng **Nam · Nữ · Chưa rõ** trong khối Admin của
+      `components/NodeMenuDialog.tsx`.
+- [ ] **Bản in khổ lớn** (`print/scene.ts`): vẽ lại ô dọc theo bố cục mới, nền/viền theo tông, bo góc theo hình
+      dạng, đường hôn nhân đúng màu và nét đứt - bản PDF/PNG phải giống hệt màn hình.
+- [ ] **Màu không là tín hiệu duy nhất**: giới tính nằm trong nhãn đọc màn hình của ô; người đã mất vẫn có dấu ✝.
+
+🔧 Setup: không có (không thêm phụ thuộc; `MiniMap` đã có sẵn trong `@xyflow/react`).
+🧪 Test tay: `/cay` ở **375px** và **1280px**, cả nền sáng và nền tối - (1) thẻ dọc đúng bố cục mẫu; (2) đặt
+giới tính Nam/Nữ trong menu ô, ô đổi màu ngay, người đã mất vẫn xám; (3) vợ/chồng kề nhau có đoạn đỏ nhạt,
+người có từ 3 vợ/chồng có đường **nét đứt**; (4) đổi đủ 5 bảng màu và 4 hình dạng, tắt ảnh/danh hiệu/năm thì ô
+co lại, tải lại trang vẫn giữ lựa chọn; (5) "Chỉ huyết thống" ẩn hết vợ/chồng, "Chỉ Nam" giữ người chưa rõ giới
+tính, không ô nào hiện "+N con" sai; (6) **việc cũ không hỏng**: xoay ngang/dọc, cỡ Nhỏ/Vừa/Lớn, kéo góc đổi cỡ
+ô, "Đặt lại các ô", thu gọn/mở nhánh, tìm trên cây, "Xem tổ tiên của tôi", kéo-thả chuyển nhánh; (7) MiniMap có
+ở 1280px, **không** có ở 375px; (8) "Xem cây" rồi xuất PDF và PNG, phải giống màn hình; (9) khách xem được
+`/cay` và không thấy hàng đặt giới tính.
+
+**✅ Đã làm:** _(điền khi xong)_
+
+### Đợt 51 - Cây: tính xưng hô giữa hai người ⬜
+IDEA §8 · DECISIONS #88, #100
+
+- [ ] **Thuật toán** (`apps/frontend/src/utils/tree/kinship.ts` mới, hàm thuần, **không có bản Java** vì không
+      có API): `kinshipBetween(index, generations, aNodeId, bNodeId)` trả về `aCallsB`, `bCallsA`, `path`, hoặc
+      `null` khi hai người không nối được. Dựng trên `buildTreeIndex`, `computeGenerations`, `getAncestors`,
+      `lineageIdOf` đã có ở `utils/tree/graph.ts` - **không viết lại việc duyệt cây**.
+      Thứ tự xét: cùng ô, vợ/chồng, dòng thẳng (Cha/Mẹ - Con, Ông/Bà - Cháu, Cụ - Chắt, Kỵ - Chút, xa hơn ghi
+      "tổ tiên/hậu duệ đời thứ N"), tổ tiên chung gần nhất (cùng cha mẹ: Anh/Chị - Em theo `sortOrder`; cùng
+      khoảng cách lớn hơn 1: Anh/Chị/Em **họ**; lệch vai: bác/chú/cô bên nội, cậu/dì bên ngoại - Cháu), cuối
+      cùng là qua hôn nhân thì tính theo người thuộc dòng rồi ghi thêm "(bên vợ/chồng)".
+- [ ] **Thiếu dữ liệu**: chưa điền giới tính thì dùng dạng gộp ("Ông/Bà", "Chú/Cô", "Anh/Chị") kèm gợi ý
+      *"Điền giới tính để xưng hô chính xác hơn"*; thứ bậc anh/em lấy theo `sortOrder` trên cây.
+- [ ] **Hộp "Xưng hô"** (`components/KinshipDialog.tsx` mới): hai ô chọn người + nút hoán đổi, hiện xưng hô hai
+      chiều và dòng mô tả đường quan hệ. Ô chọn người **tách dùng chung** từ bộ tìm kiếm không dấu đang nằm
+      trong `components/TreeToolbar.tsx` (`toSearchName`, sắp theo đời rồi theo tên), thành
+      `components/MemberPicker.tsx`.
+- [ ] **Lối vào**: nút "Xưng hô" (icon `heart-handshake`) ở góc phải trên sơ đồ, cạnh nút tìm kiếm; điện thoại
+      đặt trong sheet "Tùy chọn hiển thị". Mở sẵn người thứ nhất là ô "Tôi" nếu tài khoản đã liên kết; đang
+      chọn một ô trên cây thì ô đó vào người thứ hai.
+- [ ] **Khách dùng được** (cây vốn công khai, DECISIONS #88): tính hoàn toàn ở máy người dùng, không gọi API.
+- [ ] Một self-check nhỏ cho `kinship.ts` (vài cặp dựng tay) - **ngoại lệ có chủ đích** với DECISIONS #84 vì
+      logic nhiều nhánh; không muốn thì bỏ file này, phần còn lại không phụ thuộc vào nó.
+
+🔧 Setup: không có.
+🧪 Test tay: (1) hai vợ chồng cho ra "Chồng" / "Vợ"; (2) ông và cháu nội cho ra "Ông" / "Cháu"; (3) hai anh em
+ruột ra Anh/Em đúng thứ tự trên cây, bấm nút hoán đổi thì đảo đúng; (4) hai người ở hai cây rời nhau thì báo
+không tìm thấy quan hệ, không trắng màn hình; (5) người chưa điền giới tính ra dạng gộp kèm gợi ý; (6) khách
+cũng mở được hộp; (7) xem ở 375px và 1280px.
+
+**✅ Đã làm:** _(điền khi xong)_

@@ -21,6 +21,16 @@
   --color-text-muted: #5b6b7f;
   --color-deceased: #9aa5b1;
   --color-tree-line: #c9d3df;
+  /* Ô cây theo giới tính (DECISIONS #100, DESIGN §1) */
+  --color-tree-male: #6f9bd1;
+  --color-tree-male-bg: #e2ecf8;
+  --color-tree-female: #d98ba8;
+  --color-tree-female-bg: #fae4ec;
+  --color-tree-unknown: #b9c5d4;
+  --color-tree-unknown-bg: #ffffff;
+  --color-tree-gone: #9aa5b1;
+  --color-tree-gone-bg: #f1f4f7;
+  --color-tree-marriage: #e08a86;
   --color-success: #1f7a45;
   --color-success-bg: #e6f6ec;
   --color-warning: #9a5b00;
@@ -89,6 +99,15 @@
   --color-text-muted: #9fb0c4;
   --color-deceased: #7d8a99;
   --color-tree-line: #3a4b62;
+  --color-tree-male: #5a86be;
+  --color-tree-male-bg: #1b2b40;
+  --color-tree-female: #b06e8c;
+  --color-tree-female-bg: #2e1f29;
+  --color-tree-unknown: #3a4b62;
+  --color-tree-unknown-bg: #16202f;
+  --color-tree-gone: #5b6775;
+  --color-tree-gone-bg: #1b2330;
+  --color-tree-marriage: #c97b77;
   --color-success: #5fd08b;
   --color-success-bg: #14301f;
   --color-warning: #f0b45a;
@@ -104,6 +123,61 @@
   --shadow-card: 0 2px 12px rgb(0 0 0 / 0.35);
   --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.5);
 }
+
+/*
+ * Bảng màu ô cây (DECISIONS #100, DESIGN §1). Đặt `data-tree-palette` trên khung sơ đồ; biến CSS
+ * đổ xuống nên mọi ô bên trong đổi màu mà component không cần biết. `classic` là mặc định của @theme.
+ */
+[data-tree-palette='neutral'] {
+  --color-tree-male: #7c96ae;
+  --color-tree-male-bg: #e6ebf1;
+  --color-tree-female: #9c93b8;
+  --color-tree-female-bg: #eceaf4;
+}
+[data-tree-palette='warm'] {
+  --color-tree-male: #d1a24a;
+  --color-tree-male-bg: #fbf0d9;
+  --color-tree-female: #de8f7a;
+  --color-tree-female-bg: #fbe6df;
+}
+[data-tree-palette='forest'] {
+  --color-tree-male: #5e9e74;
+  --color-tree-male-bg: #e1f0e6;
+  --color-tree-female: #9b8ac4;
+  --color-tree-female-bg: #ede8f7;
+}
+[data-tree-palette='royal'] {
+  --color-tree-male: #7c83d4;
+  --color-tree-male-bg: #e6e8fa;
+  --color-tree-female: #d4799b;
+  --color-tree-female-bg: #fae1ea;
+}
+
+:root.dark [data-tree-palette='neutral'] {
+  --color-tree-male: #6d8296;
+  --color-tree-male-bg: #1e262f;
+  --color-tree-female: #8479a3;
+  --color-tree-female-bg: #262231;
+}
+:root.dark [data-tree-palette='warm'] {
+  --color-tree-male: #b08a3f;
+  --color-tree-male-bg: #2e2718;
+  --color-tree-female: #b9755f;
+  --color-tree-female-bg: #30211b;
+}
+:root.dark [data-tree-palette='forest'] {
+  --color-tree-male: #4f8763;
+  --color-tree-male-bg: #17291e;
+  --color-tree-female: #8273a8;
+  --color-tree-female-bg: #241f31;
+}
+:root.dark [data-tree-palette='royal'] {
+  --color-tree-male: #6a71b8;
+  --color-tree-male-bg: #1d1f36;
+  --color-tree-female: #b2657f;
+  --color-tree-female-bg: #301c26;
+}
+
 
 /*
  * Tên lớp tiện ích của shadcn. Không map `accent`, `primary`, `secondary`, `border`

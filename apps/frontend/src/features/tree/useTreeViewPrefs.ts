@@ -1,13 +1,33 @@
 import { useCallback, useMemo, useState } from 'react'
+import {
+  DEFAULT_CARD,
+  FILTERS,
+  PALETTES,
+  SHAPES,
+  type TreeCardFields,
+  type TreeFilter,
+  type TreePalette,
+  type TreeShape,
+} from './cardStyle'
 import type { NodeOverride, TreeSize, TreeViewPrefs } from './nodeSize'
 
 const KEY = 'tocpha.tree.view'
 const SIZES: readonly TreeSize[] = ['small', 'medium', 'large']
 
 type Stored = TreeViewPrefs & { nodes: Record<string, NodeOverride> }
-const DEFAULT: Stored = { vertical: false, size: 'medium', nodes: {} }
+const DEFAULT: Stored = {
+  vertical: true,
+  size: 'medium',
+  palette: 'classic',
+  shape: 'rounded',
+  filter: 'all',
+  card: DEFAULT_CARD,
+  nodes: {},
+}
 
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : undefined)
+const pick = <T,>(values: readonly T[], v: unknown, fallback: T): T => (values.includes(v as T) ? (v as T) : fallback)
+const flag = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fallback)
 
 function read(): Stored {
   try {
@@ -23,9 +43,19 @@ function read(): Stored {
         ...(num(o.height) !== undefined ? { height: num(o.height) } : {}),
       }
     }
+    const card = (parsed.card ?? {}) as Partial<TreeCardFields>
     return {
-      vertical: parsed.vertical === true,
-      size: SIZES.includes(parsed.size as TreeSize) ? (parsed.size as TreeSize) : DEFAULT.size,
+      // Kiểu dọc là mặc định từ #100; chỉ ai đã tự chọn ngang mới giữ ngang
+      vertical: parsed.vertical !== false,
+      size: pick(SIZES, parsed.size, DEFAULT.size),
+      palette: pick(PALETTES, parsed.palette, DEFAULT.palette) as TreePalette,
+      shape: pick(SHAPES, parsed.shape, DEFAULT.shape) as TreeShape,
+      filter: pick(FILTERS, parsed.filter, DEFAULT.filter) as TreeFilter,
+      card: {
+        photo: flag(card.photo, DEFAULT_CARD.photo),
+        labels: flag(card.labels, DEFAULT_CARD.labels),
+        years: flag(card.years, DEFAULT_CARD.years),
+      },
       nodes,
     }
   } catch {
@@ -35,7 +65,8 @@ function read(): Stored {
 
 /**
  * Cách hiển thị cây, nhớ trong trình duyệt (tiện ích của từng người xem, không lên máy chủ):
- * dọc/ngang và cỡ chung cho cả cây, cùng tùy chỉnh riêng từng ô (kiểu dọc/ngang, cỡ kéo tay).
+ * dọc/ngang, cỡ chung, bảng màu, hình dạng ô, bộ lọc người và các thông tin hiện trên ô,
+ * cùng tùy chỉnh riêng từng ô (kiểu dọc/ngang, cỡ kéo tay).
  */
 export function useTreeViewPrefs() {
   const [stored, setStored] = useState<Stored>(read)
@@ -58,6 +89,12 @@ export function useTreeViewPrefs() {
     [commit],
   )
 
+  /** Bật/tắt một thông tin trên ô (ảnh, danh hiệu, năm). */
+  const setCard = useCallback(
+    (change: Partial<TreeCardFields>) => commit((c) => ({ ...c, card: { ...c.card, ...change } })),
+    [commit],
+  )
+
   /** Gộp `patch` vào tùy chỉnh của một ô; `null` là bỏ tùy chỉnh của ô đó. */
   const setNode = useCallback(
     (nodeId: number, patch: NodeOverride | null) =>
@@ -72,6 +109,16 @@ export function useTreeViewPrefs() {
 
   const resetNodes = useCallback(() => commit((c) => ({ ...c, nodes: {} })), [commit])
 
-  const prefs = useMemo<TreeViewPrefs>(() => ({ vertical: stored.vertical, size: stored.size }), [stored.vertical, stored.size])
-  return { prefs, nodes: stored.nodes, setPrefs, setNode, resetNodes }
+  const prefs = useMemo<TreeViewPrefs>(
+    () => ({
+      vertical: stored.vertical,
+      size: stored.size,
+      palette: stored.palette,
+      shape: stored.shape,
+      filter: stored.filter,
+      card: stored.card,
+    }),
+    [stored.vertical, stored.size, stored.palette, stored.shape, stored.filter, stored.card],
+  )
+  return { prefs, nodes: stored.nodes, setPrefs, setCard, setNode, resetNodes }
 }

@@ -499,6 +499,22 @@
     - **Quên mật khẩu vẫn dùng OTP qua email.**
     - **Giao diện:** trang Đăng ký bỏ câu mô tả; đăng ký xong vào thẳng app, không qua trang nhập mã.
 
+## Y. Cây gia phả theo mẫu `giapha.top/demo` (chốt 2026-11-16, hỏi đáp với người dùng)
+
+100. **Làm lại hình thức cây theo bản mẫu và bổ sung hai tính năng của mẫu (Cấu hình cây, Xưng hô)** — Đợt 50, 51
+    → **Chốt:**
+    - **Thẻ dọc là mặc định:** ảnh tròn 44px trên cùng (chưa có ảnh thì chữ cái đầu, nền theo tông), tên 15px/600 căn giữa tối đa 2 dòng, năm sinh–mất 13px sát đáy. Thẻ ngang 200×72 vẫn giữ làm lựa chọn.
+    - **Màu theo giới tính:** Nam `--color-tree-male`, Nữ `--color-tree-female`. **Chưa điền giới tính thì dùng màu trung tính** `--color-tree-unknown`; **không đoán giới tính theo tên đệm** ("Văn"/"Thị") vì 28 thành viên seed có tên không theo quy tắc đó. **Người đã mất luôn xám** (`--color-tree-gone`, ảnh `grayscale`), đè lên màu giới tính, đúng như bản mẫu.
+    - **Màu không bao giờ là tín hiệu duy nhất:** giới tính nằm trong nhãn đọc màn hình của ô, người đã mất luôn có dấu ✝, và có sẵn bảng màu **Trung tính** cho người khó phân biệt màu.
+    - **Đường hôn nhân** màu `--color-tree-marriage` (đỏ nhạt), **nét đứt** khi vợ/chồng không kề nhau; đường cha mẹ–con giữ `--color-tree-line`. Thuật toán layout **không đổi**, chỉ đổi cách vẽ.
+    - **Cấu hình cây** (lưu trên máy, khóa `tocpha.tree.view`): lọc người (Tất cả · Chỉ Nam · Chỉ huyết thống), bật-tắt ảnh / danh hiệu / năm, 5 bảng màu, 4 hình dạng thẻ. **"Chỉ Nam" vẫn giữ người chưa điền giới tính**, nếu không cây gần như trống.
+    - **Giữ nguyên mọi tùy chọn sẵn có:** ngang/dọc, cỡ Nhỏ/Vừa/Lớn, kéo đổi cỡ từng ô, thu gọn nhánh, ô trống, in khổ lớn, kéo-thả chuyển nhánh.
+    - **Đặt giới tính nhanh:** thêm `PATCH /api/members/{id}/gender` (chỉ Admin) thay vì gửi lại cả hồ sơ qua `PUT /api/members/{id}` — tránh ghi đè nhầm các trường khác. Không cần migration, cột `gender` đã có ở `V6__member.sql`.
+    - **Ngoại lệ cỡ chữ:** chữ trong ô cây là nhãn sơ đồ phóng to thu nhỏ được (15px tên, 13px năm), **không** áp mức tối thiểu 16px của chữ nền. Ghi trong `docs/DESIGN.md` mục 6.
+    - **Bản in** (`print/scene.ts`) phải đồng bộ với thẻ mới, nếu không PDF/PNG sẽ khác màn hình.
+    - **Xưng hô** (Đợt 51): hàm thuần `utils/tree/kinship.ts`, tính hoàn toàn ở máy người dùng, **không có API và không có bản Java**; khách cũng dùng được (cây vốn công khai, #88). Thiếu giới tính thì trả dạng gộp ("Ông/Bà", "Anh/Chị") kèm gợi ý điền giới tính; thứ bậc anh/em lấy theo `sortOrder` trên cây.
+    - **Không lấy từ mẫu:** nút "Nhập JSON" (không hợp với mô hình Admin dựng cây tay) và bộ ảnh minh họa theo giới tính/độ tuổi (giữ chữ cái đầu).
+
 ## Việc còn chờ
 - Nhà cung cấp email OTP chính thức.
 - Chính sách bảo mật: bản nháp cần người có trách nhiệm pháp lý duyệt. Cần cập nhật khi duyệt: Trợ lý AI nay mở cho khách (#91) và giọng nói do trình duyệt xử lý (#92).
