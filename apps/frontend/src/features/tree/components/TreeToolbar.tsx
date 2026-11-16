@@ -1,16 +1,12 @@
-import { ChevronsDown, ListTree, Maximize2, Plus, Printer, RectangleHorizontal, RectangleVertical, RotateCcw, Search, UserRound } from 'lucide-react'
-import { useId, useMemo, useState } from 'react'
+import { ChevronsDown, HeartHandshake, ListTree, Maximize2, Plus, Printer, RectangleHorizontal, RectangleVertical, RotateCcw, UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { cn } from '@/utils/cn'
-import { toSearchName } from '@/utils/text'
 import type { TreeIndex } from '@/utils/tree'
 import type { TreeSize, TreeViewPrefs } from '../nodeSize'
-import { nodeName, yearsText } from '../nodeText'
 import { treeStrings } from '../strings'
+import { MemberPicker } from './MemberPicker'
 
 const s = treeStrings.toolbar
-const MAX_RESULTS = 8
 const SIZE_OPTIONS: { value: TreeSize; label: string }[] = [
   { value: 'small', label: s.sizeSmall },
   { value: 'medium', label: s.sizeMedium },
@@ -36,6 +32,7 @@ type TreeToolbarProps = {
   onAddRoot: () => void
   onPick: (nodeId: number) => void
   onMyAncestors: () => void
+  onKinship: () => void
   onPrint: () => void
   onShowAll: () => void
   onMoreDepth: () => void
@@ -88,94 +85,31 @@ export function TreeToolbar({
   onAddRoot,
   onPick,
   onMyAncestors,
+  onKinship,
   onPrint,
   onShowAll,
   onMoreDepth,
 }: TreeToolbarProps) {
-  const searchId = useId()
-  const [query, setQuery] = useState('')
-
-  // Chỉ người có trên cây (ô trống không có tên để tìm), xếp theo đời rồi theo tên
-  const results = useMemo(() => {
-    const needle = toSearchName(query)
-    if (!needle) return []
-    return [...index.nodes.values()]
-      .filter((n) => n.member && toSearchName(n.member.fullName).includes(needle))
-      .sort(
-        (a, b) =>
-          (generations.get(a.id) ?? 0) - (generations.get(b.id) ?? 0) ||
-          nodeName(a).localeCompare(nodeName(b), 'vi'),
-      )
-  }, [generations, index, query])
-
-  const pick = (nodeId: number) => {
-    setQuery('')
-    onPick(nodeId)
-  }
-
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-3 md:flex-row md:items-end">
-        <div className="relative flex flex-col gap-1.5 md:w-72 md:shrink-0">
-          <label htmlFor={searchId} className="text-base font-medium whitespace-nowrap">
-            {s.search}
-          </label>
-          <div className="relative">
-            <Search
-              className="pointer-events-none absolute top-1/2 left-3 size-5 -translate-y-1/2 text-text-muted"
-              aria-hidden="true"
-            />
-            <Input
-              id={searchId}
-              type="search"
-              value={query}
-              placeholder={s.searchPlaceholder}
-              autoComplete="off"
-              className="pl-10"
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                const first = results[0]
-                if (e.key === 'Enter' && first) {
-                  e.preventDefault()
-                  pick(first.id)
-                }
-                if (e.key === 'Escape') setQuery('')
-              }}
-            />
-          </div>
-          {query.trim() && (
-            <div className="absolute top-full right-0 left-0 z-20 mt-1 max-h-72 overflow-y-auto rounded-field border border-border bg-surface shadow-overlay">
-              {results.length === 0 ? (
-                <p className="px-3 py-3 text-text-muted">{s.searchNoMatch}</p>
-              ) : (
-                <ul aria-label={s.searchResults}>
-                  {results.slice(0, MAX_RESULTS).map((n) => (
-                    <li key={n.id} className="border-b border-border last:border-b-0">
-                      <button
-                        type="button"
-                        onClick={() => pick(n.id)}
-                        className="flex min-h-14 w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 text-left transition-colors duration-200 ease-out hover:bg-surface-muted"
-                      >
-                        <span className="min-w-0">
-                          <span className="block font-semibold [overflow-wrap:anywhere]">{nodeName(n)}</span>
-                          {n.member && (
-                            <span className="block text-sm text-text-muted tabular-nums">{yearsText(n.member)}</span>
-                          )}
-                        </span>
-                        <span className="shrink-0 text-sm font-medium text-text-muted tabular-nums">
-                          {treeStrings.generation(generations.get(n.id) ?? 0)}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-        </div>
+        <MemberPicker
+          index={index}
+          generations={generations}
+          label={s.search}
+          placeholder={s.searchPlaceholder}
+          resultsLabel={s.searchResults}
+          noMatch={s.searchNoMatch}
+          onPick={onPick}
+          className="md:w-72 md:shrink-0"
+        />
 
         {/* Điện thoại: các nút này nổi trên sơ đồ (TreePhoneTools) */}
         <div className="hidden flex-1 flex-wrap gap-2 md:flex">
+          <Button variant="secondary" onClick={onKinship}>
+            <HeartHandshake aria-hidden="true" />
+            {s.kinship}
+          </Button>
           <Button variant="secondary" onClick={onMyAncestors}>
             <UserRound aria-hidden="true" />
             {s.myAncestors}

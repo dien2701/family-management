@@ -1,4 +1,4 @@
-import { Ellipsis, Plus, Printer, RectangleHorizontal, RectangleVertical, RotateCcw, UserRound } from 'lucide-react'
+import { Ellipsis, HeartHandshake, Plus, Printer, RectangleHorizontal, RectangleVertical, RotateCcw, UserRound } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { ListGroup, ListRow } from '@/components/shared/ListRow'
 import { ModalDialog } from '@/components/shared/ModalDialog'
@@ -17,6 +17,7 @@ type TreePhoneToolsProps = {
   onResetNodes: () => void
   onAddRoot: () => void
   onMyAncestors: () => void
+  onKinship: () => void
   onPrint: () => void
 }
 
@@ -58,6 +59,7 @@ export function TreePhoneTools({
   onResetNodes,
   onAddRoot,
   onMyAncestors,
+  onKinship,
   onPrint,
 }: TreePhoneToolsProps) {
   const [open, setOpen] = useState(false)
@@ -94,6 +96,7 @@ export function TreePhoneTools({
           <SizeGroup size={prefs.size} onChange={(size) => onPrefsChange({ size })} />
         </div>
         <ListGroup>
+          <ListRow icon={HeartHandshake} label={s.kinship} onClick={run(onKinship)} />
           <ListRow icon={Printer} label={s.print} onClick={run(onPrint)} />
           {hasNodeOverrides && <ListRow icon={RotateCcw} label={s.resetNodes} onClick={run(onResetNodes)} />}
         </ListGroup>

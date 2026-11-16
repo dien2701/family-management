@@ -19,6 +19,7 @@ import {
 } from '@/utils/tree'
 import { AddMemberDialog, type AddMode } from '../components/AddMemberDialog'
 import { MoveDialog } from '../components/MoveDialog'
+import { KinshipDialog } from '../components/KinshipDialog'
 import { DeleteSlotDialog, RemoveMemberDialog } from '../components/NodeConfirmDialogs'
 import { NodeMenuDialog, type MenuAction } from '../components/NodeMenuDialog'
 import { PairDialog } from '../components/PairDialog'
@@ -143,6 +144,9 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
 
   const { prefs, nodes: overrides, setPrefs, setCard, setNode, resetNodes } = useTreeViewPrefs()
   const [configOpen, setConfigOpen] = useState(false)
+  // Hộp Xưng hô: mỗi lần mở dựng lại để lấy "Tôi" và ô đang chọn làm hai người ban đầu
+  const [kinship, setKinship] = useState({ open: false, key: 0 })
+  const openKinship = () => setKinship((k) => ({ open: true, key: k.key + 1 }))
   // Font tải xong thì đo lại cỡ ô cho đúng
   const [fontsReady, setFontsReady] = useState(0)
   useEffect(() => {
@@ -460,6 +464,7 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
             reveal(nodeId)
           }}
           onMyAncestors={showMyAncestors}
+          onKinship={openKinship}
           onPrint={() => setPrintOpen(true)}
           onShowAll={showAll}
           onMoreDepth={() => setDepthLimit((d) => (d === null ? d : d + 1))}
@@ -504,6 +509,7 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
             onResetNodes={resetNodes}
             onAddRoot={() => openFlow({ kind: 'add', mode: { kind: 'root' } })}
             onMyAncestors={showMyAncestors}
+          onKinship={openKinship}
             onPrint={() => setPrintOpen(true)}
           />
         </div>
@@ -519,6 +525,15 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
         verticalOf={verticalOf}
         look={{ palette: prefs.palette, shape: prefs.shape, card: prefs.card }}
         onClose={() => setPrintOpen(false)}
+      />
+      <KinshipDialog
+        key={kinship.key}
+        open={kinship.open}
+        index={index}
+        generations={generations}
+        initialA={myNodeId}
+        initialB={selectedId !== null && selectedId !== myNodeId && index.nodes.get(selectedId)?.member ? selectedId : null}
+        onClose={() => setKinship((k) => ({ ...k, open: false }))}
       />
       <TreeConfigDialog
         open={configOpen}

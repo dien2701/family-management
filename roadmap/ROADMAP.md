@@ -87,9 +87,9 @@
 | 49 | Quản trị và nhóm trang đăng nhập | Claude Code | Sonnet · medium | ✅ 2026-11-08 |
 | **GĐ F** | **Cây gia phả theo mẫu `giapha.top/demo` (DECISIONS #100)** | | | |
 | 50 | Cây: thẻ dọc kiểu mẫu, màu theo giới tính, MiniMap, hộp Cấu hình cây | Claude Code | Sonnet · high | ✅ 2026-11-16 |
-| 51 | Cây: tính xưng hô giữa hai người | Claude Code | **Opus** · high | ⬜ |
+| 51 | Cây: tính xưng hô giữa hai người | Claude Code | **Opus** · high | ✅ 2026-11-16 |
 
-## ▶️ Đợt tiếp theo: Đợt 51 — Cây: tính xưng hô giữa hai người
+## ▶️ Đợt tiếp theo: chưa có (GĐ F đã xong)
 
 ---
 
@@ -1276,29 +1276,29 @@ File chính: `features/tree/components/{MemberNode,TreeEdge,GenerationGutter,Tre
 `member/{controller/MemberController,service/MemberService,entity/Member,dto/MemberGenderInput}.java`, `openapi.yaml`.
 Việc nên làm thêm: "Chỉ Nam" cũng áp vào chế độ "Xem tổ tiên của tôi" (hiện đang áp, có thể ẩn bà nội/mẹ - hỏi lại người dùng nếu muốn khác).
 
-### Đợt 51 - Cây: tính xưng hô giữa hai người ⬜
+### Đợt 51 - Cây: tính xưng hô giữa hai người ✅ 2026-11-16
 IDEA §8 · DECISIONS #88, #100
 
-- [ ] **Thuật toán** (`apps/frontend/src/utils/tree/kinship.ts` mới, hàm thuần, **không có bản Java** vì không
+- [x] **Thuật toán** (`apps/frontend/src/utils/tree/kinship.ts` mới, hàm thuần, **không có bản Java** vì không
       có API): `kinshipBetween(index, generations, aNodeId, bNodeId)` trả về `aCallsB`, `bCallsA`, `path`, hoặc
       `null` khi hai người không nối được. Dựng trên `buildTreeIndex`, `computeGenerations`, `getAncestors`,
       `lineageIdOf` đã có ở `utils/tree/graph.ts` - **không viết lại việc duyệt cây**.
       Thứ tự xét: cùng ô, vợ/chồng, dòng thẳng (Cha/Mẹ - Con, Ông/Bà - Cháu, Cụ - Chắt, Kỵ - Chút, xa hơn ghi
       "tổ tiên/hậu duệ đời thứ N"), tổ tiên chung gần nhất (cùng cha mẹ: Anh/Chị - Em theo `sortOrder`; cùng
       khoảng cách lớn hơn 1: Anh/Chị/Em **họ**; lệch vai: bác/chú/cô bên nội, cậu/dì bên ngoại - Cháu), cuối
-      cùng là qua hôn nhân thì tính theo người thuộc dòng rồi ghi thêm "(bên vợ/chồng)".
-- [ ] **Thiếu dữ liệu**: chưa điền giới tính thì dùng dạng gộp ("Ông/Bà", "Chú/Cô", "Anh/Chị") kèm gợi ý
-      *"Điền giới tính để xưng hô chính xác hơn"*; thứ bậc anh/em lấy theo `sortOrder` trên cây.
-- [ ] **Hộp "Xưng hô"** (`components/KinshipDialog.tsx` mới): hai ô chọn người + nút hoán đổi, hiện xưng hô hai
+      cùng là qua hôn nhân thì tính theo người thuộc dòng rồi ghi thêm "(bên vợ/chồng)". ✅ 2026-11-16
+- [x] **Thiếu dữ liệu**: chưa điền giới tính thì dùng dạng gộp ("Ông/Bà", "Chú/Cô", "Anh/Chị") kèm gợi ý
+      *"Điền giới tính để xưng hô chính xác hơn"*; thứ bậc anh/em lấy theo `sortOrder` trên cây. ✅ 2026-11-16
+- [x] **Hộp "Xưng hô"** (`components/KinshipDialog.tsx` mới): hai ô chọn người + nút hoán đổi, hiện xưng hô hai
       chiều và dòng mô tả đường quan hệ. Ô chọn người **tách dùng chung** từ bộ tìm kiếm không dấu đang nằm
       trong `components/TreeToolbar.tsx` (`toSearchName`, sắp theo đời rồi theo tên), thành
-      `components/MemberPicker.tsx`.
-- [ ] **Lối vào**: nút "Xưng hô" (icon `heart-handshake`) ở góc phải trên sơ đồ, cạnh nút tìm kiếm; điện thoại
+      `components/MemberPicker.tsx`. ✅ 2026-11-16
+- [x] **Lối vào**: nút "Xưng hô" (icon `heart-handshake`) ở góc phải trên sơ đồ, cạnh nút tìm kiếm; điện thoại
       đặt trong sheet "Tùy chọn hiển thị". Mở sẵn người thứ nhất là ô "Tôi" nếu tài khoản đã liên kết; đang
-      chọn một ô trên cây thì ô đó vào người thứ hai.
-- [ ] **Khách dùng được** (cây vốn công khai, DECISIONS #88): tính hoàn toàn ở máy người dùng, không gọi API.
-- [ ] Một self-check nhỏ cho `kinship.ts` (vài cặp dựng tay) - **ngoại lệ có chủ đích** với DECISIONS #84 vì
-      logic nhiều nhánh; không muốn thì bỏ file này, phần còn lại không phụ thuộc vào nó.
+      chọn một ô trên cây thì ô đó vào người thứ hai. ✅ 2026-11-16
+- [x] **Khách dùng được** (cây vốn công khai, DECISIONS #88): tính hoàn toàn ở máy người dùng, không gọi API. ✅ 2026-11-16
+- [x] Một self-check nhỏ cho `kinship.ts` (vài cặp dựng tay) - **ngoại lệ có chủ đích** với DECISIONS #84 vì
+      logic nhiều nhánh; không muốn thì bỏ file này, phần còn lại không phụ thuộc vào nó. ✅ 2026-11-16
 
 🔧 Setup: không có.
 🧪 Test tay: (1) hai vợ chồng cho ra "Chồng" / "Vợ"; (2) ông và cháu nội cho ra "Ông" / "Cháu"; (3) hai anh em
@@ -1306,4 +1306,14 @@ ruột ra Anh/Em đúng thứ tự trên cây, bấm nút hoán đổi thì đ�
 không tìm thấy quan hệ, không trắng màn hình; (5) người chưa điền giới tính ra dạng gộp kèm gợi ý; (6) khách
 cũng mở được hộp; (7) xem ở 375px và 1280px.
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** `kinshipBetween` (hàm thuần, dựng trên `lineageIdOf`/`getAncestors`) xét cùng ô → vợ/chồng → cùng là
+vợ/chồng của một người (cưới trước là chị/anh) → tổ tiên chung gần nhất (Cha/Mẹ, Ông/Bà **nội/ngoại**, Cụ, Kỵ; anh em và
+anh em họ theo `sortOrder` của nhánh; bác/chú/cô bên nội, cậu/dì bên ngoại) → qua hôn nhân (thím, mợ, dượng, dâu, rể; người
+là vợ/chồng ghi thêm "(bên chồng)"/"(bên vợ)"). Ô vợ/chồng là `coParentNodeId` trên đường đi được tính là cha/mẹ ruột
+(Mẹ, Bà nội), không phải "Mẹ kế". Thiếu giới tính trả dạng gộp + gợi ý. Ô tìm trên cây tách thành `MemberPicker` (dùng
+chung thanh công cụ và hộp Xưng hô). Nút "Xưng hô" đặt ở hàng nút thanh công cụ máy tính, ngay cạnh ô tìm (trên sơ đồ
+góc phải trên chưa có nút nào ở máy tính); điện thoại nằm trong sheet "Tùy chọn hiển thị".
+File chính: `utils/tree/{kinship,kinship.test}.ts`, `features/tree/components/{KinshipDialog,MemberPicker,TreeToolbar,TreePhoneTools}.tsx`,
+`features/tree/{strings.ts,pages/TreePage.tsx}`.
+Việc nên làm thêm: tên gọi theo miền (Bắc "Bác" cho anh/chị của mẹ, Nam "Cậu/Dì") và "Ông chú/Bà cô" cho em của ông bà
+hiện ghi gọn là "Ông/Bà"; hỏi lại người dùng nếu cần chi tiết hơn.

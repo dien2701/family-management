@@ -36,6 +36,7 @@ export const treeStrings = {
     searchResults: 'Kết quả tìm trên cây',
     searchNoMatch: 'Không có ai tên này trên cây.',
     myAncestors: 'Xem tổ tiên của tôi',
+    kinship: 'Xưng hô',
     print: 'Xem cây',
     verticalView: 'Hiển thị dọc',
     horizontalView: 'Hiển thị ngang',
@@ -81,6 +82,22 @@ export const treeStrings = {
     genderMale: 'Nam',
     genderFemale: 'Nữ',
     genderUnknown: 'Chưa rõ',
+  },
+
+  kinship: {
+    title: 'Xưng hô',
+    intro: 'Chọn hai người có trên cây để xem họ gọi nhau thế nào. Tính ngay trên máy của bạn.',
+    first: 'Người thứ nhất',
+    second: 'Người thứ hai',
+    placeholder: 'Gõ họ tên, không cần dấu',
+    results: 'Kết quả tìm người',
+    noMatch: 'Không có ai tên này trên cây. Thử gõ tên gọi, không cần dấu.',
+    swap: 'Hoán đổi hai người',
+    pickBoth: 'Chọn đủ hai người để xem cách xưng hô.',
+    calls: (a: string, b: string) => `${a} gọi ${b} là`,
+    pathTitle: 'Đường quan hệ',
+    notFound: 'Không tìm thấy quan hệ giữa hai người này trên cây (có thể họ ở hai cây rời nhau).',
+    needsGender: 'Có người chưa điền giới tính nên xưng hô đang ở dạng gộp. Điền giới tính để xưng hô chính xác hơn.',
   },
 
   config: {
