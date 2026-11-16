@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Outlet } from 'react-router'
 import { isApproved } from '@/features/auth/routing'
 import { PushPrompt } from '@/features/notification/components/PushPrompt'
@@ -8,8 +9,30 @@ import { BottomNav } from './BottomNav'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 
+const SIDEBAR_KEY = 'tocpha.sidebarCollapsed'
+
+// Bọc try/catch vì localStorage có thể bị chặn (chế độ riêng tư)
+function readCollapsed(): boolean {
+  try {
+    return localStorage.getItem(SIDEBAR_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 export function AppShell() {
   const { user } = useAuth()
+  const [collapsed, setCollapsed] = useState(readCollapsed)
+  const toggleSidebar = () => {
+    const next = !collapsed
+    setCollapsed(next)
+    try {
+      localStorage.setItem(SIDEBAR_KEY, next ? '1' : '0')
+    } catch {
+      // Không lưu được thì chỉ áp dụng cho phiên này
+    }
+  }
+
   return (
     <div className="min-h-dvh md:flex">
       <a
@@ -18,13 +41,13 @@ export function AppShell() {
       >
         Bỏ qua tới nội dung
       </a>
-      <Sidebar />
+      <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Header />
         <main
           id="main"
           tabIndex={-1}
-          className="mx-auto w-full max-w-[1200px] flex-1 px-4 py-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:py-6 md:pb-6"
+          className="w-full flex-1 px-4 py-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:py-6 md:pb-6"
         >
           <AccessBanner />
           {/* Thông báo đẩy: đã duyệt gắn với tài khoản, còn lại nhận như khách (DECISIONS #89) */}

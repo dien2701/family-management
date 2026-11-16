@@ -127,6 +127,21 @@ function TreeCanvasInner({
     return () => cancelAnimationFrame(frame)
   }, [view, layout, isDesktop, fitView, setCenter])
 
+  // Bề ngang vùng vẽ đổi (thu gọn/mở menu trái, đổi cỡ cửa sổ) thì vừa lại cả cây cho ô to rõ theo chỗ mới
+  const regionRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = regionRef.current
+    if (!el) return
+    let width = el.clientWidth
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth === width) return
+      width = el.clientWidth
+      void fitView({ ...FIT, duration: prefersReducedMotion() ? 0 : 250 })
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [fitView])
+
   const nodeAt = useCallback(
     (event: unknown, excludeId: number): number | null => {
       const point = pointOf(event)
@@ -155,7 +170,7 @@ function TreeCanvasInner({
       className="flex h-full min-h-0 overflow-hidden rounded-card border border-border bg-surface-muted"
     >
       <GenerationGutter generations={layout.generations} />
-      <div className="relative h-full min-w-0 flex-1" role="region" aria-label={t.canvasLabel}>
+      <div ref={regionRef} className="relative h-full min-w-0 flex-1" role="region" aria-label={t.canvasLabel}>
         <TreeActionsContext.Provider value={guarded}>
           <ReactFlow
             nodes={nodes}

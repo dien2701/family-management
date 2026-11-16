@@ -57,7 +57,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-header">
-      <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-2 px-4 md:px-6 lg:h-16 lg:gap-4">
+      <div className="flex h-14 items-center gap-2 px-4 md:px-6 lg:h-16 lg:gap-4">
         {isHome && (
           <Link
             to="/"
