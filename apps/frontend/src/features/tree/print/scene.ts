@@ -60,7 +60,8 @@ export function readPrintColors(palette: TreePalette): PrintColors {
   }
 }
 
-type SceneItem = { x0: number; y0: number; x1: number; y1: number; svg: string }
+/** `tree`: ô hoặc đường nối, dời theo `shiftX` khi vẽ; còn lại (tiêu đề, đường kẻ cột "Đời") đứng yên. */
+type SceneItem = { x0: number; y0: number; x1: number; y1: number; svg: string; tree?: boolean }
 
 export type Scene = {
   sheet: SheetGeometry
@@ -224,7 +225,7 @@ function nodeSvg(placed: PlacedNode, ox: number, oy: number, input: SceneInput):
   const tone = cardTone(placed.node)
   const palette = colors.tones[tone]
 
-  let out = `<rect${attrs({
+  const out = `<rect${attrs({
     x,
     y,
     width: W,
@@ -297,20 +298,6 @@ export async function buildScene(input: SceneInput): Promise<Scene> {
   const { originX: ox, originY: oy } = sheet
   const items: SceneItem[] = []
 
-  const rowGuides: SceneItem[] = layout.generations.map((g) => {
-    const y = oy + g.y + g.height / 2
-    const x0 = SHEET.margin + SHEET.gutter - 8
-    const x1 = sheet.width - SHEET.margin
-    return {
-      x0,
-      y0: y - 1,
-      x1,
-      y1: y + 1,
-      svg: `<line${attrs({ x1: x0, y1: y, x2: x1, y2: y, stroke: colors.border, 'stroke-width': 1, 'stroke-dasharray': '2 6' })}/>`,
-    }
-  })
-  items.push(...rowGuides)
-
   const gutterX = ox - 20
   items.push({
     x0: gutterX - 1,
@@ -356,6 +343,7 @@ export async function buildScene(input: SceneInput): Promise<Scene> {
       x1: Math.max(...xs) + 12,
       y1: Math.max(...ys) + 12,
       svg: edgeSvg(edge, ox, oy, colors, (spouseCount.get(edge.fromNodeId) ?? 0) > 1),
+      tree: true,
     })
     await tick()
   }
@@ -367,6 +355,7 @@ export async function buildScene(input: SceneInput): Promise<Scene> {
       x1: ox + placed.x + placed.width + 2,
       y1: oy + placed.y + placed.height + 2,
       svg: nodeSvg(placed, ox, oy, input),
+      tree: true,
     })
     await tick()
   }
@@ -388,6 +377,8 @@ export type RenderOptions = {
   fonts?: PrintFonts
   /** Cắt phần vẽ tràn ra ngoài trang (khi chia trang). */
   clip?: boolean
+  /** Dời cụm cây sang phải (unit) để nằm giữa giấy, xem `PagePlan.shiftX`. */
+  shiftX?: number
 }
 
 const intersects = (item: SceneItem, r: Rect) =>
@@ -400,8 +391,24 @@ export function renderSvg(
   size: { width: number; height: number },
   options: RenderOptions = {},
 ): string {
-  const { colors } = scene
-  const body = scene.items.filter((item) => intersects(item, view)).map((item) => item.svg)
+  const { colors, sheet } = scene
+  const dx = options.shiftX ?? 0
+  const treeView = { ...view, x: view.x - dx }
+  const body: string[] = []
+
+  // Đường gạch mờ theo hàng mỗi đời: từ cột "Đời" kéo tới mép phải cụm cây (đã dời)
+  const guideX0 = SHEET.margin + SHEET.gutter - 8
+  const guideX1 = sheet.width - SHEET.margin + dx
+  for (const g of scene.generations) {
+    if (g.cy < view.y - 1 || g.cy > view.y + view.h + 1) continue
+    body.push(
+      `<line${attrs({ x1: guideX0, y1: g.cy, x2: guideX1, y2: g.cy, stroke: colors.border, 'stroke-width': 1, 'stroke-dasharray': '2 6' })}/>`,
+    )
+  }
+
+  body.push(...scene.items.filter((item) => !item.tree && intersects(item, view)).map((item) => item.svg))
+  const tree = scene.items.filter((item) => item.tree && intersects(item, treeView)).map((item) => item.svg)
+  if (tree.length > 0) body.push(dx ? `<g transform="translate(${num(dx)} 0)">${tree.join('')}</g>` : tree.join(''))
 
   // Nhãn "Đời" của mỗi hàng: ở cột trang đầu nằm trong lề trái, các cột sau lặp lại ở mép trang cho dễ ghép
   const labelX = view.x <= 0 ? SHEET.margin : view.x + 6

@@ -45,7 +45,7 @@ export async function exportPdf(
         onProgress(page - 1, total)
 
         const view = { x: col * plan.tileW, y: row * plan.tileH, w: plan.tileW, h: plan.tileH }
-        const svg = renderSvg(scene, view, { width: plan.printW, height: plan.printH }, { clip: tiled })
+        const svg = renderSvg(scene, view, { width: plan.printW, height: plan.printH }, { clip: tiled, shiftX: plan.shiftX })
         const element = new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement
         host.replaceChildren(document.importNode(element, true))
         await svg2pdf(host.firstElementChild as SVGElement, doc, { x: m, y: m, width: plan.printW, height: plan.printH })

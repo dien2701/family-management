@@ -318,13 +318,19 @@ function PreviewBody({ graph, index, generations, defaultRootId, layoutOptions, 
   const tiled = pageCount > 1
 
   // Trang đang xem (hoặc cả tờ) và SVG của nó: đúng phần sẽ ra giấy
+  // Cả tờ: nới bề ngang đúng bằng đoạn cụm cây bị dời để không mất mép phải
   const view = wholeSheet
-    ? { x: 0, y: 0, w: sheet.width, h: sheet.height }
+    ? { x: 0, y: 0, w: sheet.width + plan.shiftX, h: sheet.height }
     : { x: (current % plan.cols) * plan.tileW, y: Math.floor(current / plan.cols) * plan.tileH, w: plan.tileW, h: plan.tileH }
   const svg = useMemo(
     () =>
       prepared.status === 'ready'
-        ? renderSvg(prepared.prepared.scene, view, { width: view.w, height: view.h }, { clip: tiled && !wholeSheet })
+        ? renderSvg(
+            prepared.prepared.scene,
+            view,
+            { width: view.w, height: view.h },
+            { clip: tiled && !wholeSheet, shiftX: plan.shiftX },
+          )
         : '',
     // eslint-disable-next-line react-hooks/exhaustive-deps -- `view` suy ra từ các giá trị đã liệt kê
     [prepared, current, wholeSheet, plan, tiled],

@@ -69,6 +69,8 @@ export type PagePlan = {
   /** Kích thước một trang tính bằng unit. */
   tileW: number
   tileH: number
+  /** Dời cụm cây sang phải (unit) để nằm giữa bề ngang giấy; tiêu đề và cột "Đời" giữ sát lề trái. */
+  shiftX: number
 }
 
 export function planPages(sheet: SheetGeometry, options: Pick<PrintOptions, 'paper' | 'orientation'>): PagePlan {
@@ -79,7 +81,12 @@ export function planPages(sheet: SheetGeometry, options: Pick<PrintOptions, 'pap
   // Trừ một chút sai số để tờ vừa khít không bị đẩy sang trang thừa
   const cols = Math.max(1, Math.ceil((sheet.width * scale) / printW - 1e-6))
   const rows = Math.max(1, Math.ceil((sheet.height * scale) / printH - 1e-6))
-  return { scale, pageW, pageH, printW, printH, cols, rows, tileW: printW / scale, tileH: printH / scale }
+  const tileW = printW / scale
+  const tileH = printH / scale
+  // Tâm cụm cây (từ originX tới trước lề phải) về tâm bề ngang giấy; không bao giờ dời sang trái đè cột "Đời"
+  const treeCenter = (sheet.originX + sheet.width - SHEET.margin) / 2
+  const shiftX = Math.max(0, (cols * tileW) / 2 - treeCenter)
+  return { scale, pageW, pageH, printW, printH, cols, rows, tileW, tileH, shiftX }
 }
 
 export type PngPlan = { width: number; height: number; dpi: number }
