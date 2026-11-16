@@ -2,6 +2,7 @@
 // tọa độ lấy nguyên từ layout, không tính lại ở đây.
 import type { Edge, Node } from '@xyflow/react'
 import type { AddOptions } from '@/utils/tree'
+import type { TreeCardFields, TreeShape } from './cardStyle'
 import type { LayoutEdge, LayoutResult, PlacedNode } from './layout/types'
 
 /** Trạng thái của ô khi đang kéo một nhánh để chuyển (chỉ máy tính). */
@@ -25,6 +26,9 @@ export type MemberNodeData = {
   vertical: boolean
   /** Cỡ chung (Nhỏ/Vừa/Lớn): nội dung ô được phóng theo. */
   scale: number
+  /** Thông tin bật/tắt trên ô và hình dạng ô (hộp Cấu hình cây). */
+  card: TreeCardFields
+  shape: TreeShape
 }
 
 export type MemberFlowNode = Node<MemberNodeData, 'member'>
@@ -41,6 +45,8 @@ export type FlowUi = {
   /** Ô này hiển thị dọc (kiểu chung hoặc riêng của ô). */
   verticalOf: (nodeId: number) => boolean
   scale: number
+  card: TreeCardFields
+  shape: TreeShape
   /** Có hiện nút "+" nhanh không, và cho ô nào thì thêm được gì. */
   addOptionsOf: ((nodeId: number) => AddOptions) | null
   /** Số vợ/chồng hiện có của một người thuộc dòng (để biết người tiếp theo đứng bên nào). */
@@ -103,6 +109,8 @@ export function buildFlow(layout: LayoutResult, ui: FlowUi): { nodes: MemberFlow
         spouseAddSide: host?.side ?? null,
         vertical: ui.verticalOf(placed.id),
         scale: ui.scale,
+        card: ui.card,
+        shape: ui.shape,
       },
     }
   })

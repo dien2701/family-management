@@ -24,6 +24,7 @@ import { NodeMenuDialog, type MenuAction } from '../components/NodeMenuDialog'
 import { PairDialog } from '../components/PairDialog'
 import { ReorderDialog } from '../components/ReorderDialog'
 import { TreeCanvas, type ViewRequest } from '../components/TreeCanvas'
+import { TreeConfigDialog } from '../components/TreeConfigDialog'
 import { TreePhoneTools } from '../components/TreePhoneTools'
 import { TreePreviewScreen } from '../components/TreePreviewScreen'
 import { TreeToolbar, type ViewStatus } from '../components/TreeToolbar'
@@ -140,7 +141,8 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
   // Đang xem tổ tiên là một phần của cây nên không chỉnh sửa ở chế độ này
   const editing = isAdmin && ancestorsOf === null
 
-  const { prefs, nodes: overrides, setPrefs, setNode, resetNodes } = useTreeViewPrefs()
+  const { prefs, nodes: overrides, setPrefs, setCard, setNode, resetNodes } = useTreeViewPrefs()
+  const [configOpen, setConfigOpen] = useState(false)
   // Font tải xong thì đo lại cỡ ô cho đúng
   const [fontsReady, setFontsReady] = useState(0)
   useEffect(() => {
@@ -150,8 +152,11 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
       alive = false
     }
   }, [])
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- `fontsReady` chỉ để đo lại sau khi font tải xong
-  const fitted = useMemo(() => fitNodeSizes(graph.nodes, prefs.size), [graph.nodes, prefs.size, fontsReady])
+   
+  const fitted = useMemo(
+    () => fitNodeSizes(graph.nodes, prefs.size, prefs.card),
+    [graph.nodes, prefs.size, prefs.card, fontsReady],
+  )
 
   // Kiểu dọc/ngang của từng ô: riêng của ô nếu có, không thì kiểu chung
   const verticalOf = useCallback((id: number) => overrides[id]?.vertical ?? prefs.vertical, [overrides, prefs.vertical])
@@ -165,8 +170,8 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
       const fit = (o.vertical ?? prefs.vertical) ? fitted.vertical : fitted.horizontal
       nodeSizes.set(id, { width: o.width ?? fit.width, height: o.height ?? fit.height })
     }
-    return { nodeWidth: base.width, nodeHeight: base.height, nodeSizes }
-  }, [fitted, overrides, prefs.vertical, graph.nodes])
+    return { nodeWidth: base.width, nodeHeight: base.height, nodeSizes, filter: prefs.filter }
+  }, [fitted, overrides, prefs.vertical, prefs.filter, graph.nodes])
 
   const layout = useMemo(
     () =>
@@ -412,11 +417,13 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
       admin: editing,
       verticalOf,
       scale: SIZE_SCALE[prefs.size],
+      card: prefs.card,
+      shape: prefs.shape,
       // Nút "+" nhỏ trên ô chỉ dùng được với chuột; điện thoại thêm qua menu của ô
       addOptionsOf: editing && isDesktop ? (id: number) => getAddOptions(index, id) : null,
       spouseCountOf: (id: number) => index.spousesOf.get(id)?.length ?? 0,
     }),
-    [selectedId, highlightId, myNodeId, editing, isDesktop, index, prefs.size, verticalOf],
+    [selectedId, highlightId, myNodeId, editing, isDesktop, index, prefs.size, prefs.card, prefs.shape, verticalOf],
   )
 
   const viewRootNode = viewRootId === null ? undefined : index.nodes.get(viewRootId)
@@ -479,6 +486,8 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
           <TreeCanvas
             layout={layout}
             ui={canvasUi}
+            palette={prefs.palette}
+            onOpenConfig={() => setConfigOpen(true)}
             view={view}
             isDesktop={isDesktop}
             dragValid={dragValid}
@@ -508,7 +517,15 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
         defaultRootId={viewRootId}
         layoutOptions={layoutOptions}
         verticalOf={verticalOf}
+        look={{ palette: prefs.palette, shape: prefs.shape, card: prefs.card }}
         onClose={() => setPrintOpen(false)}
+      />
+      <TreeConfigDialog
+        open={configOpen}
+        prefs={prefs}
+        onPrefsChange={setPrefs}
+        onCardChange={setCard}
+        onClose={() => setConfigOpen(false)}
       />
       <NodeMenuDialog
         open={flow?.kind === 'menu'}

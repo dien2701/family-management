@@ -21,6 +21,7 @@ import { ModalDialog } from '@/components/shared/ModalDialog'
 import type { TreeNode } from '@/types/api'
 import { cn } from '@/utils/cn'
 import { getAddOptions, getSiblings, lineageIdOf, type TreeIndex } from '@/utils/tree'
+import { useSetGender } from '../hooks'
 import { nodeName, yearsText } from '../nodeText'
 import { treeStrings } from '../strings'
 
@@ -85,6 +86,40 @@ function Item({
   )
 }
 
+type Gender = 'M' | 'F' | null
+
+/** Đặt nhanh giới tính (chỉ Admin, #100): ô đổi màu ngay khi cây tải lại. */
+function GenderRow({ memberId, gender }: { memberId: number; gender: Gender }) {
+  const setGender = useSetGender()
+  const options: { value: Gender; label: string }[] = [
+    { value: 'M', label: t.genderMale },
+    { value: 'F', label: t.genderFemale },
+    { value: null, label: t.genderUnknown },
+  ]
+  return (
+    <div role="group" aria-label={t.gender} className="flex items-center gap-2 px-3 pb-1">
+      <span className="shrink-0 text-base font-medium">{t.gender}</span>
+      <div className="flex flex-1 gap-1 rounded-button bg-secondary p-1">
+        {options.map((o) => (
+          <button
+            key={o.label}
+            type="button"
+            aria-pressed={gender === o.value}
+            disabled={setGender.isPending}
+            onClick={() => gender !== o.value && setGender.mutate({ memberId, gender: o.value })}
+            className={cn(
+              'min-h-9 min-w-11 flex-1 cursor-pointer rounded-button px-2 text-base font-semibold transition-colors duration-200 ease-out disabled:cursor-wait disabled:opacity-70',
+              gender === o.value ? 'bg-primary text-primary-fg' : 'text-secondary-fg hover:bg-secondary-hover',
+            )}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 /**
  * Menu khi bấm vào một ô (IDEA §8): mọi người thấy "Xem hồ sơ" và "Xem cây từ người này"; Admin thấy thêm các
  * thao tác dựng cây, chỉ ở chỗ được phép theo `utils/tree`. Dạng hộp thoại (bottom sheet trên điện thoại) nên
@@ -137,6 +172,7 @@ export function NodeMenuDialog({ open, node, index, generation, isAdmin, collaps
       {isAdmin && (
         <div className="flex flex-col gap-1 border-t border-border pt-3">
           <p className="px-3 text-sm font-medium text-text-muted">{t.adminGroup}</p>
+          {node.member && node.memberId !== null && <GenderRow memberId={node.memberId} gender={node.member.gender} />}
           <ul className="flex flex-col gap-1">
             {empty && (
               <Item icon={UserPlus} onClick={run('fill')}>

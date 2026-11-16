@@ -2,11 +2,12 @@
 // chỉ đưa vào SVG của trang những mục giao với trang đó. Mọi thuộc tính vẽ đặt thẳng vào phần tử (không dùng class)
 // vì svg2pdf và ảnh SVG không đọc được CSS của trang.
 import type { TreeMember } from '@/types/api'
-import { yearsLines } from '../nodeText'
 import { initialOf } from '@/utils/text'
+import { cardTone, SHAPE_RADIUS, TONE_VARS, type CardLook, type CardTone, type TreePalette } from '../cardStyle'
 import { treeStrings } from '../strings'
 import type { LayoutEdge, LayoutResult, PlacedNode } from '../layout/types'
 import { yieldToBrowser } from './async'
+import { grayKey } from './photos'
 import { PRINT_FONT, toBase64, type PrintFonts } from './fonts'
 import { sheetGeometry, SHEET, type Rect, type SheetGeometry } from './geometry'
 
@@ -26,15 +27,36 @@ const TOKENS = {
   secondaryFg: '--color-secondary-fg',
   warning: '--color-warning',
   warningBg: '--color-warning-bg',
+  marriage: '--color-tree-marriage',
 } as const
 
-export type PrintColors = Record<keyof typeof TOKENS, string>
+const TONES: readonly CardTone[] = ['male', 'female', 'unknown', 'gone', 'empty']
 
-/** Màu lấy từ token của giao diện (DESIGN §1), không viết mã màu trong code. */
-export function readPrintColors(): PrintColors {
-  const style = getComputedStyle(document.documentElement)
-  const read = (name: string) => style.getPropertyValue(name).trim() || 'black'
-  return Object.fromEntries(Object.entries(TOKENS).map(([key, name]) => [key, read(name)])) as PrintColors
+export type PrintColors = Record<keyof typeof TOKENS, string> & {
+  /** Viền / nền ô theo tông, đã tính theo bảng màu đang chọn. */
+  tones: Record<CardTone, { border: string; bg: string }>
+}
+
+/**
+ * Màu lấy từ token của giao diện (DESIGN §1), không viết mã màu trong code. Đọc trên một phần tử tạm có
+ * `data-tree-palette` để ra đúng màu Nam/Nữ của bảng đang chọn (#100).
+ */
+export function readPrintColors(palette: TreePalette): PrintColors {
+  const probe = document.createElement('div')
+  probe.dataset.treePalette = palette
+  probe.hidden = true
+  document.body.append(probe)
+  try {
+    const style = getComputedStyle(probe)
+    const read = (name: string) => style.getPropertyValue(name).trim() || 'black'
+    const base = Object.fromEntries(Object.entries(TOKENS).map(([key, name]) => [key, read(name)]))
+    const tones = Object.fromEntries(
+      TONES.map((tone) => [tone, { border: read(TONE_VARS[tone].border), bg: read(TONE_VARS[tone].bg) }]),
+    )
+    return { ...base, tones } as PrintColors
+  } finally {
+    probe.remove()
+  }
 }
 
 type SceneItem = { x0: number; y0: number; x1: number; y1: number; svg: string }
@@ -53,6 +75,8 @@ export type SceneInput = {
   photos: Map<string, string> | null
   /** Ô nào hiển thị dọc (mỗi từ của tên một dòng) như trên màn hình. */
   verticalOf: (nodeId: number) => boolean
+  /** Hình dạng và thông tin trên ô như hộp Cấu hình cây (bảng màu đã nằm trong `colors`). */
+  look: CardLook
   title: string
   subtitle: string
   signal: AbortSignal
@@ -128,149 +152,157 @@ function textEl(
 
 const CROSS_W = 9
 
-/** Năm sinh – năm mất; dấu ✝ vẽ bằng nét vì font không có ký tự này. */
-function yearsSvg(member: TreeMember, x: number, baseline: number, colors: PrintColors): string {
+/**
+ * Năm sinh – năm mất; dấu ✝ vẽ bằng nét vì font không có ký tự này. `center` thì `x` là tâm dòng (ô dọc),
+ * không thì là mép trái (ô ngang).
+ */
+function yearsSvg(member: TreeMember, x: number, baseline: number, size: number, colors: PrintColors, center = false): string {
+  const fill = colors.textMuted
   if (!member.isDeceased) {
-    return member.birthYear === null ? '' : textEl(x, baseline, String(member.birthYear), 14, false, colors.textMuted)
+    if (member.birthYear === null) return ''
+    return textEl(x, baseline, String(member.birthYear), size, false, fill, center ? 'middle' : undefined)
   }
+  const k = size / 14
+  const crossW = CROSS_W * k
+  const prefix = member.birthYear === null ? '' : `${member.birthYear} – `
+  const death = String(member.deathYear ?? '?')
+  const prefixW = prefix ? measure(prefix, size, false) : 0
+  const width = prefixW + crossW + 3 * k + measure(death, size, false)
+  let cursor = center ? x - width / 2 : x
   let out = ''
-  let cursor = x
-  if (member.birthYear !== null) {
-    const prefix = `${member.birthYear} – `
-    out += textEl(cursor, baseline, prefix, 14, false, colors.textMuted)
-    cursor += measure(prefix, 14, false)
+  if (prefix) {
+    out += textEl(cursor, baseline, prefix, size, false, fill)
+    cursor += prefixW
   }
-  const cx = cursor + CROSS_W / 2
   out += `<path${attrs({
-    d: `M${num(cx)} ${num(baseline - 12)}V${num(baseline)}M${num(cursor + 1)} ${num(baseline - 8)}H${num(cursor + CROSS_W - 1)}`,
+    d: `M${num(cursor + crossW / 2)} ${num(baseline - 12 * k)}V${num(baseline)}M${num(cursor + k)} ${num(baseline - 8 * k)}H${num(cursor + crossW - k)}`,
     fill: 'none',
-    stroke: colors.textMuted,
+    stroke: fill,
     'stroke-width': 1.6,
   })}/>`
-  out += textEl(cursor + CROSS_W + 3, baseline, String(member.deathYear ?? '?'), 14, false, colors.textMuted)
+  out += textEl(cursor + crossW + 3 * k, baseline, death, size, false, fill)
+  return out
+}
+
+/** Ảnh tròn (người đã mất dùng bản xám); không có ảnh thì chữ cái đầu trên nền theo tông như màn hình. */
+function avatarSvg(member: TreeMember, cx: number, cy: number, size: number, tone: CardTone, input: SceneInput): string {
+  const { colors, photos } = input
+  const url = member.avatarUrl
+  const photo = url && photos ? ((tone === 'gone' ? photos.get(grayKey(url)) : undefined) ?? photos.get(url)) : undefined
+  if (photo) {
+    const x = cx - size / 2
+    const y = cy - size / 2
+    return `<image${attrs({ x, y, width: size, height: size, href: photo, 'xlink:href': photo })}/>`
+  }
+  // Khớp TONE_AVATAR_CLASS: màu viền của tông pha 25%; chưa rõ giới tính dùng nền secondary
+  const circle =
+    tone === 'unknown'
+      ? attrs({ cx, cy, r: size / 2, fill: colors.secondary })
+      : attrs({ cx, cy, r: size / 2, fill: colors.tones[tone].border, 'fill-opacity': 0.25 })
+  const textFill = tone === 'unknown' ? colors.secondaryFg : tone === 'gone' ? colors.textMuted : colors.text
+  return `<circle${circle}/>` + textEl(cx, cy + 6, initialOf(member.fullName), 16, true, textFill, 'middle')
+}
+
+/** Nhãn đặc biệt đè lên viền trên của ô: ô dọc ở góc phải, ô ngang cách mép phải 12. */
+function labelSvg(member: TreeMember, x: number, y: number, W: number, vertical: boolean, colors: PrintColors): string {
+  const firstLabel = member.labels[0]
+  if (!firstLabel) return ''
+  const extra = member.labels.length - 1
+  const label = fit(extra > 0 ? `${firstLabel} +${extra}` : firstLabel, Math.max(40, W * 0.7 - 16), 13, true)
+  const w = measure(label, 13, true) + 16
+  const px = vertical ? x + W + 8 - w : x + W - 12 - w
+  return (
+    `<rect${attrs({ x: px, y: y - 9, width: w, height: 18, rx: 9, fill: colors.warningBg })}/>` +
+    textEl(px + w / 2, y + 4, label, 13, true, colors.warning, 'middle')
+  )
+}
+
+// Khớp MemberNode/nodeSize.ts: ảnh 44, cách tên 6, tên 15px dòng 20, năm 13px dòng 18, đệm trên 10, dưới 12
+const V_PHOTO = 44
+const V_TOP = 10
+const V_BOTTOM = 12
+
+/** Thẻ dọc kiểu mẫu (#100): ảnh tròn trên cùng, tên căn giữa tối đa 2 dòng, năm sinh–mất sát đáy. */
+function verticalNodeContent(placed: PlacedNode, member: TreeMember, x: number, y: number, tone: CardTone, input: SceneInput): string {
+  const { colors, look } = input
+  const { width: W, height: H } = placed
+  const cx = x + W / 2
+  let out = ''
+  let top = y + V_TOP
+  if (look.card.photo) {
+    out += avatarSvg(member, cx, top + V_PHOTO / 2, V_PHOTO, tone, input)
+    top += V_PHOTO + 6
+  }
+  wrapName(member.fullName, W - 16, 15).forEach((line, i) => {
+    out += textEl(cx, top + 15 + i * 20, line, 15, true, colors.text, 'middle')
+  })
+  if (look.card.years) out += yearsSvg(member, cx, y + H - V_BOTTOM - 4, 13, colors, true)
+  if (look.card.labels) out += labelSvg(member, x, y, W, true, colors)
   return out
 }
 
 const AVATAR = 40
 const AVATAR_PAD = 8
 
-/** Năm ở giữa ô dọc; ✝ vẽ bằng nét như `yearsSvg`. */
-function centeredYear(line: string, cx: number, baseline: number, colors: PrintColors): string {
-  if (!line.startsWith('✝')) return textEl(cx, baseline, line, 14, false, colors.textMuted, 'middle')
-  const text = line.slice(1).trim()
-  const width = CROSS_W + 3 + measure(text, 14, false)
-  const start = cx - width / 2
-  return (
-    `<path${attrs({
-      d: `M${num(start + CROSS_W / 2)} ${num(baseline - 12)}V${num(baseline)}M${num(start + 1)} ${num(baseline - 8)}H${num(start + CROSS_W - 1)}`,
-      fill: 'none',
-      stroke: colors.textMuted,
-      'stroke-width': 1.6,
-    })}/>` + textEl(start + CROSS_W + 3, baseline, text, 14, false, colors.textMuted)
-  )
-}
-
-/** Ô dọc: mỗi từ của tên một dòng, chữ đứng thẳng, năm sinh–mất ở cuối ô; không ảnh đại diện. */
-function verticalNodeContent(placed: PlacedNode, member: TreeMember, x: number, y: number, input: SceneInput): string {
-  const { colors } = input
-  const { width: W, height: H } = placed
-  const cx = x + W / 2
-  let out = ''
-  member.fullName
-    .split(/\s+/)
-    .filter(Boolean)
-    .forEach((word, i) => {
-      out += textEl(cx, y + 14 + 15 + i * 19, fit(word, W - 8, 16, true), 16, true, colors.text, 'middle')
-    })
-  const years = yearsLines(member)
-  years.forEach((line, i) => {
-    out += centeredYear(line, cx, y + H - 10 - (years.length - 1 - i) * 18, colors)
-  })
-  const firstLabel = member.labels[0]
-  if (firstLabel) {
-    const label = fit(member.labels.length > 1 ? `${firstLabel} +${member.labels.length - 1}` : firstLabel, Math.max(40, W - 16), 13, true)
-    const w = measure(label, 13, true) + 16
-    const px = x + W / 2 - w / 2
-    out += `<rect${attrs({ x: px, y: y - 9, width: w, height: 18, rx: 9, fill: colors.warningBg })}/>`
-    out += textEl(px + w / 2, y + 4, label, 13, true, colors.warning, 'middle')
-  }
-  return out
-}
-
 function nodeSvg(placed: PlacedNode, ox: number, oy: number, input: SceneInput): string {
-  const { colors, photos } = input
+  const { colors, look } = input
   const { width: W, height: H } = placed
   const x = ox + placed.x
   const y = oy + placed.y
   const member = placed.node.member
-  const empty = member === null
+  const tone = cardTone(placed.node)
+  const palette = colors.tones[tone]
 
   let out = `<rect${attrs({
     x,
     y,
     width: W,
     height: H,
-    rx: 12,
-    fill: empty ? colors.surfaceMuted : colors.surface,
-    stroke: empty || member.isDeceased ? colors.deceased : colors.border,
+    rx: Math.min(SHAPE_RADIUS[look.shape], W / 2, H / 2),
+    fill: palette.bg,
+    stroke: palette.border,
     'stroke-width': 2,
-    'stroke-dasharray': empty ? '6 4' : undefined,
+    'stroke-dasharray': member === null ? '6 4' : undefined,
   })}/>`
 
-  if (empty) return out + textEl(x + W / 2, y + H / 2 + 5, treeStrings.emptySlot, 16, false, colors.textMuted, 'middle')
+  if (member === null) return out + textEl(x + W / 2, y + H / 2 + 5, treeStrings.emptySlot, 16, false, colors.textMuted, 'middle')
 
-  if (input.verticalOf(placed.id)) return out + verticalNodeContent(placed, member, x, y, input)
+  if (input.verticalOf(placed.id)) return out + verticalNodeContent(placed, member, x, y, tone, input)
 
-  const withPhotos = photos !== null
-  const textX = withPhotos ? x + AVATAR_PAD + AVATAR + 8 : x + 12
+  const withAvatar = look.card.photo
+  const textX = withAvatar ? x + AVATAR_PAD + AVATAR + 8 : x + 12
   const textWidth = x + W - 8 - textX
-  if (withPhotos) {
-    const cx = x + AVATAR_PAD + AVATAR / 2
-    const cy = y + H / 2
-    const photo = member.avatarUrl ? photos.get(member.avatarUrl) : undefined
-    if (photo) {
-      out += `<image${attrs({ x: cx - AVATAR / 2, y: cy - AVATAR / 2, width: AVATAR, height: AVATAR, href: photo, 'xlink:href': photo })}/>`
-    } else {
-      out += `<circle${attrs({ cx, cy, r: AVATAR / 2, fill: colors.secondary })}/>`
-      out += textEl(cx, cy + 6, initialOf(member.fullName), 16, true, colors.secondaryFg, 'middle')
-    }
-  }
+  if (withAvatar) out += avatarSvg(member, x + AVATAR_PAD + AVATAR / 2, y + H / 2, AVATAR, tone, input)
 
   const lines = wrapName(member.fullName, textWidth, 16)
-  const hasYears = member.isDeceased || member.birthYear !== null
+  const hasYears = look.card.years && (member.isDeceased || member.birthYear !== null)
   const block = lines.length * 19 + (hasYears ? 18 : 0)
   const top = y + (H - block) / 2
   lines.forEach((line, i) => {
     out += textEl(textX, top + 15 + i * 19, line, 16, true, colors.text)
   })
-  if (hasYears) out += yearsSvg(member, textX, top + lines.length * 19 + 14, colors)
-
-  // Nhãn đặc biệt đè lên viền trên của ô
-  const firstLabel = member.labels[0]
-  if (firstLabel) {
-    const extra = member.labels.length - 1
-    const label = fit(extra > 0 ? `${firstLabel} +${extra}` : firstLabel, 124, 13, true)
-    const w = measure(label, 13, true) + 16
-    const px = x + W - 12 - w
-    out += `<rect${attrs({ x: px, y: y - 9, width: w, height: 18, rx: 9, fill: colors.warningBg })}/>`
-    out += textEl(px + w / 2, y + 4, label, 13, true, colors.warning, 'middle')
-  }
+  if (hasYears) out += yearsSvg(member, textX, top + lines.length * 19 + 14, 14, colors)
+  if (look.card.labels) out += labelSvg(member, x, y, W, false, colors)
   return out
 }
 
+/** Hôn nhân màu `tree-marriage`, nét đứt khi cặp không kề nhau; cha mẹ–con màu `tree-line` (#100, giống TreeEdge). */
 function edgeSvg(edge: LayoutEdge, ox: number, oy: number, colors: PrintColors, showOrder: boolean) {
+  const marriage = edge.kind === 'marriage'
+  const stroke = marriage ? colors.marriage : colors.treeLine
   let out = `<polyline${attrs({
     points: edge.points.map((p) => `${num(ox + p.x)},${num(oy + p.y)}`).join(' '),
     fill: 'none',
-    stroke: colors.treeLine,
+    stroke,
     // Nét dày hơn màn hình một chút để còn rõ khi in nhỏ
     'stroke-width': 2,
     'stroke-linejoin': 'round',
+    'stroke-dasharray': marriage && edge.points.length > 2 ? '6 4' : undefined,
   })}/>`
   if (showOrder && edge.anchor && edge.order !== null) {
     const cx = ox + edge.anchor.x
     const cy = oy + edge.anchor.y
-    out += `<circle${attrs({ cx, cy, r: 11, fill: colors.surface, stroke: colors.treeLine, 'stroke-width': 1.5 })}/>`
+    out += `<circle${attrs({ cx, cy, r: 11, fill: colors.surface, stroke, 'stroke-width': 1.5 })}/>`
     out += textEl(cx, cy + 4.5, String(edge.order), 12, true, colors.textMuted, 'middle')
   }
   return out
@@ -394,7 +426,7 @@ export function renderSvg(
     if (g.cy < view.y - 16 || g.cy > view.y + view.h + 16) continue
     const w = g.labelWidth + 20
     body.push(
-      `<rect${attrs({ x: labelX, y: g.cy - 13, width: w, height: 26, rx: 13, fill: colors.surfaceMuted })}/>`,
+      `<rect${attrs({ x: labelX, y: g.cy - 13, width: w, height: 26, rx: 13, fill: colors.surface, stroke: colors.border, 'stroke-width': 1 })}/>`,
       textEl(labelX + 10, g.cy + 5, g.label, 14, true, colors.textMuted),
     )
   }

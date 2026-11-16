@@ -1,5 +1,7 @@
 import { api } from '@/services/client'
 import type {
+  MemberDetail,
+  MemberGenderInput,
   MemberPage,
   TreeChildInput,
   TreeCoParentInput,
@@ -26,6 +28,9 @@ export const treeApi = {
     api.put<TreeNode>(`/tree/nodes/${nodeId}/order`, input),
   setCoParent: (nodeId: number, input: TreeCoParentInput) =>
     api.put<TreeNode>(`/tree/nodes/${nodeId}/co-parent`, input),
+  /** Đặt nhanh giới tính từ menu ô (chỉ Admin, DECISIONS #100). */
+  setGender: (memberId: number, gender: MemberGenderInput['gender']) =>
+    api.patch<MemberDetail>(`/members/${memberId}/gender`, { gender }),
   /** Thành viên chưa có trên cây, tìm không dấu (nguồn cho hộp chọn khi thêm vào cây). */
   searchOffTree: (q: string, size: number) =>
     api.get<MemberPage>('/members', {

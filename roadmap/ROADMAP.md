@@ -86,10 +86,10 @@
 | 48 | Form, Cây, Bài khấn, Trợ lý, Thông báo và các trang trong Thêm | Claude Code | Sonnet · medium | ✅ 2026-11-08 |
 | 49 | Quản trị và nhóm trang đăng nhập | Claude Code | Sonnet · medium | ✅ 2026-11-08 |
 | **GĐ F** | **Cây gia phả theo mẫu `giapha.top/demo` (DECISIONS #100)** | | | |
-| 50 | Cây: thẻ dọc kiểu mẫu, màu theo giới tính, MiniMap, hộp Cấu hình cây | Claude Code | Sonnet · high | ⬜ |
+| 50 | Cây: thẻ dọc kiểu mẫu, màu theo giới tính, MiniMap, hộp Cấu hình cây | Claude Code | Sonnet · high | ✅ 2026-11-16 |
 | 51 | Cây: tính xưng hô giữa hai người | Claude Code | **Opus** · high | ⬜ |
 
-## ▶️ Đợt tiếp theo: Đợt 50 — Cây: thẻ dọc kiểu mẫu, màu theo giới tính, MiniMap, hộp Cấu hình cây
+## ▶️ Đợt tiếp theo: Đợt 51 — Cây: tính xưng hô giữa hai người
 
 ---
 
@@ -1225,35 +1225,35 @@ Việc nên làm thêm: điện thoại vào thẳng `/quan-tri/...` từ link n
 > tên đệm; (2) chữ trong ô cây là nhãn sơ đồ (15px tên, 13px năm) nên **không** áp mức tối thiểu 16px của chữ
 > nền - ngoại lệ này ghi trong `docs/DESIGN.md` mục 6.
 
-### Đợt 50 - Cây: thẻ dọc kiểu mẫu, màu theo giới tính, MiniMap, hộp Cấu hình cây ⬜
+### Đợt 50 - Cây: thẻ dọc kiểu mẫu, màu theo giới tính, MiniMap, hộp Cấu hình cây ✅ 2026-11-16
 IDEA §8 · DECISIONS #88, #96, #100 · `docs/DESIGN.md` mục 1, 6 · `shared/api/openapi.yaml`
 
-- [ ] **Token màu** (`docs/DESIGN.md` trước, rồi `apps/frontend/src/index.css`): `--color-tree-male/-bg`,
+- [x] **Token màu** (`docs/DESIGN.md` trước, rồi `apps/frontend/src/index.css`): `--color-tree-male/-bg`,
       `-female/-bg`, `-unknown/-bg`, `-gone/-bg`, `--color-tree-marriage`, đủ cả bản tối. 5 bảng màu
       (Cổ điển · Trung tính · Ấm áp · Rừng xanh · Hoàng gia) ghi đè 4 biến Nam/Nữ qua `[data-tree-palette]`.
-      Cập nhật dòng "Nút thành viên trên cây" ở DESIGN mục 6.
-- [ ] **Thẻ dọc kiểu mẫu** (`nodeSize.ts`, `components/MemberNode.tsx`, `cardStyle.ts`): ảnh tròn 44px trên
+      Cập nhật dòng "Nút thành viên trên cây" ở DESIGN mục 6. ✅ 2026-11-16
+- [x] **Thẻ dọc kiểu mẫu** (`nodeSize.ts`, `components/MemberNode.tsx`, `cardStyle.ts`): ảnh tròn 44px trên
       cùng (chưa có ảnh thì chữ cái đầu, nền theo tông), tên 15px/600 căn giữa tối đa 2 dòng, năm sinh-mất
       13px sát đáy. Tông theo `cardTone`: Nam / Nữ / chưa rõ / **đã mất (xám, đè lên màu giới tính, ảnh
-      `grayscale`)** / ô trống (viền đứt). Kiểu dọc thành **mặc định**; kiểu ngang giữ nguyên.
-- [ ] **Đường nối** (`components/TreeEdge.tsx`): đường hôn nhân màu `--color-tree-marriage`, **nét đứt** khi
-      cặp không kề nhau (`points.length > 2`); cha mẹ-con giữ `--color-tree-line`. Giữ nhãn thứ tự hôn nhân.
-- [ ] **Nhãn "Đời N"** (`components/GenerationGutter.tsx`): viên thuốc nền `surface`, có viền và đổ bóng.
-- [ ] **MiniMap và cụm điều khiển** (`components/TreeCanvas.tsx`): `MiniMap` của `@xyflow/react` ở góc phải
+      `grayscale`)** / ô trống (viền đứt). Kiểu dọc thành **mặc định**; kiểu ngang giữ nguyên. ✅ 2026-11-16
+- [x] **Đường nối** (`components/TreeEdge.tsx`): đường hôn nhân màu `--color-tree-marriage`, **nét đứt** khi
+      cặp không kề nhau (`points.length > 2`); cha mẹ-con giữ `--color-tree-line`. Giữ nhãn thứ tự hôn nhân. ✅ 2026-11-16
+- [x] **Nhãn "Đời N"** (`components/GenerationGutter.tsx`): viên thuốc nền `surface`, có viền và đổ bóng. ✅ 2026-11-16
+- [x] **MiniMap và cụm điều khiển** (`components/TreeCanvas.tsx`): `MiniMap` của `@xyflow/react` ở góc phải
       dưới (**chỉ từ `md` trở lên**, màu ô theo tông), dời cụm phóng to / thu nhỏ / vừa khung nhìn sang góc
-      trái dưới và thêm nút mở hộp Cấu hình cây.
-- [ ] **Hộp "Cấu hình cây"** (`components/TreeConfigDialog.tsx` mới, `useTreeViewPrefs.ts`, `layout/`): 4 nhóm -
+      trái dưới và thêm nút mở hộp Cấu hình cây. ✅ 2026-11-16
+- [x] **Hộp "Cấu hình cây"** (`components/TreeConfigDialog.tsx` mới, `useTreeViewPrefs.ts`, `layout/`): 4 nhóm -
       *Hiển thị thành viên* (Tất cả · Chỉ Nam · Chỉ huyết thống, qua `LayoutOptions.filter`), *Hiển thị thông
       tin thẻ* (ảnh · danh hiệu · năm), *Màu sắc thẻ* (5 bảng), *Hình dạng thẻ* (Vuông · Vừa · Bo góc · Tròn).
       Lưu chung khóa `tocpha.tree.view`. "Chỉ Nam" **giữ** người chưa điền giới tính và ghi rõ điều đó trong
-      hộp. Con bị lọc phải bỏ khỏi `allChildren` **trước khi đếm** để không hiện pill "+N con" sai.
-- [ ] **Đặt giới tính nhanh trên cây**: `PATCH /api/members/{id}/gender` vào `shared/api/openapi.yaml` trước,
+      hộp. Con bị lọc phải bỏ khỏi `allChildren` **trước khi đếm** để không hiện pill "+N con" sai. ✅ 2026-11-16
+- [x] **Đặt giới tính nhanh trên cây**: `PATCH /api/members/{id}/gender` vào `shared/api/openapi.yaml` trước,
       `npm run gen:api`, rồi lát cắt BE nhỏ trong `vn/giapha/member/` (chỉ Admin, có audit; **không cần
       migration**, cột `gender` đã có ở `V6__member.sql`), và hàng **Nam · Nữ · Chưa rõ** trong khối Admin của
-      `components/NodeMenuDialog.tsx`.
-- [ ] **Bản in khổ lớn** (`print/scene.ts`): vẽ lại ô dọc theo bố cục mới, nền/viền theo tông, bo góc theo hình
-      dạng, đường hôn nhân đúng màu và nét đứt - bản PDF/PNG phải giống hệt màn hình.
-- [ ] **Màu không là tín hiệu duy nhất**: giới tính nằm trong nhãn đọc màn hình của ô; người đã mất vẫn có dấu ✝.
+      `components/NodeMenuDialog.tsx`. ✅ 2026-11-16
+- [x] **Bản in khổ lớn** (`print/scene.ts`): vẽ lại ô dọc theo bố cục mới, nền/viền theo tông, bo góc theo hình
+      dạng, đường hôn nhân đúng màu và nét đứt - bản PDF/PNG phải giống hệt màn hình. ✅ 2026-11-16
+- [x] **Màu không là tín hiệu duy nhất**: giới tính nằm trong nhãn đọc màn hình của ô; người đã mất vẫn có dấu ✝. ✅ 2026-11-16
 
 🔧 Setup: không có (không thêm phụ thuộc; `MiniMap` đã có sẵn trong `@xyflow/react`).
 🧪 Test tay: `/cay` ở **375px** và **1280px**, cả nền sáng và nền tối - (1) thẻ dọc đúng bố cục mẫu; (2) đặt
@@ -1265,7 +1265,16 @@ tính, không ô nào hiện "+N con" sai; (6) **việc cũ không hỏng**: xoa
 ở 1280px, **không** có ở 375px; (8) "Xem cây" rồi xuất PDF và PNG, phải giống màn hình; (9) khách xem được
 `/cay` và không thấy hàng đặt giới tính.
 
-**✅ Đã làm:** _(điền khi xong)_
+**✅ Đã làm:** Thẻ dọc kiểu mẫu là mặc định (ảnh tròn 44px, tên 15px 2 dòng, năm 13px sát đáy), tô màu theo
+`cardTone` (Nam/Nữ/chưa rõ/đã mất xám + ảnh `grayscale`), bo góc theo hình dạng; nhãn đọc màn hình có giới tính và
+"đã mất". Đường hôn nhân đỏ nhạt, nét đứt khi không kề; nhãn "Đời N" viên thuốc; MiniMap (md+), cụm zoom + nút Cấu hình
+cây ở góc trái dưới. Hộp Cấu hình cây 4 nhóm. `PATCH /api/members/{id}/gender` (hợp đồng → BE chỉ Admin + audit → hàng
+Nam · Nữ · Chưa rõ trong menu ô). Bản in vẽ lại ô dọc, màu theo bảng đang chọn, bo góc, đường hôn nhân, ảnh người mất xám
+(ảnh in đổi sang PNG nền trong suốt để góc ảnh không lộ trên nền màu).
+File chính: `features/tree/components/{MemberNode,TreeEdge,GenerationGutter,TreeCanvas,TreeConfigDialog,NodeMenuDialog}.tsx`,
+`features/tree/{flow,strings,api,hooks}.ts`, `pages/TreePage.tsx`, `print/{scene,runPrint,photos}.ts`,
+`member/{controller/MemberController,service/MemberService,entity/Member,dto/MemberGenderInput}.java`, `openapi.yaml`.
+Việc nên làm thêm: "Chỉ Nam" cũng áp vào chế độ "Xem tổ tiên của tôi" (hiện đang áp, có thể ẩn bà nội/mẹ - hỏi lại người dùng nếu muốn khác).
 
 ### Đợt 51 - Cây: tính xưng hô giữa hai người ⬜
 IDEA §8 · DECISIONS #88, #100

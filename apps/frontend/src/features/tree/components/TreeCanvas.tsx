@@ -1,7 +1,8 @@
 import '@xyflow/react/dist/style.css'
-import { ReactFlow, ReactFlowProvider, useReactFlow, type NodeChange } from '@xyflow/react'
-import { Maximize, Minus, Plus } from 'lucide-react'
+import { MiniMap, ReactFlow, ReactFlowProvider, useReactFlow, type Node, type NodeChange } from '@xyflow/react'
+import { Maximize, Minus, Plus, SlidersHorizontal } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { cardTone, TONE_VARS, type TreePalette } from '../cardStyle'
 import { buildFlow, type FlowUi, type MemberFlowNode } from '../flow'
 import type { LayoutResult } from '../layout/types'
 import { treeStrings as t } from '../strings'
@@ -18,11 +19,22 @@ const FIT = { padding: 0.15, minZoom: 0.3, maxZoom: 1 } as const
 /** Yêu cầu đưa khung nhìn về một chỗ; `tick` tăng lên mỗi lần yêu cầu để canvas biết đã có yêu cầu mới. */
 export type ViewRequest = { tick: number; nodeId: number | null }
 
-type CanvasUi = Pick<FlowUi, 'selectedId' | 'highlightId' | 'meNodeId' | 'draggable' | 'admin' | 'verticalOf' | 'scale' | 'addOptionsOf' | 'spouseCountOf'>
+type CanvasUi = Pick<
+  FlowUi,
+  'selectedId' | 'highlightId' | 'meNodeId' | 'draggable' | 'admin' | 'verticalOf' | 'scale' | 'card' | 'shape' | 'addOptionsOf' | 'spouseCountOf'
+>
+
+/** Màu ô trên MiniMap theo đúng tông của ô (biến CSS, nên đổi theo bảng màu và nền tối). */
+const toneOf = (node: Node) => cardTone((node as MemberFlowNode).data.placed.node)
+const miniFill = (node: Node) => `var(${TONE_VARS[toneOf(node)].bg})`
+const miniStroke = (node: Node) => `var(${TONE_VARS[toneOf(node)].border})`
 
 type TreeCanvasProps = {
   layout: LayoutResult
   ui: CanvasUi
+  /** Bảng màu ô (hộp Cấu hình cây), đặt qua `data-tree-palette` trên khung sơ đồ. */
+  palette: TreePalette
+  onOpenConfig: () => void
   view: ViewRequest
   isDesktop: boolean
   /** Các ô thả được khi đang kéo một nhánh; `null` khi không kéo. */
@@ -62,6 +74,8 @@ function ZoomButton({ label, onClick, children }: { label: string; onClick: () =
 function TreeCanvasInner({
   layout,
   ui,
+  palette,
+  onOpenConfig,
   view,
   isDesktop,
   dragValid,
@@ -136,7 +150,10 @@ function TreeCanvasInner({
   }, [])
 
   return (
-    <div className="flex h-full min-h-0 overflow-hidden rounded-card border border-border bg-surface-muted">
+    <div
+      data-tree-palette={palette}
+      className="flex h-full min-h-0 overflow-hidden rounded-card border border-border bg-surface-muted"
+    >
       <GenerationGutter generations={layout.generations} />
       <div className="relative h-full min-w-0 flex-1" role="region" aria-label={t.canvasLabel}>
         <TreeActionsContext.Provider value={guarded}>
@@ -186,11 +203,27 @@ function TreeCanvasInner({
             minZoom={0.15}
             maxZoom={1.5}
             onlyRenderVisibleElements
-            attributionPosition="bottom-left"
-          />
+            attributionPosition="top-left"
+          >
+            {/* Bản đồ thu nhỏ chỉ từ md trở lên: trên điện thoại chiếm quá nhiều chỗ (#100) */}
+            <MiniMap
+              className="hidden overflow-hidden rounded-field border border-border shadow-card md:block"
+              bgColor="var(--color-surface)"
+              nodeColor={miniFill}
+              nodeStrokeColor={miniStroke}
+              nodeStrokeWidth={4}
+              nodeBorderRadius={8}
+              ariaLabel={t.miniMap}
+              pannable
+              zoomable
+            />
+          </ReactFlow>
         </TreeActionsContext.Provider>
 
-        <div className="absolute right-3 bottom-3 z-10 flex flex-col gap-2">
+        <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2">
+          <ZoomButton label={t.config.open} onClick={onOpenConfig}>
+            <SlidersHorizontal className="size-5" aria-hidden="true" />
+          </ZoomButton>
           <ZoomButton label="Phóng to" onClick={() => void zoomIn({ duration: 150 })}>
             <Plus className="size-5" aria-hidden="true" />
           </ZoomButton>

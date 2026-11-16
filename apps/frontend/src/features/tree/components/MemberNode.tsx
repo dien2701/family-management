@@ -3,13 +3,15 @@ import { Ellipsis, MoveDiagonal2, Plus } from 'lucide-react'
 import { memo, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { cn } from '@/utils/cn'
 import { initialOf } from '@/utils/text'
+import { cardTone, SHAPE_CLASS, TONE_AVATAR_CLASS, TONE_CLASS, type CardTone } from '../cardStyle'
 import type { MemberFlowNode } from '../flow'
-import { nodeName, yearsLines, yearsText } from '../nodeText'
+import { nodeName, yearsText } from '../nodeText'
 import { treeStrings as t } from '../strings'
 import { useTreeActions, type QuickAddKind } from '../treeActions'
 
-// Ô thành viên theo DESIGN §6: 200×72, bo 12px, nền trắng, viền border; đã mất viền deceased + ✝;
-// ô trống viền đứt; đang chọn viền accent 2px. Toàn bộ thân ô là vùng bấm.
+// Ô thành viên theo DESIGN §6 và #100: kiểu dọc (ảnh tròn trên, tên 2 dòng, năm sát đáy) hoặc ngang 200×72;
+// nền/viền theo tông (giới tính, đã mất xám), bo góc theo hình dạng đã chọn; ô trống viền đứt; đang chọn viền
+// accent 2px. Toàn bộ thân ô là vùng bấm.
 const MIN_WIDTH = 72
 const MIN_HEIGHT = 56
 const MAX_SIZE = 520
@@ -45,13 +47,23 @@ function QuickAddButton({
   )
 }
 
-function Avatar({ name, url }: { name: string; url: string | null }) {
+/** Ảnh tròn; chưa có ảnh thì chữ cái đầu trên nền theo tông. Người đã mất ảnh xám (#100). */
+function Avatar({ name, url, tone, className }: { name: string; url: string | null; tone: CardTone; className: string }) {
   return url ? (
-    <img src={url} alt="" draggable={false} className="size-10 shrink-0 rounded-full object-cover" />
+    <img
+      src={url}
+      alt=""
+      draggable={false}
+      className={cn('shrink-0 rounded-full object-cover', tone === 'gone' && 'grayscale', className)}
+    />
   ) : (
     <span
       aria-hidden="true"
-      className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-base font-semibold text-secondary-fg"
+      className={cn(
+        'flex shrink-0 items-center justify-center rounded-full text-base font-semibold',
+        TONE_AVATAR_CLASS[tone],
+        className,
+      )}
     >
       {initialOf(name)}
     </span>
@@ -72,14 +84,18 @@ function Tag({ children, className }: { children: ReactNode; className: string }
 }
 
 function MemberNodeView({ data }: NodeProps<MemberFlowNode>) {
-  const { placed, isMe, selected, highlighted, drop, admin, add, spouseAddFor, spouseAddSide, vertical, scale } = data
+  const { placed, isMe, selected, highlighted, drop, admin, add, spouseAddFor, spouseAddSide, vertical, scale, card, shape } = data
   const actions = useTreeActions()
   const { node } = placed
   const member = node.member
   const empty = member === null
+  const tone = cardTone(node)
   const name = nodeName(node)
-  const label = empty ? t.emptyNodeLabel(placed.generation) : t.nodeLabel(name, placed.generation)
-  const firstLabel = member?.labels[0]
+  const label = empty
+    ? t.emptyNodeLabel(placed.generation)
+    : t.nodeLabel(name, member.gender, member.isDeceased, placed.generation)
+  const firstLabel = card.labels ? member?.labels[0] : undefined
+  const years = member && card.years ? yearsText(member) : ''
   const extraLabels = (member?.labels.length ?? 0) - 1
 
   const quickAdd = (kind: QuickAddKind, nodeId: number) => () => actions.quickAdd(kind, nodeId)
@@ -98,7 +114,6 @@ function MemberNodeView({ data }: NodeProps<MemberFlowNode>) {
   }
   const boxWidth = live?.w ?? placed.width
   const boxHeight = live?.h ?? placed.height
-  const words = name.split(/\s+/).filter(Boolean)
 
   return (
     <div className="group relative h-full w-full">
@@ -119,10 +134,11 @@ function MemberNodeView({ data }: NodeProps<MemberFlowNode>) {
           transformOrigin: 'top left',
         }}
         className={cn(
-          'flex cursor-pointer overflow-hidden rounded-field border bg-surface text-left transition-[border-color,box-shadow,opacity,background-color] duration-200 ease-out hover:bg-surface-muted',
-          vertical ? 'flex-col items-center gap-1 px-1 py-2' : 'items-center gap-2 px-2',
-          member?.isDeceased ? 'border-deceased' : 'border-border',
-          empty && 'border-dashed border-deceased bg-surface-muted',
+          'flex cursor-pointer overflow-hidden border text-left transition-[border-color,box-shadow,opacity,filter] duration-200 ease-out hover:brightness-[0.97]',
+          // Khoảng đệm khớp hằng số VERTICAL của nodeSize.ts (chrome 16, padding 22)
+          vertical ? 'flex-col items-center px-2 pt-2.5 pb-3' : 'items-center gap-2 px-2',
+          SHAPE_CLASS[shape],
+          TONE_CLASS[tone],
           selected && 'border-2 border-accent',
           highlighted && 'ring-4 ring-accent/40',
           drop === 'valid' && 'ring-2 ring-accent ring-offset-2',
@@ -135,36 +151,31 @@ function MemberNodeView({ data }: NodeProps<MemberFlowNode>) {
         {empty ? (
           <span
             className={cn(
-              'flex-1 text-center text-base font-medium text-text-muted',
-              vertical && 'flex items-center justify-center pb-10 [writing-mode:vertical-rl]',
+              'flex flex-1 items-center justify-center text-center text-base font-medium text-text-muted',
+              vertical && 'pb-8',
             )}
           >
             {t.emptySlot}
           </span>
         ) : vertical ? (
-          // Kiểu ảnh mẫu: mỗi từ của tên một dòng (chữ đứng thẳng), năm sinh–mất ở cuối ô
-          <span className="flex min-h-0 w-full flex-1 flex-col items-center text-center">
-            <span className="text-base leading-tight font-semibold">
-              {words.map((word, i) => (
-                <span key={`${i}-${word}`} className="block">
-                  {word}
-                </span>
-              ))}
+          // Thẻ dọc kiểu mẫu: ảnh tròn 44px, tên 15px tối đa 2 dòng, năm 13px sát đáy (chữ nhãn sơ đồ, DESIGN §6)
+          <>
+            {card.photo && <Avatar name={name} url={member.avatarUrl} tone={tone} className="mb-1.5 size-11" />}
+            <span className="line-clamp-2 w-full text-center text-[15px] leading-5 font-semibold [overflow-wrap:anywhere]">
+              {name}
             </span>
-            <span className="mt-auto pt-1 text-sm leading-tight text-text-muted tabular-nums">
-              {yearsLines(member).map((line) => (
-                <span key={line} className="block">
-                  {line}
-                </span>
-              ))}
-            </span>
-          </span>
+            {years && (
+              <span className="mt-auto w-full truncate text-center text-[13px] leading-[18px] text-text-muted tabular-nums">
+                {years}
+              </span>
+            )}
+          </>
         ) : (
           <>
-            <Avatar name={name} url={member.avatarUrl} />
+            {card.photo && <Avatar name={name} url={member.avatarUrl} tone={tone} className="size-10" />}
             <span className="min-w-0 flex-1">
               <span className="block text-base leading-tight font-semibold [overflow-wrap:anywhere]">{name}</span>
-              <span className="block truncate text-sm text-text-muted tabular-nums">{yearsText(member)}</span>
+              {years && <span className="block truncate text-sm text-text-muted tabular-nums">{years}</span>}
             </span>
           </>
         )}
@@ -201,7 +212,7 @@ function MemberNodeView({ data }: NodeProps<MemberFlowNode>) {
 
       {isMe && <Tag className={cn('bg-primary text-primary-fg', vertical ? '-top-3 -left-2' : '-top-3 left-3')}>{t.isMe}</Tag>}
       {firstLabel && (
-        <Tag className={cn('bg-warning-bg text-warning', vertical ? '-top-3 -right-2 max-w-[44px]' : '-top-3 right-3')}>
+        <Tag className={cn('bg-warning-bg text-warning', vertical ? '-top-3 -right-2' : '-top-3 right-3')}>
           {extraLabels > 0 ? `${firstLabel} +${extraLabels}` : firstLabel}
         </Tag>
       )}

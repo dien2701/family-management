@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { TREE_KEY } from '@/hooks/useTree'
-import type { TreeChildInput, TreeCoParentInput, TreeMoveInput, TreeOrderInput } from '@/types/api'
+import type { MemberGenderInput, TreeChildInput, TreeCoParentInput, TreeMoveInput, TreeOrderInput } from '@/types/api'
 import { treeApi } from './api'
 
 /** Số kết quả tối đa của hộp chọn; muốn thấy người khác thì gõ thêm để thu hẹp. */
@@ -113,6 +113,16 @@ export function useReorderNode() {
     meta: { successMessage: 'Đã đổi thứ tự.' },
     mutationFn: ({ nodeId, input }: { nodeId: number; input: TreeOrderInput }) =>
       treeApi.reorderNode(nodeId, input),
+    onSettled: done,
+  })
+}
+
+export function useSetGender() {
+  const done = useAfterTreeChange()
+  return useMutation({
+    meta: { successMessage: 'Đã cập nhật giới tính.' },
+    mutationFn: ({ memberId, gender }: { memberId: number; gender: MemberGenderInput['gender'] }) =>
+      treeApi.setGender(memberId, gender),
     onSettled: done,
   })
 }

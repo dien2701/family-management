@@ -507,6 +507,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/members/{id}/gender": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Đặt giới tính thành viên
+         * @description Chỉ Admin (kiểm từ DB). Chỉ đổi trường `gender`, các trường khác giữ nguyên, có ghi audit log (DECISIONS #100).
+         *     Dùng cho hàng Nam · Nữ · Chưa rõ trong menu ô trên cây.
+         */
+        patch: operations["updateMemberGender"];
+        trace?: never;
+    };
     "/api/files/sign": {
         parameters: {
             query?: never;
@@ -1993,6 +2014,11 @@ export interface components {
             burialPlace: string | null;
             /** Format: date-time */
             updatedAt: string;
+        };
+        /** @description Đặt nhanh giới tính trên cây (DECISIONS */
+        MemberGenderInput: {
+            /** @enum {string|null} */
+            gender: "M" | "F" | null;
         };
         /**
          * @description Nội dung hồ sơ khi thêm hoặc sửa (PUT thay toàn bộ, trường bỏ trống nghĩa là xóa giá trị).
@@ -3669,6 +3695,36 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+        };
+    };
+    updateMemberGender: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MemberGenderInput"];
+            };
+        };
+        responses: {
+            /** @description Thành công */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MemberDetail"];
+                };
+            };
+            400: components["responses"]["ValidationError"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
     signUpload: {

@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.giapha.auth.AuthFacade;
 import vn.giapha.common.audit.AuditLogWriter;
 import vn.giapha.common.exception.BusinessException;
+import vn.giapha.common.exception.FieldError;
 import vn.giapha.common.util.SearchText;
 import vn.giapha.member.MemberDeletedEvent;
 import vn.giapha.member.MemberDeletionGuard;
@@ -31,9 +32,11 @@ import vn.giapha.member.MemberSnapshotContributor;
 import vn.giapha.member.MemberTreePlacement;
 import vn.giapha.member.dto.MemberDetail;
 import vn.giapha.member.dto.MemberFilter;
+import vn.giapha.member.dto.MemberGenderInput;
 import vn.giapha.member.dto.MemberInput;
 import vn.giapha.member.dto.MemberPage;
 import vn.giapha.member.dto.MemberSummary;
+import vn.giapha.member.entity.Gender;
 import vn.giapha.member.entity.Member;
 import vn.giapha.member.entity.MemberProfile;
 import vn.giapha.member.mapper.MemberMapper;
@@ -154,6 +157,28 @@ public class MemberService {
         }
         MemberDetail before = mapper.toDetail(member, false);
         member.apply(profile, Instant.now(clock));
+        audit.write(actorId, "UPDATE", TARGET_TYPE, id, before, mapper.toDetail(member, false));
+        return detailOf(member, true);
+    }
+
+    /**
+     * Chỉ Admin đặt nhanh giới tính từ menu ô trên cây (DECISIONS #100). Chỉ đổi {@code gender} để không ghi đè nhầm các
+     * trường khác như khi gửi lại cả hồ sơ qua PUT.
+     */
+    @Transactional
+    public MemberDetail updateGender(Long actorId, Long id, MemberGenderInput input) {
+        requireAdmin(actorId);
+        String raw = input == null || input.gender() == null ? "" : input.gender().trim();
+        Gender gender = switch (raw) {
+            case "" -> null;
+            case "M" -> Gender.M;
+            case "F" -> Gender.F;
+            default -> throw new BusinessException(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Dữ liệu không hợp lệ.",
+                    List.of(new FieldError("gender", "Giới tính chỉ nhận Nam, Nữ hoặc để trống.")));
+        };
+        Member member = find(id);
+        MemberDetail before = mapper.toDetail(member, false);
+        member.changeGender(gender, Instant.now(clock));
         audit.write(actorId, "UPDATE", TARGET_TYPE, id, before, mapper.toDetail(member, false));
         return detailOf(member, true);
     }

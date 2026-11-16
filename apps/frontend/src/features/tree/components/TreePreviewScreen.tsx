@@ -9,6 +9,7 @@ import { cn } from '@/utils/cn'
 import { toSearchName } from '@/utils/text'
 import type { TreeGraph, TreeIndex } from '@/utils/tree'
 import { layoutTree } from '../layout/layoutTree'
+import type { CardLook } from '../cardStyle'
 import type { LayoutOptions } from '../layout/types'
 import { nodeName } from '../nodeText'
 import { isAbort } from '../print/async'
@@ -228,14 +229,16 @@ type BodyProps = {
   index: TreeIndex
   generations: ReadonlyMap<number, number>
   defaultRootId: number | null
-  layoutOptions: Pick<LayoutOptions, 'nodeWidth' | 'nodeHeight' | 'nodeSizes'>
+  layoutOptions: Pick<LayoutOptions, 'nodeWidth' | 'nodeHeight' | 'nodeSizes' | 'filter'>
   verticalOf: (nodeId: number) => boolean
+  /** Bảng màu, hình dạng và thông tin trên ô đang chọn ở hộp Cấu hình cây. */
+  look: CardLook
   onClose: () => void
 }
 
 type Prepared = { status: 'loading' } | { status: 'error' } | { status: 'ready'; prepared: PreparedScene }
 
-function PreviewBody({ graph, index, generations, defaultRootId, layoutOptions, verticalOf, onClose }: BodyProps) {
+function PreviewBody({ graph, index, generations, defaultRootId, layoutOptions, verticalOf, look, onClose }: BodyProps) {
   // Gốc chọn được: người thuộc dòng (không phải vợ/chồng của ai), xếp theo đời rồi theo tên
   const roots = useMemo(
     () =>
@@ -292,6 +295,7 @@ function PreviewBody({ graph, index, generations, defaultRootId, layoutOptions, 
           layout,
           withPhotos: options.withPhotos,
           verticalOf,
+          look,
           rootName,
           signal: abort.signal,
           onStage: () => undefined,
@@ -302,7 +306,9 @@ function PreviewBody({ graph, index, generations, defaultRootId, layoutOptions, 
       }
     })()
     return () => abort.abort()
-  }, [layout, options.withPhotos, rootName, verticalOf])
+    // `look` là object mới mỗi lần TreePage vẽ lại: so theo giá trị để không dựng lại vô ích
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layout, options.withPhotos, rootName, verticalOf, look.palette, look.shape, look.card])
 
   const sheet = prepared.status === 'ready' ? prepared.prepared.scene.sheet : sheetGeometry(layout)
   const plan = useMemo(() => planPages(sheet, options), [sheet, options])

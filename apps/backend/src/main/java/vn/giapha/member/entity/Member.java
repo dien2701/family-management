@@ -122,6 +122,12 @@ public class Member {
         this.updatedAt = now;
     }
 
+    /** Chỉ đổi giới tính (đặt nhanh trên cây, DECISIONS #100); {@code null} là chưa rõ. */
+    public void changeGender(Gender gender, Instant now) {
+        this.gender = gender;
+        this.updatedAt = now;
+    }
+
     /** Ghi đè toàn bộ hồ sơ (PUT thay toàn bộ); ảnh đại diện và người tạo giữ nguyên. */
     public void apply(MemberProfile p, Instant now) {
         this.fullName = p.fullName();

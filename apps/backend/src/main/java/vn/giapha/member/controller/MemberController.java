@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -26,6 +27,7 @@ import vn.giapha.common.security.CurrentUser;
 import vn.giapha.common.web.ApiRefs;
 import vn.giapha.member.dto.MemberDetail;
 import vn.giapha.member.dto.MemberFilter;
+import vn.giapha.member.dto.MemberGenderInput;
 import vn.giapha.member.dto.MemberInput;
 import vn.giapha.member.dto.MemberPage;
 import vn.giapha.member.service.MemberService;
@@ -115,6 +117,20 @@ class MemberController {
             @PathVariable Long id,
             @Valid @RequestBody MemberInput input) {
         return service.update(current.userId(), id, input);
+    }
+
+    @Operation(operationId = "updateMemberGender", summary = "Đặt giới tính thành viên",
+            description = "Chỉ Admin. Chỉ đổi gender (M, F hoặc null), có audit log (DECISIONS #100).")
+    @ApiResponse(responseCode = "200", description = "Thành công")
+    @ApiResponse(responseCode = "400", ref = ApiRefs.VALIDATION_ERROR)
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
+    @PatchMapping("/{id}/gender")
+    MemberDetail updateGender(@Parameter(hidden = true) CurrentUser current,
+            @PathVariable Long id,
+            @RequestBody MemberGenderInput input) {
+        return service.updateGender(current.userId(), id, input);
     }
 
     @Operation(operationId = "deleteMember", summary = "Xóa thành viên",

@@ -10,7 +10,12 @@ export const treeStrings = {
   hiddenChildren: (n: number) => `+${n} con`,
   expandHidden: (n: number) => `Hiện ${n} con đang ẩn`,
   canvasLabel: 'Sơ đồ cây gia phả',
-  nodeLabel: (name: string, generation: number) => `${name}, Đời ${pad(generation)}`,
+  miniMap: 'Bản đồ thu nhỏ của cây',
+  // Màu không là tín hiệu duy nhất (#100): giới tính và việc đã mất luôn có trong nhãn đọc màn hình
+  nodeLabel: (name: string, gender: 'M' | 'F' | null, deceased: boolean, generation: number) =>
+    [name, gender === 'M' ? 'Nam' : gender === 'F' ? 'Nữ' : 'chưa rõ giới tính', deceased ? 'đã mất' : null, `Đời ${pad(generation)}`]
+      .filter(Boolean)
+      .join(', '),
   emptyNodeLabel: (generation: number) => `Ô trống, Đời ${pad(generation)}`,
   isMe: 'Tôi',
   fillSlotHint: 'Chọn người điền vào ô trống',
@@ -72,6 +77,33 @@ export const treeStrings = {
     setPair: 'Đổi cặp cha–mẹ',
     removeMember: 'Gỡ khỏi cây',
     deleteSlot: 'Xóa ô',
+    gender: 'Giới tính',
+    genderMale: 'Nam',
+    genderFemale: 'Nữ',
+    genderUnknown: 'Chưa rõ',
+  },
+
+  config: {
+    open: 'Cấu hình cây',
+    title: 'Cấu hình cây',
+    close: 'Xong',
+    filterGroup: 'Hiển thị thành viên',
+    filterAll: 'Tất cả',
+    filterMale: 'Chỉ Nam',
+    filterBloodline: 'Chỉ huyết thống',
+    filterMaleHint: 'Ẩn vợ/chồng và con gái đã đánh dấu Nữ. Người chưa điền giới tính vẫn được giữ.',
+    filterBloodlineHint: 'Ẩn mọi vợ/chồng, chỉ còn người trong dòng.',
+    cardGroup: 'Hiển thị thông tin thẻ',
+    cardPhoto: 'Ảnh đại diện',
+    cardLabels: 'Danh hiệu',
+    cardYears: 'Năm sinh – mất',
+    paletteGroup: 'Màu sắc thẻ',
+    palettes: { classic: 'Cổ điển', neutral: 'Trung tính', warm: 'Ấm áp', forest: 'Rừng xanh', royal: 'Hoàng gia' },
+    paletteHint: 'Bảng Trung tính dễ phân biệt hơn với người khó nhận màu.',
+    shapeGroup: 'Hình dạng thẻ',
+    shapes: { square: 'Vuông', soft: 'Vừa', rounded: 'Bo góc', pill: 'Tròn' },
+    male: 'Nam',
+    female: 'Nữ',
   },
 
   add: {

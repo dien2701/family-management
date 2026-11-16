@@ -996,6 +996,44 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/members/{id}/gender:
+    patch:
+      tags:
+        - members
+      summary: Đặt giới tính thành viên
+      description: |
+        Chỉ Admin (kiểm từ DB). Chỉ đổi trường `gender`, các trường khác giữ nguyên, có ghi audit log (DECISIONS #100).
+        Dùng cho hàng Nam · Nữ · Chưa rõ trong menu ô trên cây.
+      operationId: updateMemberGender
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberGenderInput'
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberDetail'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/files/sign:
     post:
       tags:
@@ -3478,6 +3516,20 @@ components:
             - memorialOverride
             - burialPlace
             - updatedAt
+    MemberGenderInput:
+      type: object
+      description: Đặt nhanh giới tính trên cây (DECISIONS #100). `null` là chưa rõ.
+      required:
+        - gender
+      properties:
+        gender:
+          type:
+            - string
+            - 'null'
+          enum:
+            - M
+            - F
+            - null
     MemberInput:
       type: object
       description: |

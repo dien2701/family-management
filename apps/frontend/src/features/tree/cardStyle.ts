@@ -64,3 +64,6 @@ export const FILTERS: readonly TreeFilter[] = ['all', 'male', 'bloodline']
 /** Các thông tin bật/tắt được trên ô. Nhãn đặc biệt đè lên viền nên không ảnh hưởng cỡ ô. */
 export type TreeCardFields = { photo: boolean; labels: boolean; years: boolean }
 export const DEFAULT_CARD: TreeCardFields = { photo: true, labels: true, years: true }
+
+/** Phần "hình thức" của ô mà bản in cần biết để giống màn hình. */
+export type CardLook = { palette: TreePalette; shape: TreeShape; card: TreeCardFields }
