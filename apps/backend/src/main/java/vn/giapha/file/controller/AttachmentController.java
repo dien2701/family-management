@@ -45,6 +45,19 @@ class AttachmentController {
         return service.listForMember(id);
     }
 
+    @Operation(operationId = "removeMemberAvatar", summary = "Gỡ ảnh đại diện của thành viên", tags = "members",
+            description = "Admin gỡ ảnh của mọi hồ sơ; User chỉ gỡ ảnh hồ sơ đã liên kết với mình. "
+                    + "Xóa cả trên Cloudinary (sau khi commit); avatarUrl về null.")
+    @ApiResponse(responseCode = "204", description = "Đã gỡ")
+    @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)
+    @ApiResponse(responseCode = "403", ref = ApiRefs.FORBIDDEN)
+    @ApiResponse(responseCode = "404", ref = ApiRefs.NOT_FOUND)
+    @DeleteMapping("/api/members/{id}/avatar")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void removeMemberAvatar(@Parameter(hidden = true) CurrentUser current, @PathVariable Long id) {
+        service.removeMemberAvatar(current.userId(), id);
+    }
+
     @Operation(operationId = "listCommonAttachments", summary = "Danh sách tài liệu chung", tags = "files")
     @ApiResponse(responseCode = "200", description = "Thành công")
     @ApiResponse(responseCode = "401", ref = ApiRefs.UNAUTHORIZED)

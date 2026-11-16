@@ -37,4 +37,5 @@ export const memberApi = {
   deleteRelative: (id: number, relativeId: number) =>
     api.delete<void>(`/members/${id}/relatives/${relativeId}`),
   uploadAvatar: (memberId: number, file: File) => uploadAvatar({ kind: 'AVATAR', memberId }, file),
+  removeAvatar: (memberId: number) => api.delete<void>(`/members/${memberId}/avatar`),
 }

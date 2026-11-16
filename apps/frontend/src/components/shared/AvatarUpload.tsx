@@ -1,4 +1,4 @@
-import { Camera, X } from 'lucide-react'
+import { Camera, Trash2, Undo2, X } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { initialOf } from '@/utils/text'
@@ -16,7 +16,18 @@ type AvatarUploadProps = {
   onChange: (file: File | null) => void
   disabled?: boolean
   hint?: string
-  labels: { choose: string; change: string; clear: string; badType: string; tooBig: string }
+  /** Đánh dấu gỡ ảnh hiện tại; nơi dùng gỡ thật khi lưu. Không truyền thì không có nút gỡ. */
+  removed?: boolean
+  onRemovedChange?: (removed: boolean) => void
+  labels: {
+    choose: string
+    change: string
+    clear: string
+    badType: string
+    tooBig: string
+    remove?: string
+    undoRemove?: string
+  }
 }
 
 /**
@@ -31,6 +42,8 @@ export function AvatarUpload({
   onChange,
   disabled,
   hint,
+  removed = false,
+  onRemovedChange,
   labels,
 }: AvatarUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -68,7 +81,8 @@ export function AvatarUpload({
     if (inputRef.current) inputRef.current.value = ''
   }
 
-  const shown = (file ? preview : null) ?? currentUrl ?? null
+  const shown = (file ? preview : null) ?? (removed ? null : currentUrl) ?? null
+  const canRemove = Boolean(currentUrl && !file && onRemovedChange)
   const describedBy = [hint ? `${id}-hint` : null, error ? `${id}-error` : null]
     .filter(Boolean)
     .join(' ')
@@ -102,6 +116,17 @@ export function AvatarUpload({
             <Button type="button" variant="ghost" disabled={disabled} onClick={() => select(null)}>
               <X aria-hidden="true" />
               {labels.clear}
+            </Button>
+          )}
+          {canRemove && (
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={disabled}
+              onClick={() => onRemovedChange?.(!removed)}
+            >
+              {removed ? <Undo2 aria-hidden="true" /> : <Trash2 aria-hidden="true" />}
+              {removed ? labels.undoRemove : labels.remove}
             </Button>
           )}
         </div>

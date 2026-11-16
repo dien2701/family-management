@@ -18,6 +18,8 @@
 
     <properties>
         <java.version>21</java.version>
+        <!-- spring-boot:run mặc định profile dev; -Dspring-boot.run.profiles=... vẫn ghi đè được. Jar prod không bị ảnh hưởng -->
+        <spring-boot.run.profiles>dev</spring-boot.run.profiles>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-modulith.version>2.1.1</spring-modulith.version>
         <springdoc.version>3.1.1</springdoc.version>

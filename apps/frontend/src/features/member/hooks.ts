@@ -88,6 +88,15 @@ export function useUploadAvatar() {
   })
 }
 
+export function useRemoveAvatar() {
+  const invalidate = useInvalidateMembers()
+  return useMutation({
+    meta: { successMessage: 'Đã xóa ảnh đại diện.' },
+    mutationFn: (memberId: number) => memberApi.removeAvatar(memberId),
+    onSuccess: invalidate,
+  })
+}
+
 export function useDeleteMember() {
   const queryClient = useQueryClient()
   return useMutation({

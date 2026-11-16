@@ -34,7 +34,8 @@ type MemberFormProps = {
   lockDeathFields?: boolean
   submitLabel: string
   /** Ném `ApiError` khi lưu lỗi, form sẽ gán lỗi vào đúng trường. */
-  onSubmit: (input: MemberInput, avatar: File | null) => Promise<void>
+  /** `removeAvatar`: người dùng đã bấm Xóa ảnh và không chọn ảnh mới. */
+  onSubmit: (input: MemberInput, avatar: File | null, removeAvatar: boolean) => Promise<void>
   onCancel: () => void
 }
 
@@ -47,6 +48,7 @@ export function MemberForm({
 }: MemberFormProps) {
   const s = memberStrings.form
   const [avatar, setAvatar] = useState<File | null>(null)
+  const [avatarRemoved, setAvatarRemoved] = useState(false)
   const {
     register,
     control,
@@ -63,7 +65,7 @@ export function MemberForm({
 
   const submit = handleSubmit(async (values) => {
     try {
-      await onSubmit(formValuesToInput(values), avatar)
+      await onSubmit(formValuesToInput(values), avatar, avatarRemoved && !avatar)
     } catch (error) {
       applyApiError(error, setError, MEMBER_FORM_FIELDS)
     }
@@ -82,6 +84,8 @@ export function MemberForm({
           onChange={setAvatar}
           disabled={isSubmitting}
           hint={memberStrings.avatar.hint}
+          removed={avatarRemoved}
+          onRemovedChange={setAvatarRemoved}
           labels={memberStrings.avatar}
         />
         <FormField label={s.fullName} hint={s.fullNameHint} error={errors.fullName?.message}>

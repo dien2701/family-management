@@ -55,6 +55,11 @@ class CloudinaryFileStorage implements FileStorage {
     public SignedUpload signUpload(String publicId, FileFormat format) {
         requireConfigured();
         Map<String, String> params = new TreeMap<>();
+        // Chế độ dynamic folders xếp thư mục theo asset_folder, chế độ fixed theo tiền tố public_id: gửi cả hai
+        int slash = publicId.lastIndexOf('/');
+        if (slash > 0) {
+            params.put("asset_folder", publicId.substring(0, slash));
+        }
         params.put("public_id", publicId);
         params.put("timestamp", String.valueOf(now()));
         params.put("type", format.deliveryType());

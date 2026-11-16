@@ -41,7 +41,8 @@ import vn.giapha.member.MemberFacade;
 public class AttachmentService {
 
     private static final String TARGET_TYPE = "ATTACHMENT";
-    private static final String FOLDER = "giapha/";
+    // Tệp cũ ở giapha/ giữ nguyên: DB lưu public_id đầy đủ nên xem và xóa vẫn đúng
+    private static final String FOLDER = "family-management/";
     private static final String AVATAR_FOLDER = FOLDER + "avatar/";
     private static final String ACCOUNT_AVATAR_FOLDER = FOLDER + "account/";
     private static final String DOCUMENT_FOLDER = FOLDER + "document/";
@@ -247,6 +248,28 @@ public class AttachmentService {
         audit.write(actorId, "DELETE", "ACCOUNT_AVATAR", accountId, before, null);
     }
 
+    /**
+     * Gỡ ảnh đại diện của thành viên: Admin gỡ mọi hồ sơ, User chỉ gỡ hồ sơ đã liên kết (DECISIONS #78).
+     * Xóa dòng ngay, xóa trên Cloudinary sau khi commit; {@code avatarUrl} về null.
+     */
+    @Transactional
+    public void removeMemberAvatar(Long actorId, Long memberId) {
+        AuthFacade.Account actor = auth.find(actorId).filter(AuthFacade.Account::usable).orElseThrow(
+                AttachmentService::forbidden);
+        if (!actor.admin() && !memberId.equals(actor.memberId())) {
+            throw forbidden();
+        }
+        if (!members.exists(memberId)) {
+            throw new BusinessException(HttpStatus.NOT_FOUND, "MEMBER_NOT_FOUND", "Không tìm thấy thành viên.");
+        }
+        List<Attachment> old = attachments.findByMemberIdAndKind(memberId, AttachmentKind.AVATAR);
+        List<AttachmentResponse> before = old.stream().map(AttachmentResponse::of).toList();
+        attachments.deleteAll(old);
+        cleaner.deleteAfterCommit(old);
+        members.changeAvatar(memberId, null);
+        audit.write(actorId, "DELETE", "MEMBER_AVATAR", memberId, before, null);
+    }
+
     // ---------- Nội bộ ----------
 
     private Attachment find(Long id) {
@@ -342,7 +365,7 @@ public class AttachmentService {
         return DOCUMENT_FOLDER;
     }
 
-    /** Ảnh: {@code giapha/avatar/<memberId>-<uuid>}; tệp raw giữ đuôi để tải về đúng loại. */
+    /** Ảnh: {@code family-management/avatar/<memberId>-<uuid>}; tệp raw giữ đuôi để tải về đúng loại. */
     private static String newPublicId(AttachmentKind kind, Long ownerId, FileFormat format) {
         String id = UUID.randomUUID().toString().replace("-", "");
         String suffix = format.isImage() ? "" : "." + format.extension();

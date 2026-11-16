@@ -1303,6 +1303,26 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/members/{id}/avatar:
+    delete:
+      tags:
+        - members
+      summary: Gỡ ảnh đại diện của thành viên
+      description: |
+        Admin gỡ ảnh của mọi hồ sơ; User chỉ gỡ ảnh hồ sơ đã liên kết với mình (`user.member_id`).
+        Xóa cả trên Cloudinary (sau khi commit); `avatarUrl` của hồ sơ về `null`.
+      operationId: removeMemberAvatar
+      parameters:
+        - $ref: '#/components/parameters/MemberId'
+      responses:
+        '204':
+          description: Đã gỡ
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/members/{id}/attachments:
     get:
       tags:

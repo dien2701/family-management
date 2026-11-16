@@ -7,7 +7,13 @@ import { useMe } from '@/hooks/useMe'
 import { ApiError } from '@/services/client'
 import type { MemberInput } from '@/types/api'
 import { MemberForm } from '../components/MemberForm'
-import { useCreateMember, useMemberDetail, useUpdateMember, useUploadAvatar } from '../hooks'
+import {
+  useCreateMember,
+  useMemberDetail,
+  useRemoveAvatar,
+  useUpdateMember,
+  useUploadAvatar,
+} from '../hooks'
 import { memberStrings } from '../strings'
 
 /**
@@ -26,10 +32,11 @@ export function MemberFormPage() {
   const createMember = useCreateMember()
   const updateMember = useUpdateMember()
   const uploadAvatar = useUploadAvatar()
+  const removeAvatar = useRemoveAvatar()
   const isAdmin = useAuth().user?.systemRole === 'ADMIN'
   const me = useMe()
 
-  const save = async (input: MemberInput, avatar: File | null) => {
+  const save = async (input: MemberInput, avatar: File | null, removeAvatarOnSave: boolean) => {
     const saved = editing
       ? await updateMember.mutateAsync({ id: memberId, input })
       : await createMember.mutateAsync(input)
@@ -42,6 +49,13 @@ export function MemberFormPage() {
       } catch (error) {
         const reason = error instanceof ApiError ? error.message : 'Có lỗi xảy ra.'
         notice = s.avatarFailed(reason)
+      }
+    } else if (removeAvatarOnSave) {
+      try {
+        await removeAvatar.mutateAsync(saved.id)
+      } catch (error) {
+        const reason = error instanceof ApiError ? error.message : 'Có lỗi xảy ra.'
+        notice = s.avatarRemoveFailed(reason)
       }
     }
     void navigate(`/thanh-vien/${saved.id}`, { replace: true, state: notice ? { notice } : null })

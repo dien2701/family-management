@@ -229,7 +229,7 @@
 66. **Quyền xem dữ liệu**
     → **Chốt:** mọi tài khoản đã duyệt xem toàn bộ thành viên, danh sách người thân (#75), cây, lịch và tệp. SĐT và email của thành viên chỉ trả cho Admin và chính chủ (`user.member_id`).
 67. **Upload**
-    → **Chốt:** 10 MB mỗi file, **1 GB cho toàn hệ thống**, folder Cloudinary `giapha/`. `attachment.kind` gồm AVATAR và DOCUMENT (bỏ COVER vì không còn ảnh bìa dòng họ). `member_id = NULL` nghĩa là tài liệu chung. Chỉ Admin tải lên và xóa, trừ ảnh đại diện của chính mình (#78).
+    → **Chốt:** 10 MB mỗi file, **1 GB cho toàn hệ thống**, folder Cloudinary `giapha/` (🔁 2026-11-16: tệp mới vào `family-management/`, gửi cả tiền tố `public_id` và `asset_folder`; tệp cũ ở `giapha/` giữ nguyên). `attachment.kind` gồm AVATAR và DOCUMENT (bỏ COVER vì không còn ảnh bìa dòng họ). `member_id = NULL` nghĩa là tài liệu chung. Chỉ Admin tải lên và xóa, trừ ảnh đại diện của chính mình (#78).
 68. **Dữ liệu ban đầu (IDEA Phụ lục A)**
     → **Chốt:** gồm 28 thành viên, lưu ở nguồn duy nhất `shared/fixtures/seed/members.json`.
     - Frontend đọc file này ở chế độ giả lập (Đợt 9).
