@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 
 type ModalDialogProps = {
   open: boolean
-  title: string
+  title: ReactNode
   /** Đang gửi dữ liệu: không cho đóng bằng Esc hay nút đóng. */
   busy?: boolean
   /** Rộng tới 720px ở ≥768px (nội dung hai cột), mặc định 480px. */

@@ -139,13 +139,21 @@ export function NodeMenuDialog({ open, node, index, generation, isAdmin, collaps
   const parentSpouses = node.parentNodeId === null ? 0 : (index.spousesOf.get(node.parentNodeId)?.length ?? 0)
 
   const run = (action: MenuAction) => () => onAction(action)
-  const meta = [generation === null ? null : treeStrings.generation(generation), node.member ? yearsText(node.member) : null]
-    .filter(Boolean)
-    .join(' · ')
+  const years = node.member ? yearsText(node.member) : null
+  const title = (
+    <>
+      {nodeName(node)}
+      {generation !== null && (
+        <span className="ml-2 inline-block rounded-full bg-secondary px-2.5 py-0.5 align-middle text-sm font-medium whitespace-nowrap text-secondary-fg tabular-nums">
+          {treeStrings.generation(generation)}
+        </span>
+      )}
+    </>
+  )
 
   return (
-    <ModalDialog open={open} title={nodeName(node)} onClose={onClose}>
-      {meta && <p className="-mt-2 text-text-muted tabular-nums">{meta}</p>}
+    <ModalDialog open={open} title={title} onClose={onClose}>
+      {years && <p className="-mt-2 text-text-muted tabular-nums">{years}</p>}
 
       <ul className="flex flex-col gap-1">
         {!empty && (
