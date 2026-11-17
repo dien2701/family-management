@@ -22,6 +22,7 @@ const DEFAULT: Stored = {
   shape: 'rounded',
   filter: 'all',
   card: DEFAULT_CARD,
+  toolsCollapsed: false,
   nodes: {},
 }
 
@@ -56,6 +57,7 @@ function read(): Stored {
         labels: flag(card.labels, DEFAULT_CARD.labels),
         years: flag(card.years, DEFAULT_CARD.years),
       },
+      toolsCollapsed: flag(parsed.toolsCollapsed, false),
       nodes,
     }
   } catch {
@@ -117,8 +119,9 @@ export function useTreeViewPrefs() {
       shape: stored.shape,
       filter: stored.filter,
       card: stored.card,
+      toolsCollapsed: stored.toolsCollapsed,
     }),
-    [stored.vertical, stored.size, stored.palette, stored.shape, stored.filter, stored.card],
+    [stored.vertical, stored.size, stored.palette, stored.shape, stored.filter, stored.card, stored.toolsCollapsed],
   )
   return { prefs, nodes: stored.nodes, setPrefs, setCard, setNode, resetNodes }
 }

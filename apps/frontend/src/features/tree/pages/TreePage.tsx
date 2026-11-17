@@ -1,4 +1,4 @@
-import { Loader2, Network, Plus, X } from 'lucide-react'
+import { ChevronDown, Loader2, Network, Plus, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 import { Alert } from '@/components/shared/Alert'
@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useMe } from '@/hooks/useMe'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useTree, useTreeModel } from '@/hooks/useTree'
+import { cn } from '@/utils/cn'
 import {
   ancestorGraph,
   buildTreeIndex,
@@ -146,6 +147,8 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
   const editing = isAdmin && ancestorsOf === null
 
   const { prefs, nodes: overrides, setPrefs, setCard, setNode, resetNodes } = useTreeViewPrefs()
+  // Máy tính đã thu gọn công cụ: sơ đồ tràn sát thanh trên, thanh bên và đáy màn hình
+  const fullBleed = !isPhone && prefs.toolsCollapsed
   const [configOpen, setConfigOpen] = useState(false)
   // Hộp Xưng hô: mỗi lần mở dựng lại để lấy ô đang chọn và "Tôi" làm hai người ban đầu
   const [kinship, setKinship] = useState({ open: false, key: 0 })
@@ -483,9 +486,24 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
     <TreeActionsContext.Provider value={actions}>
       {/* Điện thoại: sơ đồ tràn hết chỗ giữa thanh trên (57px) và thanh điều hướng dưới (69px). Lề âm bù phần đệm của
           <main> trong AppShell (pt 16px, pb 88px cho thanh dưới) để không còn khoảng trống hay thanh cuộn */}
-      <div className="flex flex-col gap-4 max-md:-mx-4 max-md:-mt-4 max-md:-mb-[1.1875rem] max-md:h-[calc(100dvh-7.875rem-env(safe-area-inset-bottom))] max-md:gap-0">
+      {/* Máy tính: sơ đồ kéo tới sát đáy (lề âm bù pb 24px của <main>; thanh trên cao 57px, lg 65px). Thu gọn công cụ
+          thì bù cả lề trái/phải/trên để sơ đồ sát thanh trên và thanh bên, thông báo nổi trên đầu sơ đồ */}
+      <div
+        className={cn(
+          'relative flex flex-col gap-4 max-md:-mx-4 max-md:-mt-4 max-md:-mb-[1.1875rem] max-md:h-[calc(100dvh-7.875rem-env(safe-area-inset-bottom))] max-md:gap-0',
+          fullBleed
+            ? 'md:-m-6 md:h-[calc(100dvh-57px)] lg:h-[calc(100dvh-65px)]'
+            : 'md:-mb-6 md:h-[calc(100dvh-57px-1.5rem)] lg:h-[calc(100dvh-65px-1.5rem)]',
+        )}
+      >
         {(!isPhone || status || notice || soughtHidden) && (
-        <div className="flex flex-col gap-4 max-md:gap-2 max-md:px-4 max-md:py-2">
+        <div
+          className={cn(
+            'flex flex-col gap-4 max-md:gap-2 max-md:px-4 max-md:py-2',
+            // Chừa cột "Đời" bên trái và nút "Mở công cụ" bên phải
+            fullBleed && 'absolute top-3 right-48 left-24 z-20 gap-2',
+          )}
+        >
         <TreeToolbar
           index={index}
           generations={generations}
@@ -539,12 +557,24 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
             </Button>
           </div>
         )}
-        {editing && isDesktop && <p className="text-sm text-text-muted">{t.toolbar.dragHint}</p>}
+        {editing && isDesktop && !prefs.toolsCollapsed && <p className="text-sm text-text-muted">{t.toolbar.dragHint}</p>}
         </div>
         )}
 
-        <div className="relative min-h-0 flex-1 md:h-[calc(100dvh-17rem)] md:min-h-[420px] md:flex-none">
+        <div className="relative min-h-0 flex-1 md:min-h-[420px]">
+          {fullBleed && (
+            <Button
+              variant="secondary"
+              aria-expanded={false}
+              onClick={() => setPrefs({ toolsCollapsed: false })}
+              className="absolute top-3 right-3 z-10 shadow-card"
+            >
+              <ChevronDown aria-hidden="true" />
+              {t.toolbar.expandBar}
+            </Button>
+          )}
           <TreeCanvas
+            flat={fullBleed}
             layout={layout}
             ui={canvasUi}
             palette={prefs.palette}

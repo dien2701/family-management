@@ -1,4 +1,4 @@
-import { ChevronsDown, HeartHandshake, ListTree, Maximize2, Plus, Printer, RectangleHorizontal, RectangleVertical, RotateCcw, UserRound } from 'lucide-react'
+import { ChevronsDown, ChevronUp, HeartHandshake, ListTree, Maximize2, Plus, Printer, RectangleHorizontal, RectangleVertical, RotateCcw, UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utils/cn'
 import type { TreeIndex } from '@/utils/tree'
@@ -90,10 +90,13 @@ export function TreeToolbar({
   onShowAll,
   onMoreDepth,
 }: TreeToolbarProps) {
+  // Đã thu gọn thì nút mở lại nổi ở góc trên phải sơ đồ (TreePage), ở đây chỉ còn dòng trạng thái
+  const collapsed = prefs.toolsCollapsed
   return (
     <div className="flex flex-col gap-3">
       {/* Điện thoại: ô tìm và các nút nằm trong thanh công cụ góc dưới trái sơ đồ (TreePhoneTools) */}
-      <div className="hidden gap-3 md:flex md:flex-row md:items-end">
+      {!collapsed && (
+      <div className="hidden gap-3 md:flex md:flex-row md:items-center">
         <MemberPicker
           index={index}
           generations={generations}
@@ -102,6 +105,7 @@ export function TreeToolbar({
           resultsLabel={s.searchResults}
           noMatch={s.searchNoMatch}
           onPick={onPick}
+          hideLabel
           className="md:w-72 md:shrink-0"
         />
 
@@ -139,11 +143,29 @@ export function TreeToolbar({
               {s.addRoot}
             </Button>
           )}
+          <Button
+            variant="secondary"
+            size="icon"
+            aria-label={s.collapseBar}
+            title={s.collapseBar}
+            aria-expanded
+            onClick={() => onPrefsChange({ toolsCollapsed: true })}
+            className="ml-auto"
+          >
+            <ChevronUp aria-hidden="true" />
+          </Button>
         </div>
       </div>
+      )}
 
       {status && (
-        <div role="status" className="flex flex-wrap items-center gap-2 rounded-field bg-secondary px-3 py-2 text-secondary-fg">
+        <div
+          role="status"
+          className={cn(
+            'flex flex-wrap items-center gap-2 rounded-field bg-secondary px-3 py-2 text-secondary-fg',
+            collapsed && 'md:shadow-card',
+          )}
+        >
           <ListTree className="size-5 shrink-0" aria-hidden="true" />
           <span className="min-w-0 flex-1 font-medium [overflow-wrap:anywhere]">{statusText(status)}</span>
           {canShowMoreDepth && (

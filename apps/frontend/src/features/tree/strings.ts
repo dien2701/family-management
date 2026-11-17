@@ -45,6 +45,8 @@ export const treeStrings = {
     moreTools: 'Tùy chọn hiển thị',
     collapseTools: 'Thu gọn thanh công cụ',
     expandTools: 'Mở thanh công cụ',
+    collapseBar: 'Thu gọn',
+    expandBar: 'Mở công cụ',
     sizeSmall: 'Nhỏ',
     sizeMedium: 'Vừa',
     sizeLarge: 'Lớn',

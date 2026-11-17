@@ -21,6 +21,8 @@ type MemberPickerProps = {
   selectedId?: number | null
   /** Danh sách kết quả nổi đè lên nội dung bên dưới (thanh công cụ) hay đẩy nội dung xuống (trong hộp thoại). */
   floating?: boolean
+  /** Chỉ giữ nhãn cho trình đọc màn hình, không hiện ra (ô tìm trên thanh công cụ). */
+  hideLabel?: boolean
   className?: string
 }
 
@@ -35,6 +37,7 @@ export function MemberPicker({
   onPick,
   selectedId = null,
   floating = true,
+  hideLabel = false,
   className,
 }: MemberPickerProps) {
   const inputId = useId()
@@ -63,7 +66,7 @@ export function MemberPicker({
 
   return (
     <div className={cn('relative flex flex-col gap-1.5', className)}>
-      <label htmlFor={inputId} className="text-base font-medium whitespace-nowrap">
+      <label htmlFor={inputId} className={cn('text-base font-medium whitespace-nowrap', hideLabel && 'sr-only')}>
         {label}
       </label>
       <div className="relative">

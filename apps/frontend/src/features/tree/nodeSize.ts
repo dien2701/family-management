@@ -14,6 +14,8 @@ export type TreeViewPrefs = {
   shape: TreeShape
   filter: TreeFilter
   card: TreeCardFields
+  /** Máy tính: thu gọn hàng công cụ phía trên sơ đồ. */
+  toolsCollapsed: boolean
 }
 
 /** Tùy chỉnh riêng một ô (chỉ lưu trên máy này): kiểu dọc/ngang và cỡ kéo tay. */

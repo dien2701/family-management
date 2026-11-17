@@ -1,6 +1,7 @@
 import '@xyflow/react/dist/style.css'
 import { MiniMap, ReactFlow, ReactFlowProvider, useReactFlow, type Node, type NodeChange } from '@xyflow/react'
 import { ChevronsDown, ChevronsUp, Maximize, Minus, Plus, SlidersHorizontal } from 'lucide-react'
+import { cn } from '@/utils/cn'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { cardTone, TONE_VARS, type TreePalette } from '../cardStyle'
 import { buildFlow, type FlowUi, type MemberFlowNode } from '../flow'
@@ -47,6 +48,8 @@ type TreeCanvasProps = {
   /** Nút thêm vào đầu và cuối thanh công cụ dọc góc dưới trái (điện thoại: tìm, xem cây, "..."). */
   toolsStart?: ReactNode
   toolsEnd?: ReactNode
+  /** Máy tính, thanh công cụ đã thu gọn: sơ đồ tràn sát mép nên bỏ viền và bo góc. */
+  flat?: boolean
 }
 
 /** Toạ độ con trỏ từ sự kiện chuột hoặc cảm ứng do React Flow chuyển lên. */
@@ -89,6 +92,7 @@ function TreeCanvasInner({
   onPaneClick,
   toolsStart,
   toolsEnd,
+  flat = false,
 }: TreeCanvasProps) {
   const { fitView, setCenter, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow()
   const actions = useTreeActions()
@@ -174,7 +178,10 @@ function TreeCanvasInner({
   return (
     <div
       data-tree-palette={palette}
-      className="flex h-full min-h-0 overflow-hidden bg-surface-muted md:rounded-card md:border md:border-border"
+      className={cn(
+        'flex h-full min-h-0 overflow-hidden bg-surface-muted',
+        !flat && 'md:rounded-card md:border md:border-border',
+      )}
     >
       <GenerationGutter generations={layout.generations} />
       <div ref={regionRef} className="relative h-full min-w-0 flex-1" role="region" aria-label={t.canvasLabel}>
