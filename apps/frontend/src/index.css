@@ -1,6 +1,9 @@
 @import './assets/fonts/be-vietnam-pro.css';
 @import 'tailwindcss';
 
+/* `dark:` theo lớp `.dark` trên <html> (useTheme), không theo media query */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Token theo docs/DESIGN.md §8.1. Cần token mới thì sửa DESIGN.md trước. */
 @theme {
   --font-sans: 'Be Vietnam Pro', system-ui, sans-serif;
@@ -97,17 +100,10 @@
   --color-accent-text: #6cc3f7;
   --color-text: #e8eef6;
   --color-text-muted: #9fb0c4;
-  --color-deceased: #7d8a99;
-  --color-tree-line: #3a4b62;
-  --color-tree-male: #5a86be;
-  --color-tree-male-bg: #1b2b40;
-  --color-tree-female: #b06e8c;
-  --color-tree-female-bg: #2e1f29;
-  --color-tree-unknown: #3a4b62;
-  --color-tree-unknown-bg: #16202f;
-  --color-tree-gone: #5b6775;
-  --color-tree-gone-bg: #1b2330;
-  --color-tree-marriage: #c97b77;
+  --color-deceased: #95a1af;
+  /* Ô cây giữ màu sáng ở giao diện tối (xem .tree-light bên dưới); chỉ đường nối đổi sang tông sáng cho nổi trên nền tối */
+  --color-tree-line: #8a9fbb;
+  --color-tree-marriage: #ec9a95;
   --color-success: #5fd08b;
   --color-success-bg: #14301f;
   --color-warning: #f0b45a;
@@ -153,29 +149,23 @@
   --color-tree-female-bg: #fae1ea;
 }
 
-:root.dark [data-tree-palette='neutral'] {
-  --color-tree-male: #6d8296;
-  --color-tree-male-bg: #1e262f;
-  --color-tree-female: #8479a3;
-  --color-tree-female-bg: #262231;
-}
-:root.dark [data-tree-palette='warm'] {
-  --color-tree-male: #b08a3f;
-  --color-tree-male-bg: #2e2718;
-  --color-tree-female: #b9755f;
-  --color-tree-female-bg: #30211b;
-}
-:root.dark [data-tree-palette='forest'] {
-  --color-tree-male: #4f8763;
-  --color-tree-male-bg: #17291e;
-  --color-tree-female: #8273a8;
-  --color-tree-female-bg: #241f31;
-}
-:root.dark [data-tree-palette='royal'] {
-  --color-tree-male: #6a71b8;
-  --color-tree-male-bg: #1d1f36;
-  --color-tree-female: #b2657f;
-  --color-tree-female-bg: #301c26;
+/*
+ * Ô cây sáng trên nền tối (người dùng yêu cầu 2026-11-17, DESIGN §1): ở giao diện tối, ô thành viên và bản in
+ * dùng lại token chữ/nền của giao diện sáng, để ô nền sáng đi với chữ đậm. Chữ phụ (năm) đậm hơn bản sáng một mức.
+ */
+:root.dark .tree-light {
+  --color-surface: #ffffff;
+  --color-surface-muted: #f5f7fa;
+  --color-border: #e3e8ef;
+  --color-secondary: #e4ecf6;
+  --color-secondary-hover: #d3e0f0;
+  --color-secondary-fg: #24466f;
+  --color-accent-text: #0b6fb3;
+  --color-text: #0f1b2d;
+  --color-text-muted: #46566a;
+  --color-deceased: #9aa5b1;
+  --color-tree-line: #c9d3df;
+  --color-tree-marriage: #e08a86;
 }
 
 
@@ -221,6 +211,19 @@
   /* ::backdrop không thừa kế biến CSS trên Safari/iOS cũ nên không dùng var(): màu viết thẳng */
   dialog::backdrop {
     background: rgb(15 27 45 / 0.5);
+  }
+  /* Danh sách thả xuống gốc: <select> nền trong suốt (FilterChip) thì popup nền trắng mà chữ thừa kế màu sáng */
+  option,
+  optgroup {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+  }
+  /* Nhãn "React Flow" ở góc sơ đồ: nền mặc định trắng mờ, lệch hẳn khi ở giao diện tối */
+  .react-flow__attribution {
+    background: var(--color-surface);
+  }
+  .react-flow__attribution a {
+    color: var(--color-text-muted);
   }
   :focus-visible {
     outline: 2px solid var(--color-accent);

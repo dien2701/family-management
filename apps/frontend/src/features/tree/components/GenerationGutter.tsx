@@ -20,7 +20,7 @@ export function GenerationGutter({ generations }: { generations: LayoutGeneratio
           style={{ top: y + g.y * zoom, height: g.height * zoom }}
         >
           {/* Nhãn viên thuốc như bản mẫu (#100) */}
-          <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-sm font-bold whitespace-nowrap text-text-muted tabular-nums shadow-card">
+          <span className="rounded-full border border-border bg-surface px-2 py-0.5 text-sm font-bold whitespace-nowrap text-text-muted tabular-nums shadow-card dark:border-transparent dark:bg-secondary dark:text-secondary-fg">
             {t.generation(g.generation)}
           </span>
         </div>

@@ -116,7 +116,8 @@ function MemberNodeView({ data }: NodeProps<MemberFlowNode>) {
   const boxHeight = live?.h ?? placed.height
 
   return (
-    <div className="group relative h-full w-full">
+    // `tree-light`: ô vẫn nền sáng chữ đậm ở giao diện tối (index.css)
+    <div className="tree-light group relative h-full w-full">
       <Handle type="target" position={Position.Top} isConnectable={false} style={hiddenHandle} />
       <Handle type="source" position={Position.Bottom} isConnectable={false} style={hiddenHandle} />
 
@@ -134,7 +135,8 @@ function MemberNodeView({ data }: NodeProps<MemberFlowNode>) {
           transformOrigin: 'top left',
         }}
         className={cn(
-          'flex cursor-pointer overflow-hidden border text-left transition-[border-color,box-shadow,opacity,filter] duration-200 ease-out hover:brightness-[0.97]',
+          // `text-text` đặt ngay trên ô: màu thừa kế từ body đã tính sẵn (chữ sáng), không theo biến của `tree-light`
+          'flex cursor-pointer overflow-hidden border text-left text-text transition-[border-color,box-shadow,opacity,filter] duration-200 ease-out hover:brightness-[0.97]',
           // Khoảng đệm khớp hằng số VERTICAL của nodeSize.ts (chrome 16, padding 22)
           vertical ? 'flex-col items-center px-2 pt-2.5 pb-3' : 'items-center gap-2 px-2',
           SHAPE_CLASS[shape],
@@ -185,7 +187,7 @@ function MemberNodeView({ data }: NodeProps<MemberFlowNode>) {
         type="button"
         aria-label={t.resizeHandle(name)}
         title={t.resizeHint}
-        className="nodrag nopan absolute -right-2 -bottom-2 z-10 flex size-7 cursor-nwse-resize touch-none items-center justify-center rounded-full border border-border bg-surface text-text-muted opacity-0 shadow-card transition-opacity duration-200 ease-out group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
+        className="nodrag nopan absolute -right-2 -bottom-2 z-10 flex size-7 cursor-nwse-resize touch-none items-center justify-center rounded-full border border-border bg-surface text-text-muted opacity-0 shadow-card transition-opacity dark:border-text-muted dark:text-text duration-200 ease-out group-hover:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100"
         onClick={(e) => e.stopPropagation()}
         onPointerDown={(e) => {
           e.stopPropagation()

@@ -18,7 +18,8 @@ export function TreeEdge({ data }: EdgeProps<TreeFlowEdge>) {
         strokeWidth={1.5}
         strokeLinejoin="round"
         strokeDasharray={marriage && edge.points.length > 2 ? '6 4' : undefined}
-        className={stroke}
+        // Giao diện tối: nét 2px cho rõ trên nền tối
+        className={`${stroke} dark:stroke-2`}
       />
       {edge.anchor && (
         <>

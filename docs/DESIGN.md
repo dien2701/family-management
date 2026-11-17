@@ -27,7 +27,7 @@ Nguồn: skill ui-ux-pro-max + docs/theme.png
 | Neutral | `--color-text` | `#0F1B2D` | Chữ chính |
 | | `--color-text-muted` | `#5B6B7F` | Chữ phụ (≥ 4.5:1 trên nền trắng) |
 | | `--color-deceased` | `#9AA5B1` | Viền ô cây và chữ phụ của người đã mất |
-| | `--color-tree-line` | `#C9D3DF` | Đường nối trên cây (hôn nhân, cha mẹ–con), nét 1.5px |
+| | `--color-tree-line` | `#C9D3DF` (tối `#8A9FBB`, hôn nhân tối `#EC9A95`) | Đường nối trên cây (hôn nhân, cha mẹ–con), nét 1.5px (tối 2px). **Giao diện tối (2026-11-17):** ô cây vẫn nền sáng chữ đậm (lớp `.tree-light` dùng lại token sáng, chữ năm `#46566A`), bản in luôn nền sáng; nhãn "Đời" nền `--color-secondary` |
 | Ô cây (#100) | `--color-tree-male` / `-bg` | `#6F9BD1` / `#E2ECF8` | Viền / nền ô của thành viên Nam còn sống |
 | | `--color-tree-female` / `-bg` | `#D98BA8` / `#FAE4EC` | Viền / nền ô của thành viên Nữ còn sống |
 | | `--color-tree-unknown` / `-bg` | `#B9C5D4` / `#FFFFFF` | Chưa điền giới tính (mặc định của cây) |
@@ -116,7 +116,7 @@ Dùng shadcn/ui làm nền, chỉnh theo token ở trên.
 | Thành phần | Quy cách |
 |---|---|
 | **Button** | Cao 44px, bo 10px, chữ 16px/600. `primary`: nền `--color-primary`, chữ `--color-primary-fg`. `secondary`: nền `--color-secondary`. `ghost`: trong suốt, hover `--color-surface-muted`. `danger`: nền `--color-danger`. Disabled giảm opacity 50%, kèm spinner khi đang gửi. |
-| **Input / Select** | Cao 44px, bo 12px, nền `--color-surface-muted`, viền `--color-border`. Nhãn luôn hiện phía trên (không dùng placeholder thay nhãn). Lỗi: viền `--color-danger` + thông báo ngay dưới trường. Có dòng gợi ý (helper) khi cần. |
+| **Input / Select** | Cao 44px, bo 12px, nền `--color-surface-muted`, viền `--color-border`. Nhãn luôn hiện phía trên (không dùng placeholder thay nhãn). Lỗi: viền `--color-danger` + thông báo ngay dưới trường. Có dòng gợi ý (helper) khi cần. Mục `<option>` của danh sách thả xuống gốc luôn nền `--color-surface`, chữ `--color-text` (đặt chung ở `index.css`), để giao diện tối không ra chữ sáng trên nền trắng. |
 | **Card** | Nền `--color-surface`, bo 16px, `--shadow-card`, viền `--color-border` 1px. Biến thể `card-primary` (navy, chữ trắng) cho thẻ hồ sơ. Thẻ có tiêu đề mục dùng `SectionCard` (mục 9). |
 | **Table** (≥768px) | Header nền `--color-surface-muted`, chữ 14px/600 muted. Hàng cao ≥ 48px, xen kẽ `--color-surface-muted`. Dưới 768px chuyển thành danh sách thẻ (IDEA §6.3). |
 | **Modal / Sheet** | Desktop: modal giữa màn hình, rộng tối đa 480px, bo 16px, `--shadow-overlay`. Mobile: bottom sheet bo góc trên 16px. Có nút đóng ≥ 44px, khóa cuộn nền, trả focus về nút mở, đóng bằng `Esc`. |

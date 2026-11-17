@@ -45,6 +45,8 @@ export type PrintColors = Record<keyof typeof TOKENS, string> & {
 export function readPrintColors(palette: TreePalette): PrintColors {
   const probe = document.createElement('div')
   probe.dataset.treePalette = palette
+  // Bản in luôn nền giấy sáng, kể cả khi đang ở giao diện tối (ô cây sáng, index.css)
+  probe.className = 'tree-light'
   probe.hidden = true
   document.body.append(probe)
   try {

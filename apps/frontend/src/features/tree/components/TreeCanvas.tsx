@@ -232,6 +232,8 @@ function TreeCanvasInner({
               className="overflow-hidden rounded-field border border-border shadow-card"
               style={isDesktop ? undefined : { width: 120, height: 90 }}
               bgColor="var(--color-surface)"
+              // Mặc định React Flow là lớp phủ trắng mờ: lấy theo nền trang để giao diện tối không ra ô trắng
+              maskColor="color-mix(in srgb, var(--color-bg) 65%, transparent)"
               nodeColor={miniFill}
               nodeStrokeColor={miniStroke}
               nodeStrokeWidth={4}
