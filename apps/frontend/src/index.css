@@ -23,7 +23,7 @@
   --color-text: #0f1b2d;
   --color-text-muted: #5b6b7f;
   --color-deceased: #9aa5b1;
-  --color-tree-line: #c9d3df;
+  --color-tree-line: #7a8ea8;
   /* Ô cây theo giới tính (DECISIONS #100, DESIGN §1) */
   --color-tree-male: #6f9bd1;
   --color-tree-male-bg: #e2ecf8;
@@ -33,7 +33,7 @@
   --color-tree-unknown-bg: #ffffff;
   --color-tree-gone: #9aa5b1;
   --color-tree-gone-bg: #f1f4f7;
-  --color-tree-marriage: #e08a86;
+  --color-tree-marriage: #d06e69;
   --color-success: #1f7a45;
   --color-success-bg: #e6f6ec;
   --color-warning: #9a5b00;
@@ -164,8 +164,8 @@
   --color-text: #0f1b2d;
   --color-text-muted: #46566a;
   --color-deceased: #9aa5b1;
-  --color-tree-line: #c9d3df;
-  --color-tree-marriage: #e08a86;
+  --color-tree-line: #7a8ea8;
+  --color-tree-marriage: #d06e69;
 }
 
 

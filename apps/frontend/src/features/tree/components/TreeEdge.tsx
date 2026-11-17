@@ -2,7 +2,7 @@ import type { EdgeProps } from '@xyflow/react'
 import type { TreeFlowEdge } from '../flow'
 
 // Đường nối vẽ đúng các điểm do `layoutTree` tính (hôn nhân kèm thứ tự, cặp cha–mẹ → con, một mình cha/mẹ → con),
-// nét 1.5px theo DESIGN §6. Hôn nhân màu `tree-marriage`, nét đứt khi cặp không kề nhau (đường phải vòng, #100);
+// nét 2px theo DESIGN §6. Hôn nhân màu `tree-marriage`, nét đứt khi cặp không kề nhau (đường phải vòng, #100);
 // cha mẹ–con màu `tree-line`. Không dùng đường cong mặc định của React Flow.
 export function TreeEdge({ data }: EdgeProps<TreeFlowEdge>) {
   if (!data) return null
@@ -15,11 +15,10 @@ export function TreeEdge({ data }: EdgeProps<TreeFlowEdge>) {
       <path
         d={path}
         fill="none"
-        strokeWidth={1.5}
+        strokeWidth={2}
         strokeLinejoin="round"
         strokeDasharray={marriage && edge.points.length > 2 ? '6 4' : undefined}
-        // Giao diện tối: nét 2px cho rõ trên nền tối
-        className={`${stroke} dark:stroke-2`}
+        className={stroke}
       />
       {edge.anchor && (
         <>

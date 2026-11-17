@@ -224,7 +224,7 @@ function TreeCanvasInner({
             nodeDragThreshold={6}
             minZoom={0.15}
             maxZoom={1.5}
-            onlyRenderVisibleElements
+            // Không bật onlyRenderVisibleElements: nó ẩn dây khi ô hai đầu ra ngoài khung nhìn
             attributionPosition="top-left"
           >
             {/* Bản đồ thu nhỏ: điện thoại cũng hiện theo mẫu (thay quyết định ẩn ở #100), cỡ nhỏ hơn cho đỡ chiếm chỗ */}

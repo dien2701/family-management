@@ -27,12 +27,12 @@ Nguồn: skill ui-ux-pro-max + docs/theme.png
 | Neutral | `--color-text` | `#0F1B2D` | Chữ chính |
 | | `--color-text-muted` | `#5B6B7F` | Chữ phụ (≥ 4.5:1 trên nền trắng) |
 | | `--color-deceased` | `#9AA5B1` | Viền ô cây và chữ phụ của người đã mất |
-| | `--color-tree-line` | `#C9D3DF` (tối `#8A9FBB`, hôn nhân tối `#EC9A95`) | Đường nối trên cây (hôn nhân, cha mẹ–con), nét 1.5px (tối 2px). **Giao diện tối (2026-11-17):** ô cây vẫn nền sáng chữ đậm (lớp `.tree-light` dùng lại token sáng, chữ năm `#46566A`), bản in luôn nền sáng; nhãn "Đời" nền `--color-secondary` |
+| | `--color-tree-line` | `#7A8EA8` (tối `#8A9FBB`, hôn nhân tối `#EC9A95`) | Đường nối trên cây (hôn nhân, cha mẹ–con), nét 2px, luôn vẽ đủ (không ẩn khi ra ngoài khung nhìn). **Giao diện tối (2026-11-17):** ô cây vẫn nền sáng chữ đậm (lớp `.tree-light` dùng lại token sáng, chữ năm `#46566A`), bản in luôn nền sáng; nhãn "Đời" nền `--color-secondary` |
 | Ô cây (#100) | `--color-tree-male` / `-bg` | `#6F9BD1` / `#E2ECF8` | Viền / nền ô của thành viên Nam còn sống |
 | | `--color-tree-female` / `-bg` | `#D98BA8` / `#FAE4EC` | Viền / nền ô của thành viên Nữ còn sống |
 | | `--color-tree-unknown` / `-bg` | `#B9C5D4` / `#FFFFFF` | Chưa điền giới tính (mặc định của cây) |
 | | `--color-tree-gone` / `-bg` | `#9AA5B1` / `#F1F4F7` | Đã mất — xám, đè lên màu giới tính |
-| | `--color-tree-marriage` | `#E08A86` | Đường hôn nhân (nét đứt khi vợ/chồng không kề nhau) |
+| | `--color-tree-marriage` | `#D06E69` | Đường hôn nhân (nét đứt khi vợ/chồng không kề nhau) |
 | Trạng thái | `--color-success` / `-bg` | `#1F7A45` / `#E6F6EC` | Badge "Còn sống", "Đã duyệt" |
 | | `--color-warning` / `-bg` | `#9A5B00` / `#FFF4DE` | Badge "Chờ duyệt", cảnh báo xung đột |
 | | `--color-danger` / `-bg` | `#C5221F` / `#FDECEA` | Lỗi, nút Xóa/Khóa |
@@ -127,7 +127,7 @@ Dùng shadcn/ui làm nền, chỉnh theo token ở trên.
 | **Badge** | Viên thuốc, chữ 14px/500, cặp màu `-bg` + màu chữ tương ứng của trạng thái. Luôn có chữ, không chỉ màu. |
 | **Thẻ hồ sơ (chi tiết member)** | Thẻ primary navy, avatar vuông bo 16px, badge trạng thái góc trên trái, tên chữ trắng đậm, dòng phụ: năm sinh – năm mất và đời. Bên dưới là các ô trắng lồng trong thẻ, mỗi ô một dòng liên hệ có icon tròn (SĐT, email, nơi chôn cất). |
 | **Thẻ số liệu (dashboard)** | Ô `--color-surface-muted` bo 12px trong `SectionCard` "Gia phả", nhãn muted 14px, số 24px (32px ở máy tính). Biểu đồ dùng Recharts theo skill dataviz, không dựa vào màu đơn thuần. |
-| **Nút thành viên trên cây** | **Hai kiểu, đổi ở thanh công cụ.** *Kiểu dọc (mặc định, #100, hẹp theo #102):* ảnh tròn 44px trên cùng (không có ảnh thì chữ cái đầu, nền theo giới tính), tên 15px/600 dòng 20px căn giữa, mỗi dòng rộng cỡ "Bà Nguyễn", không giới hạn số dòng; năm sinh – năm mất 13px muted sát đáy; cỡ ô do đo chữ mà ra (rộng khoảng 100px ở cỡ Vừa). *Kiểu ngang:* rộng 200px, cao 72px, avatar 40px bên trái, tên + năm bên phải. Nền và viền theo **tông ô**: Nam `--color-tree-male`, Nữ `--color-tree-female`, chưa điền giới tính `--color-tree-unknown`, **đã mất `--color-tree-gone` (đè lên màu giới tính) + ảnh `grayscale`; dòng năm `1930 – 1990`, chưa rõ ghi `?` (#101, #102)**. Bo góc theo hình dạng đã chọn (mặc định 12px). Nhãn đặc biệt hiện dạng badge; bỏ được bằng Cấu hình cây cùng với ảnh và năm. Đang chọn: viền `--color-accent` 2px. Đường nối cha mẹ–con `--color-tree-line`, đường hôn nhân `--color-tree-marriage`, đều nét 1.5px. Toàn bộ nút là vùng bấm. Ô trống: viền đứt, nền `--color-surface-muted`, chữ "Ô trống". Nhãn đặc biệt và "Tôi" là thẻ nhỏ đè lên viền trên của ô. Cột "Đời 01…N" cố định bên trái sơ đồ, nhãn dạng viên thuốc nền `--color-surface` có viền và đổ bóng, chữ 14px/700 muted. Nút "+" của Admin (máy tính): chấm tròn 24px trên viền ô, vùng bấm nới ra 40px; điện thoại thêm qua menu của ô. **Ngoại lệ cỡ chữ:** chữ bên trong ô cây là nhãn sơ đồ phóng to thu nhỏ được (15px tên, 13px năm), không áp mức tối thiểu 16px của chữ nền. |
+| **Nút thành viên trên cây** | **Hai kiểu, đổi ở thanh công cụ.** *Kiểu dọc (mặc định, #100, hẹp theo #102):* ảnh tròn 44px trên cùng (không có ảnh thì chữ cái đầu, nền theo giới tính), tên 15px/600 dòng 20px căn giữa, mỗi dòng rộng cỡ "Bà Nguyễn", không giới hạn số dòng; năm sinh – năm mất 13px muted sát đáy; cỡ ô do đo chữ mà ra (rộng khoảng 100px ở cỡ Vừa). *Kiểu ngang:* rộng 200px, cao 72px, avatar 40px bên trái, tên + năm bên phải. Nền và viền theo **tông ô**: Nam `--color-tree-male`, Nữ `--color-tree-female`, chưa điền giới tính `--color-tree-unknown`, **đã mất `--color-tree-gone` (đè lên màu giới tính) + ảnh `grayscale`; dòng năm `1930 – 1990`, chưa rõ ghi `?` (#101, #102)**. Bo góc theo hình dạng đã chọn (mặc định 12px). Nhãn đặc biệt hiện dạng badge; bỏ được bằng Cấu hình cây cùng với ảnh và năm. Đang chọn: viền `--color-accent` 2px. Đường nối cha mẹ–con `--color-tree-line`, đường hôn nhân `--color-tree-marriage`, đều nét 2px. Toàn bộ nút là vùng bấm. Ô trống: viền đứt, nền `--color-surface-muted`, chữ "Ô trống". Nhãn đặc biệt và "Tôi" là thẻ nhỏ đè lên viền trên của ô. Cột "Đời 01…N" cố định bên trái sơ đồ, nhãn dạng viên thuốc nền `--color-surface` có viền và đổ bóng, chữ 14px/700 muted. Nút "+" của Admin (máy tính): chấm tròn 24px trên viền ô, vùng bấm nới ra 40px; điện thoại thêm qua menu của ô. **Ngoại lệ cỡ chữ:** chữ bên trong ô cây là nhãn sơ đồ phóng to thu nhỏ được (15px tên, 13px năm), không áp mức tối thiểu 16px của chữ nền. |
 | **Lịch tháng** | Ô ngày: số dương 16px, số âm 13px muted, chấm màu theo loại sự kiện. Mobile: danh sách theo tuần, mỗi sự kiện chấm màu + tên. Chú giải: chấm màu + chữ, không icon. |
 | **Hàng sự kiện** | Ô số ngày bên trái rộng 64px bo 12px: số 24px/700 + "ngày nữa"/"ngày trước" 14px (nền `--color-secondary`; hôm nay nền primary chữ "Hôm nay"; ngày mai chỉ ghi "Ngày mai"; đã qua nền surface-muted chữ muted). Giữa: tên 16px/600, dòng loại 14px/500 có chấm màu 10px ("Giỗ lần thứ 5", "Tròn 70 tuổi" hoặc tên loại), dòng ngày dương – âm muted, ghi chú tối đa 2 dòng. Không badge. Nút Sửa ghost màu muted; nút Xóa luôn màu danger, hover nền `--color-danger-bg`. Ô số ngày + phần chữ là một nút mở hộp **"Chi tiết sự kiện"** (`OccurrenceDetailDialog`, bottom sheet ở điện thoại): ô số ngày + tên 18px/700 + dòng loại; bảng Dương lịch, Âm lịch, Ghi chú đầy đủ; hàng nút chia đều: Xem hồ sơ (giỗ, sinh nhật), Sửa (outline), Xóa (danger) theo quyền. Trang Tổng quan dùng chung hộp này (không có Sửa/Xóa). Chip lọc và tiêu đề thẻ ở trang Sự kiện không có icon. |
 | **Trạng thái rỗng** | Icon lucide lớn + một câu ngắn + một nút hành động gợi ý. |
@@ -164,7 +164,7 @@ Dùng shadcn/ui làm nền, chỉnh theo token ở trên.
   --color-text: #0F1B2D;
   --color-text-muted: #5B6B7F;
   --color-deceased: #9AA5B1;
-  --color-tree-line: #C9D3DF;
+  --color-tree-line: #7A8EA8;
   --color-tree-male: #6F9BD1;
   --color-tree-male-bg: #E2ECF8;
   --color-tree-female: #D98BA8;
@@ -173,7 +173,7 @@ Dùng shadcn/ui làm nền, chỉnh theo token ở trên.
   --color-tree-unknown-bg: #FFFFFF;
   --color-tree-gone: #9AA5B1;
   --color-tree-gone-bg: #F1F4F7;
-  --color-tree-marriage: #E08A86;
+  --color-tree-marriage: #D06E69;
   --color-success: #1F7A45;
   --color-success-bg: #E6F6EC;
   --color-warning: #9A5B00;
