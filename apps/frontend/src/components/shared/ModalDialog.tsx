@@ -7,6 +7,8 @@ type ModalDialogProps = {
   title: string
   /** Đang gửi dữ liệu: không cho đóng bằng Esc hay nút đóng. */
   busy?: boolean
+  /** Rộng tới 720px ở ≥768px (nội dung hai cột), mặc định 480px. */
+  wide?: boolean
   onClose: () => void
   children: ReactNode
 }
@@ -14,7 +16,7 @@ type ModalDialogProps = {
 // Hộp thoại có nội dung tùy ý (form, danh sách chọn). Cùng kiểu với ConfirmDialog (DESIGN §6): <dialog> gốc có sẵn
 // khóa focus, đóng bằng Esc và trả focus về nút đã mở. Điện thoại: bottom sheet bo góc trên; ≥768px: modal giữa
 // màn hình rộng tối đa 480px. Nội dung chỉ được dựng khi mở nên state bên trong tự về ban đầu ở mỗi lần mở.
-export function ModalDialog({ open, title, busy, onClose, children }: ModalDialogProps) {
+export function ModalDialog({ open, title, busy, wide, onClose, children }: ModalDialogProps) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
 
@@ -43,7 +45,7 @@ export function ModalDialog({ open, title, busy, onClose, children }: ModalDialo
         e.preventDefault()
         if (!busy) onClose()
       }}
-      className="m-0 mt-auto max-h-[92dvh] w-full max-w-none flex-col rounded-t-card border border-border bg-surface p-0 text-text shadow-overlay open:flex md:m-auto md:max-h-[85dvh] md:max-w-[480px] md:rounded-card"
+      className={`m-0 mt-auto max-h-[92dvh] w-full max-w-none flex-col rounded-t-card border border-border bg-surface p-0 text-text shadow-overlay open:flex md:m-auto md:max-h-[85dvh] md:rounded-card ${wide ? 'md:max-w-[720px]' : 'md:max-w-[480px]'}`}
     >
       {open && (
         <>

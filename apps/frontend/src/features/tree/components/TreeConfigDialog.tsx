@@ -57,9 +57,10 @@ export function TreeConfigDialog({ open, prefs, onPrefsChange, onCardChange, onC
   return (
     <ModalDialog open={open} title={s.title} onClose={onClose}>
       <Group title={s.filterGroup} hint={filterHint}>
-        <div className="grid grid-cols-3 gap-2">
+        {/* Rộng theo chữ rồi chia phần dư: ba cột bằng nhau làm "Chỉ huyết thống" xuống dòng ở 375px */}
+        <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => (
-            <Choice key={f} pressed={prefs.filter === f} onClick={() => onPrefsChange({ filter: f })} className="px-2 text-center">
+            <Choice key={f} pressed={prefs.filter === f} onClick={() => onPrefsChange({ filter: f })} className="flex-auto whitespace-nowrap">
               {filterLabel[f]}
             </Choice>
           ))}

@@ -14,8 +14,10 @@ import {
   lineageIdOf,
   type SpouseEntry,
   type TreeGraph,
+  type TreeIndex,
   type TreeNode,
 } from '@/utils/tree'
+import type { TreeFilter } from '../cardStyle'
 import type { LayoutEdge, LayoutOptions, LayoutResult, PlacedNode, Point } from './types'
 
 export const LAYOUT = {
@@ -71,6 +73,27 @@ type Unit = {
 
 const mean = (values: number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
 
+// Lọc của hộp Cấu hình cây: vợ/chồng Nữ và nhánh con gái bị ẩn ở chế độ "Chỉ Nam";
+// "Chỉ huyết thống" bỏ hết ô vợ/chồng. Người chưa điền giới tính luôn được giữ. Gốc không bao giờ bị lọc.
+function filterRules(filter: TreeFilter) {
+  const notFemale = (node: TreeNode) => node.member?.gender !== 'F'
+  return {
+    keepSpouse: (node: TreeNode) => (filter === 'bloodline' ? false : filter === 'male' ? notFemale(node) : true),
+    keepChild: (node: TreeNode) => filter !== 'male' || notFemale(node),
+  }
+}
+
+/** Ô này có bị bộ lọc ẩn không: chính nó, hoặc một ô thuộc dòng phía trên nó (cả nhánh con gái ẩn theo). */
+export function hiddenByFilter(index: TreeIndex, nodeId: number, filter: TreeFilter): boolean {
+  const node = index.nodes.get(nodeId)
+  if (!node || filter === 'all') return false
+  const { keepSpouse, keepChild } = filterRules(filter)
+  if (index.ownerOf.has(nodeId) && !keepSpouse(node)) return true
+  const lineage = index.nodes.get(lineageIdOf(index, nodeId))
+  if (!lineage) return false
+  return [lineage, ...getAncestors(index, lineage.id)].some((n) => n.parentNodeId !== null && !keepChild(n))
+}
+
 export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): LayoutResult {
   const { spouseGap, siblingGap, treeGap, rowGap, laneStep, marriageLaneStep } = LAYOUT
   // Cỡ ô mặc định 200×72; giao diện truyền cỡ vừa với tên và cỡ riêng của từng ô (nếu có)
@@ -80,12 +103,7 @@ export function layoutTree(graph: TreeGraph, options: LayoutOptions = {}): Layou
     w: options.nodeSizes?.get(node.id)?.width ?? defaultW,
     h: options.nodeSizes?.get(node.id)?.height ?? defaultH,
   })
-  const filter = options.filter ?? 'all'
-  // Lọc của hộp Cấu hình cây: vợ/chồng Nữ và nhánh con gái bị ẩn ở chế độ "Chỉ Nam";
-  // "Chỉ huyết thống" bỏ hết ô vợ/chồng. Người chưa điền giới tính luôn được giữ.
-  const notFemale = (node: TreeNode) => node.member?.gender !== 'F'
-  const keepSpouse = (node: TreeNode) => (filter === 'bloodline' ? false : filter === 'male' ? notFemale(node) : true)
-  const keepChild = (node: TreeNode) => filter !== 'male' || notFemale(node)
+  const { keepSpouse, keepChild } = filterRules(options.filter ?? 'all')
   const index = buildTreeIndex(graph)
   const generations = computeGenerations(index)
 

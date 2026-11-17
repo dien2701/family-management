@@ -30,7 +30,7 @@ import { TreeConfigDialog } from '../components/TreeConfigDialog'
 import { TreePhoneTools } from '../components/TreePhoneTools'
 import { TreePreviewScreen } from '../components/TreePreviewScreen'
 import { TreeToolbar, type ViewStatus } from '../components/TreeToolbar'
-import { layoutTree } from '../layout/layoutTree'
+import { hiddenByFilter, layoutTree } from '../layout/layoutTree'
 import { fitNodeSizes, SIZE_SCALE } from '../nodeSize'
 import { nodeName } from '../nodeText'
 import { treeStrings as t } from '../strings'
@@ -139,13 +139,15 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
   const [notice, setNotice] = useState<Notice | null>(null)
   const [dragId, setDragId] = useState<number | null>(null)
   const [printOpen, setPrintOpen] = useState(false)
+  // Người vừa tìm/thêm/mở từ liên kết: nếu bộ lọc đang ẩn người này thì hiện thông báo kèm nút "Hiện tất cả"
+  const [sought, setSought] = useState<number | null>(initial.highlight)
 
   // Đang xem tổ tiên là một phần của cây nên không chỉnh sửa ở chế độ này
   const editing = isAdmin && ancestorsOf === null
 
   const { prefs, nodes: overrides, setPrefs, setCard, setNode, resetNodes } = useTreeViewPrefs()
   const [configOpen, setConfigOpen] = useState(false)
-  // Hộp Xưng hô: mỗi lần mở dựng lại để lấy "Tôi" và ô đang chọn làm hai người ban đầu
+  // Hộp Xưng hô: mỗi lần mở dựng lại để lấy ô đang chọn và "Tôi" làm hai người ban đầu
   const [kinship, setKinship] = useState({ open: false, key: 0 })
   const openKinship = () => setKinship((k) => ({ open: true, key: k.key + 1 }))
   // Font tải xong thì đo lại cỡ ô cho đúng
@@ -200,11 +202,14 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
   const requestView = (nodeId: number | null) => setView((v) => ({ tick: v.tick + 1, nodeId }))
 
   // Đổi dọc/ngang hoặc cỡ ô thì kích thước cây đổi nhiều: đưa khung nhìn về vừa cả cây
+  // (hoặc về người vừa được bỏ lọc nhờ nút "Hiện tất cả")
   const prefsSeen = useRef(prefs)
+  const viewAfterPrefs = useRef<number | null>(null)
   useEffect(() => {
     if (prefsSeen.current === prefs) return
     prefsSeen.current = prefs
-    requestView(null)
+    requestView(viewAfterPrefs.current)
+    viewAfterPrefs.current = null
   }, [prefs])
 
 
@@ -240,8 +245,20 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
     }
     setFocusId(nodeId)
     setSelectedId(nodeId)
+    setSought(nodeId)
     highlight(nodeId)
     requestView(nodeId)
+  }
+
+  // Tính lại theo index mới nên người vừa thêm (chưa có trong index lúc thêm) cũng được kiểm khi cây tải lại
+  const soughtNode = sought === null ? undefined : index.nodes.get(sought)
+  const soughtHidden = soughtNode?.member && prefs.filter !== 'all' && hiddenByFilter(index, soughtNode.id, prefs.filter) ? soughtNode : null
+  const showFiltered = () => {
+    if (!soughtHidden) return
+    viewAfterPrefs.current = soughtHidden.id
+    setFocusId(soughtHidden.id)
+    highlight(soughtHidden.id)
+    setPrefs({ filter: 'all' })
   }
 
   const showAll = () => {
@@ -341,6 +358,11 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
       case 'viewFrom':
         closeFlow()
         viewFrom(nodeId)
+        break
+      case 'kinship':
+        // Ô này đã là selectedId (mở menu thì chọn ô) nên hộp Xưng hô lấy sẵn người này và "Tôi"
+        closeFlow()
+        openKinship()
         break
       case 'toggleCollapse':
         closeFlow()
@@ -454,6 +476,8 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
   const moveFlow = flow?.kind === 'move' ? flow : null
   const flowNodeId = flow && flow.kind !== 'add' ? flow.nodeId : null
   const flowNode = flowNodeId === null ? null : (index.nodes.get(flowNodeId) ?? null)
+  // Hộp Xưng hô: người đang chọn trên cây ở ô thứ nhất, "Tôi" ở ô thứ hai; chưa chọn ai thì "Tôi" ở ô thứ nhất
+  const kinshipPicked = selectedId !== null && index.nodes.get(selectedId)?.member ? selectedId : null
 
   return (
     <TreeActionsContext.Provider value={actions}>
@@ -491,6 +515,22 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
               )}
             </Alert>
             <Button variant="ghost" size="icon" aria-label={t.toolbar.dismiss} onClick={() => setNotice(null)}>
+              <X />
+            </Button>
+          </div>
+        )}
+        {soughtHidden && (
+          <div className="flex items-start gap-2">
+            <Alert variant="info" className="flex-1">
+              {t.toolbar.hiddenByFilter(
+                nodeName(soughtHidden),
+                prefs.filter === 'male' ? t.config.filterMale : t.config.filterBloodline,
+              )}
+              <button type="button" onClick={showFiltered} className="ml-2 cursor-pointer font-semibold underline">
+                {t.toolbar.showAllMembers}
+              </button>
+            </Alert>
+            <Button variant="ghost" size="icon" aria-label={t.toolbar.dismiss} onClick={() => setSought(null)}>
               <X />
             </Button>
           </div>
@@ -541,8 +581,8 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
         open={kinship.open}
         index={index}
         generations={generations}
-        initialA={myNodeId}
-        initialB={selectedId !== null && selectedId !== myNodeId && index.nodes.get(selectedId)?.member ? selectedId : null}
+        initialA={kinshipPicked ?? myNodeId}
+        initialB={kinshipPicked !== null && kinshipPicked !== myNodeId ? myNodeId : null}
         onClose={() => setKinship((k) => ({ ...k, open: false }))}
       />
       <TreeConfigDialog

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { kinshipBetween, type TreeIndex } from '@/utils/tree'
 import { nodeName } from '../nodeText'
 import { treeStrings } from '../strings'
-import { MemberPicker } from './MemberPicker'
+import { PersonSelect } from './PersonSelect'
 
 const s = treeStrings.kinship
 
@@ -14,7 +14,7 @@ type KinshipDialogProps = {
   open: boolean
   index: TreeIndex
   generations: ReadonlyMap<number, number>
-  /** Mở sẵn: người thứ nhất là "Tôi" (nếu đã liên kết), người thứ hai là ô đang chọn trên cây. */
+  /** Mở sẵn: người thứ nhất là ô đang chọn trên cây (không có thì "Tôi"), người thứ hai là "Tôi" (nếu đã liên kết). */
   initialA: number | null
   initialB: number | null
   onClose: () => void
@@ -32,21 +32,11 @@ export function KinshipDialog({ open, index, generations, initialA, initialB, on
     const node = index.nodes.get(id)
     return node ? nodeName(node) : ''
   }
-  const pickerProps = {
-    index,
-    generations,
-    placeholder: s.placeholder,
-    resultsLabel: s.results,
-    noMatch: s.noMatch,
-    floating: false,
-  }
-
   return (
-    <ModalDialog open={open} title={s.title} onClose={onClose}>
-      <p className="text-text-muted">{s.intro}</p>
-
-      <div className="flex flex-col gap-2">
-        <MemberPicker {...pickerProps} label={s.first} selectedId={a} onPick={setA} />
+    <ModalDialog open={open} title={s.title} wide onClose={onClose}>
+      {/* Điện thoại: hai ô xếp chồng; ≥768px: hai ô cạnh nhau như mẫu, nút hoán đổi ở giữa */}
+      <div className="flex flex-col gap-1 md:grid md:grid-cols-[1fr_auto_1fr] md:items-end md:gap-2">
+        <PersonSelect index={index} generations={generations} label={s.first} selectedId={a} onPick={setA} />
         <div className="flex justify-center">
           <Button
             variant="ghost"
@@ -59,10 +49,10 @@ export function KinshipDialog({ open, index, generations, initialA, initialB, on
               setB(a)
             }}
           >
-            <ArrowDownUp />
+            <ArrowDownUp className="md:rotate-90" />
           </Button>
         </div>
-        <MemberPicker {...pickerProps} label={s.second} selectedId={b} onPick={setB} />
+        <PersonSelect index={index} generations={generations} label={s.second} selectedId={b} onPick={setB} />
       </div>
 
       <div aria-live="polite" className="flex flex-col gap-3">

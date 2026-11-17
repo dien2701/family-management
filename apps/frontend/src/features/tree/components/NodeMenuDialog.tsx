@@ -5,6 +5,7 @@ import {
   ChevronsDownUp,
   ChevronsUpDown,
   Heart,
+  HeartHandshake,
   Move,
   Network,
   RotateCcw,
@@ -30,6 +31,7 @@ const t = treeStrings.menu
 export type MenuAction =
   | 'profile'
   | 'viewFrom'
+  | 'kinship'
   | 'toggleCollapse'
   | 'rotate'
   | 'resetNode'
@@ -154,6 +156,11 @@ export function NodeMenuDialog({ open, node, index, generation, isAdmin, collaps
         <Item icon={Network} onClick={run('viewFrom')}>
           {empty ? t.viewFromSlot : t.viewFrom}
         </Item>
+        {!empty && (
+          <Item icon={HeartHandshake} onClick={run('kinship')}>
+            {t.kinship}
+          </Item>
+        )}
         <Item icon={RotateCw} onClick={run('rotate')}>
           {vertical ? t.rotateToHorizontal : t.rotateToVertical}
         </Item>
