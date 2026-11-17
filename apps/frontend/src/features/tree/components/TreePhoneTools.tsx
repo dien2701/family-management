@@ -1,15 +1,50 @@
-import { Ellipsis, HeartHandshake, Plus, Printer, RectangleHorizontal, RectangleVertical, RotateCcw, UserRound } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { Ellipsis, HeartHandshake, Plus, Printer, RectangleHorizontal, RectangleVertical, RotateCcw, Search, UserRound } from 'lucide-react'
+import { useState } from 'react'
 import { ListGroup, ListRow } from '@/components/shared/ListRow'
 import { ModalDialog } from '@/components/shared/ModalDialog'
-import { cn } from '@/utils/cn'
+import type { TreeIndex } from '@/utils/tree'
 import type { TreeViewPrefs } from '../nodeSize'
 import { treeStrings } from '../strings'
+import { MemberPicker } from './MemberPicker'
+import { ToolButton } from './TreeCanvas'
 import { SizeGroup } from './TreeToolbar'
 
 const s = treeStrings.toolbar
 
-type TreePhoneToolsProps = {
+type PhoneSearchProps = {
+  index: TreeIndex
+  generations: ReadonlyMap<number, number>
+  onPick: (nodeId: number) => void
+}
+
+/** Điện thoại: nút kính lúp đầu thanh công cụ góc dưới trái, mở hộp "Tìm trên cây" (thay ô tìm phía trên sơ đồ). */
+export function PhoneSearchTool({ index, generations, onPick }: PhoneSearchProps) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <ToolButton label={s.search} onClick={() => setOpen(true)}>
+        <Search aria-hidden="true" />
+      </ToolButton>
+      <ModalDialog open={open} title={s.search} onClose={() => setOpen(false)}>
+        <MemberPicker
+          index={index}
+          generations={generations}
+          label={s.search}
+          placeholder={s.searchPlaceholder}
+          resultsLabel={s.searchResults}
+          noMatch={s.searchNoMatch}
+          floating={false}
+          onPick={(nodeId) => {
+            setOpen(false)
+            onPick(nodeId)
+          }}
+        />
+      </ModalDialog>
+    </>
+  )
+}
+
+type PhoneMoreProps = {
   isAdmin: boolean
   prefs: TreeViewPrefs
   onPrefsChange: (change: Partial<TreeViewPrefs>) => void
@@ -21,37 +56,8 @@ type TreePhoneToolsProps = {
   onPrint: () => void
 }
 
-function RoundButton({
-  label,
-  primary,
-  onClick,
-  children,
-}: {
-  label: string
-  primary?: boolean
-  onClick: () => void
-  children: ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className={cn(
-        'flex size-11 cursor-pointer items-center justify-center rounded-full shadow-card transition-colors duration-200 ease-out [&_svg]:size-5',
-        primary
-          ? 'bg-primary text-primary-fg hover:bg-primary-hover'
-          : 'border border-border bg-surface text-primary hover:bg-surface-muted',
-      )}
-    >
-      {children}
-    </button>
-  )
-}
-
-/** Điện thoại: cột nút tròn 44px nổi ở góc trên phải sơ đồ; các tùy chọn ít dùng nằm trong bảng "Tùy chọn hiển thị". */
-export function TreePhoneTools({
+/** Điện thoại: nút "Xem cây" và "..." cuối thanh công cụ góc dưới trái; các thao tác còn lại nằm trong bảng "...". */
+export function PhoneMoreTools({
   isAdmin,
   prefs,
   onPrefsChange,
@@ -61,7 +67,7 @@ export function TreePhoneTools({
   onMyAncestors,
   onKinship,
   onPrint,
-}: TreePhoneToolsProps) {
+}: PhoneMoreProps) {
   const [open, setOpen] = useState(false)
   const run = (action: () => void) => () => {
     setOpen(false)
@@ -70,25 +76,12 @@ export function TreePhoneTools({
 
   return (
     <>
-      <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 md:hidden">
-        <RoundButton label={s.myAncestors} onClick={onMyAncestors}>
-          <UserRound aria-hidden="true" />
-        </RoundButton>
-        <RoundButton
-          label={prefs.vertical ? s.horizontalView : s.verticalView}
-          onClick={() => onPrefsChange({ vertical: !prefs.vertical })}
-        >
-          {prefs.vertical ? <RectangleHorizontal aria-hidden="true" /> : <RectangleVertical aria-hidden="true" />}
-        </RoundButton>
-        {isAdmin && (
-          <RoundButton label={s.addRoot} primary onClick={onAddRoot}>
-            <Plus aria-hidden="true" />
-          </RoundButton>
-        )}
-        <RoundButton label={s.moreTools} onClick={() => setOpen(true)}>
-          <Ellipsis aria-hidden="true" />
-        </RoundButton>
-      </div>
+      <ToolButton label={s.print} onClick={onPrint}>
+        <Printer aria-hidden="true" />
+      </ToolButton>
+      <ToolButton label={s.moreTools} onClick={() => setOpen(true)}>
+        <Ellipsis aria-hidden="true" />
+      </ToolButton>
 
       <ModalDialog open={open} title={s.moreTools} onClose={() => setOpen(false)}>
         <div className="flex flex-col gap-1.5">
@@ -97,7 +90,13 @@ export function TreePhoneTools({
         </div>
         <ListGroup>
           <ListRow icon={HeartHandshake} label={s.kinship} onClick={run(onKinship)} />
-          <ListRow icon={Printer} label={s.print} onClick={run(onPrint)} />
+          <ListRow icon={UserRound} label={s.myAncestors} onClick={run(onMyAncestors)} />
+          <ListRow
+            icon={prefs.vertical ? RectangleHorizontal : RectangleVertical}
+            label={prefs.vertical ? s.horizontalView : s.verticalView}
+            onClick={run(() => onPrefsChange({ vertical: !prefs.vertical }))}
+          />
+          {isAdmin && <ListRow icon={Plus} label={s.addRoot} onClick={run(onAddRoot)} />}
           {hasNodeOverrides && <ListRow icon={RotateCcw} label={s.resetNodes} onClick={run(onResetNodes)} />}
         </ListGroup>
       </ModalDialog>

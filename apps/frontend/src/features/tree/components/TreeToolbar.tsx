@@ -92,7 +92,8 @@ export function TreeToolbar({
 }: TreeToolbarProps) {
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-col gap-3 md:flex-row md:items-end">
+      {/* Điện thoại: ô tìm và các nút nằm trong thanh công cụ góc dưới trái sơ đồ (TreePhoneTools) */}
+      <div className="hidden gap-3 md:flex md:flex-row md:items-end">
         <MemberPicker
           index={index}
           generations={generations}
@@ -104,8 +105,7 @@ export function TreeToolbar({
           className="md:w-72 md:shrink-0"
         />
 
-        {/* Điện thoại: các nút này nổi trên sơ đồ (TreePhoneTools) */}
-        <div className="hidden flex-1 flex-wrap gap-2 md:flex">
+        <div className="flex flex-1 flex-wrap gap-2">
           <Button variant="secondary" onClick={onKinship}>
             <HeartHandshake aria-hidden="true" />
             {s.kinship}

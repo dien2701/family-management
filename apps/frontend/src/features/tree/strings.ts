@@ -43,6 +43,8 @@ export const treeStrings = {
     resetNodes: 'Đặt lại các ô',
     sizeGroup: 'Cỡ ô',
     moreTools: 'Tùy chọn hiển thị',
+    collapseTools: 'Thu gọn thanh công cụ',
+    expandTools: 'Mở thanh công cụ',
     sizeSmall: 'Nhỏ',
     sizeMedium: 'Vừa',
     sizeLarge: 'Lớn',

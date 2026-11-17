@@ -27,7 +27,7 @@ import { PairDialog } from '../components/PairDialog'
 import { ReorderDialog } from '../components/ReorderDialog'
 import { TreeCanvas, type ViewRequest } from '../components/TreeCanvas'
 import { TreeConfigDialog } from '../components/TreeConfigDialog'
-import { TreePhoneTools } from '../components/TreePhoneTools'
+import { PhoneMoreTools, PhoneSearchTool } from '../components/TreePhoneTools'
 import { TreePreviewScreen } from '../components/TreePreviewScreen'
 import { TreeToolbar, type ViewStatus } from '../components/TreeToolbar'
 import { hiddenByFilter, layoutTree } from '../layout/layoutTree'
@@ -481,7 +481,11 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
 
   return (
     <TreeActionsContext.Provider value={actions}>
-      <div className="flex flex-col gap-4">
+      {/* Điện thoại: sơ đồ tràn hết chỗ giữa thanh trên (57px) và thanh điều hướng dưới (69px). Lề âm bù phần đệm của
+          <main> trong AppShell (pt 16px, pb 88px cho thanh dưới) để không còn khoảng trống hay thanh cuộn */}
+      <div className="flex flex-col gap-4 max-md:-mx-4 max-md:-mt-4 max-md:-mb-[1.1875rem] max-md:h-[calc(100dvh-7.875rem-env(safe-area-inset-bottom))] max-md:gap-0">
+        {(!isPhone || status || notice || soughtHidden) && (
+        <div className="flex flex-col gap-4 max-md:gap-2 max-md:px-4 max-md:py-2">
         <TreeToolbar
           index={index}
           generations={generations}
@@ -536,8 +540,10 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
           </div>
         )}
         {editing && isDesktop && <p className="text-sm text-text-muted">{t.toolbar.dragHint}</p>}
+        </div>
+        )}
 
-        <div className="relative h-[68dvh] min-h-[420px] md:h-[calc(100dvh-17rem)]">
+        <div className="relative min-h-0 flex-1 md:h-[calc(100dvh-17rem)] md:min-h-[420px] md:flex-none">
           <TreeCanvas
             layout={layout}
             ui={canvasUi}
@@ -550,17 +556,33 @@ function TreeWorkspace({ model, isAdmin, myMemberId }: WorkspaceProps) {
             onDragEnd={() => setDragId(null)}
             onDrop={onDrop}
             onPaneClick={() => setSelectedId(null)}
-          />
-          <TreePhoneTools
-            isAdmin={editing}
-            prefs={prefs}
-            onPrefsChange={setPrefs}
-            hasNodeOverrides={Object.keys(overrides).length > 0}
-            onResetNodes={resetNodes}
-            onAddRoot={() => openFlow({ kind: 'add', mode: { kind: 'root' } })}
-            onMyAncestors={showMyAncestors}
-          onKinship={openKinship}
-            onPrint={() => setPrintOpen(true)}
+            toolsStart={
+              isPhone && (
+                <PhoneSearchTool
+                  index={index}
+                  generations={generations}
+                  onPick={(nodeId) => {
+                    setNotice(null)
+                    reveal(nodeId)
+                  }}
+                />
+              )
+            }
+            toolsEnd={
+              isPhone && (
+                <PhoneMoreTools
+                  isAdmin={editing}
+                  prefs={prefs}
+                  onPrefsChange={setPrefs}
+                  hasNodeOverrides={Object.keys(overrides).length > 0}
+                  onResetNodes={resetNodes}
+                  onAddRoot={() => openFlow({ kind: 'add', mode: { kind: 'root' } })}
+                  onMyAncestors={showMyAncestors}
+                  onKinship={openKinship}
+                  onPrint={() => setPrintOpen(true)}
+                />
+              )
+            }
           />
         </div>
       </div>

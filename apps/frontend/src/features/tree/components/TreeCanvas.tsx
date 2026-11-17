@@ -1,6 +1,6 @@
 import '@xyflow/react/dist/style.css'
 import { MiniMap, ReactFlow, ReactFlowProvider, useReactFlow, type Node, type NodeChange } from '@xyflow/react'
-import { Maximize, Minus, Plus, SlidersHorizontal } from 'lucide-react'
+import { ChevronsDown, ChevronsUp, Maximize, Minus, Plus, SlidersHorizontal } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { cardTone, TONE_VARS, type TreePalette } from '../cardStyle'
 import { buildFlow, type FlowUi, type MemberFlowNode } from '../flow'
@@ -44,6 +44,9 @@ type TreeCanvasProps = {
   /** Thả nhánh `nodeId` lên ô `targetId` (`null` là thả ra chỗ trống). */
   onDrop: (nodeId: number, targetId: number | null) => void
   onPaneClick: () => void
+  /** Nút thêm vào đầu và cuối thanh công cụ dọc góc dưới trái (điện thoại: tìm, xem cây, "..."). */
+  toolsStart?: ReactNode
+  toolsEnd?: ReactNode
 }
 
 /** Toạ độ con trỏ từ sự kiện chuột hoặc cảm ứng do React Flow chuyển lên. */
@@ -57,14 +60,15 @@ function pointOf(event: unknown): { x: number; y: number } | null {
 const prefersReducedMotion = () =>
   typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-function ZoomButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
+/** Một nút trong thanh công cụ dọc ở góc dưới trái sơ đồ (vùng chạm 44px). */
+export function ToolButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
   return (
     <button
       type="button"
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="flex size-11 cursor-pointer items-center justify-center rounded-button border border-border bg-surface text-text shadow-card transition-colors duration-200 ease-out hover:bg-surface-muted"
+      className="flex size-11 cursor-pointer items-center justify-center text-text transition-colors duration-200 ease-out hover:bg-surface-muted focus-visible:relative focus-visible:z-10 [&_svg]:size-5"
     >
       {children}
     </button>
@@ -83,11 +87,14 @@ function TreeCanvasInner({
   onDragEnd,
   onDrop,
   onPaneClick,
+  toolsStart,
+  toolsEnd,
 }: TreeCanvasProps) {
   const { fitView, setCenter, zoomIn, zoomOut, screenToFlowPosition } = useReactFlow()
   const actions = useTreeActions()
   const [dragId, setDragId] = useState<number | null>(null)
   const [overId, setOverId] = useState<number | null>(null)
+  const [toolsOpen, setToolsOpen] = useState(true)
   const [dragPosition, setDragPosition] = useState<FlowUi['dragPosition']>(null)
   const justDragged = useRef(false)
 
@@ -167,7 +174,7 @@ function TreeCanvasInner({
   return (
     <div
       data-tree-palette={palette}
-      className="flex h-full min-h-0 overflow-hidden rounded-card border border-border bg-surface-muted"
+      className="flex h-full min-h-0 overflow-hidden bg-surface-muted md:rounded-card md:border md:border-border"
     >
       <GenerationGutter generations={layout.generations} />
       <div ref={regionRef} className="relative h-full min-w-0 flex-1" role="region" aria-label={t.canvasLabel}>
@@ -220,9 +227,10 @@ function TreeCanvasInner({
             onlyRenderVisibleElements
             attributionPosition="top-left"
           >
-            {/* Bản đồ thu nhỏ chỉ từ md trở lên: trên điện thoại chiếm quá nhiều chỗ (#100) */}
+            {/* Bản đồ thu nhỏ: điện thoại cũng hiện theo mẫu (thay quyết định ẩn ở #100), cỡ nhỏ hơn cho đỡ chiếm chỗ */}
             <MiniMap
-              className="hidden overflow-hidden rounded-field border border-border shadow-card md:block"
+              className="overflow-hidden rounded-field border border-border shadow-card"
+              style={isDesktop ? undefined : { width: 120, height: 90 }}
               bgColor="var(--color-surface)"
               nodeColor={miniFill}
               nodeStrokeColor={miniStroke}
@@ -235,19 +243,37 @@ function TreeCanvasInner({
           </ReactFlow>
         </TreeActionsContext.Provider>
 
-        <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2">
-          <ZoomButton label={t.config.open} onClick={onOpenConfig}>
-            <SlidersHorizontal className="size-5" aria-hidden="true" />
-          </ZoomButton>
-          <ZoomButton label="Phóng to" onClick={() => void zoomIn({ duration: 150 })}>
-            <Plus className="size-5" aria-hidden="true" />
-          </ZoomButton>
-          <ZoomButton label="Thu nhỏ" onClick={() => void zoomOut({ duration: 150 })}>
-            <Minus className="size-5" aria-hidden="true" />
-          </ZoomButton>
-          <ZoomButton label="Vừa khung nhìn" onClick={() => void fitView({ ...FIT, duration: 250 })}>
-            <Maximize className="size-5" aria-hidden="true" />
-          </ZoomButton>
+        {/* Một thanh dọc liền ở góc dưới trái: mọi nút công cụ của sơ đồ nằm ở đây */}
+        {/* Nút thu gọn nằm cuối thanh nên vẫn đứng yên ở góc khi thanh co lại */}
+        <div className="absolute bottom-3 left-3 z-10 flex flex-col divide-y divide-border overflow-hidden rounded-field border border-border bg-surface shadow-card">
+          {toolsOpen && (
+            <>
+              {toolsStart}
+              <ToolButton label="Phóng to" onClick={() => void zoomIn({ duration: 150 })}>
+                <Plus aria-hidden="true" />
+              </ToolButton>
+              <ToolButton label="Thu nhỏ" onClick={() => void zoomOut({ duration: 150 })}>
+                <Minus aria-hidden="true" />
+              </ToolButton>
+              <ToolButton label="Vừa khung nhìn" onClick={() => void fitView({ ...FIT, duration: 250 })}>
+                <Maximize aria-hidden="true" />
+              </ToolButton>
+              <ToolButton label={t.config.open} onClick={onOpenConfig}>
+                <SlidersHorizontal aria-hidden="true" />
+              </ToolButton>
+              {toolsEnd}
+            </>
+          )}
+          <button
+            type="button"
+            aria-expanded={toolsOpen}
+            aria-label={toolsOpen ? t.toolbar.collapseTools : t.toolbar.expandTools}
+            title={toolsOpen ? t.toolbar.collapseTools : t.toolbar.expandTools}
+            onClick={() => setToolsOpen((v) => !v)}
+            className="flex size-11 cursor-pointer items-center justify-center text-text-muted transition-colors duration-200 ease-out hover:bg-surface-muted hover:text-text [&_svg]:size-5"
+          >
+            {toolsOpen ? <ChevronsDown aria-hidden="true" /> : <ChevronsUp aria-hidden="true" />}
+          </button>
         </div>
       </div>
     </div>
