@@ -12,6 +12,8 @@ export type Kinship = {
   path: number[]
   /** Có người chưa điền giới tính nên phải dùng dạng gộp ("Anh/Chị"). */
   needsGender: boolean
+  /** Loại quan hệ, hiện ở viên đầu thẻ kết quả ("cha/mẹ - con", "anh chị em họ"…). */
+  group: string
 }
 
 const bySortOrder = (a: TreeNode, b: TreeNode) => a.sortOrder - b.sortOrder || a.id - b.id
@@ -38,13 +40,19 @@ export function kinshipBetween(
     needsGender = true
     return either
   }
-  const done = (aCallsB: string, bCallsA: string, path: number[]): Kinship => ({ aCallsB, bCallsA, path, needsGender })
+  const done = (aCallsB: string, bCallsA: string, path: number[], group: string): Kinship => ({
+    aCallsB,
+    bCallsA,
+    path,
+    needsGender,
+    group,
+  })
 
-  if (aNodeId === bNodeId) return done('Chính mình', 'Chính mình', [aNodeId])
+  if (aNodeId === bNodeId) return done('Chính mình', 'Chính mình', [aNodeId], 'bản thân')
 
   const a0 = lineageIdOf(index, aNodeId)
   const b0 = lineageIdOf(index, bNodeId)
-  if (a0 === bNodeId || b0 === aNodeId) return done(by(bNodeId, 'Chồng', 'Vợ'), by(aNodeId, 'Chồng', 'Vợ'), [aNodeId, bNodeId])
+  if (a0 === bNodeId || b0 === aNodeId) return done(by(bNodeId, 'Chồng', 'Vợ'), by(aNodeId, 'Chồng', 'Vợ'), [aNodeId, bNodeId], 'vợ - chồng')
 
   if (a0 === b0) {
     // Cùng là vợ/chồng của một người: người cưới trước là chị/anh
@@ -54,6 +62,7 @@ export function kinshipBetween(
       aFirst ? 'Em' : by(bNodeId, 'Anh', 'Chị'),
       aFirst ? by(aNodeId, 'Anh', 'Chị') : 'Em',
       [aNodeId, a0, bNodeId],
+      'cùng chồng/vợ',
     )
   }
 
@@ -137,5 +146,23 @@ export function kinshipBetween(
 
   const aCallsB = call(chainA, da, chainB, db, bNodeId, bInLaw) + (aInLaw ? sideOf(a0) : '')
   const bCallsA = call(chainB, db, chainA, da, aNodeId, aInLaw) + (bInLaw ? sideOf(b0) : '')
-  return done(aCallsB, bCallsA, path)
+  return done(aCallsB, bCallsA, path, groupOf(da, db, aInLaw, bInLaw))
+}
+
+/**
+ * Loại quan hệ theo số đời từ mỗi người lên tổ tiên chung (`da`, `db`). Có người là dâu/rể (`*InLaw`) thì dùng
+ * nhãn "qua hôn nhân"; riêng cha/mẹ trực tiếp thì phân biệt con dâu/rể với cha/mẹ kế.
+ */
+function groupOf(da: number, db: number, aInLaw: boolean, bInLaw: boolean): string {
+  const direct = da === 0 || db === 0
+  const depth = Math.max(da, db)
+  if (aInLaw || bInLaw) {
+    if (!direct || depth !== 1 || (aInLaw && bInLaw)) return 'họ hàng qua hôn nhân'
+    // Người ở đầu tổ tiên (độ sâu 0) là dâu/rể thì là cha/mẹ kế, ngược lại là con dâu/rể
+    const ancestorInLaw = da === 0 ? aInLaw : bInLaw
+    return ancestorInLaw ? 'cha/mẹ kế - con' : 'cha/mẹ - con dâu/rể'
+  }
+  if (direct) return depth === 1 ? 'cha/mẹ - con' : depth === 2 ? 'ông/bà - cháu' : 'tổ tiên - hậu duệ'
+  if (da === db) return da === 1 ? 'anh chị em ruột' : 'anh chị em họ'
+  return Math.abs(da - db) === 1 ? 'cô dì chú bác - cháu' : 'họ hàng'
 }

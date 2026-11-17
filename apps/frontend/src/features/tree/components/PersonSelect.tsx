@@ -16,6 +16,8 @@ type PersonSelectProps = {
   generations: ReadonlyMap<number, number>
   label: string
   selectedId: number | null
+  /** Người đã chọn ở ô kia: không hiện trong danh sách để không chọn trùng. */
+  excludeId?: number | null
   onPick: (nodeId: number) => void
 }
 
@@ -24,7 +26,7 @@ type PersonSelectProps = {
  * Danh sách đặt `position: fixed` theo vị trí ô để nổi ra ngoài phần cuộn của hộp thoại (popover của thư viện
  * gắn vào body sẽ nằm dưới lớp <dialog> modal). Cuộn hay đổi cỡ màn hình thì đóng, như ô chọn gốc của trình duyệt.
  */
-export function PersonSelect({ index, generations, label, selectedId, onPick }: PersonSelectProps) {
+export function PersonSelect({ index, generations, label, selectedId, excludeId = null, onPick }: PersonSelectProps) {
   const labelId = useId()
   const listId = useId()
   const rootRef = useRef<HTMLDivElement>(null)
@@ -39,13 +41,13 @@ export function PersonSelect({ index, generations, label, selectedId, onPick }: 
   const people = useMemo(
     () =>
       [...index.nodes.values()]
-        .flatMap((n) => (n.member ? [{ id: n.id, member: n.member }] : []))
+        .flatMap((n) => (n.member && n.id !== excludeId ? [{ id: n.id, member: n.member }] : []))
         .sort(
           (a, b) =>
             (generations.get(a.id) ?? 0) - (generations.get(b.id) ?? 0) ||
             a.member.fullName.localeCompare(b.member.fullName, 'vi'),
         ),
-    [generations, index],
+    [excludeId, generations, index],
   )
   const results = useMemo(() => {
     const needle = toSearchName(query)
@@ -111,7 +113,7 @@ export function PersonSelect({ index, generations, label, selectedId, onPick }: 
 
   return (
     <div ref={rootRef} className="flex min-w-0 flex-col gap-1.5">
-      <span id={labelId} className="text-base font-medium text-text-muted">
+      <span id={labelId} className="text-sm font-medium text-text-muted">
         {label}
       </span>
       <button

@@ -101,8 +101,11 @@ export const treeStrings = {
     results: 'Người có trên cây',
     noMatch: 'Không có ai tên này trên cây.',
     swap: 'Hoán đổi hai người',
-    pickBoth: 'Chọn đủ hai người để xem cách xưng hô.',
-    calls: (a: string, b: string) => `${a} gọi ${b} là`,
+    callsWord: 'gọi',
+    isWord: 'là',
+    /** `diff` = đời người thứ hai − đời người thứ nhất (dương: người thứ nhất ở vai trên). */
+    generation: (diff: number) =>
+      diff === 0 ? 'cùng thế hệ' : diff > 0 ? `lớn hơn ${diff} thế hệ` : `nhỏ hơn ${-diff} thế hệ`,
     pathTitle: 'Đường quan hệ',
     notFound: 'Không tìm thấy quan hệ giữa hai người này trên cây (có thể họ ở hai cây rời nhau).',
     needsGender: 'Có người chưa điền giới tính nên xưng hô đang ở dạng gộp. Điền giới tính để xưng hô chính xác hơn.',
